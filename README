@@ -1,0 +1,33 @@
+tl;dr If you don't know that this is, you probably don't want to.
+
+
+ABOUT
+
+This is a library and demonstrator for the current version of the FPGA-based
+SpaceWire Router and Data Compressor Unit (RDCU) built in collaboration of
+the University of Vienna, Department of Astrophysics (IFA/UVIE) and the
+Austrian Academy of Sciences Space Research Institute (IWF/OEAW) for
+PLATO (PLAnetary Transits and Oscillations of stars).
+
+The RDCU consists of an GR718RB SpaceWire router and an RTAX2000 FPGA
+holding the RMAP Target and Data Compressor. All of these components are
+utilitsed in the demonstrator.
+
+Note that this library is not part of any formal official delivery.
+
+
+ATTENTION
+
+This is not production-ready code, mostly because I cannot tell what
+your operating system environment will be and how you will actually command
+the RMAP targets or handle RMAP timeouts etc.
+
+
+HOWTO
+
+RTFM (see doxygen tags in source and source itself), otherwise:
+
+1) run make
+2) start grmon
+3) ???
+4) profit!
