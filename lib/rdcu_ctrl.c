@@ -462,6 +462,20 @@ uint32_t rdcu_get_adc_logic_enabled(void)
 }
 
 
+/*
+ * @brief get RDCU Interrupt status
+ * @see RDCU-FRS-FN-0632
+ *
+ * @returns 0: Interrupt is disabled
+ *	    1: Interrupt is enabled
+ */
+
+uint32_t rdcu_get_rdcu_interrupt_enabled(void)
+{
+	return ((rdcu->compr_status >> 8) & 0x1UL);
+}
+
+
 /**
  * @brief get compressor status valid
  * @see RDCU-FRS-FN-0632
@@ -771,6 +785,28 @@ void rdcu_set_adc_logic_enabled(void)
 void rdcu_set_adc_logic_disabled(void)
 {
 	rdcu->adc_ctrl &= ~0x1UL;
+}
+
+
+/**
+ * @brief enable RDCU interrupt signal to the ICU
+ * @see RDCU-FRS-FN-0732
+ */
+
+void rdcu_set_rdcu_interrupt(void)
+{
+	rdcu->compr_ctrl |= (0x1UL << 8);
+}
+
+
+/**
+ * @brief disable RDCU interrupt signal to the ICU
+ * @see RDCU-FRS-FN-0732
+ */
+
+void rdcu_clear_rdcu_interrupt(void)
+{
+	rdcu->compr_ctrl &= ~(0x1UL << 8);
 }
 
 
