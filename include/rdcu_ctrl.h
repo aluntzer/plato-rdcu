@@ -164,6 +164,7 @@ uint32_t rdcu_get_adc_logic_reset(void);
 uint32_t rdcu_get_adc_logic_enabled(void);
 
 
+uint32_t rdcu_get_rdcu_interrupt_enabled(void);
 uint32_t rdcu_get_compr_status_valid(void);
 uint32_t rdcu_get_data_compr_ready(void);
 uint32_t rdcu_get_data_compr_interrupted(void);
@@ -194,6 +195,8 @@ void rdcu_clear_adc_logic_reset(void);
 void rdcu_set_adc_logic_enabled(void);
 void rdcu_set_adc_logic_disabled(void);
 
+void rdcu_set_rdcu_interrupt(void);
+void rdcu_clear_rdcu_interrupt(void);
 void rdcu_set_data_compr_interrupt(void);
 void rdcu_clear_data_compr_interrupt(void);
 void rdcu_set_data_compr_start(void);
