@@ -524,6 +524,9 @@ int rdcu_package(uint8_t *blob,
 		 const uint8_t *data, int data_size)
 {
 	int n;
+	int has_data_crc = 0;
+	struct rmap_instruction *ri;
+
 
 
 	if (!cmd_size) {
@@ -533,7 +536,24 @@ int rdcu_package(uint8_t *blob,
 
 
 	/* allocate space for header, header crc, data, data crc */
-	n = cmd_size + 2;
+	n = cmd_size + 1;
+
+	ri = (struct rmap_instruction *) &cmd[non_crc_bytes + RMAP_INSTRUCTION];
+
+	/* see if the type of command needs a data crc field at the end */
+	switch (ri->cmd) {
+		case RMAP_READ_MODIFY_WRITE_ADDR_INC:
+		case RMAP_WRITE_ADDR_SINGLE:
+		case RMAP_WRITE_ADDR_INC:
+		case RMAP_WRITE_ADDR_SINGLE_VERIFY:
+		case RMAP_WRITE_ADDR_INC_VERIFY:
+			has_data_crc = 1;
+			n += 1;
+			break;
+		default:
+			break;
+	}
+
 
 	if (data)
 		n += data_size;
@@ -552,7 +572,8 @@ int rdcu_package(uint8_t *blob,
 		blob[cmd_size + 1 + data_size] = rmap_crc8(data, data_size);
 	} else {
 		/* if no data is present, data crc is 0x0 */
-		blob[cmd_size + 1] = 0x0;
+		if (has_data_crc)
+			blob[cmd_size + 1] = 0x0;
 	}
 
 
