@@ -648,6 +648,22 @@ int rdcu_write_cmd_num_samples(uint16_t trans_id, uint8_t *cmd)
 
 
 /**
+ * @brief create a command to write the RDCU updated/new model start address register
+ *
+ * @param trans_id a transaction identifier
+ *
+ * @param cmd the command buffer; if NULL, the function returns the needed size
+ *
+ * @returns the size of the command data buffer or 0 on error
+ */
+
+int rdcu_write_cmd_new_model_start_addr(uint16_t trans_id, uint8_t *cmd)
+{
+	return rdcu_write_cmd_register_internal(trans_id, cmd, NEW_MODEL_START_ADDR);
+}
+
+
+/**
  * @brief create a command to write the RDCU compressed data buffer start
  *	  address register
  *

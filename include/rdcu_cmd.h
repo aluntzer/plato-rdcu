@@ -58,7 +58,7 @@
 #define DATA_START_ADDR			0x11000010UL
 #define MODEL_START_ADDR		0x11000014UL
 #define NUM_SAMPLES			0x11000018UL
-/* spare: 0x1100001CUL */
+#define NEW_MODEL_START_ADDR		0x1100001CUL
 #define COMPR_DATA_BUF_START_ADDR	0x11000020UL
 #define COMPR_DATA_BUF_LEN		0x11000024UL
 /* spare: 0x11000028UL */
@@ -136,6 +136,8 @@ int rdcu_write_cmd_adaptive_param2(uint16_t trans_id, uint8_t *cmd);
 int rdcu_write_cmd_data_start_addr(uint16_t trans_id, uint8_t *cmd);
 int rdcu_write_cmd_model_start_addr(uint16_t trans_id, uint8_t *cmd);
 int rdcu_write_cmd_num_samples(uint16_t trans_id, uint8_t *cmd);
+int rdcu_write_cmd_new_model_start_addr(uint16_t trans_id, uint8_t *cmd);
+
 int rdcu_write_cmd_compr_data_buf_start_addr(uint16_t trans_id, uint8_t *cmd);
 int rdcu_write_cmd_compr_data_buf_len(uint16_t trans_id, uint8_t *cmd);
 

@@ -1091,6 +1091,26 @@ int rdcu_set_num_samples(uint32_t samples)
 
 
 /**
+ * @brief set updated_model/new model start address
+ * @see RDCU-FRS-FN-0842
+ *
+ * @returns 0 on success, otherwise error
+ */
+
+int rdcu_set_new_model_start_addr(uint32_t addr)
+{
+	if (addr > 0x00FFFFFFUL)
+		return -1;
+
+	/* clear and set */
+	rdcu->new_model_start_addr &= ~0x00FFFFFFUL;
+	rdcu->new_model_start_addr |= addr;
+
+	return 0;
+}
+
+
+/**
  * @brief set compressed data buffer start address
  * @see RDCU-FRS-FN-0850
  *
