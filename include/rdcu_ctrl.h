@@ -52,6 +52,8 @@ struct rdcu_mirror {
 	uint32_t data_start_addr;		/* RDCU-FRS-FN-0812 */
 	uint32_t model_start_addr;		/* RDCU-FRS-FN-0822 */
 	uint32_t num_samples;			/* RDCU-FRS-FN-0832 */
+	uint32_t new_model_start_addr;		/* RDCU-FRS-FN-0842 */
+
 	uint32_t compr_data_buf_start_addr;	/* RDCU-FRS-FN-0852 */
 	uint32_t compr_data_buf_len;		/* RDCU-FRS-FN-0862 */
 	uint32_t used_param1;			/* RDCU-FRS-FN-0892 */
@@ -101,6 +103,8 @@ int rdcu_sync_adaptive_param2(void);
 int rdcu_sync_data_start_addr(void);
 int rdcu_sync_model_start_addr(void);
 int rdcu_sync_num_samples(void);
+int rdcu_sync_new_model_start_addr(void);
+
 int rdcu_sync_compr_data_buf_start_addr(void);
 int rdcu_sync_compr_data_buf_len(void);
 int rdcu_sync_used_param1(void);
@@ -223,6 +227,8 @@ int rdcu_set_data_start_addr(uint32_t addr);
 int rdcu_set_model_start_addr(uint32_t addr);
 
 int rdcu_set_num_samples(uint32_t samples);
+
+int rdcu_set_new_model_start_addr(uint32_t addr);
 
 int rdcu_set_compr_data_buf_start_addr(uint32_t addr);
 
