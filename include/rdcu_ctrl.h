@@ -63,8 +63,8 @@ struct rdcu_mirror {
 	uint32_t compr_data_adaptive_1_size;	/* RDCU-FRS-FN-0932 */
 	uint32_t compr_data_adaptive_2_size;	/* RDCU-FRS-FN-0942 */
 	uint32_t compr_error;			/* RDCU-FRS-FN-0952 */
-	uint32_t model_info_start_addr;		/* RDCU-FRS-FN-0962 */
-	uint32_t model_info_len;		/* RDCU-FRS-FN-0970 */
+	uint32_t new_model_adr_used;		/* RDCU-FRS-FN-0962 */
+	uint32_t samples_used;			/* RDCU-FRS-FN-0970 */
 
 
 	/* SRAM EDAC registers */
@@ -114,8 +114,8 @@ int rdcu_sync_compr_data_size(void);
 int rdcu_sync_compr_data_adaptive_1_size(void);
 int rdcu_sync_compr_data_adaptive_2_size(void);
 int rdcu_sync_compr_error(void);
-int rdcu_sync_model_info_start_addr(void);
-int rdcu_sync_model_info_len(void);
+int rdcu_sync_new_model_adr_used(void);
+int rdcu_sync_samples_used(void);
 
 /* SRAM EDAC registers */
 int rdcu_sync_sram_edac_ctrl(void);
@@ -252,9 +252,9 @@ uint32_t rdcu_get_compr_data_adaptive_2_size(void);
 
 uint8_t rdcu_get_compr_error(void);
 
-uint32_t rdcu_get_model_info_start_addr(void);
+uint32_t rdcu_get_new_model_adr_used(void);
 
-uint32_t rdcu_get_model_info_len(void);
+uint32_t rdcu_get_samples_used(void);
 
 /* SRAM EDAC registers */
 int rdcu_edac_set_sub_chip_die_addr(uint32_t ca);

@@ -712,7 +712,8 @@ int rdcu_write_cmd_compr_data_buf_len(uint16_t trans_id, uint8_t *cmd)
 
 int rdcu_read_cmd_used_param1(uint16_t trans_id, uint8_t *cmd)
 {
-	return rdcu_read_cmd_register_internal(trans_id, cmd, USED_PARAM_1);
+	return rdcu_read_cmd_register_internal(trans_id, cmd,
+					       USED_COMPR_PARAM_1);
 }
 
 
@@ -728,7 +729,8 @@ int rdcu_read_cmd_used_param1(uint16_t trans_id, uint8_t *cmd)
 
 int rdcu_read_cmd_used_param2(uint16_t trans_id, uint8_t *cmd)
 {
-	return rdcu_read_cmd_register_internal(trans_id, cmd, USED_PARAM_2);
+	return rdcu_read_cmd_register_internal(trans_id, cmd,
+					       USED_COMPR_PARAM_2);
 }
 
 
@@ -828,10 +830,10 @@ int rdcu_read_cmd_compr_error(uint16_t trans_id, uint8_t *cmd)
  * @returns the size of the command data buffer or 0 on error
  */
 
-int rdcu_read_cmd_model_info_start_addr(uint16_t trans_id, uint8_t *cmd)
+int rdcu_read_cmd_new_model_adr_used(uint16_t trans_id, uint8_t *cmd)
 {
 	return rdcu_read_cmd_register_internal(trans_id, cmd,
-					       MODEL_INFO_START_ADDR);
+					       NEW_MODEL_START_ADDR);
 }
 
 
@@ -845,9 +847,10 @@ int rdcu_read_cmd_model_info_start_addr(uint16_t trans_id, uint8_t *cmd)
  * @returns the size of the command data buffer or 0 on error
  */
 
-int rdcu_read_cmd_model_info_len(uint16_t trans_id, uint8_t *cmd)
+int rdcu_read_cmd_samples_used(uint16_t trans_id, uint8_t *cmd)
 {
-	return rdcu_read_cmd_register_internal(trans_id, cmd, MODEL_INFO_LEN);
+	return rdcu_read_cmd_register_internal(trans_id, cmd,
+					       USED_NUMBER_OF_SAMPLES);
 }
 
 

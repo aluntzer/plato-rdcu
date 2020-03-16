@@ -1340,7 +1340,7 @@ uint32_t rdcu_get_compr_data_adaptive_2_size(void)
 
 uint8_t rdcu_get_compr_error(void)
 {
-	return (uint8_t) (rdcu->compr_error & 0xFFUL);
+	return (uint8_t) (rdcu->compr_error & 0x3FFUL);
 }
 
 
@@ -1350,9 +1350,9 @@ uint8_t rdcu_get_compr_error(void)
  *
  */
 
-uint32_t rdcu_get_model_info_start_addr(void)
+uint32_t rdcu_get_new_model_adr_used(void)
 {
-	return rdcu->model_info_start_addr & 0x00FFFFFFUL;
+	return rdcu->new_model_adr_used & 0x00FFFFFFUL;
 }
 
 
@@ -1363,9 +1363,9 @@ uint32_t rdcu_get_model_info_start_addr(void)
  * @returns the number of 16-bit samples in the model
  */
 
-uint32_t rdcu_get_model_info_len(void)
+uint32_t rdcu_get_samples_used(void)
 {
-	return rdcu->model_info_len & 0x00FFFFFFUL;
+	return rdcu->samples_used & 0x00FFFFFFUL;
 }
 
 
@@ -2100,10 +2100,10 @@ int rdcu_sync_compr_error(void)
  * @returns 0 on success, otherwise error
  */
 
-int rdcu_sync_model_info_start_addr(void)
+int rdcu_sync_new_model_adr_used(void)
 {
-	return rdcu_sync(rdcu_read_cmd_model_info_start_addr,
-			 &rdcu->model_info_start_addr, 0);
+	return rdcu_sync(rdcu_read_cmd_new_model_adr_used,
+			 &rdcu->new_model_adr_used, 0);
 }
 
 
@@ -2113,10 +2113,10 @@ int rdcu_sync_model_info_start_addr(void)
  * @returns 0 on success, otherwise error
  */
 
-int rdcu_sync_model_info_len(void)
+int rdcu_sync_samples_used(void)
 {
-	return rdcu_sync(rdcu_read_cmd_model_info_len,
-			 &rdcu->model_info_len, 0);
+	return rdcu_sync(rdcu_read_cmd_samples_used,
+			 &rdcu->samples_used, 0);
 }
 
 
