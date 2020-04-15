@@ -61,6 +61,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <byteorder.h>
 #include <rmap.h>
 #include <rdcu_cmd.h>
 #include <rdcu_ctrl.h>
@@ -462,7 +463,7 @@ uint32_t rdcu_get_adc_logic_enabled(void)
 }
 
 
-/*
+/**
  * @brief get RDCU Interrupt status
  * @see RDCU-FRS-FN-0632
  *
@@ -1453,7 +1454,7 @@ uint8_t rdcu_edac_get_scrub_info(void)
 
 
 /**
- * @brief read data from SRAM
+ * @brief read data from the local SRAM mirror
  *
  * @param buf the buffer to read to (if NULL, the required size is returned)
  *
@@ -1477,12 +1478,12 @@ int rdcu_read_sram(void *buf, uint32_t addr, uint32_t size)
 	if (buf)
 		memcpy(buf, &rdcu->sram[addr], size);
 
-	return size; /* lol */
+	return (int)size; /* lol */
 }
 
 
 /**
- * @brief write data to SRAM
+ * @brief write arbitrary big-endian data to the local SRAM mirror
  *
  * @param buf the buffer to read from
  *
@@ -1509,7 +1510,117 @@ int rdcu_write_sram(void *buf, uint32_t addr, uint32_t size)
 	if (buf)
 		memcpy(&rdcu->sram[addr], buf, size);
 
-	return size; /* lol */
+	return (int)size; /* lol */
+}
+
+
+/**
+ * @brief write uint8_t formatted data to the local SRAM mirror. (This function
+ *	is endian-safe.)
+ *
+ * @param buf the buffer to read from
+ *
+ * @param addr an address within the RDCU SRAM
+ * @param size the number of bytes read
+ *
+ * @returns the number of bytes written, < 0 on error
+ */
+
+int rdcu_write_sram_8(uint8_t *buf, uint32_t addr, uint32_t size)
+{
+	return rdcu_write_sram(buf, addr, size);
+}
+
+
+/**
+ * @brief write uint16_t formatted data to the local SRAM mirror. This function
+ *	is endian-safe.
+ *
+ * @param buf the buffer to read from
+ *
+ * @param addr an address within the RDCU SRAM
+ * @param size the number of bytes read
+ *
+ * @returns the number of bytes written, < 0 on error
+ */
+
+int rdcu_write_sram_16(uint16_t *buf, uint32_t addr, uint32_t size)
+{
+	if (!buf)
+		return 0;
+
+	if (size & 0x1)
+		return -1;
+
+	if (addr > RDCU_SRAM_END)
+		return -1;
+
+	if (size > RDCU_SRAM_SIZE)
+		return -1;
+
+	if (addr + size > RDCU_SRAM_END)
+		return -1;
+
+#if __BIG_ENDIAN
+	return rdcu_write_sram(buf, addr, size);
+#else
+	{
+		uint32_t i;
+
+		for (i = 0; i < size/sizeof(uint16_t); i++) {
+			uint16_t *sram_buf = (uint16_t *)&rdcu->sram[addr];
+
+			sram_buf[i] = cpu_to_be16(buf[i]);
+		}
+	}
+	return (int)size; /* lol */
+#endif /* __BIG_ENDIAN */
+}
+
+
+/**
+ * @brief write uint32_t formatted data to the local SRAM mirror. This function
+ *	is endian-safe.
+ *
+ * @param buf the buffer to read from
+ *
+ * @param addr an address within the RDCU SRAM
+ * @param size the number of bytes read
+ *
+ * @returns the number of bytes written, < 0 on error
+ */
+
+int rdcu_write_sram_32(uint32_t *buf, uint32_t addr, uint32_t size)
+{
+	if (!buf)
+		return 0;
+
+	if (size & 0x3)
+		return -1;
+
+	if (addr > RDCU_SRAM_END)
+		return -1;
+
+	if (size > RDCU_SRAM_SIZE)
+		return -1;
+
+	if (addr + size > RDCU_SRAM_END)
+		return -1;
+
+#if __BIG_ENDIAN
+	return rdcu_write_sram(buf, addr, size);
+#else
+	{
+		uint32_t i;
+
+		for (i = 0; i < size/sizeof(uint32_t); i++) {
+			uint32_t *sram_buf = (uint32_t *)&rdcu->sram[addr];
+
+			sram_buf[i] = cpu_to_be32(buf[i]);
+		}
+	}
+	return (int)size; /* lol */
+#endif /* __BIG_ENDIAN */
 }
 
 
@@ -2050,7 +2161,7 @@ int rdcu_sync_mirror_to_sram(uint32_t addr, uint32_t size, uint32_t mtu)
 
 	tx_bytes = size;
 
-	while(tx_bytes >= mtu) {
+	while (tx_bytes >= mtu) {
 
 		ret = rdcu_sync_data(rdcu_write_cmd_data, addr + sent,
 				     &rdcu->sram[addr + sent], mtu, 0);
@@ -2124,13 +2235,14 @@ int rdcu_sync_sram_to_mirror(uint32_t addr, uint32_t size, uint32_t mtu)
 
 	rx_bytes = size;
 
-	while(rx_bytes >= mtu) {
+	while (rx_bytes >= mtu) {
 
 		ret = rdcu_sync_data(rdcu_read_cmd_data, addr + recv,
 				     &rdcu->sram[addr + recv], mtu, 1);
 
 #if 1
-		while (rdcu_rmap_sync_status() > 3);
+		while (rdcu_rmap_sync_status() > 3)
+			;
 #endif
 
 		if (ret > 0)
