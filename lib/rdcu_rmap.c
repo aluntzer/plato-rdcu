@@ -519,9 +519,9 @@ int rdcu_sync_data(int (*fn)(uint16_t trans_id, uint8_t *cmd,
  */
 
 int rdcu_package(uint8_t *blob,
-		 const uint8_t *cmd,  uint32_t cmd_size,
+		 const uint8_t *cmd,  int cmd_size,
 		 const uint8_t non_crc_bytes,
-		 const uint8_t *data, uint32_t data_size)
+		 const uint8_t *data, int data_size)
 {
 	int n;
 	int has_data_crc = 0;
@@ -535,25 +535,23 @@ int rdcu_package(uint8_t *blob,
 	}
 
 
-	/* allocate space for header, header crc, data */
+	/* allocate space for header, header crc, data, data crc */
 	n = cmd_size + 1;
 
 	ri = (struct rmap_instruction *) &cmd[non_crc_bytes + RMAP_INSTRUCTION];
 
 	/* see if the type of command needs a data crc field at the end */
-	if (ri->cmd_resp) {
-		if (ri->cmd & RMAP_CMD_BIT_WRITE) {
+	switch (ri->cmd) {
+		case RMAP_READ_MODIFY_WRITE_ADDR_INC:
+		case RMAP_WRITE_ADDR_SINGLE:
+		case RMAP_WRITE_ADDR_INC:
+		case RMAP_WRITE_ADDR_SINGLE_VERIFY:
+		case RMAP_WRITE_ADDR_INC_VERIFY:
 			has_data_crc = 1;
 			n += 1;
-		}
-	} else {
-		if (!(ri->cmd & RMAP_CMD_BIT_WRITE)) {
-			has_data_crc = 1;
-			n += 1;
-		} else if (ri->cmd == RMAP_READ_MODIFY_WRITE_ADDR_INC) {
-			has_data_crc = 1;
-			n += 1;
-		}
+			break;
+		default:
+			break;
 	}
 
 
