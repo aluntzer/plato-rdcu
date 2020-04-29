@@ -66,6 +66,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <byteorder.h>
 #include <rmap.h>
 #include <rdcu_rmap.h>
 
@@ -229,7 +230,7 @@ static int rdcu_process_rx(void)
 	int n;
 	int cnt = 0;
 
-	void *local_addr;
+	uint32_t *local_addr;
 
 	uint8_t *spw_pckt;
 
@@ -243,13 +244,14 @@ static int rdcu_process_rx(void)
 	while ((n = rmap_rx(NULL))) {
 		/* we received something, allocate enough space for the packet */
 		spw_pckt = (uint8_t *) malloc(n);
-		if(!spw_pckt) {
+		if (!spw_pckt) {
 			printf("malloc() for packet failed!\n");
 			return -1;
 		}
 
 		/* read the packet */
 		n = rmap_rx(spw_pckt);
+
 		if (!n) {
 			printf("Unknown error in rmap_rx()\n");
 			free(spw_pckt);
@@ -273,14 +275,27 @@ static int rdcu_process_rx(void)
 		local_addr = trans_log_get_addr(rp->tr_id);
 
 		if (!local_addr) {
-			printf("warning: response packet received not in"
+			printf("warning: response packet received not in "
 			       "transaction log\n");
 			rmap_erase_packet(rp);
 			continue;
 		}
 
-		if (rp->data_len)
+		if (rp->data_len) {
 			memcpy(local_addr, rp->data, rp->data_len);
+#if __LITTLE_ENDIAN
+			if (rp->data_len & 0x3)
+				printf("warning: length of response packet"
+				       "received is not a multiple of 4 bytes\n");
+			{
+				uint32_t i;
+
+				for (i = 0; i < rp->data_len/4; i++)
+					be32_to_cpus(&local_addr[i]);
+			}
+#endif /* __LITTLE_ENDIAN */
+		}
+
 
 		trans_log_release_slot(rp->tr_id);
 		rmap_erase_packet(rp);
@@ -314,7 +329,7 @@ int rdcu_submit_tx(const uint8_t *cmd,  int cmd_size,
 		printf("Transmitting RMAP command\n");
 
 	if (rmap_tx(cmd, cmd_size, dpath_len, data, data_size)) {
-		printf("rmap_tx() returned error!");
+		printf("rmap_tx() returned error!\n");
 		return -1;
 	}
 
@@ -401,8 +416,7 @@ int rdcu_sync(int (*fn)(uint16_t trans_id, uint8_t *cmd),
 	int slot;
 
 	uint8_t *rmap_cmd;
-
-
+	uint8_t *data = addr;
 
 	slot = trans_log_grab_slot(addr);
 	if (slot < 0)
@@ -426,8 +440,26 @@ int rdcu_sync(int (*fn)(uint16_t trans_id, uint8_t *cmd),
 		return -1;
 	}
 
-	n = rdcu_submit_tx(rmap_cmd, n, addr, data_len);
+#if __LITTLE_ENDIAN
+	if (data_len & 0x3)
+		printf("warning: length of send packet is not a multiple of "
+		       "4 bytes\n");
+
+	if (data_len) {
+		int i;
+
+		data = (uint8_t *) malloc(data_len);
+		for (i = 0; i < data_len/4; i++)
+			((uint32_t *)data)[i] =
+				cpu_to_be32(((uint32_t *)addr)[i]);
+	}
+#endif /* __LITTLE_ENDIAN */
+
+	n = rdcu_submit_tx(rmap_cmd, n, data, data_len);
 	free(rmap_cmd);
+#if __LITTLE_ENDIAN
+	free(data);
+#endif /* __LITTLE_ENDIAN */
 
 	return n;
 }

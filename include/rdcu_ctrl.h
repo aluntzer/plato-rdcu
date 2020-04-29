@@ -272,7 +272,9 @@ uint8_t rdcu_edac_get_scrub_info(void);
 /* SRAM */
 int rdcu_read_sram(void *buf, uint32_t addr, uint32_t size);
 int rdcu_write_sram(void *buf, uint32_t addr, uint32_t size);
-
+int rdcu_write_sram_8(uint8_t *buf, uint32_t addr, uint32_t size);
+int rdcu_write_sram_16(uint16_t *buf, uint32_t addr, uint32_t size);
+int rdcu_write_sram_32(uint32_t *buf, uint32_t addr, uint32_t size);
 
 
 void rdcu_ctrl_init(void);
