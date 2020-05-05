@@ -472,6 +472,8 @@ int rmap_build_hdr(struct rmap_pkt *pkt, uint8_t *hdr)
 	} else if (!pkt->ri.cmd_resp && pkt->ri.cmd & RMAP_CMD_BIT_WRITE) {
 		/* all headers have data length unless they are a write reply */
 		return n;
+	} else {
+		hdr[n++] = 0x0;	/* on other replies, this is a reserved field */
 	}
 
 	hdr[n++] = (uint8_t) (pkt->data_len >> 16); /* data len MSB */
