@@ -469,7 +469,7 @@ int rmap_build_hdr(struct rmap_pkt *pkt, uint8_t *hdr)
 		hdr[n++] = (uint8_t) (pkt->addr >> 16);
 		hdr[n++] = (uint8_t) (pkt->addr >>  8);
 		hdr[n++] = (uint8_t)  pkt->addr;	/* data addr LSB */
-	} else if (pkt->ri.cmd & (RMAP_CMD_BIT_WRITE | RMAP_CMD_BIT_REPLY)) {
+	} else if (!pkt->ri.cmd_resp && pkt->ri.cmd & RMAP_CMD_BIT_WRITE) {
 		/* all headers have data length unless they are a write reply */
 		return n;
 	}
@@ -551,8 +551,7 @@ struct rmap_pkt *rmap_pkt_from_buffer(uint8_t *buf)
 	}
 
 	/* all headers have data length unless they are a write reply */
-	if (((pkt->ri.cmd ^ (RMAP_CMD_BIT_WRITE | RMAP_CMD_BIT_REPLY))
-	      & (RMAP_CMD_BIT_WRITE | RMAP_CMD_BIT_REPLY))) {
+	if (!(!pkt->ri.cmd_resp && (pkt->ri.cmd & (RMAP_CMD_BIT_WRITE)))) {
 
 		pkt->data_len = ((uint32_t) buf[RMAP_DATALEN_BYTE0 + n] << 16) |
 				((uint32_t) buf[RMAP_DATALEN_BYTE1 + n] <<  8) |
@@ -656,7 +655,7 @@ static void rmap_process_read_reply(uint8_t *pkt)
 	len |= ((uint32_t) pkt[RMAP_DATALEN_BYTE1]) <<  8;
 	len |= ((uint32_t) pkt[RMAP_DATALEN_BYTE2]) <<  0;
 
-	printf("\tData length is %ld bytes:\n\t", len);
+	printf("\tData length is %u bytes:\n\t", len);
 
 
 	for (i = 0; i < len; i++)
