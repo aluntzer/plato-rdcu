@@ -579,6 +579,8 @@ int rdcu_package(uint8_t *blob,
 		case RMAP_WRITE_ADDR_INC:
 		case RMAP_WRITE_ADDR_SINGLE_VERIFY:
 		case RMAP_WRITE_ADDR_INC_VERIFY:
+		case RMAP_WRITE_ADDR_SINGLE_VERIFY_REPLY:
+		case RMAP_WRITE_ADDR_INC_VERIFY_REPLY:
 			has_data_crc = 1;
 			n += 1;
 			break;
