@@ -684,6 +684,9 @@ int rdcu_set_return_path(uint8_t *path, uint8_t len)
 	if (len > RMAP_MAX_REPLY_PATH_LEN)
 		return -1;
 
+	if (len & 0x3)
+		return -1;	/* not a multiple of 4 */
+
 	if (!path || !len) {
 		rpath     = NULL;
 		rpath_len = 0;
