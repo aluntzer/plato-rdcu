@@ -46,6 +46,19 @@
 #include <cfg.h>
 #include <demo.h>
 
+#include <leon3_grtimer_longcount.h>
+
+
+/* timer config */
+
+#define CPU_CPS			80000000		/* in Hz */
+#define GRTIMER_RELOAD		4
+#define GRTIMER_MAX		0xffffffff
+#define GRTIMER_TICKS_PER_SEC	((CPU_CPS / (GRTIMER_RELOAD + 1)))
+
+struct grtimer_unit *rtu = (struct grtimer_unit *) LEON3_BASE_ADDRESS_GRTIMER;
+
+
 
 #define MAX_PAYLOAD_SIZE	4096
 
@@ -484,6 +497,8 @@ static void rdcu_verify_data_transfers(void)
 static void rdcu_compression_demo(void)
 {
 	int cnt;
+	
+
 
 	/* first, set compression paramters in local mirror registers */
 	printf("Configuring compression mode 1, weighting 8\n");
@@ -543,6 +558,8 @@ static void rdcu_compression_demo(void)
 	/* sync */
 	rdcu_sync_mirror_to_sram(DATASTART,  NUMSAMPLES * 2, MAX_PAYLOAD_SIZE);
 	rdcu_sync_mirror_to_sram(MODELSTART, NUMSAMPLES * 2, MAX_PAYLOAD_SIZE);
+	
+
 
 	/* wait */
 	sync();
@@ -651,6 +668,11 @@ static void rdcu_compression_demo(void)
 
 static void rdcu_demo(void)
 {
+	struct grtimer_uptime t0, t1;
+
+
+	grtimer_longcount_get_uptime(rtu, &t0);
+
 	/* get some status info from the RDCU */
 	rdcu_sync_fpga_version();
 	rdcu_sync_compr_status();
@@ -696,6 +718,10 @@ static void rdcu_demo(void)
 
 	/* have a look at the RDCU RMAP error counters */
 	rdcu_show_rmap_errors();
+	
+	grtimer_longcount_get_uptime(rtu, &t1);
+	printf("SYNC in %g seconds\n", grtimer_longcount_difftime(rtu, t1, t0));
+	
 	/* check transfer program */
 	rdcu_verify_data_transfers();
 
@@ -703,6 +729,7 @@ static void rdcu_demo(void)
 	rdcu_show_rmap_errors();
 
 
+	while(1); 
 	/* now do some compression work */
 	rdcu_compression_demo();
 }
@@ -717,6 +744,12 @@ int main(void)
 	 * detection, so we'll initialise it here
 	 */
 	irq_dispatch_enable();
+
+        grtimer_longcount_start(rtu, GRTIMER_RELOAD,
+				GRTIMER_TICKS_PER_SEC, GRTIMER_MAX);
+
+
+
 
 	/* local SpW port configuration */
 	spw_alloc(&spw_cfg);

@@ -14,7 +14,10 @@ SOURCES         := $(wildcard *.c)\
 		   $(SOURCEDIR)/rdcu_cmd.c \
 		   $(SOURCEDIR)/rdcu_rmap.c \
 		   $(SOURCEDIR)/gr718b_rmap.c \
+		   $(SOURCEDIR)/leon3_grtimer.c \
+		   $(SOURCEDIR)/leon3_grtimer_longcount.c \
 		   $(SOURCEDIR)/irq_dispatch.c
+
 OBJECTS         := $(patsubst %.c, $(BUILDDIR)/%.o, $(subst $(SOURCEDIR)/,, $(SOURCES)))
 TARGET          := demo_plato_rdcu
 
