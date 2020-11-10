@@ -183,6 +183,8 @@ struct rmap_pkt {
 	uint32_t	addr;		/* (first) data address */
 	uint8_t		*data;
 	uint32_t	data_len;	/* lenght of data in bytes */
+	uint8_t		hdr_crc;
+	uint8_t		data_crc;
 };
 
 

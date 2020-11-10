@@ -560,6 +560,8 @@ struct rmap_pkt *rmap_pkt_from_buffer(uint8_t *buf)
 			         (uint32_t) buf[RMAP_DATALEN_BYTE2 + n];
 	}
 
+	pkt->hdr_crc  = buf[RMAP_HEADER_CRC];
+
 	if (pkt->data_len) {
 		pkt->data = (uint8_t *) malloc(pkt->data_len);
 		if (!pkt->data)
@@ -567,6 +569,9 @@ struct rmap_pkt *rmap_pkt_from_buffer(uint8_t *buf)
 
 		for (i = 0; i < pkt->data_len; i++)
 			pkt->data[i] = buf[RMAP_DATA_START + n + i];
+
+		/* final byte is data crc */
+		pkt->data_crc = buf[RMAP_DATA_START + n + i];
 	}
 
 
@@ -657,7 +662,11 @@ static void rmap_process_read_reply(uint8_t *pkt)
 	len |= ((uint32_t) pkt[RMAP_DATALEN_BYTE1]) <<  8;
 	len |= ((uint32_t) pkt[RMAP_DATALEN_BYTE2]) <<  0;
 
+#if (__sparc__)
+	printf("\tData length is %lu bytes:\n\t", len);
+#else
 	printf("\tData length is %u bytes:\n\t", len);
+#endif
 
 
 	for (i = 0; i < len; i++)

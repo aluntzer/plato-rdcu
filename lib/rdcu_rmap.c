@@ -281,19 +281,48 @@ static int rdcu_process_rx(void)
 			continue;
 		}
 
-		if (rp->data_len) {
-			memcpy(local_addr, rp->data, rp->data_len);
-#if __LITTLE_ENDIAN
-			if (rp->data_len & 0x3)
-				printf("warning: length of response packet"
-				       "received is not a multiple of 4 bytes\n");
-			{
-				uint32_t i;
 
-				for (i = 0; i < rp->data_len/4; i++)
-					be32_to_cpus(&local_addr[i]);
+		if (rp->data_len & 0x3) {
+			printf("Error: response packet data size is not a "
+			       "multiple of 4, transaction dropped\n");
+
+			trans_log_release_slot(rp->tr_id);
+			rmap_erase_packet(rp);
+			return -1;
+		}
+
+
+		if (rp->data_len) {
+
+			uint8_t crc8;
+
+			/* convert endianess if needed */
+#if (__BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__)
+			{
+				unsigned int i;
+				uint32_t *p = (uint32_t *) rp->data;
+
+				for (i = 0; i < (rp->data_len / 4); i++)
+					be32_to_cpus(&p[i]);
 			}
-#endif /* __LITTLE_ENDIAN */
+#endif /* __BYTE_ORDER__ */
+
+
+			crc8 = rmap_crc8(rp->data, rp->data_len);
+
+			if (crc8 != rp->data_crc) {
+
+				printf("Error: data CRC8 mismatch, transaction "
+				       "dropped\n");
+
+				trans_log_release_slot(rp->tr_id);
+				rmap_erase_packet(rp);
+				return -1;
+			}
+
+			memcpy(local_addr, rp->data, rp->data_len);
+
+
 		}
 
 
@@ -405,6 +434,9 @@ int rdcu_gen_cmd(uint16_t trans_id, uint8_t *cmd,
  * @param addr the local address of the corresponding remote address
  * @param data_len the length of the data payload (0 for read commands)
  *
+ * @note data_len must be a multiple of 4
+ * @note all data is treated (and byte swapped) as 32 bit words
+ *
  * @return 0 on success, otherwise error
  */
 
@@ -416,7 +448,10 @@ int rdcu_sync(int (*fn)(uint16_t trans_id, uint8_t *cmd),
 	int slot;
 
 	uint8_t *rmap_cmd;
-	uint8_t *data = addr;
+
+
+	if (data_len & 0x3)
+		return -1;
 
 	slot = trans_log_grab_slot(addr);
 	if (slot < 0)
@@ -440,26 +475,20 @@ int rdcu_sync(int (*fn)(uint16_t trans_id, uint8_t *cmd),
 		return -1;
 	}
 
-#if __LITTLE_ENDIAN
-	if (data_len & 0x3)
-		printf("warning: length of send packet is not a multiple of "
-		       "4 bytes\n");
-
-	if (data_len) {
+	/* convert endianess if needed */
+#if (__BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__)
+	if (data_len)
+	{
 		int i;
+		uint32_t *p = (uint32_t *) addr;
 
-		data = (uint8_t *) malloc(data_len);
-		for (i = 0; i < data_len/4; i++)
-			((uint32_t *)data)[i] =
-				cpu_to_be32(((uint32_t *)addr)[i]);
+		for (i = 0; i < (data_len / 4); i++)
+			cpu_to_be32s(&p[i]);
 	}
-#endif /* __LITTLE_ENDIAN */
+#endif /* __BYTE_ORDER__ */
 
-	n = rdcu_submit_tx(rmap_cmd, n, data, data_len);
+	n = rdcu_submit_tx(rmap_cmd, n, addr, data_len);
 	free(rmap_cmd);
-#if __LITTLE_ENDIAN
-	free(data);
-#endif /* __LITTLE_ENDIAN */
 
 	return n;
 }
@@ -547,6 +576,9 @@ int rdcu_sync_data(int (*fn)(uint16_t trans_id, uint8_t *cmd,
  * @param[in]  data a data buffer (may be NULL)
  * @param[in]  data_size the size of the data buffer (ignored if data is NULL)
  *
+ * @note data_size must be a multiple of 4
+ * @note this function will convert all data to big endian as 32 bit words
+ *
  * @returns the size of the blob or 0 on error
  */
 
@@ -560,6 +592,8 @@ int rdcu_package(uint8_t *blob,
 	struct rmap_instruction *ri;
 
 
+	if (data_size & 0x3)	/* must be multiple of 4 */
+		return -1;
 
 	if (!cmd_size) {
 		blob = NULL;
@@ -574,18 +608,19 @@ int rdcu_package(uint8_t *blob,
 
 	/* see if the type of command needs a data crc field at the end */
 	switch (ri->cmd) {
-		case RMAP_READ_MODIFY_WRITE_ADDR_INC:
-		case RMAP_WRITE_ADDR_SINGLE:
-		case RMAP_WRITE_ADDR_INC:
-		case RMAP_WRITE_ADDR_SINGLE_VERIFY:
-		case RMAP_WRITE_ADDR_INC_VERIFY:
-		case RMAP_WRITE_ADDR_SINGLE_VERIFY_REPLY:
-		case RMAP_WRITE_ADDR_INC_VERIFY_REPLY:
-			has_data_crc = 1;
-			n += 1;
-			break;
-		default:
-			break;
+	case RMAP_READ_MODIFY_WRITE_ADDR_INC:
+	case RMAP_WRITE_ADDR_SINGLE:
+	case RMAP_WRITE_ADDR_INC:
+	case RMAP_WRITE_ADDR_SINGLE_VERIFY:
+	case RMAP_WRITE_ADDR_INC_VERIFY:
+	case RMAP_WRITE_ADDR_SINGLE_VERIFY_REPLY:
+	case RMAP_WRITE_ADDR_INC_VERIFY_REPLY:
+	case RMAP_WRITE_ADDR_INC_REPLY:
+		has_data_crc = 1;
+		n += 1;
+		break;
+	default:
+		break;
 	}
 
 
@@ -603,7 +638,23 @@ int rdcu_package(uint8_t *blob,
 
 	if (data) {
 		memcpy(&blob[cmd_size + 1], data, data_size);
-		blob[cmd_size + 1 + data_size] = rmap_crc8(data, data_size);
+
+		/* convert endianess if needed */
+#if (__BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__)
+		{
+			int i;
+			uint32_t *p = (uint32_t *) &blob[cmd_size + 1];
+
+			/* data may be misaligned. keep your fingers crossed
+			 * (we only do this on PC for testing, no worries...)
+			 */
+
+			for (i = 0; i < (data_size / 4); i++)
+				cpu_to_be32s(&p[i]);
+		}
+#endif /* __BYTE_ORDER__ */
+
+		blob[cmd_size + 1 + data_size] = rmap_crc8(&blob[cmd_size + 1], data_size);
 	} else {
 		/* if no data is present, data crc is 0x0 */
 		if (has_data_crc)
