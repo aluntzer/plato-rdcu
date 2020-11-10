@@ -264,7 +264,7 @@ static int rdcu_process_rx(void)
 			rmap_parse_pkt(spw_pckt);
 
 		/* convert format */
-		rp = rmap_pkt_from_buffer(spw_pckt);
+		rp = rmap_pkt_from_buffer(spw_pckt, n);
 		free(spw_pckt);
 
 		if (!rp) {
