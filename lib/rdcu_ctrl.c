@@ -2241,8 +2241,7 @@ int rdcu_sync_sram_to_mirror(uint32_t addr, uint32_t size, uint32_t mtu)
 				     &rdcu->sram[addr + recv], mtu, 1);
 
 #if 1
-		while (rdcu_rmap_sync_status() > 3)
-			;
+		while (rdcu_rmap_sync_status() > 3);
 #endif
 
 		if (ret > 0)

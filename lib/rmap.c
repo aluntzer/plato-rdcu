@@ -490,7 +490,11 @@ int rmap_build_hdr(struct rmap_pkt *pkt, uint8_t *hdr)
  * @param buf the buffer, with the target path stripped away, i.e.
  *	  starting with <logical address>, <protocol id>, ...
  *
- * @note there is no size checking, be careful
+ * @warn there is no size checking, as the user must ensure that the
+ *	 buffer is valid and of sufficient size, so be careful!
+ *	 NOTE: if the buffer is undersized with regard to the supposed
+ *	 data content of the RMAP packet, out-of-bounds garbage may be
+ *	 copied to the returned packet.
  *
  * @returns an rmap packet, containing the decoded buffer including any data,
  *	    NULL on error

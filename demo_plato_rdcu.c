@@ -71,9 +71,50 @@ static struct spw_cfg {
 
 void event_report(enum error_class c, enum error_severity s, uint32_t err)
 {
-	(void) c;
-	(void) s;
-	(void) err;
+	printf("\nEVENT REPORT: class ");
+
+	switch (c) {
+	case GRSPW2:
+		printf("%s ", "GRSPW2");
+		break;
+	default:
+		printf("%d ", c);
+		break;
+	}
+
+	switch (s) {
+	case NORMAL:
+		printf("%s ", "NORMAL");
+		break;
+	case LOW:
+		printf("%s ", "LOW");
+		break;
+	case MEDIUM:
+		printf("%s ", "MEDIUM");
+		break;
+	case HIGH:
+		printf("%s ", "HIGH");
+		break;
+	default:
+		printf("%d ", s);
+		break;
+	}
+
+	switch (err) {
+	case E_SPW_PARITY_ERROR:
+		printf("%s\n", "PARITY_ERROR\n");
+		break;
+	case E_SPW_ESCAPE_ERROR:
+		printf("%s\n", "ESCAPE_ERROR\n");
+		break;
+	case E_SPW_CREDIT_ERROR:
+		printf("%s\n", "CREDIT_ERROR\n");
+		break;
+	default:
+		printf("%lu\n", err);
+		break;
+
+	}
 }
 
 
@@ -375,13 +416,16 @@ static void rdcu_show_rmap_errors(void)
 
 static void rdcu_verify_data_transfers(void)
 {
+#define MAX_ERR_CNT	10
+
 	int i;
 	int cnt = 0;
 	int size = (int) RDCU_SRAM_SIZE >> 2;
 	uint32_t *ram = (uint32_t *) 0x60000000;
 
 
-	printf("Performing SRAM transfer verification.");
+
+	printf("Performing SRAM transfer verification.\n");
 
 	printf("Clearing local SRAM mirror\n");
 	bzero(ram, RDCU_SRAM_SIZE);
@@ -417,13 +461,15 @@ static void rdcu_verify_data_transfers(void)
 
 	for (i = 0; i < size; i++) {
 		if (ram[i] != 0xdeadcafe) {
-			printf("invalid pattern at address %08X: %08lX\n",
-			       i << 2, ram[i]);
+			if (cnt < MAX_ERR_CNT)
+				printf("invalid pattern at address %08X: %08lX\n",
+				       i << 2, ram[i]);
 			cnt++;
 		}
 	}
 
-	printf("Check complete, %d error(s) encountered\n", cnt);
+	printf("Check complete, %d error(s) encountered (max %d listed)\n\n",
+	       cnt, MAX_ERR_CNT);
 
 
 
@@ -583,8 +629,8 @@ static void rdcu_compression_demo(void)
 		uint8_t *myresult = malloc(s);
 		rdcu_read_sram(myresult, COMPRSTART, s);
 
-		printf("\n\nHere's the compressed data:\n"
-		       "================================\n");
+		printf("\n\nHere's the compressed data (size %lu):\n"
+		       "================================\n", s);
 
 		for (i = 0; i < s; i++) {
 			printf("%02X ", myresult[i]);

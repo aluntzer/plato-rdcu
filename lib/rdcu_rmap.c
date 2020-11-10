@@ -312,8 +312,8 @@ static int rdcu_process_rx(void)
 
 			if (crc8 != rp->data_crc) {
 
-				printf("Error: data CRC8 mismatch, transaction "
-				       "dropped\n");
+				printf("Error: data CRC8 mismatch, data invalid or "
+				       "packet truncated. Transaction dropped\n");
 
 				trans_log_release_slot(rp->tr_id);
 				rmap_erase_packet(rp);
