@@ -124,7 +124,9 @@ int rdcu_sync_sram_edac_status(void);
 /* SRAM */
 int rdcu_sync_mirror_to_sram(uint32_t addr, uint32_t size, uint32_t mtu);
 int rdcu_sync_sram_to_mirror(uint32_t addr, uint32_t size, uint32_t mtu);
-
+int rdcu_sync_sram_mirror_parallel(uint32_t rx_addr, uint32_t rx_size, 
+                                   uint32_t tx_addr, uint32_t tx_size, 
+                                   uint32_t mtu); 
 
 
 /* RDCU registers */
