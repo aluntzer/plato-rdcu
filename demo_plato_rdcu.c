@@ -661,6 +661,89 @@ static void rdcu_compression_demo(void)
 }
 
 
+/**
+ * @brief demonstrate a parallel write read
+ */
+
+static void rdcu_parallel_read_write_demo(void)
+{
+	int i;
+	int cnt = 0;
+	int size = (int) RDCU_SRAM_SIZE >> 2;
+	uint32_t *ram = (uint32_t *) 0x60000000;
+
+	printf("Performing SRAM parallel transfer test.\n");
+
+	printf("Clearing local SRAM mirror\n");
+	bzero(ram, RDCU_SRAM_SIZE);
+
+	printf("Setting pattern in mirror\n");
+	for (i = size/2; i < size; i++)
+		ram[i] = 0xbaddcafe;
+
+
+	printf("write stuff to SRAM\n");
+
+	printf("\nMIRROR -> SRAM\n");
+	/* now sync the sram chunks to the RDCU */
+	if (rdcu_sync_mirror_to_sram(DATASTART, RDCU_SRAM_SIZE,  MAX_PAYLOAD_SIZE))
+		printf("BIG FAT TRANSFER ERROR!\n");
+	sync();
+	printf("\nDONE\n");
+
+	printf("Zeroing mirror...\n");
+	bzero(ram, RDCU_SRAM_SIZE);
+
+	printf("Setting another pattern in mirror\n");
+	for (i = 0; i < size/2; i++)
+		ram[i] = 0xc001cafe;
+
+	printf("\nMIRROR <-> SRAM\n");
+
+	if(rdcu_sync_sram_mirror_parallel(RDCU_SRAM_SIZE/2, RDCU_SRAM_SIZE/2,
+			DATASTART, RDCU_SRAM_SIZE/2, MAX_PAYLOAD_SIZE))
+		printf("BIG FAT TRANSFER ERROR!\n");
+	sync();
+	printf("\nDONE\n");
+
+	printf("Checking pattern in mirror part 1\n");
+
+	for (i = size/2; i < size; i++) {
+		if (ram[i] != 0xbaddcafe) {
+			if (cnt < MAX_ERR_CNT)
+				printf("invalid pattern at address %08X: %08lX\n",
+				       i << 2, ram[i]);
+			cnt++;
+		}
+	}
+
+	printf("1. Check complete, %d error(s) encountered (max %d listed)\n\n",
+	       cnt, MAX_ERR_CNT);
+
+	printf("Zeroing mirror...\n");
+	bzero(ram, RDCU_SRAM_SIZE);
+
+	printf("transer write pattern back\n");
+	printf("\nSRAM -> MIRROR\n");
+	/* now sync the sram chunks to the RDCU */
+	if (rdcu_sync_sram_to_mirror(DATASTART, RDCU_SRAM_SIZE/2,  MAX_PAYLOAD_SIZE))
+		printf("BIG FAT TRANSFER ERROR!\n");
+	sync();
+	printf("\nDONE\n");
+	
+	for (i = 0; i < size/2; i++) {
+		if (ram[i] != 0xc001cafe) {
+			if (cnt < MAX_ERR_CNT)
+				printf("invalid pattern at address %08X: %08lX\n",
+				       i << 2, ram[i]);
+			cnt++;
+		}
+	}
+
+	printf("2. Check complete, %d error(s) encountered (max %d listed)\n\n",
+	       cnt, MAX_ERR_CNT);
+}
+
 
 /**
  * @brief exchange some stuff
@@ -727,7 +810,12 @@ static void rdcu_demo(void)
 
 	/* have a look at the RDCU RMAP error counters again*/
 	rdcu_show_rmap_errors();
+	
+	/* test parallel read write */
+	rdcu_parallel_read_write_demo();
 
+	/* have a look at the RDCU RMAP error counters again*/
+	rdcu_show_rmap_errors();
 
 	while(1); 
 	/* now do some compression work */

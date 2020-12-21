@@ -2271,9 +2271,137 @@ int rdcu_sync_sram_to_mirror(uint32_t addr, uint32_t size, uint32_t mtu)
 }
 
 
+/**
+ * @brief sync a range of 32 bit words of the remote SRAM to the local mirror
+ *	and form the local mirror to the remote SRAM in parallel
+ *
+ * @param rx_addr the read address within the remote SRAM
+ * @param rx_size the number of bytes to sync to the mirror
+ * @param tx_addr the write address within the remote SRAM
+ * @param tx_size the number of bytes to sync to the SRAM
+ * @param mtu the maximum transport unit per RMAP packet; choose wisely
+ *
+ * @note due to restrictions, the number of bytes and mtu must be a multiple
+ *	 of 4; the address must be aligned to 32-bits as well
+ *
+ * @returns 0 on succes, otherwise error
+ */
+
+int rdcu_sync_sram_mirror_parallel(uint32_t rx_addr, uint32_t rx_size,
+				   uint32_t tx_addr, uint32_t tx_size,
+				   uint32_t mtu)
+{
+	int ret;
+
+	uint32_t recv = 0;
+	uint32_t sent = 0;
+	uint32_t rx_bytes;
+	uint32_t tx_bytes;
 
 
+	if (mtu & 0x3)
+		return -1;
 
+	if (rx_addr & 0x3)
+		return -1;
+
+	if (tx_addr & 0x3)
+		return -1;
+
+	if (rx_size & 0x3)
+		return -1;
+
+	if (tx_size & 0x3)
+		return -1;
+
+	if (rx_addr > RDCU_SRAM_END)
+		return -1;
+
+	if (tx_addr > RDCU_SRAM_END)
+		return -1;
+
+	if (rx_size > RDCU_SRAM_SIZE)
+		return -1;
+
+	if (tx_size > RDCU_SRAM_SIZE)
+		return -1;
+
+	if ((rx_addr + rx_size) > (RDCU_SRAM_END + 1))
+		return -1;
+
+	if ((tx_addr + tx_size) > (RDCU_SRAM_END + 1))
+		return -1;
+
+	/* check buffer overlap */
+	if (rx_addr < tx_addr+tx_size && rx_addr+rx_size > tx_addr)
+		return -1;
+
+
+	rx_bytes = rx_size;
+	tx_bytes = tx_size;
+
+	while (rx_bytes || tx_bytes) {
+		if (rx_bytes) {
+			if (rx_bytes >= mtu) {
+				ret = rdcu_sync_data(rdcu_read_cmd_data,
+						     rx_addr + recv,
+						     &rdcu->sram[rx_addr + recv],
+						     mtu, 1);
+#if 1
+				while (rdcu_rmap_sync_status() > 3)
+					;
+#endif
+
+				if (ret < 0)
+					return -1;
+
+				if (ret == 0) {
+					recv     += mtu;
+					rx_bytes -= mtu;
+				}
+			} else {
+				ret = rdcu_sync_data(rdcu_read_cmd_data,
+						     rx_addr + recv,
+						     &rdcu->sram[rx_addr + recv],
+						     rx_bytes, 1);
+				if (ret < 0)
+					return -1;
+
+				if (ret == 0)
+					rx_bytes = 0;
+			}
+		}
+
+		if (tx_bytes) {
+			if (tx_bytes >= mtu) {
+				ret = rdcu_sync_data(rdcu_write_cmd_data,
+						     tx_addr + sent,
+						     &rdcu->sram[tx_addr + sent],
+						     mtu, 0);
+
+				if (ret < 0)
+					return -1;
+
+				if (ret == 0) {
+					sent     += mtu;
+					tx_bytes -= mtu;
+				}
+			} else {
+				ret = rdcu_sync_data(rdcu_write_cmd_data,
+						     tx_addr + sent,
+						     &rdcu->sram[tx_addr + sent],
+						     tx_bytes, 0);
+
+				if (ret < 0)
+					return -1;
+
+				if (ret == 0)
+					tx_bytes = 0;
+			}
+		}
+	}
+	return 0;
+}
 
 
 
