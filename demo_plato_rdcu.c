@@ -305,7 +305,7 @@ static void gr718b_cfg_router(void)
 	       "\n========================================================\n"
 	       "\n");
 
-	printf("Enabling routing table address control for RDCU and ICU"
+	printf("Enabling routing table address control for RDCU and ICU "
 	       "logical addresses (0x%02X and 0x%02X).\n",
 	       RDCU_ADDR, ICU_ADDR);
 
@@ -313,7 +313,7 @@ static void gr718b_cfg_router(void)
 	gr718b_set_rtactrl_enabled(ICU_ADDR);
 
 
-	printf("Clearing header deletion bit in routing table access control"
+	printf("Clearing header deletion bit in routing table access control "
 	       "for RDCU and ICU logical addresses.\n");
 
 	gr718b_clear_addr_header_deletion(RDCU_ADDR);
