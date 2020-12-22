@@ -489,13 +489,7 @@ int rmap_build_hdr(struct rmap_pkt *pkt, uint8_t *hdr)
  *
  * @param buf the buffer, with the target path stripped away, i.e.
  *	  starting with <logical address>, <protocol id>, ...
- * @param len the data length (in bytes)
- *
- * @warn there is no size checking, as the user must ensure that the
- *	 buffer is valid and of sufficient size, so be careful!
- *	 NOTE: if the buffer is undersized with regard to the supposed
- *	 data content of the RMAP packet, out-of-bounds garbage may be
- *	 copied to the returned packet.
+ * @param len the data length of the buffer (in bytes)
  *
  * @returns an rmap packet, containing the decoded buffer including any data,
  *	    NULL on error
@@ -514,7 +508,7 @@ struct rmap_pkt *rmap_pkt_from_buffer(uint8_t *buf, uint32_t len)
 		goto error;
 
 	if (len < RMAP_HDR_MIN_SIZE_WRITE_REP) {
-		printf("SpW packet is smaller than the smallest RMAP packet\n");
+		printf("buffer len is smaller than the smallest RMAP packet\n");
 		goto error;
 	}
 
@@ -536,11 +530,11 @@ struct rmap_pkt *rmap_pkt_from_buffer(uint8_t *buf, uint32_t len)
 	pkt->key         = buf[RMAP_CMD_DESTKEY];
 
 	min_hdr_size = rmap_get_min_hdr_size(pkt);
-	if (min_hdr_size == -1)
+	if (min_hdr_size < 0)
 		goto error;
 
 	if (len < (uint32_t)min_hdr_size) {
-		printf("SpW packet is smaller than the contained RMAP packet\n");
+		printf("buffer len is smaller than the contained RMAP packet\n");
 		goto error;
 	}
 
@@ -548,13 +542,14 @@ struct rmap_pkt *rmap_pkt_from_buffer(uint8_t *buf, uint32_t len)
 	if (pkt->ri.cmd_resp) {
 		pkt->rpath_len = pkt->ri.reply_addr_len << 2;
 		if (len < (uint32_t)min_hdr_size + pkt->rpath_len) {
-			printf("SpW packet is smaller than the contained RMAP packet\n");
+			printf("buffer is smaller than the contained RMAP packet\n");
 			goto error;
 		}
 
 		pkt->rpath = (uint8_t *) malloc(pkt->rpath_len);
 		if (!pkt->rpath)
 			goto error;
+
 		for (i = 0; i < pkt->rpath_len; i++)
 			pkt->rpath[i] = buf[RMAP_REPLY_ADDR_START + i];
 
@@ -586,12 +581,12 @@ struct rmap_pkt *rmap_pkt_from_buffer(uint8_t *buf, uint32_t len)
 
 	if (pkt->data_len) {
 		if (len < RMAP_DATA_START + n + pkt->data_len + 1) {  /* +1 for data CRC */
-			printf("SpW packet is smaller than the contained RMAP packet; Spw: %lu bytes vs RMAP: %lu bytes needed\n",
+			printf("buffer len is smaller than the contained RMAP packet; buf len: %lu bytes vs RMAP: %lu bytes needed\n",
 				len , RMAP_DATA_START + n + pkt->data_len);
 			goto error;
 		}
 		if (len > RMAP_DATA_START + n + pkt->data_len + 1)  /* +1 for data CRC */
-			printf("warning: the SpW packet is larger than the included RMAP packet\n");
+			printf("warning: the buffer is larger than the included RMAP packet\n");
 		
 		pkt->data = (uint8_t *) malloc(pkt->data_len);
 		if (!pkt->data)
