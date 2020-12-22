@@ -497,27 +497,25 @@ static void rdcu_verify_data_transfers(void)
 static void rdcu_compression_demo(void)
 {
 	int cnt;
-	
-
 
 	/* first, set compression paramters in local mirror registers */
-	printf("Configuring compression mode 1, weighting 8\n");
-	rdcu_set_compression_mode(1);
+	printf("Configuring compression mode 3, weighting 8\n");
+	rdcu_set_compression_mode(3);
 	rdcu_set_weighting_param(8);
 
-	printf("Configuring spillover threshold 100, golomb param 8\n");
-	rdcu_set_spillover_threshold(100);
-	rdcu_set_golomb_param(8);
+	printf("Configuring spillover threshold 48, golomb param 4\n");
+	rdcu_set_spillover_threshold(48);
+	rdcu_set_golomb_param(4);
 
-	printf("Configuring adaptive 1 spillover threshold 0x41, "
-	       "golomb param 0x2\n");
-	rdcu_set_adaptive_1_spillover_threshold(0x41);
-	rdcu_set_adaptive_1_golomb_param(0x2);
+	printf("Configuring adaptive 1 spillover threshold 35, "
+	       "golomb param 3\n");
+	rdcu_set_adaptive_1_spillover_threshold(35);
+	rdcu_set_adaptive_1_golomb_param(3);
 
-	printf("Configuring adaptive 2 spillover threshold 0x43, "
-	       "golomb param 0x4\n");
-	rdcu_set_adaptive_2_spillover_threshold(0x43);
-	rdcu_set_adaptive_2_golomb_param(0x4);
+	printf("Configuring adaptive 2 spillover threshold 60, "
+	       "golomb param 5\n");
+	rdcu_set_adaptive_2_spillover_threshold(60);
+	rdcu_set_adaptive_2_golomb_param(5);
 
 	printf("Configuring data start address 0x%08lX\n", DATASTART);
 	rdcu_set_data_start_addr(DATASTART);
@@ -728,8 +726,6 @@ static void rdcu_demo(void)
 	/* have a look at the RDCU RMAP error counters again*/
 	rdcu_show_rmap_errors();
 
-
-	while(1); 
 	/* now do some compression work */
 	rdcu_compression_demo();
 }
