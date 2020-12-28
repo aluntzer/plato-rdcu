@@ -489,27 +489,28 @@ int rmap_build_hdr(struct rmap_pkt *pkt, uint8_t *hdr)
  *
  * @param buf the buffer, with the target path stripped away, i.e.
  *	  starting with <logical address>, <protocol id>, ...
- *
- * @warn there is no size checking, as the user must ensure that the
- *	 buffer is valid and of sufficient size, so be careful!
- *	 NOTE: if the buffer is undersized with regard to the supposed
- *	 data content of the RMAP packet, out-of-bounds garbage may be
- *	 copied to the returned packet.
+ * @param len the data length of the buffer (in bytes)
  *
  * @returns an rmap packet, containing the decoded buffer including any data,
  *	    NULL on error
  */
 
-struct rmap_pkt *rmap_pkt_from_buffer(uint8_t *buf)
+struct rmap_pkt *rmap_pkt_from_buffer(uint8_t *buf, uint32_t len)
 {
 	size_t n = 0;
 	size_t i;
+	int min_hdr_size;
 
 	struct rmap_pkt *pkt = NULL;
 
 
 	if (!buf)
 		goto error;
+
+	if (len < RMAP_HDR_MIN_SIZE_WRITE_REP) {
+		printf("buffer len is smaller than the smallest RMAP packet\n");
+		goto error;
+	}
 
 	if (buf[RMAP_PROTOCOL_ID] != RMAP_PROTOCOL_ID) {
 		printf("Not an RMAP packet, got %x but expected %x\n",
@@ -528,9 +529,22 @@ struct rmap_pkt *rmap_pkt_from_buffer(uint8_t *buf)
 	pkt->instruction = buf[RMAP_INSTRUCTION];
 	pkt->key         = buf[RMAP_CMD_DESTKEY];
 
+	min_hdr_size = rmap_get_min_hdr_size(pkt);
+	if (min_hdr_size < 0)
+		goto error;
+
+	if (len < (uint32_t)min_hdr_size) {
+		printf("buffer len is smaller than the contained RMAP packet\n");
+		goto error;
+	}
+
 
 	if (pkt->ri.cmd_resp) {
 		pkt->rpath_len = pkt->ri.reply_addr_len << 2;
+		if (len < (uint32_t)min_hdr_size + pkt->rpath_len) {
+			printf("buffer is smaller than the contained RMAP packet\n");
+			goto error;
+		}
 
 		pkt->rpath = (uint8_t *) malloc(pkt->rpath_len);
 		if (!pkt->rpath)
@@ -538,7 +552,6 @@ struct rmap_pkt *rmap_pkt_from_buffer(uint8_t *buf)
 
 		for (i = 0; i < pkt->rpath_len; i++)
 			pkt->rpath[i] = buf[RMAP_REPLY_ADDR_START + i];
-
 
 		n = pkt->rpath_len; /* rpath skip */
 	}
@@ -567,6 +580,14 @@ struct rmap_pkt *rmap_pkt_from_buffer(uint8_t *buf)
 	pkt->hdr_crc  = buf[RMAP_HEADER_CRC];
 
 	if (pkt->data_len) {
+		if (len < RMAP_DATA_START + n + pkt->data_len + 1) {  /* +1 for data CRC */
+			printf("buffer len is smaller than the contained RMAP packet; buf len: %lu bytes vs RMAP: %lu bytes needed\n",
+				len , RMAP_DATA_START + n + pkt->data_len);
+			goto error;
+		}
+		if (len > RMAP_DATA_START + n + pkt->data_len + 1)  /* +1 for data CRC */
+			printf("warning: the buffer is larger than the included RMAP packet\n");
+		
 		pkt->data = (uint8_t *) malloc(pkt->data_len);
 		if (!pkt->data)
 			goto error;
