@@ -48,12 +48,13 @@ int rdcu_set_destination_path(uint8_t *path, uint8_t len);
 int rdcu_set_return_path(uint8_t *path, uint8_t len);
 void rdcu_set_source_logical_address(uint8_t addr);
 void rdcu_set_destination_key(uint8_t key);
+size_t rdcu_get_data_mtu(void);
 
 int rdcu_rmap_sync_status(void);
 
 void rdcu_rmap_reset_log(void);
 
-int rdcu_rmap_init(int mtu,
+int rdcu_rmap_init(size_t mtu,
 		   int32_t (*tx)(const void *hdr,  uint32_t hdr_size,
 				 const uint8_t non_crc_bytes,
 				 const void *data, uint32_t data_size),
