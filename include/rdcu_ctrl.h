@@ -250,7 +250,7 @@ uint32_t rdcu_get_compr_data_adaptive_1_size(void);
 
 uint32_t rdcu_get_compr_data_adaptive_2_size(void);
 
-uint8_t rdcu_get_compr_error(void);
+uint16_t rdcu_get_compr_error(void);
 
 uint32_t rdcu_get_new_model_adr_used(void);
 

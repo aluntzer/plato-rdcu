@@ -1338,9 +1338,9 @@ uint32_t rdcu_get_compr_data_adaptive_2_size(void)
  * @returns the compression error code
  */
 
-uint8_t rdcu_get_compr_error(void)
+uint16_t rdcu_get_compr_error(void)
 {
-	return (uint8_t) (rdcu->compr_error & 0x3FFUL);
+	return (uint16_t) (rdcu->compr_error & 0x3FFUL);
 }
 
 
