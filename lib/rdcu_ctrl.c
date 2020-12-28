@@ -877,8 +877,10 @@ void rdcu_clear_data_compr_start(void)
 
 int rdcu_set_noise_bits_rounded(uint32_t rpar)
 {
+#ifndef SKIP_CMP_PAR_CHECK
 	if (rpar > 3)
 		return -1;
+#endif /*SKIP_CMP_PAR_CHECK*/ /*SKIP_CMP_PAR_CHECK*/
 
 	/* clear and set */
 	rdcu->compressor_param1 &= ~(0x3UL << 16);
@@ -897,8 +899,10 @@ int rdcu_set_noise_bits_rounded(uint32_t rpar)
 
 int rdcu_set_weighting_param(uint32_t mval)
 {
+#ifndef SKIP_CMP_PAR_CHECK
 	if (mval > 16)
 		return -1;
+#endif /*SKIP_CMP_PAR_CHECK*/
 
 	/* clear and set */
 	rdcu->compressor_param1 &= ~(0x1FUL << 8);
@@ -917,8 +921,10 @@ int rdcu_set_weighting_param(uint32_t mval)
 
 int rdcu_set_compression_mode(uint32_t cmode)
 {
+#ifndef SKIP_CMP_PAR_CHECK
 	if (cmode > 4)
 		return -1;
+#endif /*SKIP_CMP_PAR_CHECK*/
 
 	/* clear and set */
 	rdcu->compressor_param1 &= ~0xFFUL;
@@ -937,11 +943,13 @@ int rdcu_set_compression_mode(uint32_t cmode)
 
 int rdcu_set_spillover_threshold(uint32_t spill)
 {
+#ifndef SKIP_CMP_PAR_CHECK
 	if (!spill)
 		return -1;
 
 	if (spill > 16383)
 		return -1;
+#endif /*SKIP_CMP_PAR_CHECK*/
 
 	/* clear and set */
 	rdcu->compressor_param2 &= ~(0x3FFFUL << 8);
@@ -960,11 +968,13 @@ int rdcu_set_spillover_threshold(uint32_t spill)
 
 int rdcu_set_golomb_param(uint32_t gpar)
 {
+#ifndef SKIP_CMP_PAR_CHECK
 	if (!gpar)
 		return -1;
 
 	if (gpar > 63)
 		return -1;
+#endif /*SKIP_CMP_PAR_CHECK*/
 
 	/* clear and set */
 	rdcu->compressor_param2 &= ~0x3FUL;
@@ -983,11 +993,13 @@ int rdcu_set_golomb_param(uint32_t gpar)
 
 int rdcu_set_adaptive_1_spillover_threshold(uint32_t spill)
 {
+#ifndef SKIP_CMP_PAR_CHECK
 	if (!spill)
 		return -1;
 
 	if (spill > 16383)
 		return -1;
+#endif /*SKIP_CMP_PAR_CHECK*/
 
 	/* clear and set */
 	rdcu->adaptive_param1 &= ~(0x3FFFUL << 8);
@@ -1006,11 +1018,13 @@ int rdcu_set_adaptive_1_spillover_threshold(uint32_t spill)
 
 int rdcu_set_adaptive_1_golomb_param(uint32_t gpar)
 {
+#ifndef SKIP_CMP_PAR_CHECK
 	if (!gpar)
 		return -1;
 
 	if (gpar > 63)
 		return -1;
+#endif /*SKIP_CMP_PAR_CHECK*/
 
 	/* clear and set */
 	rdcu->adaptive_param1 &= ~0x3FUL;
@@ -1030,11 +1044,13 @@ int rdcu_set_adaptive_1_golomb_param(uint32_t gpar)
 
 int rdcu_set_adaptive_2_spillover_threshold(uint32_t spill)
 {
+#ifndef SKIP_CMP_PAR_CHECK
 	if (!spill)
 		return -1;
 
 	if (spill > 16383)
 		return -1;
+#endif /*SKIP_CMP_PAR_CHECK*/
 
 	/* clear and set */
 	rdcu->adaptive_param2 &= ~(0x3FFFUL << 8);
@@ -1053,11 +1069,13 @@ int rdcu_set_adaptive_2_spillover_threshold(uint32_t spill)
 
 int rdcu_set_adaptive_2_golomb_param(uint32_t gpar)
 {
+#ifndef SKIP_CMP_PAR_CHECK
 	if (!gpar)
 		return -1;
 
 	if (gpar > 63)
 		return -1;
+#endif /*SKIP_CMP_PAR_CHECK*/
 
 	/* clear and set */
 	rdcu->adaptive_param2 &= ~0x3FUL;
@@ -1076,8 +1094,10 @@ int rdcu_set_adaptive_2_golomb_param(uint32_t gpar)
 
 int rdcu_set_data_start_addr(uint32_t addr)
 {
+#ifndef SKIP_CMP_PAR_CHECK
 	if (addr > 0x00FFFFFFUL)
 		return -1;
+#endif /*SKIP_CMP_PAR_CHECK*/
 
 	/* clear and set */
 	rdcu->data_start_addr &= ~0x00FFFFFFUL;
@@ -1096,8 +1116,10 @@ int rdcu_set_data_start_addr(uint32_t addr)
 
 int rdcu_set_model_start_addr(uint32_t addr)
 {
+#ifndef SKIP_CMP_PAR_CHECK
 	if (addr > 0x00FFFFFFUL)
 		return -1;
+#endif /*SKIP_CMP_PAR_CHECK*/
 
 	/* clear and set */
 	rdcu->model_start_addr &= ~0x00FFFFFFUL;
@@ -1116,8 +1138,10 @@ int rdcu_set_model_start_addr(uint32_t addr)
 
 int rdcu_set_num_samples(uint32_t samples)
 {
+#ifndef SKIP_CMP_PAR_CHECK
 	if (samples > 0x00FFFFFFUL)
 		return -1;
+#endif /*SKIP_CMP_PAR_CHECK*/
 
 	/* clear and set */
 	rdcu->num_samples &= ~0x00FFFFFFUL;
@@ -1136,8 +1160,10 @@ int rdcu_set_num_samples(uint32_t samples)
 
 int rdcu_set_new_model_start_addr(uint32_t addr)
 {
+#ifndef SKIP_CMP_PAR_CHECK
 	if (addr > 0x00FFFFFFUL)
 		return -1;
+#endif /*SKIP_CMP_PAR_CHECK*/
 
 	/* clear and set */
 	rdcu->new_model_start_addr &= ~0x00FFFFFFUL;
@@ -1156,9 +1182,10 @@ int rdcu_set_new_model_start_addr(uint32_t addr)
 
 int rdcu_set_compr_data_buf_start_addr(uint32_t addr)
 {
+#ifndef SKIP_CMP_PAR_CHECK
 	if (addr > 0x00FFFFFFUL)
 		return -1;
-
+#endif /*SKIP_CMP_PAR_CHECK*/
 	/* clear and set */
 	rdcu->compr_data_buf_start_addr &= ~0x00FFFFFFUL;
 	rdcu->compr_data_buf_start_addr |= addr;
