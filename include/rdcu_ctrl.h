@@ -209,7 +209,7 @@ void rdcu_clear_data_compr_start(void);
 
 
 /* Data Compressor registers */
-int rdcu_set_noise_bits_rounded(uint32_t nbits);
+int rdcu_set_noise_bits_rounded(uint32_t rpar);
 int rdcu_set_weighting_param(uint32_t mval);
 int rdcu_set_compression_mode(uint32_t cmode);
 

@@ -188,7 +188,7 @@ uint8_t rdcu_get_rmap_target_cmd_key(void)
 /**
  * @brief get LVDS link enabled bit
  *
- * @param bit the link number (0-7)
+ * @param link the link number (0-7)
  *
  * @see RDCU-FRS-FN-0542
  *
@@ -560,7 +560,7 @@ void rdcu_set_rdcu_board_reset_keyword(uint8_t key)
 
 void rdcu_set_rdcu_bus_reset(void)
 {
-	rdcu->rdcu_reset |=  (0x1UL << 12);
+	rdcu->rdcu_reset |= (0x1UL << 12);
 }
 
 
@@ -587,7 +587,7 @@ void rdcu_clear_rdcu_bus_reset(void)
 
 void rdcu_set_rdcu_rmap_error_cntr_reset(void)
 {
-	rdcu->rdcu_reset |=  (0x1UL << 9);
+	rdcu->rdcu_reset |= (0x1UL << 9);
 }
 
 
@@ -614,7 +614,7 @@ void rdcu_clear_rdcu_rmap_error_cntr_reset(void)
 
 void rdcu_set_rdcu_spw_error_cntr_reset(void)
 {
-	rdcu->rdcu_reset |=  (0x1UL << 8);
+	rdcu->rdcu_reset |= (0x1UL << 8);
 }
 
 
@@ -641,7 +641,7 @@ void rdcu_clear_rdcu_spw_error_cntr_reset(void)
 
 void rdcu_set_rdcu_board_reset(void)
 {
-	rdcu->rdcu_reset |=  (0x1UL << 1);
+	rdcu->rdcu_reset |= (0x1UL << 1);
 }
 
 
@@ -669,7 +669,7 @@ int rdcu_set_spw_link_run_clkdiv(uint8_t div)
 		return -1;
 
 	/* clear and set */
-	rdcu->spw_link_ctrl &= ~(0x3f << 8);
+	rdcu->spw_link_ctrl &= ~(0x3FUL << 8);
 	rdcu->spw_link_ctrl |= ((uint32_t) div << 8);
 
 	return 0;
@@ -679,7 +679,7 @@ int rdcu_set_spw_link_run_clkdiv(uint8_t div)
 /**
  * @brief set LVDS link enabled
  *
- * @param bit the link number (0-7)
+ * @param link the link number (0-7)
  *
  * @see RDCU-FRS-FN-0682
  *
@@ -700,7 +700,7 @@ int rdcu_set_lvds_link_enabled(uint32_t link)
 /**
  * @brief set LVDS link disabled
  *
- * @param bit the link number (0-7)
+ * @param link the link number (0-7)
  *
  * @see RDCU-FRS-FN-0682
  *
@@ -2281,7 +2281,8 @@ int rdcu_sync_sram_to_mirror(uint32_t addr, uint32_t size, uint32_t mtu)
 				     &rdcu->sram[addr + recv], mtu, 1);
 
 #if 1
-		while (rdcu_rmap_sync_status() > 3);
+		while (rdcu_rmap_sync_status() > 3)
+			;
 #endif
 
 		if (ret > 0)
