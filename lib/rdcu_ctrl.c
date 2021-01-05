@@ -1350,9 +1350,9 @@ uint16_t rdcu_get_compr_error(void)
  *
  */
 
-uint32_t rdcu_get_new_model_adr_used(void)
+uint32_t rdcu_get_new_model_addr_used(void)
 {
-	return rdcu->new_model_adr_used & 0x00FFFFFFUL;
+	return rdcu->new_model_addr_used & 0x00FFFFFFUL;
 }
 
 
@@ -1980,6 +1980,19 @@ int rdcu_sync_num_samples(void)
 
 
 /**
+ * @brief sync the Model Start Address (write only)
+ *
+ * @returns 0 on success, otherwise error
+ */
+
+int rdcu_sync_new_model_start_addr(void)
+{
+	return rdcu_sync(rdcu_write_cmd_new_model_start_addr,
+			 &rdcu->new_model_start_addr, 4);
+}
+
+
+/**
  * @brief sync the Compressed Data Buffer Start Address (write only)
  *
  * @returns 0 on success, otherwise error
@@ -2100,10 +2113,10 @@ int rdcu_sync_compr_error(void)
  * @returns 0 on success, otherwise error
  */
 
-int rdcu_sync_new_model_adr_used(void)
+int rdcu_sync_new_model_addr_used(void)
 {
-	return rdcu_sync(rdcu_read_cmd_new_model_adr_used,
-			 &rdcu->new_model_adr_used, 0);
+	return rdcu_sync(rdcu_read_cmd_new_model_addr_used,
+			 &rdcu->new_model_addr_used, 0);
 }
 
 

@@ -659,7 +659,8 @@ int rdcu_write_cmd_num_samples(uint16_t trans_id, uint8_t *cmd)
 
 int rdcu_write_cmd_new_model_start_addr(uint16_t trans_id, uint8_t *cmd)
 {
-	return rdcu_write_cmd_register_internal(trans_id, cmd, NEW_MODEL_START_ADDR);
+	return rdcu_write_cmd_register_internal(trans_id, cmd,
+						UPDATED_MODEL_START_ADDR);
 }
 
 
@@ -821,7 +822,7 @@ int rdcu_read_cmd_compr_error(uint16_t trans_id, uint8_t *cmd)
 
 
 /**
- * @brief create a command to read the RDCU model info start address register
+ * @brief create a command to read the RDCU updated model start address register
  *
  * @param trans_id a transaction identifier
  *
@@ -830,15 +831,15 @@ int rdcu_read_cmd_compr_error(uint16_t trans_id, uint8_t *cmd)
  * @returns the size of the command data buffer or 0 on error
  */
 
-int rdcu_read_cmd_new_model_adr_used(uint16_t trans_id, uint8_t *cmd)
+int rdcu_read_cmd_new_model_addr_used(uint16_t trans_id, uint8_t *cmd)
 {
 	return rdcu_read_cmd_register_internal(trans_id, cmd,
-					       NEW_MODEL_START_ADDR);
+					       USED_UPDATED_MODEL_START_ADDR);
 }
 
 
 /**
- * @brief create a command to read the RDCU model info length gister
+ * @brief create a command to read the RDCU used number of samples register
  *
  * @param trans_id a transaction identifier
  *
