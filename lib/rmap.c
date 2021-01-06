@@ -342,7 +342,7 @@ int rmap_set_dest_path(struct rmap_pkt *pkt, const uint8_t *path, uint8_t len)
  * @param pkt	a struct rmap_pkt
  * @param cmd	the selected command
  *
- * @param returns -1 on error
+ * @returns -1 on error
  */
 
 int rmap_set_cmd(struct rmap_pkt *pkt, uint8_t cmd)
@@ -398,7 +398,7 @@ void rmap_set_data_addr(struct rmap_pkt *pkt, uint32_t addr)
  * @param pkt	a struct rmap_pkt
  * @param len	the data length (in bytes)
  *
- * @param returns -1 on error
+ * @returns -1 on error
  *
  * @note the length is at most 2^24-1 bytes
  * @note if the RMAP command is of 'SINGLE' type, only multiples of 4

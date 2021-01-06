@@ -523,6 +523,9 @@ static void rdcu_compression_demo(void)
 	printf("Configuring model start address 0x%08lX\n", MODELSTART);
 	rdcu_set_model_start_addr(MODELSTART);
 
+	printf("Configuring updated model start address 0x%08lX\n", UPDATED_MODELSTAT);
+	rdcu_set_new_model_start_addr(UPDATED_MODELSTAT);
+
 	printf("Configuring compressed start address 0x%08lX\n", COMPRSTART);
 	rdcu_set_compr_data_buf_start_addr(COMPRSTART);
 
@@ -539,6 +542,7 @@ static void rdcu_compression_demo(void)
 	rdcu_sync_adaptive_param2();
 	rdcu_sync_data_start_addr();
 	rdcu_sync_model_start_addr();
+	rdcu_sync_new_model_start_addr();
 	rdcu_sync_compr_data_buf_start_addr();
 	rdcu_sync_compr_data_buf_len();
 	rdcu_sync_num_samples();
@@ -556,7 +560,6 @@ static void rdcu_compression_demo(void)
 	/* sync */
 	rdcu_sync_mirror_to_sram(DATASTART,  NUMSAMPLES * 2, MAX_PAYLOAD_SIZE);
 	rdcu_sync_mirror_to_sram(MODELSTART, NUMSAMPLES * 2, MAX_PAYLOAD_SIZE);
-	
 
 
 	/* wait */
@@ -716,10 +719,10 @@ static void rdcu_demo(void)
 
 	/* have a look at the RDCU RMAP error counters */
 	rdcu_show_rmap_errors();
-	
+
 	grtimer_longcount_get_uptime(rtu, &t1);
 	printf("SYNC in %g seconds\n", grtimer_longcount_difftime(rtu, t1, t0));
-	
+
 	/* check transfer program */
 	rdcu_verify_data_transfers();
 

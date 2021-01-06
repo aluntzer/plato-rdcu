@@ -58,22 +58,22 @@
 #define DATA_START_ADDR			0x11000010UL
 #define MODEL_START_ADDR		0x11000014UL
 #define NUM_SAMPLES			0x11000018UL
-#define NEW_MODEL_START_ADDR		0x1100001CUL
+#define UPDATED_MODEL_START_ADDR	0x1100001CUL
 #define COMPR_DATA_BUF_START_ADDR	0x11000020UL
 #define COMPR_DATA_BUF_LEN		0x11000024UL
 /* spare: 0x11000028UL */
 /* spare: 0x1100002CUL */
 
 /* readable Data Compressor register addresses (RDCU-FRS-FN-0288) */
-#define USED_PARAM_1			0x11000030UL
-#define USED_PARAM_2			0x11000034UL
+#define USED_COMPR_PARAM_1		0x11000030UL
+#define USED_COMPR_PARAM_2		0x11000034UL
 #define COMPR_DATA_START_ADDR		0x11000038UL
 #define COMPR_DATA_SIZE			0x1100003CUL
 #define COMPR_DATA_ADAPTIVE_1_SIZE	0x11000040UL
 #define COMPR_DATA_ADAPTIVE_2_SIZE	0x11000044UL
 #define COMPR_ERROR			0x11000048UL
-#define MODEL_INFO_START_ADDR		0x1100004CUL
-#define MODEL_INFO_LEN			0x11000050UL
+#define USED_UPDATED_MODEL_START_ADDR	0x1100004CUL
+#define USED_NUMBER_OF_SAMPLES		0x11000050UL
 /* spare: 0x11000054UL */
 /* spare: 0x11000058UL */
 /* spare: 0x1100005CUL */
@@ -137,7 +137,6 @@ int rdcu_write_cmd_data_start_addr(uint16_t trans_id, uint8_t *cmd);
 int rdcu_write_cmd_model_start_addr(uint16_t trans_id, uint8_t *cmd);
 int rdcu_write_cmd_num_samples(uint16_t trans_id, uint8_t *cmd);
 int rdcu_write_cmd_new_model_start_addr(uint16_t trans_id, uint8_t *cmd);
-
 int rdcu_write_cmd_compr_data_buf_start_addr(uint16_t trans_id, uint8_t *cmd);
 int rdcu_write_cmd_compr_data_buf_len(uint16_t trans_id, uint8_t *cmd);
 
@@ -149,8 +148,8 @@ int rdcu_read_cmd_compr_data_size(uint16_t trans_id, uint8_t *cmd);
 int rdcu_read_cmd_compr_data_adaptive_1_size(uint16_t trans_id, uint8_t *cmd);
 int rdcu_read_cmd_compr_data_adaptive_2_size(uint16_t trans_id, uint8_t *cmd);
 int rdcu_read_cmd_compr_error(uint16_t trans_id, uint8_t *cmd);
-int rdcu_read_cmd_model_info_start_addr(uint16_t trans_id, uint8_t *cmd);
-int rdcu_read_cmd_model_info_len(uint16_t trans_id, uint8_t *cmd);
+int rdcu_read_cmd_new_model_addr_used(uint16_t trans_id, uint8_t *cmd);
+int rdcu_read_cmd_samples_used(uint16_t trans_id, uint8_t *cmd);
 
 
 /* SRAM EDAC read accessors */
