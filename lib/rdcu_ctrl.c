@@ -944,7 +944,7 @@ int rdcu_set_compression_mode(uint32_t cmode)
 int rdcu_set_spillover_threshold(uint32_t spill)
 {
 #ifndef SKIP_CMP_PAR_CHECK
-	if (!spill)
+	if (spill < 2)
 		return -1;
 
 	if (spill > 16383)
@@ -994,7 +994,7 @@ int rdcu_set_golomb_param(uint32_t gpar)
 int rdcu_set_adaptive_1_spillover_threshold(uint32_t spill)
 {
 #ifndef SKIP_CMP_PAR_CHECK
-	if (!spill)
+	if (spill < 2)
 		return -1;
 
 	if (spill > 16383)
