@@ -43,6 +43,9 @@
 #include <rdcu_ctrl.h>
 #include <rdcu_rmap.h>
 
+#include <cmp_support.h>
+#include <cmp_rdcu.h>
+
 #include <cfg.h>
 #include <demo.h>
 
@@ -151,7 +154,6 @@ static int32_t rmap_tx(const void *hdr,  uint32_t hdr_size,
 		       const void *data, uint32_t data_size)
 {
 	return grspw2_add_pkt(&spw_cfg.spw, hdr, hdr_size, non_crc_bytes, data, data_size);
-
 }
 
 
@@ -662,6 +664,129 @@ static void rdcu_compression_demo(void)
 }
 
 
+/**
+ * @brief demonstrate a compression using the cmp_rdcu library
+ */
+
+static void rdcu_compression_cmp_lib_demo(void)
+{
+	int cnt = 0;
+
+	/* declare configuration and information structure */
+	struct cmp_cfg example_cfg;
+	struct cmp_status example_status;
+	struct cmp_info example_info;
+
+	/* set up compressor configuration */
+	example_cfg = DEFAULT_CFG_MODEL;
+	example_cfg.input_buf = data;
+	example_cfg.model_buf = model;
+	example_cfg.samples = NUMSAMPLES;
+	example_cfg.buffer_length = COMPRDATALEN;
+
+	/* start HW compression */
+	if (rdcu_compress_data(&example_cfg))
+		printf("Error occur during rdcu_compress_data\n");
+
+	/* start polling the compression status */
+	/* alternative you can wait for an interrupt form the RDCU */
+	do {
+		/* check compression status */
+		if (rdcu_read_cmp_status(&example_status))
+			printf("Error occur during rdcu_read_cmp_statu");
+
+		cnt++;
+
+		if (cnt > 5) {	/* wait for 5 polls */
+
+			printf("Not waiting for compressor to become ready, will "
+			       "check status and abort\n");
+
+			/* interrupt the data compression */
+			rdcu_interrupt_compression();
+
+			/* now we may read the compression info register to get
+			 * the error code */
+			if (rdcu_read_cmp_info(&example_info))
+				printf("Error occur during rdcu_read_cmp_info");
+			printf("Compressor error code: 0x%02X\n",
+			       example_info.cmp_err);
+
+			return;
+		}
+	} while (!example_status.cmp_ready);
+
+	printf("Compression took %d polling cycles\n\n", cnt);
+
+
+	printf("Compressor status: ACT: %d, RDY: %d, DATA VALID: %d, INT: %d, INT_EN: %d\n",
+		example_status.cmp_active, example_status.cmp_ready,
+		example_status.data_valid, example_status.cmp_interrupted,
+		example_status.rdcu_interrupt_en);
+
+	/* now we may read the compressor registers */
+	if (rdcu_read_cmp_info(&example_info))
+		printf("Error occur during rdcu_read_cmp_info");
+
+	print_cmp_info(&example_info);
+
+
+	/* read compressed data to some buffer and print */
+	if (1) {
+		uint32_t i;
+		uint32_t s = size_of_bitstream(example_info.cmp_size);
+		uint8_t *myresult = malloc(s);
+
+		if (!myresult) {
+			printf("malloc failed!\n");
+			return;
+		}
+
+		if (rdcu_read_cmp_bitstream(&example_info, myresult) < 0)
+			printf("Error occurred by reading in the compressed data");
+
+		printf("\n\nHere's the compressed data (size %lu):\n"
+		       "================================\n", s);
+
+		for (i = 0; i < s; i++) {
+			printf("%02X ", myresult[i]);
+			if (i && !((i+1) % 40))
+				printf("\n");
+		}
+		printf("\n");
+
+		free(myresult);
+	}
+
+	if (1) {
+		uint32_t i;
+		uint32_t s = size_of_model(example_info.samples_used,
+					   example_info.cmp_mode_used);
+		uint8_t *mymodel = malloc(s);
+
+		if (!mymodel) {
+			printf("malloc failed!\n");
+			return;
+		}
+
+		if (rdcu_read_model(&example_info, mymodel) < 0)
+			printf("Error occurred by reading in the compressed data");
+
+		printf("\n\nHere's the updated model (size %lu):\n"
+		       "================================\n", s);
+
+		for (i = 0; i < s; i++) {
+			printf("%02X ", mymodel[i]);
+			if (i && !((i+1) % 40))
+				printf("\n");
+		}
+		printf("\n");
+
+		free(mymodel);
+	}
+
+	/* read updated model to some buffer and print */
+}
 
 /**
  * @brief exchange some stuff
@@ -731,6 +856,9 @@ static void rdcu_demo(void)
 
 	/* now do some compression work */
 	rdcu_compression_demo();
+
+	/* now do some compression work using the cmp_rdcu library */
+	rdcu_compression_cmp_lib_demo();
 }
 
 
@@ -770,7 +898,7 @@ int main(void)
 
 	/* initialise the libraries */
 	rdcu_ctrl_init();
-	rdcu_rmap_init(GRSPW2_DEFAULT_MTU, rmap_tx, rmap_rx);
+	rdcu_rmap_init(MAX_PAYLOAD_SIZE, rmap_tx, rmap_rx);
 
 	/* set initial link configuration */
 	rdcu_set_destination_logical_address(RDCU_ADDR_START);

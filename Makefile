@@ -3,7 +3,7 @@ SOURCEDIR	 = lib
 INCLUDEDIR       = include
 BUILDDIR         = ./
 PATH            +=
-CFLAGS          := -O2 -mv8 -W -Wall -Wextra -std=gnu89  -Werror -pedantic -pedantic-errors #-Wconversion #-Wno-unused 
+CFLAGS          := -O2 -mv8 -W -Wall -Wextra -std=gnu89  -Werror -pedantic -pedantic-errors #-Wconversion #-Wno-unused
 CPPFLAGS        := -I$(INCLUDEDIR) -Iinclude/leon -I. -DNO_IASW
 LDFLAGS         :=
 SOURCES         := $(wildcard *.c)\
@@ -13,6 +13,8 @@ SOURCES         := $(wildcard *.c)\
 		   $(SOURCEDIR)/rdcu_ctrl.c \
 		   $(SOURCEDIR)/rdcu_cmd.c \
 		   $(SOURCEDIR)/rdcu_rmap.c \
+		   $(SOURCEDIR)/cmp_support.c \
+		   $(SOURCEDIR)/cmp_rdcu.c \
 		   $(SOURCEDIR)/gr718b_rmap.c \
 		   $(SOURCEDIR)/leon3_grtimer.c \
 		   $(SOURCEDIR)/leon3_grtimer_longcount.c \
