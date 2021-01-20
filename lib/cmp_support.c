@@ -13,7 +13,7 @@
  * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
  * more details.
  *
- * @brief compressor control library
+ * @brief compressor support library
  * @see Data Compression User Manual PLATO-UVIE-PL-UM-0001
  */
 
@@ -91,12 +91,11 @@ const struct cmp_cfg DEFAULT_CFG_DIFF = {
  * @returns the result of floor(log2(x))
  */
 
-int ilog_2(unsigned int x)
+int ilog_2(uint32_t x)
 {
 	if (!x)
 		return -1;
 
-	/* assumption: int is 32 bits long */
 	return 31 - __builtin_clz(x);
 }
 
@@ -363,7 +362,7 @@ unsigned int round_back(unsigned int value, unsigned int round)
  * @note check before that model_value is not greater than MAX_MODEL_VALUE
 
  * @param data		data to process
- * @param model	        (current) model of the data to process
+ * @param model		(current) model of the data to process
  * @param model_value	model weighting parameter
  *
  * @returns (new) updated model
@@ -395,10 +394,8 @@ uint32_t get_max_spill(unsigned int golomb_par, unsigned int cmp_mode)
 	unsigned int max_n_sym_offset;
 	unsigned int max_cw_bits;
 
-
 	if (golomb_par == 0)
 		return 0;
-
 
 	if (rdcu_supported_mode_is_used(cmp_mode)) {
 		max_cw_bits = 16; /* the RDCU compressor can only generate code

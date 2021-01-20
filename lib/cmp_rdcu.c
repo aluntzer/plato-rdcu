@@ -26,7 +26,9 @@
 #include "../include/rdcu_rmap.h"
 
 /**
- * @brief save repeating 3 lines of code..
+ * @brief save repeating 3 lines of code...
+ *
+ * @note This function depends on the SpW implantation and must be adjusted to it.
  *
  * @note prints abort message if pending status is non-zero after 10 retries
  */
@@ -46,6 +48,7 @@ static void sync(void)
 	}
 	printf("synced\n");
 }
+
 
 /**
  * @brief check if a buffer is in inside the RDCU SRAM
@@ -92,8 +95,9 @@ static int buffers_overlap(uint32_t start_a, uint32_t end_a, uint32_t start_b,
 		return 0;
 }
 
+
 /**
- * @brief check if the compressor configuration is valid for a rdcu compression,
+ * @brief check if the compressor configuration is valid for a RDCU compression,
  * see the user manual for more information (PLATO-UVIE-PL-UM-0001).
  *
  * @param cfg	configuration contains all parameters required for compression
@@ -151,8 +155,7 @@ int rdcu_cmp_cfg_valid(const struct cmp_cfg *cfg)
 	}
 
 	if (cfg->spill < MIN_RDCU_SPILL) {
-		printf("Error: The selected spillover threshold value: %lu is "
-		       "too small. "
+		printf("Error: The selected spillover threshold value: %lu is too small. "
 		       "Smallest possible spillover value is: %lu.\n",
 		       cfg->spill, MIN_RDCU_SPILL);
 		cfg_invalid++;
@@ -211,8 +214,7 @@ int rdcu_cmp_cfg_valid(const struct cmp_cfg *cfg)
 	}
 
 	if (cfg->samples == 0) {
-		printf("Warning: The samples parameter is set to 0. No data will "
-		       "be compressed\n");
+		printf("Warning: The samples parameter is set to 0. No data will be compressed.\n");
 		cfg_warning++;
 	}
 
@@ -239,35 +241,29 @@ int rdcu_cmp_cfg_valid(const struct cmp_cfg *cfg)
 	}
 
 	if (cfg->rdcu_data_adr & 0x3) {
-		printf("Error: The RDCU data to compress start address is not "
-		       "4-Byte aligned.\n");
+		printf("Error: The RDCU data to compress start address is not 4-Byte aligned.\n");
 		cfg_invalid++;
 	}
 
 	if (cfg->rdcu_buffer_adr & 0x3) {
-		printf("Error: The RDCU compressed data start address is not "
-		       "4-Byte aligned.\n");
+		printf("Error: The RDCU compressed data start address is not 4-Byte aligned.\n");
 		cfg_invalid++;
 	}
 
 	if (!in_sram_range(cfg->rdcu_data_adr, cfg->samples * SAM2BYT)) {
-		printf("Error: The RDCU data to compress buffer is "
-		       "outside the RDCU SRAM address space.\n");
+		printf("Error: The RDCU data to compress buffer is outside the RDCU SRAM address space.\n");
 		cfg_invalid++;
 	}
 
-	if (!in_sram_range(cfg->rdcu_buffer_adr,
-			   cfg->buffer_length * SAM2BYT)) {
-		printf("Error: The RDCU compressed data buffer is "
-		       "outside the RDCU SRAM address space.\n");
+	if (!in_sram_range(cfg->rdcu_buffer_adr, cfg->buffer_length * SAM2BYT)) {
+		printf("Error: The RDCU compressed data buffer is outside the RDCU SRAM address space.\n");
 		cfg_invalid++;
 	}
 
 	if (buffers_overlap(cfg->rdcu_data_adr,
 			    cfg->rdcu_data_adr + cfg->samples * SAM2BYT,
 			    cfg->rdcu_buffer_adr,
-			    cfg->rdcu_buffer_adr +
-				    cfg->buffer_length * SAM2BYT)) {
+			    cfg->rdcu_buffer_adr + cfg->buffer_length * SAM2BYT)) {
 		printf("Error: The RDCU data to compress buffer and the RDCU "
 		       "compressed data buffer are overlapping.\n");
 		cfg_invalid++;
@@ -277,7 +273,7 @@ int rdcu_cmp_cfg_valid(const struct cmp_cfg *cfg)
 		if (cfg->model_buf == cfg->input_buf) {
 			printf("Error: The model buffer (model_buf) and the data "
 			       "to be compressed (input_buf) are equal.");
-			return -1;
+			cfg_invalid++;
 		}
 
 		if (!cfg->model_buf) {
@@ -288,15 +284,12 @@ int rdcu_cmp_cfg_valid(const struct cmp_cfg *cfg)
 		}
 
 		if (cfg->rdcu_model_adr & 0x3) {
-			printf("Error: The RDCU model start address is "
-			       "not 4-Byte aligned.\n");
+			printf("Error: The RDCU model start address is not 4-Byte aligned.\n");
 			cfg_invalid++;
 		}
 
-		if (!in_sram_range(cfg->rdcu_model_adr,
-				   cfg->samples * SAM2BYT)) {
-			printf("Error: The RDCU model buffer is "
-			       "outside the RDCU SRAM address space.\n");
+		if (!in_sram_range(cfg->rdcu_model_adr, cfg->samples * SAM2BYT)) {
+			printf("Error: The RDCU model buffer is outside the RDCU SRAM address space.\n");
 			cfg_invalid++;
 		}
 
@@ -305,8 +298,7 @@ int rdcu_cmp_cfg_valid(const struct cmp_cfg *cfg)
 			    cfg->rdcu_model_adr + cfg->samples * SAM2BYT,
 			    cfg->rdcu_data_adr,
 			    cfg->rdcu_data_adr + cfg->samples * SAM2BYT)) {
-			printf("Error: The model buffer and the data to "
-			       "compress buffer are overlapping.\n");
+			printf("Error: The model buffer and the data to compress buffer are overlapping.\n");
 			cfg_invalid++;
 		}
 
@@ -316,8 +308,7 @@ int rdcu_cmp_cfg_valid(const struct cmp_cfg *cfg)
 			cfg->rdcu_buffer_adr,
 			cfg->rdcu_buffer_adr + cfg->buffer_length * SAM2BYT)
 		    ){
-			printf("Error: The model buffer and the compressed "
-			       "data buffer are overlapping.\n");
+			printf("Error: The model buffer and the compressed data buffer are overlapping.\n");
 			cfg_invalid++;
 		}
 
@@ -389,25 +380,15 @@ int rdcu_cmp_cfg_valid(const struct cmp_cfg *cfg)
 
 
 /**
- * @brief compressing data with the help of the RDCU hardware compressor
+ * @brief set up RDCU compression register
  *
  * @param cfg  configuration contains all parameters required for compression
- *
- * @note when using the 1d-differencing mode or the raw mode (cmp_mode = 0,2,4),
- *      the model parameters (model_value, model_buf, rdcu_model_adr) are ignored
- * @note the icu_output_buf will not be used for the RDCU compression
- * @note the overlapping of the different rdcu buffers is not checked
- * @note the validity of the cfg structure is checked before the compression is
- *	 started
  *
  * @returns 0 on success, error otherwise
  */
 
-int rdcu_compress_data(const struct cmp_cfg *cfg)
+int rdcu_set_compression_register(const struct cmp_cfg *cfg)
 {
-	if (cfg == NULL)
-		return -1;
-
 	if (rdcu_cmp_cfg_valid(cfg) < 0)
 		return -1;
 
@@ -469,6 +450,60 @@ int rdcu_compress_data(const struct cmp_cfg *cfg)
 	if (rdcu_sync_compr_data_buf_len())
 		return -1;
 
+	return 0;
+}
+
+
+/**
+ * @brief start the RDCU data compressor
+ *
+ * TODO: implement a function to enable/disable rdcu interrupt
+ * @note rdcu interrupt signal is default enabled
+ * @returns 0 on success, error otherwise
+ */
+
+int rdcu_start_compression(void)
+{
+	/* enable the interrupt signal to the ICU */
+	rdcu_set_rdcu_interrupt();
+	/* start the compression */
+	rdcu_set_data_compr_start();
+	if (rdcu_sync_compr_ctrl())
+		return -1;
+	sync();
+
+	/* clear local bit immediately, this is a write-only register.
+	 * we would not want to restart compression by accidentially calling
+	 * rdcu_sync_compr_ctrl() again
+	 */
+	rdcu_clear_data_compr_start();
+
+	return 0;
+}
+
+/**
+ * @brief compressing data with the help of the RDCU hardware compressor
+ *
+ * @param cfg  configuration contains all parameters required for compression
+ *
+ * @note when using the 1d-differencing mode or the raw mode (cmp_mode = 0,2,4),
+ *      the model parameters (model_value, model_buf, rdcu_model_adr) are ignored
+ * @note the icu_output_buf will not be used for the RDCU compression
+ * @note the overlapping of the different rdcu buffers is not checked
+ * @note the validity of the cfg structure is checked before the compression is
+ *	 started
+ *
+ * @returns 0 on success, error otherwise
+ */
+
+int rdcu_compress_data(const struct cmp_cfg *cfg)
+{
+	if (!cfg)
+		return -1;
+
+	if (rdcu_set_compression_register(cfg))
+		return -1;
+
 	if (cfg->input_buf != NULL) {
 		/* round up needed size must be a multiple of 4 bytes */
 		uint32_t size = (cfg->samples * 2 + 3) & ~3U;
@@ -501,42 +536,8 @@ int rdcu_compress_data(const struct cmp_cfg *cfg)
 	sync();
 
 	/* start the compression */
-	rdcu_set_data_compr_start();
-	if (rdcu_sync_compr_ctrl())
+	if (rdcu_start_compression())
 		return -1;
-	sync();
-
-	/* clear local bit immediately, this is a write-only register.
-	 * we would not want to restart compression by accidentially calling
-	 * rdcu_sync_compr_ctrl() again
-	 */
-	rdcu_clear_data_compr_start();
-
-	return 0;
-}
-
-
-/**
- * @brief start the RDCU data compressor
- *
- * @returns 0 on success, error otherwise
- */
-
-int rdcu_start_compression(void)
-{
-	/* enable the interrupt signal to the ICU */
-	rdcu_set_rdcu_interrupt();
-	/* start the compression */
-	rdcu_set_data_compr_start();
-	if (rdcu_sync_compr_ctrl())
-		return -1;
-	sync();
-
-	/* clear local bit immediately, this is a write-only register.
-	 * we would not want to restart compression by accidentially calling
-	 * rdcu_sync_compr_ctrl() again
-	 */
-	rdcu_clear_data_compr_start();
 
 	return 0;
 }
@@ -693,7 +694,6 @@ int rdcu_read_model(const struct cmp_info *info, void *model_buf)
 	return rdcu_read_sram(model_buf, info->rdcu_new_model_adr_used, s);
 }
 
-/* TODO: implement a function to enable/disable rdcu interrupt */
 
 /**
  * @brief interrupt a data compression

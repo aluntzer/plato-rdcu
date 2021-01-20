@@ -154,7 +154,7 @@ struct cmp_info {
 };
 
 int is_a_pow_of_2(unsigned int v);
-int ilog_2(unsigned int x);
+int ilog_2(uint32_t x);
 
 int model_mode_is_used(unsigned int cmp_mode);
 int diff_mode_is_used(unsigned int cmp_mode);
@@ -172,7 +172,7 @@ unsigned int cal_up_model(unsigned int data, unsigned int model, unsigned int
 uint32_t get_max_spill(unsigned int golomb_par, unsigned int cmp_mode);
 
 size_t size_of_a_sample(unsigned int cmp_mode);
-size_t size_of_bitstream(unsigned int cmp_size);
+unsigned int size_of_bitstream(unsigned int cmp_size);
 unsigned int size_of_model(unsigned int samples, unsigned int cmp_mode);
 
 void print_cmp_cfg(const struct cmp_cfg *cfg);
