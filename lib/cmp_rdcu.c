@@ -25,6 +25,15 @@
 #include "../include/rdcu_ctrl.h"
 #include "../include/rdcu_rmap.h"
 
+
+#define RDCU_INTR_SIG_ENA 1 /* RDCU interrupt signal enabled */
+#define RDCU_INTR_SIG_DIS 0 /* RDCU interrupt signal disable */
+#define RDCU_INTR_SIG_DEFAULT RDCU_INTR_SIG_ENA /* default start value for RDCU
+						   interrupt signal */
+/* RDCU interrupt signal status */
+static int interrupt_signal_enabled = RDCU_INTR_SIG_DEFAULT;
+
+
 /**
  * @brief save repeating 3 lines of code...
  *
@@ -464,8 +473,14 @@ int rdcu_set_compression_register(const struct cmp_cfg *cfg)
 
 int rdcu_start_compression(void)
 {
-	/* enable the interrupt signal to the ICU */
-	rdcu_set_rdcu_interrupt();
+	if (interrupt_signal_enabled) {
+		/* enable the interrupt signal to the ICU */
+		rdcu_set_rdcu_interrupt();
+	} else {
+		/* disable the interrupt signal to the ICU */
+		rdcu_clear_rdcu_interrupt();
+	}
+
 	/* start the compression */
 	rdcu_set_data_compr_start();
 	if (rdcu_sync_compr_ctrl())
@@ -473,13 +488,14 @@ int rdcu_start_compression(void)
 	sync();
 
 	/* clear local bit immediately, this is a write-only register.
-	 * we would not want to restart compression by accidentially calling
+	 * we would not want to restart compression by accidentally calling
 	 * rdcu_sync_compr_ctrl() again
 	 */
 	rdcu_clear_data_compr_start();
 
 	return 0;
 }
+
 
 /**
  * @brief compressing data with the help of the RDCU hardware compressor
@@ -717,3 +733,24 @@ int rdcu_interrupt_compression(void)
 
 	return 0;
 }
+
+
+/**
+ * @brief enable the RDCU to signal a finished compression with an interrupt signal
+ */
+
+void rdcu_enable_interrput_signal(void)
+{
+	interrupt_signal_enabled = RDCU_INTR_SIG_ENA;
+}
+
+
+/**
+ * @brief deactivated the RDCU interrupt signal
+ */
+
+void rdcu_disable_interrput_signal(void)
+{
+	interrupt_signal_enabled = RDCU_INTR_SIG_DIS;
+}
+
