@@ -335,14 +335,14 @@ int multi_escape_mech_is_used(unsigned int cmp_mode)
  * @return rounded value
  */
 
-unsigned int round_down(unsigned int value, unsigned int round)
+unsigned int round_fwd(unsigned int value, unsigned int round)
 {
 	return value >> round;
 }
 
 
 /**
- * @brief reverse method for lossy rounding
+ * @brief inverse method for lossy rounding
  *
  * @param value value to round back
  * @param round round parameter
@@ -350,7 +350,7 @@ unsigned int round_down(unsigned int value, unsigned int round)
  * @return back rounded value
  */
 
-unsigned int round_back(unsigned int value, unsigned int round)
+unsigned int round_inv(unsigned int value, unsigned int round)
 {
 	return value << round;
 }
