@@ -34,4 +34,7 @@ int rdcu_read_model(const struct cmp_info *info, void *model_buf);
 
 int rdcu_interrupt_compression(void);
 
+void rdcu_enable_interrput_signal(void);
+void rdcu_disable_interrput_signal(void);
+
 #endif /* _CMP_RDCU_H_ */
