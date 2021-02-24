@@ -321,8 +321,6 @@ static int rdcu_process_rx(void)
 			}
 
 			memcpy(local_addr, rp->data, rp->data_len);
-
-
 		}
 
 
@@ -480,10 +478,13 @@ int rdcu_sync(int (*fn)(uint16_t trans_id, uint8_t *cmd),
 	if (data_len)
 	{
 		int i;
+		uint32_t *tmp_buf = alloca(data_len);
 		uint32_t *p = (uint32_t *) addr;
 
 		for (i = 0; i < (data_len / 4); i++)
-			cpu_to_be32s(&p[i]);
+			tmp_buf[i] = cpu_to_be32(p[i]);
+
+		addr = tmp_buf;
 	}
 #endif /* __BYTE_ORDER__ */
 
@@ -638,22 +639,6 @@ int rdcu_package(uint8_t *blob,
 
 	if (data) {
 		memcpy(&blob[cmd_size + 1], data, data_size);
-
-		/* convert endianess if needed */
-#if (__BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__)
-		{
-			int i;
-			uint32_t *p = (uint32_t *) &blob[cmd_size + 1];
-
-			/* data may be misaligned. keep your fingers crossed
-			 * (we only do this on PC for testing, no worries...)
-			 */
-
-			for (i = 0; i < (data_size / 4); i++)
-				cpu_to_be32s(&p[i]);
-		}
-#endif /* __BYTE_ORDER__ */
-
 		blob[cmd_size + 1 + data_size] = rmap_crc8(&blob[cmd_size + 1], data_size);
 	} else {
 		/* if no data is present, data crc is 0x0 */

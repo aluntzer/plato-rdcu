@@ -1588,7 +1588,7 @@ int rdcu_write_sram_16(uint16_t *buf, uint32_t addr, uint32_t size)
 	if (addr + size > RDCU_SRAM_END)
 		return -1;
 
-#if __BIG_ENDIAN
+#if !(__BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__)
 	return rdcu_write_sram(buf, addr, size);
 #else
 	{
@@ -1601,7 +1601,7 @@ int rdcu_write_sram_16(uint16_t *buf, uint32_t addr, uint32_t size)
 		}
 	}
 	return (int)size; /* lol */
-#endif /* __BIG_ENDIAN */
+#endif /* __BYTE_ORDER__ */
 }
 
 
@@ -1634,7 +1634,7 @@ int rdcu_write_sram_32(uint32_t *buf, uint32_t addr, uint32_t size)
 	if (addr + size > RDCU_SRAM_END)
 		return -1;
 
-#if __BIG_ENDIAN
+#if !(__BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__)
 	return rdcu_write_sram(buf, addr, size);
 #else
 	{
@@ -1647,7 +1647,7 @@ int rdcu_write_sram_32(uint32_t *buf, uint32_t addr, uint32_t size)
 		}
 	}
 	return (int)size; /* lol */
-#endif /* __BIG_ENDIAN */
+#endif /* __BYTE_ORDER__ */
 }
 
 
