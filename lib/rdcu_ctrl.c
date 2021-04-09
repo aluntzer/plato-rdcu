@@ -2169,7 +2169,7 @@ int rdcu_sync_sram_edac_status(void)
  * @note due to restrictions, the number of bytes and mtu must be a multiple
  *	 of 4; the address must be aligned to 32-bits as well
  *
- * @returns 0 on succes, otherwise error
+ * @returns 0 on success, otherwise error
  */
 
 int rdcu_sync_mirror_to_sram(uint32_t addr, uint32_t size, uint32_t mtu)
@@ -2243,7 +2243,7 @@ int rdcu_sync_mirror_to_sram(uint32_t addr, uint32_t size, uint32_t mtu)
  * @note due to restrictions, the number of bytes and mtu must be a multiple
  *	 of 4; the address must be aligned to 32-bits as well
  *
- * @returns 0 on succes, otherwise error
+ * @returns 0 on success, otherwise error
  */
 
 int rdcu_sync_sram_to_mirror(uint32_t addr, uint32_t size, uint32_t mtu)
@@ -2320,22 +2320,31 @@ int rdcu_sync_sram_to_mirror(uint32_t addr, uint32_t size, uint32_t mtu)
 
 /**
  * @brief initialise the rdcu control library
+ *
+ * @returns 0 on success, otherwise error
  */
 
-void rdcu_ctrl_init(void)
+int rdcu_ctrl_init(void)
 {
 	rdcu = (struct rdcu_mirror *) malloc(sizeof(struct rdcu_mirror));
-	if (!rdcu)
+	if (!rdcu) {
 		printf("Error allocating memory for the RDCU mirror\n");
+		return -1;
+	}
 
 	bzero(rdcu, sizeof(struct rdcu_mirror));
 
 #if (__sparc__)
 	rdcu->sram =  (uint8_t *) 0x60000000;
 #else /* assume PC */
-
 	rdcu->sram = (uint8_t *) malloc(RDCU_SRAM_SIZE);
+	if (!rdcu->sram) {
+		printf("Error allocating memory for the RDCU SRAM mirror\n");
+		return -1;
+	}
 #endif
 
 	bzero(rdcu->sram, RDCU_SRAM_SIZE);
+
+	return 0;
 }
