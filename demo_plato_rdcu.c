@@ -455,7 +455,7 @@ static void rdcu_verify_data_transfers(void)
 
 	printf("\nMIRROR -> SRAM\n");
 	/* now sync the sram chunks to the RDCU */
-	if (rdcu_sync_mirror_to_sram(DATASTART, RDCU_SRAM_SIZE,  MAX_PAYLOAD_SIZE))
+	if (rdcu_sync_mirror_to_sram(DATASTART, RDCU_SRAM_SIZE, rdcu_get_data_mtu()))
 		printf("BIG FAT TRANSFER ERROR!\n");
 	sync();
 	printf("\nDONE\n");
@@ -466,7 +466,7 @@ static void rdcu_verify_data_transfers(void)
 
 	printf("\nSRAM -> MIRROR\n");
 	/* now sync the sram chunks to the RDCU */
-	if (rdcu_sync_sram_to_mirror(DATASTART, RDCU_SRAM_SIZE,  MAX_PAYLOAD_SIZE))
+	if (rdcu_sync_sram_to_mirror(DATASTART, RDCU_SRAM_SIZE, rdcu_get_data_mtu()))
 		printf("BIG FAT TRANSFER ERROR!\n");
 	sync();
 	printf("\nDONE\n");
@@ -560,8 +560,8 @@ static void rdcu_compression_demo(void)
 	rdcu_write_sram(model, MODELSTART, NUMSAMPLES * 2);
 
 	/* sync */
-	rdcu_sync_mirror_to_sram(DATASTART,  NUMSAMPLES * 2, MAX_PAYLOAD_SIZE);
-	rdcu_sync_mirror_to_sram(MODELSTART, NUMSAMPLES * 2, MAX_PAYLOAD_SIZE);
+	rdcu_sync_mirror_to_sram(DATASTART,  NUMSAMPLES * 2, rdcu_get_data_mtu());
+	rdcu_sync_mirror_to_sram(MODELSTART, NUMSAMPLES * 2, rdcu_get_data_mtu());
 
 
 	/* wait */
@@ -635,7 +635,7 @@ static void rdcu_compression_demo(void)
 	/* issue sync back of compressed data */
 	if (rdcu_sync_sram_to_mirror(COMPRSTART,
 				     (((rdcu_get_compr_data_size() >> 3) + 3) & ~0x3UL),
-				     MAX_PAYLOAD_SIZE)) {
+				     rdcu_get_data_mtu())) {
 		printf("error in rdcu_sync_ram_to_mirror!\n");
 	}
 
