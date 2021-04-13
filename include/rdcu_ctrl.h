@@ -277,7 +277,7 @@ int rdcu_write_sram_16(uint16_t *buf, uint32_t addr, uint32_t size);
 int rdcu_write_sram_32(uint32_t *buf, uint32_t addr, uint32_t size);
 
 
-void rdcu_ctrl_init(void);
+int rdcu_ctrl_init(void);
 
 
 #endif /* _RDCU_CTRL_H_ */
