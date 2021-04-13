@@ -880,7 +880,7 @@ int rdcu_set_noise_bits_rounded(uint32_t rpar)
 #ifndef SKIP_CMP_PAR_CHECK
 	if (rpar > 3)
 		return -1;
-#endif /*SKIP_CMP_PAR_CHECK*/ /*SKIP_CMP_PAR_CHECK*/
+#endif /*SKIP_CMP_PAR_CHECK*/
 
 	/* clear and set */
 	rdcu->compressor_param1 &= ~(0x3UL << 16);
@@ -944,7 +944,7 @@ int rdcu_set_compression_mode(uint32_t cmode)
 int rdcu_set_spillover_threshold(uint32_t spill)
 {
 #ifndef SKIP_CMP_PAR_CHECK
-	if (!spill)
+	if (spill < 2)
 		return -1;
 
 	if (spill > 16383)
@@ -994,7 +994,7 @@ int rdcu_set_golomb_param(uint32_t gpar)
 int rdcu_set_adaptive_1_spillover_threshold(uint32_t spill)
 {
 #ifndef SKIP_CMP_PAR_CHECK
-	if (!spill)
+	if (spill < 2)
 		return -1;
 
 	if (spill > 16383)
@@ -1045,7 +1045,7 @@ int rdcu_set_adaptive_1_golomb_param(uint32_t gpar)
 int rdcu_set_adaptive_2_spillover_threshold(uint32_t spill)
 {
 #ifndef SKIP_CMP_PAR_CHECK
-	if (!spill)
+	if (spill < 2)
 		return -1;
 
 	if (spill > 16383)
@@ -1097,6 +1097,9 @@ int rdcu_set_data_start_addr(uint32_t addr)
 #ifndef SKIP_CMP_PAR_CHECK
 	if (addr > 0x00FFFFFFUL)
 		return -1;
+
+	if (addr & 0x3)
+		return -1;
 #endif /*SKIP_CMP_PAR_CHECK*/
 
 	/* clear and set */
@@ -1118,6 +1121,9 @@ int rdcu_set_model_start_addr(uint32_t addr)
 {
 #ifndef SKIP_CMP_PAR_CHECK
 	if (addr > 0x00FFFFFFUL)
+		return -1;
+
+	if (addr & 0x3)
 		return -1;
 #endif /*SKIP_CMP_PAR_CHECK*/
 
@@ -1163,6 +1169,9 @@ int rdcu_set_new_model_start_addr(uint32_t addr)
 #ifndef SKIP_CMP_PAR_CHECK
 	if (addr > 0x00FFFFFFUL)
 		return -1;
+
+	if (addr & 0x3)
+		return -1;
 #endif /*SKIP_CMP_PAR_CHECK*/
 
 	/* clear and set */
@@ -1184,6 +1193,9 @@ int rdcu_set_compr_data_buf_start_addr(uint32_t addr)
 {
 #ifndef SKIP_CMP_PAR_CHECK
 	if (addr > 0x00FFFFFFUL)
+		return -1;
+
+	if (addr & 0x3)
 		return -1;
 #endif /*SKIP_CMP_PAR_CHECK*/
 	/* clear and set */
