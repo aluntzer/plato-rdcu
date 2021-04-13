@@ -1100,6 +1100,7 @@ int rdcu_set_data_start_addr(uint32_t addr)
 
 	if (addr & 0x3)
 		return -1;
+#endif /*SKIP_CMP_PAR_CHECK*/
 
 	/* clear and set */
 	rdcu->data_start_addr &= ~0x00FFFFFFUL;
