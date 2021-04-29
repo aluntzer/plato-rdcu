@@ -2338,13 +2338,11 @@ int rdcu_sync_sram_to_mirror(uint32_t addr, uint32_t size, uint32_t mtu)
 
 int rdcu_ctrl_init(void)
 {
-	rdcu = (struct rdcu_mirror *) malloc(sizeof(struct rdcu_mirror));
+	rdcu = (struct rdcu_mirror *) calloc(1, sizeof(struct rdcu_mirror));
 	if (!rdcu) {
 		printf("Error allocating memory for the RDCU mirror\n");
 		return -1;
 	}
-
-	bzero(rdcu, sizeof(struct rdcu_mirror));
 
 #if (__sparc__)
 	rdcu->sram =  (uint8_t *) 0x60000000;
@@ -2356,7 +2354,7 @@ int rdcu_ctrl_init(void)
 	}
 #endif
 
-	bzero(rdcu->sram, RDCU_SRAM_SIZE);
+	memset(rdcu->sram, 0, RDCU_SRAM_SIZE);  /* clear sram buffer */
 
 	return 0;
 }

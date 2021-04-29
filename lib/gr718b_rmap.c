@@ -109,7 +109,7 @@ int gr718b_gen_cmd(uint16_t trans_id, uint8_t *cmd,
 		return n;
 	}
 
-	bzero(cmd, n);
+	memset(cmd, 0, n);  /* clear command buffer */
 
 	n = rmap_build_hdr(pkt, cmd);
 

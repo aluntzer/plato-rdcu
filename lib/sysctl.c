@@ -400,7 +400,7 @@ void sysobj_init(struct sysobj *sobj)
 	if (!sobj)
 		return;	/* invalid pointer */
 
-	bzero(sobj, sizeof(struct sysobj));
+	memset(sobj, 0, sizeof(struct sysobj));  /* clear sysobject */
 	sysobj_init_internal(sobj);
 }
 
@@ -645,13 +645,10 @@ struct sysset *sysset_create(const char *name,
 {
 	struct sysset *sysset;
 
-	sysset = malloc(sizeof(*sysset));
+	sysset = calloc(1, sizeof(*sysset));
 
 	if (!sysset)
 		return NULL;
-
-	bzero(sysset, sizeof(*sysset));
-
 
 	sysobj_set_name(&sysset->sobj, name);
 
