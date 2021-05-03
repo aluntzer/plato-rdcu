@@ -125,7 +125,7 @@ struct cmp_status {
  *      executed compression of the HW as well as the SW compressor.
  *
  * @note if SW compression is used the parameters rdcu_model_adr_used, rdcu_cmp_adr_used,
- *      ap1_cmp_size, ap2_cmp_size are not used and are therefore set to zero
+ *      ap1_cmp_size_byte, ap2_cmp_size_byte are not used and are therefore set to zero
  */
 
 struct cmp_info {
@@ -135,9 +135,9 @@ struct cmp_info {
 	uint32_t spill_used;          /* Spillover threshold used */
 	uint32_t golomb_par_used;     /* Golomb parameter used */
 	uint32_t samples_used;        /* Number of samples (16 bit value) to be stored */
-	uint32_t cmp_size;            /* Compressed data size; measured in bits */
-	uint32_t ap1_cmp_size;        /* Adaptive compressed data size 1; measured in bits */
-	uint32_t ap2_cmp_size;        /* Adaptive compressed data size 2; measured in bits */
+	uint32_t cmp_size_byte;       /* Compressed data size; measured in bytes */
+	uint32_t ap1_cmp_size_byte;  /* Adaptive compressed data size 1; measured in bytes */
+	uint32_t ap2_cmp_size_byte;  /* Adaptive compressed data size 2; measured in bytes */
 	uint32_t rdcu_new_model_adr_used; /* Updated model start  address used */
 	uint32_t rdcu_cmp_adr_used;   /* Compressed data start address */
 	uint16_t cmp_err;             /* Compressor errors
@@ -172,7 +172,8 @@ unsigned int cal_up_model(unsigned int data, unsigned int model, unsigned int
 uint32_t get_max_spill(unsigned int golomb_par, unsigned int cmp_mode);
 
 size_t size_of_a_sample(unsigned int cmp_mode);
-unsigned int size_of_bitstream(unsigned int cmp_size);
+unsigned int cmp_bit_to_4byte(unsigned int cmp_size_bit);
+unsigned int size_of_data(unsigned int samples, unsigned int cmp_mode);
 unsigned int size_of_model(unsigned int samples, unsigned int cmp_mode);
 
 void print_cmp_cfg(const struct cmp_cfg *cfg);

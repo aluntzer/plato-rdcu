@@ -1305,41 +1305,95 @@ uint32_t rdcu_get_compr_data_start_addr(void)
 
 
 /**
- * @brief get compressed data size
+ * @brief get the need bytes for the given bits
+ *
+ * @param cmp_size_bit compressed data size, measured in bits
+ *
+ * @returns the size in bytes to store the compressed data
+ * @note we round up the result to multiples of 4 bytes
+ */
+
+static uint32_t rdcu_bit_to_4byte(unsigned int cmp_size_bit)
+{
+	return (((cmp_size_bit + 7) / 8) + 3) & ~0x3UL;
+}
+
+
+/**
+ * @brief get compressed data size in bits
  * @see RDCU-FRS-FN-0922
  *
  * @returns the compressed data size in bits
  */
 
-uint32_t rdcu_get_compr_data_size(void)
+uint32_t rdcu_get_compr_data_size_bit(void)
 {
 	return rdcu->compr_data_size;
 }
 
 
 /**
- * @brief get compressed data adaptive 1 size
+ * @brief get compressed data size in bytes
+ * @see RDCU-FRS-FN-0922
+ *
+ * @returns the compressed data size in bytes
+ */
+
+uint32_t rdcu_get_compr_data_size_byte(void)
+{
+	return rdcu_bit_to_4byte(rdcu_get_compr_data_size_bit());
+}
+
+
+/**
+ * @brief get compressed data adaptive 1 size in bits
  * @see RDCU-FRS-FN-0932
  *
  * @returns the adaptive 1 compressed data size in bits
  */
 
-uint32_t rdcu_get_compr_data_adaptive_1_size(void)
+uint32_t rdcu_get_compr_data_adaptive_1_size_bit(void)
 {
 	return rdcu->compr_data_adaptive_1_size;
 }
 
 
 /**
- * @brief get compressed data adaptive 2 size
+ * @brief get compressed data adaptive 1 size in bytes
+ * @see RDCU-FRS-FN-0932
+ *
+ * @returns the adaptive 1 compressed data size in bytes
+ */
+
+uint32_t rdcu_get_compr_data_adaptive_1_size_byte(void)
+{
+	return rdcu_bit_to_4byte(rdcu_get_compr_data_adaptive_1_size_bit());
+}
+
+
+/**
+ * @brief get compressed data adaptive 2 size in bits
  * @see RDCU-FRS-FN-0942
  *
  * @returns the adaptive 2 compressed data size in bits
  */
 
-uint32_t rdcu_get_compr_data_adaptive_2_size(void)
+uint32_t rdcu_get_compr_data_adaptive_2_size_bit(void)
 {
 	return rdcu->compr_data_adaptive_2_size;
+}
+
+
+/**
+ * @brief get compressed data adaptive 2 size in bytes
+ * @see RDCU-FRS-FN-0942
+ *
+ * @returns the adaptive 2 compressed data size in bytes
+ */
+
+uint32_t rdcu_get_compr_data_adaptive_2_size_byte(void)
+{
+	return rdcu_bit_to_4byte(rdcu_get_compr_data_adaptive_2_size_bit());
 }
 
 
