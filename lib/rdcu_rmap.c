@@ -412,7 +412,7 @@ int rdcu_gen_cmd(uint16_t trans_id, uint8_t *cmd,
 		return n;
 	}
 
-	bzero(cmd, n);
+	memset(cmd, 0, n);  /* clear command buffer */
 
 	n = rmap_build_hdr(pkt, cmd);
 
@@ -781,7 +781,7 @@ int rdcu_rmap_sync_status(void)
 
 void rdcu_rmap_reset_log(void)
 {
-	bzero(trans_log.in_use, TRANS_LOG_SIZE);
+	memset(trans_log.in_use, 0, sizeof(trans_log.in_use));  /* clear in_use buffer */
 	trans_log.pending = 0;
 }
 

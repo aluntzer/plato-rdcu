@@ -192,16 +192,16 @@ static void spw_alloc(struct spw_cfg *cfg)
 	 * bare-metal demo, so we just discard the original pointer
 	 */
 
-	mem = (uint32_t) calloc(GRSPW2_DESCRIPTOR_TABLE_SIZE
-				+ GRSPW2_DESCRIPTOR_TABLE_MEM_BLOCK_ALIGN, 1);
+	mem = (uint32_t) calloc(1, GRSPW2_DESCRIPTOR_TABLE_SIZE
+				+ GRSPW2_DESCRIPTOR_TABLE_MEM_BLOCK_ALIGN);
 
 	cfg->rx_desc = (uint32_t *)
 		       ((mem + GRSPW2_DESCRIPTOR_TABLE_MEM_BLOCK_ALIGN)
 			& ~GRSPW2_DESCRIPTOR_TABLE_MEM_BLOCK_ALIGN);
 
 
-	mem = (uint32_t) calloc(GRSPW2_DESCRIPTOR_TABLE_SIZE
-				+ GRSPW2_DESCRIPTOR_TABLE_MEM_BLOCK_ALIGN, 1);
+	mem = (uint32_t) calloc(1, GRSPW2_DESCRIPTOR_TABLE_SIZE
+				+ GRSPW2_DESCRIPTOR_TABLE_MEM_BLOCK_ALIGN);
 
 	cfg->tx_desc = (uint32_t *)
 		       ((mem + GRSPW2_DESCRIPTOR_TABLE_MEM_BLOCK_ALIGN)
@@ -209,12 +209,12 @@ static void spw_alloc(struct spw_cfg *cfg)
 
 
 	/* malloc rx and tx data buffers: decriptors * packet size */
-	cfg->rx_data = (uint8_t *) calloc(GRSPW2_RX_DESCRIPTORS
-					  * GRSPW2_DEFAULT_MTU, 1);
-	cfg->tx_data = (uint8_t *) calloc(GRSPW2_TX_DESCRIPTORS
-					  * GRSPW2_DEFAULT_MTU, 1);
+	cfg->rx_data = (uint8_t *) calloc(1, GRSPW2_RX_DESCRIPTORS
+					  * GRSPW2_DEFAULT_MTU);
+	cfg->tx_data = (uint8_t *) calloc(1, GRSPW2_TX_DESCRIPTORS
+					  * GRSPW2_DEFAULT_MTU);
 
-	cfg->tx_hdr = (uint8_t *) calloc(GRSPW2_TX_DESCRIPTORS * HDR_SIZE, 1);
+	cfg->tx_hdr = (uint8_t *) calloc(1, GRSPW2_TX_DESCRIPTORS * HDR_SIZE);
 }
 
 
@@ -284,7 +284,7 @@ static int rdcu_gen_router_cmd_internal(uint16_t trans_id, uint8_t *cmd,
 		return n;
 	}
 
-	bzero(cmd, n);
+	memset(cmd, 0, n);  /* clear command buffer */
 
 	n = rmap_build_hdr(pkt, cmd);
 
@@ -443,7 +443,7 @@ static void rdcu_verify_data_transfers(void)
 	printf("Performing SRAM transfer verification.\n");
 
 	printf("Clearing local SRAM mirror\n");
-	bzero(ram, RDCU_SRAM_SIZE);
+	memset(ram, 0, RDCU_SRAM_SIZE);
 
 	printf("Setting pattern in mirror\n");
 	for (i = 0; i < size; i++)
@@ -461,7 +461,7 @@ static void rdcu_verify_data_transfers(void)
 	printf("\nDONE\n");
 
 	printf("Zeroing mirror...\n");
-	bzero(ram, RDCU_SRAM_SIZE);
+	memset(ram, 0, RDCU_SRAM_SIZE);
 
 
 	printf("\nSRAM -> MIRROR\n");

@@ -178,7 +178,7 @@ struct rmap_pkt *rmap_create_packet(void)
 	struct rmap_pkt *pkt;
 
 
-	pkt = (struct rmap_pkt *) calloc(sizeof(struct rmap_pkt), 1);
+	pkt = (struct rmap_pkt *) calloc(1, sizeof(struct rmap_pkt));
 	if (pkt)
 		pkt->proto_id = RMAP_PROTOCOL_ID;
 
@@ -587,7 +587,7 @@ struct rmap_pkt *rmap_pkt_from_buffer(uint8_t *buf, uint32_t len)
 		}
 		if (len > RMAP_DATA_START + n + pkt->data_len + 1)  /* +1 for data CRC */
 			printf("warning: the buffer is larger than the included RMAP packet\n");
-		
+
 		pkt->data = (uint8_t *) malloc(pkt->data_len);
 		if (!pkt->data)
 			goto error;
