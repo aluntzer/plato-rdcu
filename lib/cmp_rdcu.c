@@ -701,8 +701,12 @@ int rdcu_read_model(const struct cmp_info *info, void *model_buf)
 	/* calculate the need bytes for the model */
 	s = size_of_model(info->samples_used, info->cmp_mode_used);
 
-	if (model_buf == NULL)
-		return (int)s;
+	if (model_buf == NULL) {
+		if (s <= INT_MAX)
+			return (int)s;
+		else
+			return -1;
+	}
 
 	if (rdcu_sync_sram_to_mirror(info->rdcu_new_model_adr_used, (s+3) & ~3U,
 				     rdcu_get_data_mtu()))
