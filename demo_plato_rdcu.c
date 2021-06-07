@@ -1,5 +1,5 @@
 /**
- * @file   demo_spw_rmap.c
+ * @file   demo_plato_rdcu.c
  * @author Armin Luntzer (armin.luntzer@univie.ac.at),
  * @date   2018
  *
@@ -45,6 +45,7 @@
 
 #include <cmp_support.h>
 #include <cmp_rdcu.h>
+#include <cmp_entity.h>
 
 #include <cfg.h>
 #include <demo.h>
@@ -665,6 +666,17 @@ static void rdcu_compression_demo(void)
 
 
 /**
+ * @brief convert the time format to one used in the in the compression entity
+ * @warning this function is not save only for demo usage
+ */
+
+static int64_t grtimer_uptime_to_timestamp(struct grtimer_uptime time)
+{
+	return ((int64_t)time.coarse << 24) | (time.fine & 0xFFFFFF) ;
+}
+
+
+/**
  * @brief demonstrate a compression using the cmp_rdcu library
  */
 
@@ -677,23 +689,40 @@ static void rdcu_compression_cmp_lib_demo(void)
 	struct cmp_status example_status;
 	struct cmp_info example_info;
 
+	/* The creation of the timestamps is highly simplified and for
+	 * demonstration purposes only. */
+	struct grtimer_uptime start_time, end_time;
+
 	/* set up compressor configuration */
 	example_cfg = DEFAULT_CFG_MODEL;
 	example_cfg.input_buf = data;
 	example_cfg.model_buf = model;
+	example_cfg.rdcu_data_adr = DATASTART;
+	example_cfg.rdcu_model_adr = MODELSTART;
+	example_cfg.rdcu_new_model_adr = UPDATED_MODELSTAT;
+	example_cfg.rdcu_buffer_adr = COMPRSTART;
 	example_cfg.samples = NUMSAMPLES;
 	example_cfg.buffer_length = COMPRDATALEN;
 
+	printf("\n\nDemonstrate a compression using the cmp_rdcu library\n"
+	        "===================================================\n");
+
+	grtimer_longcount_get_uptime(rtu, &start_time);
+
 	/* start HW compression */
-	if (rdcu_compress_data(&example_cfg))
+	if (rdcu_compress_data(&example_cfg)) {
 		printf("Error occur during rdcu_compress_data\n");
+		return;
+	}
 
 	/* start polling the compression status */
 	/* alternative you can wait for an interrupt form the RDCU */
 	do {
 		/* check compression status */
-		if (rdcu_read_cmp_status(&example_status))
+		if (rdcu_read_cmp_status(&example_status)) {
 			printf("Error occur during rdcu_read_cmp_statu");
+			return;
+		}
 
 		cnt++;
 
@@ -707,14 +736,18 @@ static void rdcu_compression_cmp_lib_demo(void)
 
 			/* now we may read the compression info register to get
 			 * the error code */
-			if (rdcu_read_cmp_info(&example_info))
+			if (rdcu_read_cmp_info(&example_info)) {
 				printf("Error occur during rdcu_read_cmp_info");
+				return;
+			}
 			printf("Compressor error code: 0x%02X\n",
 			       example_info.cmp_err);
 
 			return;
 		}
 	} while (!example_status.cmp_ready);
+
+	grtimer_longcount_get_uptime(rtu, &end_time);
 
 	printf("Compression took %d polling cycles\n\n", cnt);
 
@@ -725,39 +758,97 @@ static void rdcu_compression_cmp_lib_demo(void)
 		example_status.rdcu_interrupt_en);
 
 	/* now we may read the compressor registers */
-	if (rdcu_read_cmp_info(&example_info))
+	if (rdcu_read_cmp_info(&example_info)) {
 		printf("Error occur during rdcu_read_cmp_info");
+		return;
+	}
 
+	printf("\n\nHere's the content of the compressor registers:\n"
+	       "===============================================\n");
 	print_cmp_info(&example_info);
+
+	/* check if data are valid or a compression error occurred */
+	if (example_info.cmp_err != 0 || example_status.data_valid == 0) {
+		printf("Compression error occurred! Compressor error code: 0x%02X\n",
+		       example_info.cmp_err);
+		return;
+	}
 
 
 	/* read compressed data to some buffer and print */
 	if (1) {
-		uint32_t i;
-		uint32_t s = example_info.cmp_size_byte;
-		uint8_t *myresult = malloc(s);
+		/* The model_id and counter and counter have to managed by the ASW
+		 * here we use arbitrary values for demonstration
+		 */
+		uint16_t model_id = 42;
+		uint8_t model_counter = 1;
 
-		if (!myresult) {
-			printf("malloc failed!\n");
+		struct cmp_entity *cmp_ent;
+		uint8_t *cmp_ent_data;
+		size_t cmp_ent_size;
+
+		/* get the size of the compression entity */
+		cmp_ent_size = cmp_ent_build(NULL, DATA_TYPE_IMAGETTE_ADAPTIVE,
+					     CMP_ASW_VERSION_ID,
+					      grtimer_uptime_to_timestamp(start_time),
+					      grtimer_uptime_to_timestamp(end_time),
+					      model_id, model_counter,
+					      &example_info, &example_cfg);
+		if(!cmp_ent_size) {
+			printf("Error occur during cmp_ent_build()\n");
 			return;
 		}
 
-		if (rdcu_read_cmp_bitstream(&example_info, myresult) < 0)
-			printf("Error occurred by reading in the compressed data");
+		/* get memory for the compression entity */
+		cmp_ent = malloc(cmp_ent_size);
+		if(!cmp_ent) {
+			printf("Error occur during malloc()\n");
+			return;
+		}
+
+		/* now let us build the compression entity */
+		cmp_ent_size = cmp_ent_build(cmp_ent, DATA_TYPE_IMAGETTE_ADAPTIVE,
+					     CMP_ASW_VERSION_ID,
+					     grtimer_uptime_to_timestamp(start_time),
+					     grtimer_uptime_to_timestamp(end_time),
+					     model_id, model_counter,
+					     &example_info, &example_cfg);
+		if(!cmp_ent_size) {
+			printf("Error occur during cmp_ent_build()\n");
+			return;
+		}
+
+		/* get the address to store the compressed data in the
+		 * compression entity */
+		cmp_ent_data = cmp_ent_get_data_buf(cmp_ent);
+		if (!cmp_ent_data) {
+			printf("Error occur during cmp_ent_get_data_buf()\n");
+			return;
+		}
+
+		/* now get the compressed data form RDCU and copy it into the
+		 * compression entity */
+		if (rdcu_read_cmp_bitstream(&example_info, cmp_ent_data) < 0)
+			printf("Error occurred by reading in the compressed data from the RDCU\n");
+
+		/* now have a look into the compression entity */
+		printf("\n\nHere's the compression entity header:\n"
+		       "=====================================\n");
+		cmp_ent_print_header(cmp_ent);
+		cmp_ent_parse(cmp_ent);
+
 
 		printf("\n\nHere's the compressed data (size %lu):\n"
-		       "================================\n", s);
+		       "======================================\n",
+		       example_info.cmp_size_byte);
 
-		for (i = 0; i < s; i++) {
-			printf("%02X ", myresult[i]);
-			if (i && !((i+1) % 40))
-				printf("\n");
-		}
+		cmp_ent_print_data(cmp_ent);
 		printf("\n");
 
-		free(myresult);
+		free(cmp_ent);
 	}
 
+	/* read updated model to some buffer and print */
 	if (1) {
 		uint32_t i;
 		uint32_t s = cmp_cal_size_of_model(example_info.samples_used,
@@ -773,7 +864,7 @@ static void rdcu_compression_cmp_lib_demo(void)
 			printf("Error occurred by reading in the compressed data");
 
 		printf("\n\nHere's the updated model (size %lu):\n"
-		       "================================\n", s);
+		       "====================================\n", s);
 
 		for (i = 0; i < s; i++) {
 			printf("%02X ", mymodel[i]);
@@ -785,8 +876,8 @@ static void rdcu_compression_cmp_lib_demo(void)
 		free(mymodel);
 	}
 
-	/* read updated model to some buffer and print */
 }
+
 
 /**
  * @brief exchange some stuff
@@ -857,7 +948,8 @@ static void rdcu_demo(void)
 	/* now do some compression work */
 	rdcu_compression_demo();
 
-	/* now do some compression work using the cmp_rdcu library */
+	/* now do some compression work using the cmp_rdcu library and put the
+	 * result in a compression entity*/
 	rdcu_compression_cmp_lib_demo();
 }
 
@@ -872,8 +964,8 @@ int main(void)
 	 */
 	irq_dispatch_enable();
 
-        grtimer_longcount_start(rtu, GRTIMER_RELOAD,
-				GRTIMER_TICKS_PER_SEC, GRTIMER_MAX);
+	grtimer_longcount_start(rtu, GRTIMER_RELOAD, GRTIMER_TICKS_PER_SEC,
+				GRTIMER_MAX);
 
 
 
