@@ -685,15 +685,19 @@ static void rdcu_compression_cmp_lib_demo(void)
 	example_cfg.buffer_length = COMPRDATALEN;
 
 	/* start HW compression */
-	if (rdcu_compress_data(&example_cfg))
+	if (rdcu_compress_data(&example_cfg)) {
 		printf("Error occur during rdcu_compress_data\n");
+		return;
+	}
 
 	/* start polling the compression status */
 	/* alternative you can wait for an interrupt form the RDCU */
 	do {
 		/* check compression status */
-		if (rdcu_read_cmp_status(&example_status))
+		if (rdcu_read_cmp_status(&example_status)) {
 			printf("Error occur during rdcu_read_cmp_statu");
+			return;
+		}
 
 		cnt++;
 
@@ -707,8 +711,10 @@ static void rdcu_compression_cmp_lib_demo(void)
 
 			/* now we may read the compression info register to get
 			 * the error code */
-			if (rdcu_read_cmp_info(&example_info))
+			if (rdcu_read_cmp_info(&example_info)) {
 				printf("Error occur during rdcu_read_cmp_info");
+				return;
+			}
 			printf("Compressor error code: 0x%02X\n",
 			       example_info.cmp_err);
 
@@ -725,10 +731,19 @@ static void rdcu_compression_cmp_lib_demo(void)
 		example_status.rdcu_interrupt_en);
 
 	/* now we may read the compressor registers */
-	if (rdcu_read_cmp_info(&example_info))
+	if (rdcu_read_cmp_info(&example_info)) {
 		printf("Error occur during rdcu_read_cmp_info");
+		return;
+	}
 
 	print_cmp_info(&example_info);
+
+	/* check if data are valid or a compression error occurred */
+	if (example_info.cmp_err != 0 || example_status.data_valid == 0) {
+		printf("Compression error occurred! Compressor error code: 0x%02X\n",
+		       example_info.cmp_err);
+		return;
+	}
 
 
 	/* read compressed data to some buffer and print */
@@ -758,6 +773,7 @@ static void rdcu_compression_cmp_lib_demo(void)
 		free(myresult);
 	}
 
+	/* read updated model to some buffer and print */
 	if (1) {
 		uint32_t i;
 		uint32_t s = size_of_model(example_info.samples_used,
@@ -785,7 +801,6 @@ static void rdcu_compression_cmp_lib_demo(void)
 		free(mymodel);
 	}
 
-	/* read updated model to some buffer and print */
 }
 
 /**
