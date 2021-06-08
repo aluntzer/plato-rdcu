@@ -173,8 +173,8 @@ uint32_t get_max_spill(unsigned int golomb_par, unsigned int cmp_mode);
 
 size_t size_of_a_sample(unsigned int cmp_mode);
 unsigned int cmp_bit_to_4byte(unsigned int cmp_size_bit);
-unsigned int size_of_data(unsigned int samples, unsigned int cmp_mode);
-unsigned int size_of_model(unsigned int samples, unsigned int cmp_mode);
+unsigned int cmp_cal_size_of_data(unsigned int samples, unsigned int cmp_mode);
+unsigned int cmp_cal_size_of_model(unsigned int samples, unsigned int cmp_mode);
 
 void print_cmp_cfg(const struct cmp_cfg *cfg);
 void print_cmp_info(const struct cmp_info *info);

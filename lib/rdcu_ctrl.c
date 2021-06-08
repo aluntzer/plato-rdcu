@@ -1310,12 +1310,11 @@ uint32_t rdcu_get_compr_data_start_addr(void)
  * @param cmp_size_bit compressed data size, measured in bits
  *
  * @returns the size in bytes to store the compressed data
- * @note we round up the result to multiples of 4 bytes
  */
 
-static uint32_t rdcu_bit_to_4byte(unsigned int cmp_size_bit)
+static uint32_t rdcu_bit_to_byte(unsigned int cmp_size_bit)
 {
-	return (((cmp_size_bit + 7) / 8) + 3) & ~0x3UL;
+	return ((cmp_size_bit + 7) / 8);
 }
 
 
@@ -1341,7 +1340,7 @@ uint32_t rdcu_get_compr_data_size_bit(void)
 
 uint32_t rdcu_get_compr_data_size_byte(void)
 {
-	return rdcu_bit_to_4byte(rdcu_get_compr_data_size_bit());
+	return rdcu_bit_to_byte(rdcu_get_compr_data_size_bit());
 }
 
 
@@ -1367,7 +1366,7 @@ uint32_t rdcu_get_compr_data_adaptive_1_size_bit(void)
 
 uint32_t rdcu_get_compr_data_adaptive_1_size_byte(void)
 {
-	return rdcu_bit_to_4byte(rdcu_get_compr_data_adaptive_1_size_bit());
+	return rdcu_bit_to_byte(rdcu_get_compr_data_adaptive_1_size_bit());
 }
 
 
@@ -1393,7 +1392,7 @@ uint32_t rdcu_get_compr_data_adaptive_2_size_bit(void)
 
 uint32_t rdcu_get_compr_data_adaptive_2_size_byte(void)
 {
-	return rdcu_bit_to_4byte(rdcu_get_compr_data_adaptive_2_size_bit());
+	return rdcu_bit_to_byte(rdcu_get_compr_data_adaptive_2_size_bit());
 }
 
 

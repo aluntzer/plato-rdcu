@@ -629,12 +629,12 @@ static void rdcu_compression_demo(void)
 
 	rdcu_sync_compr_data_size();
 	sync();
-	printf("Compressed data size: %ld\n", rdcu_get_compr_data_size_bit() >> 3);
+	printf("Compressed data size: %ld\n", (rdcu_get_compr_data_size_bit() + 7) >> 3);
 
 
 	/* issue sync back of compressed data */
 	if (rdcu_sync_sram_to_mirror(COMPRSTART,
-				     (((rdcu_get_compr_data_size_bit() >> 3) + 3) & ~0x3UL),
+				     ((((rdcu_get_compr_data_size_bit() + 7) >> 3) + 3) & ~0x3UL),
 				     rdcu_get_data_mtu())) {
 		printf("error in rdcu_sync_ram_to_mirror!\n");
 	}
@@ -645,7 +645,7 @@ static void rdcu_compression_demo(void)
 	/* read compressed data to some buffer and print */
 	if (1) {
 		uint32_t i;
-		uint32_t s = rdcu_get_compr_data_size_bit() >> 3;
+		uint32_t s = (rdcu_get_compr_data_size_bit() + 7) >> 3;
 		uint8_t *myresult = malloc(s);
 		rdcu_read_sram(myresult, COMPRSTART, s);
 
@@ -760,7 +760,7 @@ static void rdcu_compression_cmp_lib_demo(void)
 
 	if (1) {
 		uint32_t i;
-		uint32_t s = size_of_model(example_info.samples_used,
+		uint32_t s = cmp_cal_size_of_model(example_info.samples_used,
 					   example_info.cmp_mode_used);
 		uint8_t *mymodel = malloc(s);
 

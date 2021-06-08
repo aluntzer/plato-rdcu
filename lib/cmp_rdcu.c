@@ -669,7 +669,8 @@ int rdcu_read_cmp_bitstream(const struct cmp_info *info, void *output_buf)
 			return -1;
 	}
 
-	if (rdcu_sync_sram_to_mirror(info->rdcu_cmp_adr_used, s,
+	/* we round up the size s to multiples of 4 bytes */
+	if (rdcu_sync_sram_to_mirror(info->rdcu_cmp_adr_used, (s+3) & ~3UL,
 				     rdcu_get_data_mtu()))
 		return -1;
 
@@ -699,7 +700,7 @@ int rdcu_read_model(const struct cmp_info *info, void *model_buf)
 		return -1;
 
 	/* calculate the need bytes for the model */
-	s = size_of_model(info->samples_used, info->cmp_mode_used);
+	s = cmp_cal_size_of_model(info->samples_used, info->cmp_mode_used);
 
 	if (model_buf == NULL) {
 		if (s <= INT_MAX)
@@ -708,7 +709,8 @@ int rdcu_read_model(const struct cmp_info *info, void *model_buf)
 			return -1;
 	}
 
-	if (rdcu_sync_sram_to_mirror(info->rdcu_new_model_adr_used, (s+3) & ~3U,
+	/* we round up the size to multiples of 4 bytes */
+	if (rdcu_sync_sram_to_mirror(info->rdcu_new_model_adr_used, (s+3) & ~3UL,
 				     rdcu_get_data_mtu()))
 		return -1;
 

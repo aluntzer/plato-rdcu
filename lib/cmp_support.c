@@ -521,7 +521,7 @@ unsigned int cmp_bit_to_4byte(unsigned int cmp_size_bit)
  * @returns the size in bytes to store the data sample
  */
 
-unsigned int size_of_data(unsigned int samples, unsigned int cmp_mode)
+unsigned int cmp_cal_size_of_data(unsigned int samples, unsigned int cmp_mode)
 {
 	return samples * size_of_a_sample(cmp_mode);
 }
@@ -536,9 +536,9 @@ unsigned int size_of_data(unsigned int samples, unsigned int cmp_mode)
  * @returns the size in bytes to store the model sample
  */
 
-unsigned int size_of_model(unsigned int samples, unsigned int cmp_mode)
+unsigned int cmp_cal_size_of_model(unsigned int samples, unsigned int cmp_mode)
 {
-	return size_of_data(samples, cmp_mode);
+	return cmp_cal_size_of_data(samples, cmp_mode);
 }
 
 
