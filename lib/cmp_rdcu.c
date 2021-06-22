@@ -19,6 +19,7 @@
 
 #include <stdint.h>
 #include <stdio.h>
+#include <limits.h>
 
 #include "../include/rdcu_cmd.h"
 #include "../include/cmp_support.h"
@@ -632,9 +633,9 @@ int rdcu_read_cmp_info(struct cmp_info *info)
 		info->rdcu_new_model_adr_used = rdcu_get_new_model_addr_used();
 		info->samples_used = rdcu_get_samples_used();
 		info->rdcu_cmp_adr_used = rdcu_get_compr_data_start_addr();
-		info->cmp_size = rdcu_get_compr_data_size();
-		info->ap1_cmp_size = rdcu_get_compr_data_adaptive_1_size();
-		info->ap2_cmp_size = rdcu_get_compr_data_adaptive_2_size();
+		info->cmp_size_byte = rdcu_get_compr_data_size_byte();
+		info->ap1_cmp_size_byte = rdcu_get_compr_data_adaptive_1_size_byte();
+		info->ap2_cmp_size_byte = rdcu_get_compr_data_adaptive_2_size_byte();
 		info->cmp_err = rdcu_get_compr_error();
 	}
 	return 0;
@@ -659,13 +660,17 @@ int rdcu_read_cmp_bitstream(const struct cmp_info *info, void *output_buf)
 	if (info == NULL)
 		return -1;
 
-	/* calculate the need bytes for the bitstream */
-	s = size_of_bitstream(info->cmp_size);
+	s = info->cmp_size_byte;
 
-	if (output_buf == NULL)
-		return (int)s;
+	if (output_buf == NULL) {
+		if (s <= INT_MAX)
+			return (int)s;
+		else
+			return -1;
+	}
 
-	if (rdcu_sync_sram_to_mirror(info->rdcu_cmp_adr_used, s,
+	/* we round up the size s to multiples of 4 bytes */
+	if (rdcu_sync_sram_to_mirror(info->rdcu_cmp_adr_used, (s+3) & ~3UL,
 				     rdcu_get_data_mtu()))
 		return -1;
 
@@ -695,12 +700,17 @@ int rdcu_read_model(const struct cmp_info *info, void *model_buf)
 		return -1;
 
 	/* calculate the need bytes for the model */
-	s = size_of_model(info->samples_used, info->cmp_mode_used);
+	s = cmp_cal_size_of_model(info->samples_used, info->cmp_mode_used);
 
-	if (model_buf == NULL)
-		return (int)s;
+	if (model_buf == NULL) {
+		if (s <= INT_MAX)
+			return (int)s;
+		else
+			return -1;
+	}
 
-	if (rdcu_sync_sram_to_mirror(info->rdcu_new_model_adr_used, (s+3) & ~3U,
+	/* we round up the size to multiples of 4 bytes */
+	if (rdcu_sync_sram_to_mirror(info->rdcu_new_model_adr_used, (s+3) & ~3UL,
 				     rdcu_get_data_mtu()))
 		return -1;
 

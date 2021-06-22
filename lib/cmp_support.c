@@ -500,28 +500,45 @@ size_t size_of_a_sample(unsigned int cmp_mode)
 /**
  * @brief calculate the need bytes to hold a bitstream
  *
- * @param cmp_size compressed data size, measured in bits
+ * @param cmp_size_bit compressed data size, measured in bits
  *
- * @returns the size in bytes to sore the hole bitstream
+ * @returns the size in bytes to store the hole bitstream
+ * @note we round up the result to multiples of 4 bytes
  */
 
-unsigned int size_of_bitstream(unsigned int cmp_size)
+unsigned int cmp_bit_to_4byte(unsigned int cmp_size_bit)
 {
-	return (((cmp_size >> 3) + 3) & ~0x3U);
+	return (((cmp_size_bit + 7) / 8) + 3) & ~0x3UL;
+}
+
+
+/**
+ * @brief calculate the need bytes for the data
+ *
+ * @param samples number of data samples
+ * @param cmp_mode used compression mode
+ *
+ * @returns the size in bytes to store the data sample
+ */
+
+unsigned int cmp_cal_size_of_data(unsigned int samples, unsigned int cmp_mode)
+{
+	return samples * size_of_a_sample(cmp_mode);
 }
 
 
 /**
  * @brief calculate the need bytes for the model
  *
- * @param cmp_size compressed data size, measured in bits
+ * @param samples number of model samples
+ * @param cmp_mode used compression mode
  *
- * @returns the size in bytes to sore the hole bitstream
+ * @returns the size in bytes to store the model sample
  */
 
-unsigned int size_of_model(unsigned int samples, unsigned int cmp_mode)
+unsigned int cmp_cal_size_of_model(unsigned int samples, unsigned int cmp_mode)
 {
-	return samples * size_of_a_sample(cmp_mode);
+	return cmp_cal_size_of_data(samples, cmp_mode);
 }
 
 
@@ -587,9 +604,9 @@ void print_cmp_info(const struct cmp_info *info)
 	printf("spill_used: %lu\n", info->spill_used);
 	printf("golomb_par_used: %lu\n", info->golomb_par_used);
 	printf("samples_used: %lu\n", info->samples_used);
-	printf("cmp_size: %lu\n", info->cmp_size);
-	printf("ap1_cmp_size: %lu\n", info->ap1_cmp_size);
-	printf("ap2_cmp_size: %lu\n", info->ap2_cmp_size);
+	printf("cmp_size_byte: %lu\n", info->cmp_size_byte);
+	printf("ap1_cmp_size_byte: %lu\n", info->ap1_cmp_size_byte);
+	printf("ap2_cmp_size_byte: %lu\n", info->ap2_cmp_size_byte);
 	printf("rdcu_new_model_adr_used: 0x%06lX\n", info->rdcu_new_model_adr_used);
 	printf("rdcu_cmp_adr_used: 0x%06lX\n", info->rdcu_cmp_adr_used);
 	printf("cmp_err: %#X\n", info->cmp_err);
