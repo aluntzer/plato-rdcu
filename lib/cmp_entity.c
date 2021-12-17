@@ -21,9 +21,12 @@
 #include <stdio.h>
 #include <string.h>
 #include <limits.h>
-#if __has_include(<time.h>)
-	#include <time.h>
-	#include <stdlib.h>
+#if defined __has_include
+#   if __has_include(<time.h>)
+#     include <time.h>
+#     include <stdlib.h>
+#     define HAS_TIME_H 1
+#   endif
 #endif
 
 #include <cmp_entity.h>
@@ -31,7 +34,7 @@
 #include <byteorder.h>
 
 
-#if __has_include(<time.h>)
+#if defined HAS_TIME_H
 /* Used as epoch Wed Jan  1 00:00:00 2020 */
 #  if defined(_WIN32) || defined(_WIN64)
 const struct tm EPOCH_DATE = { 0, 0, 0, 1, 0, 120, 0, 0, 0 };
@@ -1994,7 +1997,7 @@ int cmp_ent_read_adaptive_imagette_header(struct cmp_entity *ent, struct cmp_inf
 #endif
 
 
-#if __has_include(<time.h>)
+#ifdef HAS_TIME_H
 /*
  * @brief Covert a calendar time expressed as a struct tm object to time since
  *	 epoch as a time_t object. The function interprets the input structure
@@ -2118,7 +2121,7 @@ static void cmp_ent_parse_generic_header(struct cmp_entity *ent)
 		uint16_t minor = asw_version_id & 0x00FFU;
 		printf("Compressed with cmp_tool version: %u.%02u\n", major,minor);
 	} else
-		printf("ICU ASW Version ID: %u\n", asw_version_id);
+		printf("ICU ASW Version ID: %lu\n", asw_version_id);
 
 	cmp_ent_size = cmp_ent_get_size(ent);
 	printf("Compression Entity Size: %lu byte\n", cmp_ent_size);
@@ -2138,7 +2141,7 @@ static void cmp_ent_parse_generic_header(struct cmp_entity *ent)
 	end_fine_time = cmp_ent_get_fine_end_time(ent);
 	printf("Compression Fine End Time: %d\n", end_fine_time);
 
-#if __has_include(<time.h>)
+#ifdef HAS_TIME_H
 	{
 		struct tm epoch_date = EPOCH_DATE;
 		time_t time = my_timegm(&epoch_date) + start_coarse_time;
