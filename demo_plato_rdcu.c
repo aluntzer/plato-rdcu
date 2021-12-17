@@ -840,7 +840,7 @@ static void rdcu_compression_cmp_lib_demo(void)
 
 		printf("\n\nHere's the compressed data (size %lu):\n"
 		       "======================================\n",
-		       example_info.cmp_size_byte);
+		       cmp_bit_to_4byte(example_info.cmp_size);
 
 		cmp_ent_print_data(cmp_ent);
 		printf("\n");
