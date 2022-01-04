@@ -670,9 +670,16 @@ static void rdcu_compression_demo(void)
  * @warning this function is not save only for demo usage
  */
 
-static int64_t grtimer_uptime_to_timestamp(struct grtimer_uptime time)
+static uint64_t grtimer_uptime_to_timestamp(struct grtimer_uptime time)
 {
-	return ((int64_t)time.coarse << 24) | (time.fine & 0xFFFFFF) ;
+	struct grtimer_uptime time_zero = {0,0};
+	double seconds = grtimer_longcount_difftime(rtu, time, time_zero);
+	uint32_t coarse, fine;
+
+	coarse = (uint32_t)seconds;
+	fine = (uint32_t)((seconds-coarse) * 256 * 256);
+
+	return ((uint64_t)coarse) << 16 | fine;
 }
 
 
