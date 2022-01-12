@@ -21,6 +21,7 @@
 
 #include <stdint.h>
 
+#define CMP_ASW_VERSION_ID 0x01
 
 /* node addresses of ICU and RDCU */
 #define ICU_ADDR	0x28	/* PLATO-IWF-PL-TR-0042-d0-1_RDCU_Functional_Test_PT1 */

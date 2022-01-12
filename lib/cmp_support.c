@@ -604,9 +604,9 @@ void print_cmp_info(const struct cmp_info *info)
 	printf("spill_used: %lu\n", info->spill_used);
 	printf("golomb_par_used: %lu\n", info->golomb_par_used);
 	printf("samples_used: %lu\n", info->samples_used);
-	printf("cmp_size_byte: %lu\n", info->cmp_size_byte);
-	printf("ap1_cmp_size_byte: %lu\n", info->ap1_cmp_size_byte);
-	printf("ap2_cmp_size_byte: %lu\n", info->ap2_cmp_size_byte);
+	printf("cmp_size: %lu\n", info->cmp_size);
+	printf("ap1_cmp_size: %lu\n", info->ap1_cmp_size);
+	printf("ap2_cmp_size: %lu\n", info->ap2_cmp_size);
 	printf("rdcu_new_model_adr_used: 0x%06lX\n", info->rdcu_new_model_adr_used);
 	printf("rdcu_cmp_adr_used: 0x%06lX\n", info->rdcu_cmp_adr_used);
 	printf("cmp_err: %#X\n", info->cmp_err);

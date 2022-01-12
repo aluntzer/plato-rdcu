@@ -633,9 +633,9 @@ int rdcu_read_cmp_info(struct cmp_info *info)
 		info->rdcu_new_model_adr_used = rdcu_get_new_model_addr_used();
 		info->samples_used = rdcu_get_samples_used();
 		info->rdcu_cmp_adr_used = rdcu_get_compr_data_start_addr();
-		info->cmp_size_byte = rdcu_get_compr_data_size_byte();
-		info->ap1_cmp_size_byte = rdcu_get_compr_data_adaptive_1_size_byte();
-		info->ap2_cmp_size_byte = rdcu_get_compr_data_adaptive_2_size_byte();
+		info->cmp_size = rdcu_get_compr_data_size_bit();
+		info->ap1_cmp_size = rdcu_get_compr_data_adaptive_1_size_bit();
+		info->ap2_cmp_size = rdcu_get_compr_data_adaptive_2_size_bit();
 		info->cmp_err = rdcu_get_compr_error();
 	}
 	return 0;
@@ -660,7 +660,7 @@ int rdcu_read_cmp_bitstream(const struct cmp_info *info, void *output_buf)
 	if (info == NULL)
 		return -1;
 
-	s = info->cmp_size_byte;
+	s = cmp_bit_to_4byte(info->cmp_size);
 
 	if (output_buf == NULL) {
 		if (s <= INT_MAX)

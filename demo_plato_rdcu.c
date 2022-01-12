@@ -670,9 +670,16 @@ static void rdcu_compression_demo(void)
  * @warning this function is not save only for demo usage
  */
 
-static int64_t grtimer_uptime_to_timestamp(struct grtimer_uptime time)
+static uint64_t grtimer_uptime_to_timestamp(struct grtimer_uptime time)
 {
-	return ((int64_t)time.coarse << 24) | (time.fine & 0xFFFFFF) ;
+	struct grtimer_uptime time_zero = {0,0};
+	double seconds = grtimer_longcount_difftime(rtu, time, time_zero);
+	uint32_t coarse, fine;
+
+	coarse = (uint32_t)seconds;
+	fine = (uint32_t)((seconds-coarse) * 0xFFFF);
+
+	return (((uint64_t)coarse) << 16) | (fine & 0xFFFF);
 }
 
 
@@ -784,8 +791,9 @@ static void rdcu_compression_cmp_lib_demo(void)
 		uint8_t model_counter = 1;
 
 		struct cmp_entity *cmp_ent;
-		uint8_t *cmp_ent_data;
+		void *cmp_ent_data;
 		size_t cmp_ent_size;
+		uint32_t i, s;
 
 		/* get the size of the compression entity */
 		cmp_ent_size = cmp_ent_build(NULL, DATA_TYPE_IMAGETTE_ADAPTIVE,
@@ -831,19 +839,23 @@ static void rdcu_compression_cmp_lib_demo(void)
 		if (rdcu_read_cmp_bitstream(&example_info, cmp_ent_data) < 0)
 			printf("Error occurred by reading in the compressed data from the RDCU\n");
 
-		/* now have a look into the compression entity */
-		printf("\n\nHere's the compression entity header:\n"
-		       "=====================================\n");
-		cmp_ent_print_header(cmp_ent);
-		cmp_ent_parse(cmp_ent);
 
-
-		printf("\n\nHere's the compressed data (size %lu):\n"
-		       "======================================\n",
-		       example_info.cmp_size_byte);
-
-		cmp_ent_print_data(cmp_ent);
+		s = cmp_ent_get_size(cmp_ent);
+		printf("\n\nHere's the compressed data including the header (size %lu):\n"
+		       "============================================================\n", s);
+		for (i = 0; i < s; i++) {
+			uint8_t *p = (uint8_t *)cmp_ent;
+			printf("%02X ", p[i]);
+			if (i && !((i+1) % 40))
+				printf("\n");
+		}
 		printf("\n");
+
+
+		/* now have a look into the compression entity */
+		printf("\n\nParse the compression entity header:\n"
+		       "====================================\n");
+		cmp_ent_parse(cmp_ent);
 
 		free(cmp_ent);
 	}

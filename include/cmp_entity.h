@@ -28,38 +28,37 @@
 #define CMP_ENTITY_H
 
 #include <stdint.h>
-#include <compiler.h>
 
+#include <compiler.h>
 #include <cmp_support.h>
 
 
-#define CMP_ASW_VERSION_ID		0x1
-
 /* Defined Compression Data Product Types */
 enum cmp_ent_data_type {
-DATA_TYPE_IMAGETTE = 1,
-DATA_TYPE_IMAGETTE_ADAPTIVE,
-DATA_TYPE_SAT_IMAGETTE,
-DATA_TYPE_SAT_IMAGETTE_ADAPTIVE,
-DATA_TYPE_OFFSET,
-DATA_TYPE_BACKGROUND,
-DATA_TYPE_SMEARING,
-DATA_TYPE_S_FX,
-DATA_TYPE_S_FX_DFX,
-DATA_TYPE_S_FX_NCOB,
-DATA_TYPE_S_FX_DFX_NCOB_ECOB,
-DATA_TYPE_L_FX,
-DATA_TYPE_L_FX_DFX,
-DATA_TYPE_L_FX_NCOB,
-DATA_TYPE_L_FX_DFX_NCOB_ECOB,
-DATA_TYPE_F_FX,
-DATA_TYPE_F_FX_DFX,
-DATA_TYPE_F_FX_NCOB,
-DATA_TYPE_F_FX_DFX_NCOB_ECOB,
-DATA_TYPE_F_CAM_IMAGETTE,
-DATA_TYPE_F_CAM_IMAGETTE_ADAPTIVE,
-DATA_TYPE_F_CAM_OFFSET,
-DATA_TYPE_F_CAM_BACKGROUND,
+	DATA_TYPE_IMAGETTE = 1,
+	DATA_TYPE_IMAGETTE_ADAPTIVE,
+	DATA_TYPE_SAT_IMAGETTE,
+	DATA_TYPE_SAT_IMAGETTE_ADAPTIVE,
+	DATA_TYPE_OFFSET,
+	DATA_TYPE_BACKGROUND,
+	DATA_TYPE_SMEARING,
+	DATA_TYPE_S_FX,
+	DATA_TYPE_S_FX_DFX,
+	DATA_TYPE_S_FX_NCOB,
+	DATA_TYPE_S_FX_DFX_NCOB_ECOB,
+	DATA_TYPE_L_FX,
+	DATA_TYPE_L_FX_DFX,
+	DATA_TYPE_L_FX_NCOB,
+	DATA_TYPE_L_FX_DFX_NCOB_ECOB,
+	DATA_TYPE_F_FX,
+	DATA_TYPE_F_FX_DFX,
+	DATA_TYPE_F_FX_NCOB,
+	DATA_TYPE_F_FX_DFX_NCOB_ECOB,
+	DATA_TYPE_F_CAM_IMAGETTE,
+	DATA_TYPE_F_CAM_IMAGETTE_ADAPTIVE,
+	DATA_TYPE_F_CAM_OFFSET,
+	DATA_TYPE_F_CAM_BACKGROUND,
+	DATA_TYPE_UNKOWN = -1
 };
 
 #define GENERIC_HEADER_SIZE 30
@@ -76,11 +75,14 @@ DATA_TYPE_F_CAM_BACKGROUND,
 
 #define CMP_ENTITY_MAX_SIZE 0xFFFFFFUL
 
+#define RAW_BIT_IN_DATA_TYPE 15U
+
+#define CMP_TOOL_VERSION_ID_BIT 0x8000U /* TBC */
 
 __extension__
-struct timestamp {
-	int32_t coarse;
-	int16_t fine;
+struct timestamp_cmp_ent {
+	uint32_t coarse;
+	uint16_t fine;
 } __attribute__((packed));
 
 __extension__
@@ -129,11 +131,11 @@ struct cmp_entity {
 	uint32_t original_size:24;		/* Original Data Size */
 	union {
 		uint64_t start_timestamp:48;	/* Compression Start Timestamp */
-		struct timestamp start_time;
+		struct timestamp_cmp_ent start_time;
 	} __attribute__((packed));
 	union {
 		uint64_t end_timestamp:48;	/* Compression End Timestamp */
-		struct timestamp end_time;
+		struct timestamp_cmp_ent end_time;
 	} __attribute__((packed));
 	uint16_t data_type;			/* Data Product Type */
 	uint8_t  cmp_mode_used;			/* used Compression Mode */
@@ -159,27 +161,32 @@ size_t cmp_ent_create(struct cmp_entity *ent, enum cmp_ent_data_type data_type,
 
 /* create a compression entity and set the header fields */
 size_t cmp_ent_build(struct cmp_entity *ent, enum cmp_ent_data_type data_type,
-		     uint16_t asw_version_id, int64_t start_time,
-		     int64_t end_time, uint16_t model_id, uint8_t model_counter,
+		     uint16_t asw_version_id, uint64_t start_time,
+		     uint64_t end_time, uint16_t model_id, uint8_t model_counter,
 		     struct cmp_info *info, struct cmp_cfg *cfg);
+
+/* read in a imagette compression entity header to a info struct */
+int cmp_ent_read_imagette_header(struct cmp_entity *ent, struct cmp_info *info);
 
 
 
 /* set functions for generic compression entity header */
 int cmp_ent_set_asw_version_id(struct cmp_entity *ent, uint32_t asw_version_id);
 int cmp_ent_set_size(struct cmp_entity *ent, uint32_t cmp_ent_size);
+
 int cmp_ent_set_original_size(struct cmp_entity *ent, uint32_t original_size);
 
 int cmp_ent_set_start_timestamp(struct cmp_entity *ent, uint64_t start_timestamp);
-int cmp_ent_set_coarse_start_time(struct cmp_entity *ent, int32_t coarse_time);
-int cmp_ent_set_fine_start_time(struct cmp_entity *ent, int16_t fine_time);
+int cmp_ent_set_coarse_start_time(struct cmp_entity *ent, uint32_t coarse_time);
+int cmp_ent_set_fine_start_time(struct cmp_entity *ent, uint16_t fine_time);
 
 int cmp_ent_set_end_timestamp(struct cmp_entity *ent, uint64_t end_timestamp);
-int cmp_ent_set_coarse_end_time(struct cmp_entity *ent, int32_t coarse_time);
-int cmp_ent_set_fine_end_time(struct cmp_entity *ent, int16_t fine_time);
+int cmp_ent_set_coarse_end_time(struct cmp_entity *ent, uint32_t coarse_time);
+int cmp_ent_set_fine_end_time(struct cmp_entity *ent, uint16_t fine_time);
 
 int cmp_ent_set_data_type(struct cmp_entity *ent,
 			  enum cmp_ent_data_type data_type);
+int cmp_ent_set_data_type_raw_bit(struct cmp_entity *ent, int raw_bit);
 int cmp_ent_set_cmp_mode(struct cmp_entity *ent, uint32_t cmp_mode_used);
 int cmp_ent_set_model_value(struct cmp_entity *ent, uint32_t model_value_used);
 int cmp_ent_set_model_id(struct cmp_entity *ent, uint32_t model_id);
@@ -231,14 +238,15 @@ uint32_t cmp_ent_get_size(struct cmp_entity *ent);
 uint32_t cmp_ent_get_original_size(struct cmp_entity *ent);
 
 uint64_t cmp_ent_get_start_timestamp(struct cmp_entity *ent);
-int32_t cmp_ent_get_coarse_start_time(struct cmp_entity *ent);
-int16_t cmp_ent_get_fine_start_time(struct cmp_entity *ent);
+uint32_t cmp_ent_get_coarse_start_time(struct cmp_entity *ent);
+uint16_t cmp_ent_get_fine_start_time(struct cmp_entity *ent);
 
 uint64_t cmp_ent_get_end_timestamp(struct cmp_entity *ent);
-int32_t cmp_ent_get_coarse_end_time(struct cmp_entity *ent);
-int16_t cmp_ent_get_fine_end_time(struct cmp_entity *ent);
+uint32_t cmp_ent_get_coarse_end_time(struct cmp_entity *ent);
+uint16_t cmp_ent_get_fine_end_time(struct cmp_entity *ent);
 
 enum cmp_ent_data_type cmp_ent_get_data_type(struct cmp_entity *ent);
+int cmp_ent_get_data_type_raw_bit(struct cmp_entity *ent);
 uint8_t cmp_ent_get_cmp_mode(struct cmp_entity *ent);
 uint8_t cmp_ent_get_model_value_used(struct cmp_entity *ent);
 
@@ -285,8 +293,11 @@ uint16_t cmp_ent_get_non_ima_cmp_par6(struct cmp_entity *ent);
 
 
 /* get function for the compressed data buffer in the entity */
-uint8_t *cmp_ent_get_data_buf(struct cmp_entity *ent);
+void *cmp_ent_get_data_buf(struct cmp_entity *ent);
+uint32_t cmp_ent_get_cmp_data_size(struct cmp_entity *ent);
 
+/* calculate the size of the compression entity header */
+uint32_t cmp_ent_cal_hdr_size(enum cmp_ent_data_type data_type);
 
 
 /* print and parse functions */
