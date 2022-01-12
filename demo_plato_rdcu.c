@@ -677,9 +677,9 @@ static uint64_t grtimer_uptime_to_timestamp(struct grtimer_uptime time)
 	uint32_t coarse, fine;
 
 	coarse = (uint32_t)seconds;
-	fine = (uint32_t)((seconds-coarse) * 256 * 256);
+	fine = (uint32_t)((seconds-coarse) * 0xFFFF);
 
-	return ((uint64_t)coarse) << 16 | fine;
+	return (((uint64_t)coarse) << 16) | (fine & 0xFFFF);
 }
 
 
