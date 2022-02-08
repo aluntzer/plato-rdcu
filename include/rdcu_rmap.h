@@ -38,9 +38,9 @@ int rdcu_sync_data(int (*fn)(uint16_t trans_id, uint8_t *cmd,
 		   uint32_t addr, void *data, uint32_t data_len, int read);
 
 int rdcu_package(uint8_t *blob,
-		 const uint8_t *cmd,  int cmd_size,
+		 const uint8_t *cmd, uint32_t cmd_size,
 		 const uint8_t non_crc_bytes,
-		 const uint8_t *data, int data_size);
+		 const uint8_t *data, uint32_t data_size);
 
 void rdcu_set_destination_logical_address(uint8_t addr);
 

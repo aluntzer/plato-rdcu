@@ -70,7 +70,7 @@
 #include <rmap.h>
 #include <rdcu_rmap.h>
 
-
+#define RDCU_CONFIG_DEBUG 0
 
 static uint8_t rdcu_addr;
 static uint8_t icu_addr;
@@ -260,7 +260,7 @@ static int rdcu_process_rx(void)
 
 		cnt++;
 
-		if (0)
+		if (RDCU_CONFIG_DEBUG)
 			rmap_parse_pkt(spw_pckt);
 
 		/* convert format */
@@ -352,7 +352,7 @@ int rdcu_submit_tx(const uint8_t *cmd,  int cmd_size,
 	if (!rmap_tx)
 		return -1;
 
-	if (0)
+	if (RDCU_CONFIG_DEBUG)
 		printf("Transmitting RMAP command\n");
 
 	if (rmap_tx(cmd, cmd_size, dpath_len, data, data_size)) {
@@ -529,8 +529,8 @@ int rdcu_sync_data(int (*fn)(uint16_t trans_id, uint8_t *cmd,
 
 	slot = trans_log_grab_slot(data);
 	if (slot < 0) {
-		if (0)
-		printf("Error: all slots busy!\n");
+		if (RDCU_CONFIG_DEBUG)
+			printf("Error: all slots busy!\n");
 		return 1;
 	}
 
@@ -584,9 +584,9 @@ int rdcu_sync_data(int (*fn)(uint16_t trans_id, uint8_t *cmd,
  */
 
 int rdcu_package(uint8_t *blob,
-		 const uint8_t *cmd,  int cmd_size,
+		 const uint8_t *cmd,  uint32_t cmd_size,
 		 const uint8_t non_crc_bytes,
-		 const uint8_t *data, int data_size)
+		 const uint8_t *data, uint32_t data_size)
 {
 	int n;
 	int has_data_crc = 0;
@@ -594,7 +594,10 @@ int rdcu_package(uint8_t *blob,
 
 
 	if (data_size & 0x3)	/* must be multiple of 4 */
-		return -1;
+		return 0;
+
+	if (!data_size)
+		data = NULL;
 
 	if (!cmd_size) {
 		blob = NULL;
@@ -624,13 +627,11 @@ int rdcu_package(uint8_t *blob,
 		break;
 	}
 
-
 	if (data)
 		n += data_size;
 
 	if (!blob)
 		return n;
-
 
 	memcpy(&blob[0], cmd, cmd_size);
 
@@ -645,7 +646,6 @@ int rdcu_package(uint8_t *blob,
 		if (has_data_crc)
 			blob[cmd_size + 1] = 0x0;
 	}
-
 
 	return n;
 }
@@ -791,10 +791,10 @@ void rdcu_rmap_reset_log(void)
  *
  * @param mtu the maximum data transfer size per unit
  *
- * @param rmap_tx a function pointer to transmit an rmap command
- * @param rmap_rx function pointer to receive an rmap command
+ * @param tx a function pointer to transmit an rmap command
+ * @param rx function pointer to receive an rmap command
  *
- * @note rmap_tx is expected to return 0 on success
+ * @note tx is expected to return 0 on success
  *	 rmap_rx is expected to return the number of packet bytes
  *
  * @returns 0 on success, otherwise error

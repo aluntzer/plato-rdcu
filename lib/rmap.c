@@ -288,11 +288,13 @@ int rmap_set_reply_path(struct rmap_pkt *pkt, const uint8_t *rpath, uint8_t len)
 
 	pkt->rpath_len = len;
 
-	pkt->rpath = (uint8_t *) malloc(pkt->rpath_len);
-	if (!pkt->rpath)
-		return -1;
+	if (len) {
+		pkt->rpath = (uint8_t *) malloc(pkt->rpath_len);
+		if (!pkt->rpath)
+			return -1;
 
-	memcpy(pkt->rpath, rpath, pkt->rpath_len);
+		memcpy(pkt->rpath, rpath, pkt->rpath_len);
+	}
 
 	/* number of 32 bit words needed to contain the path */
 	pkt->ri.reply_addr_len = len >> 2;
@@ -325,6 +327,9 @@ int rmap_set_dest_path(struct rmap_pkt *pkt, const uint8_t *path, uint8_t len)
 		return -1;
 
 	pkt->path_len = len;
+
+	if (!len)
+		return 0;
 
 	pkt->path = (uint8_t *) malloc(pkt->path_len);
 	if (!pkt->path)
@@ -581,7 +586,7 @@ struct rmap_pkt *rmap_pkt_from_buffer(uint8_t *buf, uint32_t len)
 
 	if (pkt->data_len) {
 		if (len < RMAP_DATA_START + n + pkt->data_len + 1) {  /* +1 for data CRC */
-			printf("buffer len is smaller than the contained RMAP packet; buf len: %lu bytes vs RMAP: %lu bytes needed\n",
+			printf("buffer len is smaller than the contained RMAP packet; buf len: %u bytes vs RMAP: %zu bytes needed\n",
 				len , RMAP_DATA_START + n + pkt->data_len);
 			goto error;
 		}
