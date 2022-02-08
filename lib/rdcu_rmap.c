@@ -70,7 +70,7 @@
 #include <rmap.h>
 #include <rdcu_rmap.h>
 
-
+#define RDCU_CONFIG_DEBUG 0
 
 static uint8_t rdcu_addr;
 static uint8_t icu_addr;
@@ -260,7 +260,7 @@ static int rdcu_process_rx(void)
 
 		cnt++;
 
-		if ((0))
+		if (RDCU_CONFIG_DEBUG)
 			rmap_parse_pkt(spw_pckt);
 
 		/* convert format */
@@ -352,7 +352,7 @@ int rdcu_submit_tx(const uint8_t *cmd,  int cmd_size,
 	if (!rmap_tx)
 		return -1;
 
-	if ((0))
+	if (RDCU_CONFIG_DEBUG)
 		printf("Transmitting RMAP command\n");
 
 	if (rmap_tx(cmd, cmd_size, dpath_len, data, data_size)) {
@@ -529,7 +529,7 @@ int rdcu_sync_data(int (*fn)(uint16_t trans_id, uint8_t *cmd,
 
 	slot = trans_log_grab_slot(data);
 	if (slot < 0) {
-		if ((0))
+		if (RDCU_CONFIG_DEBUG)
 			printf("Error: all slots busy!\n");
 		return 1;
 	}
