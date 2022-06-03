@@ -116,8 +116,8 @@ static size_t data_mtu;	/* maximum data transfer size per unit */
  * Every time a slot is retrieved, the "pending" counter is incremented to
  * have a fast indicator of the synchronisation status, i.e. if "pending"
  * is not set, the synchronisation procedure is complete and the local data may
- * be read, or the remote data has been written and further commands may may
- * be issued.
+ * be read, or the remote data has been written and further commands may be
+ * issued.
  *
  * The local (mirror) start address of the requested remote address is stored
  * into the same slot in the "local_addr" array, so we'll know where to put the
@@ -275,25 +275,20 @@ static int rdcu_process_rx(void)
 		local_addr = trans_log_get_addr(rp->tr_id);
 
 		if (!local_addr) {
-			printf("warning: response packet received not in "
-			       "transaction log\n");
+			printf("Warning: response packet received not in transaction log\n");
 			rmap_erase_packet(rp);
 			continue;
 		}
 
-
 		if (rp->data_len & 0x3) {
-			printf("Error: response packet data size is not a "
-			       "multiple of 4, transaction dropped\n");
+			printf("Error: response packet data size is not a multiple of 4, transaction dropped\n");
 
 			trans_log_release_slot(rp->tr_id);
 			rmap_erase_packet(rp);
 			return -1;
 		}
 
-
 		if (rp->data_len) {
-
 			uint8_t crc8;
 
 			/* convert endianess if needed */
@@ -307,13 +302,9 @@ static int rdcu_process_rx(void)
 			}
 #endif /* __BYTE_ORDER__ */
 
-
 			crc8 = rmap_crc8(rp->data, rp->data_len);
-
 			if (crc8 != rp->data_crc) {
-
-				printf("Error: data CRC8 mismatch, data invalid or "
-				       "packet truncated. Transaction dropped\n");
+				printf("Error: data CRC8 mismatch, data invalid or packet truncated. Transaction dropped\n");
 
 				trans_log_release_slot(rp->tr_id);
 				rmap_erase_packet(rp);
@@ -475,8 +466,7 @@ int rdcu_sync(int (*fn)(uint16_t trans_id, uint8_t *cmd),
 
 	/* convert endianess if needed */
 #if (__BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__)
-	if (data_len)
-	{
+	if (data_len) {
 		int i;
 		uint32_t *tmp_buf = alloca(data_len);
 		uint32_t *p = (uint32_t *) addr;

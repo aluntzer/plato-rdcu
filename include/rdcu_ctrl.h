@@ -244,14 +244,11 @@ uint32_t rdcu_get_golomb_param(void);
 
 uint32_t rdcu_get_compr_data_start_addr(void);
 
-uint32_t rdcu_get_compr_data_size_bit(void);
-uint32_t rdcu_get_compr_data_size_byte(void);
+uint32_t rdcu_get_compr_data_size(void);
 
-uint32_t rdcu_get_compr_data_adaptive_1_size_bit(void);
-uint32_t rdcu_get_compr_data_adaptive_1_size_byte(void);
+uint32_t rdcu_get_compr_data_adaptive_1_size(void);
 
-uint32_t rdcu_get_compr_data_adaptive_2_size_bit(void);
-uint32_t rdcu_get_compr_data_adaptive_2_size_byte(void);
+uint32_t rdcu_get_compr_data_adaptive_2_size(void);
 
 uint16_t rdcu_get_compr_error(void);
 

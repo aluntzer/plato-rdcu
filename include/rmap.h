@@ -20,6 +20,7 @@
 #define RMAP_H
 
 #include <stdint.h>
+#include "compiler.h"
 
 /**
  * valid RMAP command codes, see Table 5-1 of ECSS‐E‐ST‐50‐52C
@@ -149,11 +150,9 @@ struct rmap_instruction {
 #else
 #error "Unknown byte order"
 #endif
-}__attribute__((packed));
-#if 0
-compile_time_assert((sizeof(struct rmap_instruction) == sizeof(uint8_t),
-		    RMAP_INSTRUCTION_STRUCT_WRONG_SIZE));
-#endif
+} __attribute__((packed));
+
+compile_time_assert(sizeof(struct rmap_instruction) == sizeof(uint8_t), RMAP_INSTRUCTION_STRUCT_WRONG_SIZE);
 
 
 /**
