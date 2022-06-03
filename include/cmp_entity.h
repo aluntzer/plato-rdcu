@@ -285,7 +285,7 @@ ssize_t cmp_ent_get_cmp_data(struct cmp_entity *ent, uint32_t *data_buf,
 uint32_t cmp_ent_cal_hdr_size(enum cmp_data_type data_type, int raw_mode);
 
 
-#if __has_include(<time.h>)
+#ifdef HAS_TIME_H
 #include <time.h>
 /* create a timestamp for the compression header */
 extern const struct tm EPOCH_DATE;

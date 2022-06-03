@@ -99,19 +99,19 @@ static int rdcu_cfg_gen_par_is_invalid(const struct cmp_cfg *cfg)
 	}
 
 	if (cfg->cmp_mode > MAX_RDCU_CMP_MODE) {
-		debug_print("Error: selected cmp_mode: %u is not supported. Largest supported mode is: %u.\n",
+		debug_print("Error: selected cmp_mode: %lu is not supported. Largest supported mode is: %u.\n",
 			    cfg->cmp_mode, MAX_RDCU_CMP_MODE);
 		cfg_invalid++;
 	}
 
 	if (cfg->model_value > MAX_MODEL_VALUE) {
-		debug_print("Error: selected model_value: %u is invalid. Largest supported value is: %u.\n",
+		debug_print("Error: selected model_value: %lu is invalid. Largest supported value is: %u.\n",
 			    cfg->model_value, MAX_MODEL_VALUE);
 		cfg_invalid++;
 	}
 
 	if (cfg->round > MAX_RDCU_ROUND) {
-		debug_print("Error: selected round parameter: %u is not supported. Largest supported value is: %u.\n",
+		debug_print("Error: selected round parameter: %lu is not supported. Largest supported value is: %u.\n",
 			    cfg->round, MAX_RDCU_ROUND);
 		cfg_invalid++;
 	}
@@ -151,6 +151,7 @@ struct cmp_cfg rdcu_cfg_create(enum cmp_data_type data_type, enum cmp_mode cmp_m
 
 	return cfg;
 }
+
 
 /**
  * @brief check if a buffer is in inside the RDCU SRAM
@@ -407,57 +408,57 @@ static int rdcu_cfg_imagette_is_invalid(const struct cmp_cfg *cfg)
 
 	if (cfg->golomb_par < MIN_RDCU_GOLOMB_PAR ||
 	    cfg->golomb_par > MAX_RDCU_GOLOMB_PAR) {
-		debug_print("Error: The selected Golomb parameter: %u is not supported. The Golomb parameter has to  be between [%u, %u].\n",
+		debug_print("Error: The selected Golomb parameter: %lu is not supported. The Golomb parameter has to  be between [%u, %u].\n",
 			    cfg->golomb_par, MIN_RDCU_GOLOMB_PAR, MAX_RDCU_GOLOMB_PAR);
 		cfg_invalid++;
 	}
 
 	if (cfg->ap1_golomb_par < MIN_RDCU_GOLOMB_PAR ||
 	    cfg->ap1_golomb_par > MAX_RDCU_GOLOMB_PAR) {
-		debug_print("Error: The selected adaptive 1 Golomb parameter: %u is not supported. The Golomb parameter has to  be between [%u, %u].\n",
+		debug_print("Error: The selected adaptive 1 Golomb parameter: %lu is not supported. The Golomb parameter has to  be between [%u, %u].\n",
 			    cfg->ap1_golomb_par, MIN_RDCU_GOLOMB_PAR, MAX_RDCU_GOLOMB_PAR);
 		cfg_invalid++;
 	}
 
 	if (cfg->ap2_golomb_par < MIN_RDCU_GOLOMB_PAR ||
 	    cfg->ap2_golomb_par > MAX_RDCU_GOLOMB_PAR) {
-		debug_print("Error: The selected adaptive 2 Golomb parameter: %u is not supported. The Golomb parameter has to be between [%u, %u].\n",
+		debug_print("Error: The selected adaptive 2 Golomb parameter: %lu is not supported. The Golomb parameter has to be between [%u, %u].\n",
 			    cfg->ap2_golomb_par, MIN_RDCU_GOLOMB_PAR, MAX_RDCU_GOLOMB_PAR);
 		cfg_invalid++;
 	}
 
 	if (cfg->spill < MIN_RDCU_SPILL) {
-		debug_print("Error: The selected spillover threshold value: %u is too small. Smallest possible spillover value is: %u.\n",
+		debug_print("Error: The selected spillover threshold value: %lu is too small. Smallest possible spillover value is: %u.\n",
 			    cfg->spill, MIN_RDCU_SPILL);
 		cfg_invalid++;
 	}
 
 	if (cfg->spill > get_max_spill(cfg->golomb_par, cfg->data_type)) {
-		debug_print("Error: The selected spillover threshold value: %u is too large for the selected Golomb parameter: %u, the largest possible spillover value is: %u.\n",
+		debug_print("Error: The selected spillover threshold value: %lu is too large for the selected Golomb parameter: %lu, the largest possible spillover value is: %lu.\n",
 			    cfg->spill, cfg->golomb_par, get_max_spill(cfg->golomb_par, cfg->data_type));
 		cfg_invalid++;
 	}
 
 	if (cfg->ap1_spill < MIN_RDCU_SPILL) {
-		debug_print("Error: The selected adaptive 1 spillover threshold value: %u is too small. Smallest possible spillover value is: %u.\n",
+		debug_print("Error: The selected adaptive 1 spillover threshold value: %lu is too small. Smallest possible spillover value is: %u.\n",
 			    cfg->ap1_spill, MIN_RDCU_SPILL);
 		cfg_invalid++;
 	}
 
 	if (cfg->ap1_spill > get_max_spill(cfg->ap1_golomb_par, cfg->data_type)) {
-		debug_print("Error: The selected adaptive 1 spillover threshold value: %u is too large for the selected adaptive 1 Golomb parameter: %u, the largest possible adaptive 1 spillover value is: %u.\n",
+		debug_print("Error: The selected adaptive 1 spillover threshold value: %lu is too large for the selected adaptive 1 Golomb parameter: %lu, the largest possible adaptive 1 spillover value is: %lu.\n",
 			    cfg->ap1_spill, cfg->ap1_golomb_par, get_max_spill(cfg->ap1_golomb_par, cfg->data_type));
 		cfg_invalid++;
 	}
 
 	if (cfg->ap2_spill < MIN_RDCU_SPILL) {
-		debug_print("Error: The selected adaptive 2 spillover threshold value: %u is too small. Smallest possible spillover value is: %u.\n",
+		debug_print("Error: The selected adaptive 2 spillover threshold value: %lu is too small. Smallest possible spillover value is: %u.\n",
 			    cfg->ap2_spill, MIN_RDCU_SPILL);
 		cfg_invalid++;
 	}
 
 	if (cfg->ap2_spill > get_max_spill(cfg->ap2_golomb_par, cfg->data_type)) {
-		debug_print("Error: The selected adaptive 2 spillover threshold value: %u is too large for the selected adaptive 2 Golomb parameter: %u, the largest possible adaptive 2 spillover value is: %u.\n",
+		debug_print("Error: The selected adaptive 2 spillover threshold value: %lu is too large for the selected adaptive 2 Golomb parameter: %lu, the largest possible adaptive 2 spillover value is: %lu.\n",
 			    cfg->ap2_spill, cfg->ap2_golomb_par, get_max_spill(cfg->ap2_golomb_par, cfg->data_type));
 		cfg_invalid++;
 	}
@@ -796,9 +797,9 @@ int rdcu_read_cmp_info(struct cmp_info *info)
 		info->rdcu_new_model_adr_used = rdcu_get_new_model_addr_used();
 		info->samples_used = rdcu_get_samples_used();
 		info->rdcu_cmp_adr_used = rdcu_get_compr_data_start_addr();
-		info->cmp_size = rdcu_get_compr_data_size();
-		info->ap1_cmp_size = rdcu_get_compr_data_adaptive_1_size();
-		info->ap2_cmp_size = rdcu_get_compr_data_adaptive_2_size();
+		info->cmp_size = rdcu_get_compr_data_size_bit();
+		info->ap1_cmp_size = rdcu_get_compr_data_adaptive_1_size_bit();
+		info->ap2_cmp_size = rdcu_get_compr_data_adaptive_2_size_bit();
 		info->cmp_err = rdcu_get_compr_error();
 	}
 	return 0;
@@ -917,117 +918,3 @@ void rdcu_disable_interrput_signal(void)
 {
 	interrupt_signal_enabled = RDCU_INTR_SIG_DIS;
 }
-
-
-/**
- * @brief compressing data with the help of the RDCU hardware compressor; read
- *	data from the last compression before starting compression
- *
- * @param cfg	     configuration contains all parameters required for compression
- * @param last_info  compression information of last compression run
- *
- * @note when using the 1d-differencing mode or the raw mode (cmp_mode = 0,2,4),
- *      the model parameters (model_value, model_buf, rdcu_model_adr) are ignored
- * @note the overlapping of the different rdcu buffers is not checked
- * @note the validity of the cfg structure is checked before the compression is
- *	 started
- *
- * @returns 0 on success, error otherwise
- */
-
-int rdcu_compress_data_parallel(const struct cmp_cfg *cfg,
-				const struct cmp_info *last_info)
-{
-	uint32_t samples_4byte;
-
-	if (!cfg)
-		return -1;
-
-	if (!last_info)
-		return rdcu_compress_data(cfg);
-
-	if (last_info->cmp_err)
-		return -1;
-
-	rdcu_set_compression_register(cfg);
-
-	/* round up needed size must be a multiple of 4 bytes */
-	samples_4byte = (cfg->samples * IMA_SAM2BYT + 3) & ~3U;
-
-	if (cfg->input_buf != NULL) {
-		uint32_t cmp_size_4byte;
-
-		/* now set the data in the local mirror... */
-		if (rdcu_write_sram_16(cfg->input_buf, cfg->rdcu_data_adr,
-				       cfg->samples * IMA_SAM2BYT) < 0)
-			return -1;
-
-		/* calculate the need bytes for the bitstream */
-		cmp_size_4byte = ((last_info->cmp_size >> 3) + 3) & ~0x3U;
-
-		/* parallel read compressed data and write input data from sram
-		 * to mirror*/
-		if (rdcu_sync_sram_mirror_parallel(last_info->rdcu_cmp_adr_used,
-				cmp_size_4byte, cfg->rdcu_data_adr, samples_4byte,
-				rdcu_get_data_mtu()))
-			return -1;
-		/* wait for it */
-		sync();
-		if (cfg->icu_output_buf) {
-			if (rdcu_read_sram(cfg->icu_output_buf,
-					   last_info->rdcu_cmp_adr_used,
-					   cmp_size_4byte))
-				return -1;
-		}
-	} else {
-		debug_print("Warning: input_buf = NULL; input_buf is not written to the sram and compressed data is not read from the SRAM\n");
-	}
-
-	/* read model and write model in parallel */
-	if (cfg->model_buf && model_mode_is_used(cfg->cmp_mode) && model_mode_is_used(last_info->cmp_mode_used)) {
-		uint32_t new_model_size_4byte;
-
-		/* set the model in the local mirror... */
-		if (rdcu_write_sram_16(cfg->model_buf, cfg->rdcu_model_adr,
-				       cfg->samples * IMA_SAM2BYT) < 0)
-			return -1;
-
-		new_model_size_4byte = last_info->samples_used * IMA_SAM2BYT;
-		if (rdcu_sync_sram_mirror_parallel(last_info->rdcu_new_model_adr_used,
-						   (new_model_size_4byte+3) & ~0x3U,
-						   cfg->rdcu_model_adr,
-						   samples_4byte, rdcu_get_data_mtu()))
-			return -1;
-		/* wait for it */
-		sync();
-		if (cfg->icu_new_model_buf) {
-			if (rdcu_read_sram(cfg->icu_new_model_buf,
-					   last_info->rdcu_new_model_adr_used,
-					   new_model_size_4byte))
-				return -1;
-		}
-	/* write model */
-	} else if (cfg->model_buf && model_mode_is_used(cfg->cmp_mode)) {
-		/* set the model in the local mirror... */
-		if (rdcu_write_sram_16(cfg->model_buf, cfg->rdcu_model_adr,
-				       cfg->samples * IMA_SAM2BYT) < 0)
-			return -1;
-
-		if (rdcu_sync_mirror_to_sram(cfg->rdcu_model_adr, samples_4byte,
-					     rdcu_get_data_mtu()))
-			return -1;
-	/* read model */
-	} else if (model_mode_is_used(last_info->cmp_mode_used)) {
-		if (rdcu_read_model(last_info, cfg->icu_new_model_buf) < 0)
-			return -1;
-	}
-
-	/* ...and wait for completion */
-	sync();
-
-	if (rdcu_start_compression())
-		return -1;
-
-	return 0;
-}
-

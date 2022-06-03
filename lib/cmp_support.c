@@ -469,20 +469,20 @@ int cmp_cfg_icu_gen_par_is_valid(const struct cmp_cfg *cfg)
 	}
 
 	if (cfg->cmp_mode > CMP_MODE_STUFF) {
-		debug_print("Error: selected cmp_mode: %u is not supported\n.", cfg->cmp_mode);
+		debug_print("Error: selected cmp_mode: %lu is not supported\n.", cfg->cmp_mode);
 		cfg_invalid++;
 	}
 
 	if (model_mode_is_used(cfg->cmp_mode)) {
 		if (cfg->model_value > MAX_MODEL_VALUE) {
-			debug_print("Error: selected model_value: %u is invalid. Largest supported value is: %u.\n",
+			debug_print("Error: selected model_value: %lu is invalid. Largest supported value is: %u.\n",
 				    cfg->model_value, MAX_MODEL_VALUE);
 			cfg_invalid++;
 		}
 	}
 
 	if (cfg->round > MAX_ICU_ROUND) {
-		debug_print("Error: selected lossy parameter: %u is not supported. Largest supported value is: %u.\n",
+		debug_print("Error: selected lossy parameter: %lu is not supported. Largest supported value is: %u.\n",
 			    cfg->round, MAX_ICU_ROUND);
 		cfg_invalid++;
 	}
@@ -600,7 +600,7 @@ static int cmp_pars_are_valid(uint32_t cmp_par, uint32_t spill, enum cmp_mode cm
 		break;
 	case CMP_MODE_STUFF:
 		if (cmp_par > MAX_STUFF_CMP_PAR) {
-			debug_print("Error: The selected %s stuff mode compression parameter: %u is too large, the largest possible value in the selected compression mode is: %u.\n",
+			debug_print("Error: The selected %s stuff mode compression parameter: %lu is too large, the largest possible value in the selected compression mode is: %u.\n",
 				    par_name, cmp_par, MAX_STUFF_CMP_PAR);
 			cfg_invalid++;
 		}
@@ -611,17 +611,17 @@ static int cmp_pars_are_valid(uint32_t cmp_par, uint32_t spill, enum cmp_mode cm
 	case CMP_MODE_MODEL_MULTI:
 		if (cmp_par < MIN_ICU_GOLOMB_PAR ||
 		    cmp_par > MAX_ICU_GOLOMB_PAR) {
-			debug_print("Error: The selected %s compression parameter: %u is not supported. The compression parameter has to be between [%u, %u].\n",
+			debug_print("Error: The selected %s compression parameter: %lu is not supported. The compression parameter has to be between [%u, %u].\n",
 				    par_name, cmp_par, MIN_ICU_GOLOMB_PAR, MAX_ICU_GOLOMB_PAR);
 			cfg_invalid++;
 		}
 		if (spill < MIN_ICU_SPILL) {
-			debug_print("Error: The selected %s spillover threshold value: %u is too small. Smallest possible spillover value is: %u.\n",
+			debug_print("Error: The selected %s spillover threshold value: %lu is too small. Smallest possible spillover value is: %u.\n",
 				    par_name, spill, MIN_ICU_SPILL);
 			cfg_invalid++;
 		}
 		if (spill > get_max_spill(cmp_par, data_type)) {
-			debug_print("Error: The selected %s spillover threshold value: %u is too large for the selected %s compression parameter: %u, the largest possible spillover value in the selected compression mode is: %u.\n",
+			debug_print("Error: The selected %s spillover threshold value: %lu is too large for the selected %s compression parameter: %lu, the largest possible spillover value in the selected compression mode is: %lu.\n",
 				    par_name, spill, par_name, cmp_par, get_max_spill(cmp_par, data_type));
 			cfg_invalid++;
 		}

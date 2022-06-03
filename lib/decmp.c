@@ -14,7 +14,8 @@
 
 
 /* structure to hold a setup to encode a value */
-typedef unsigned int (*decoder_ptr)(unsigned int, unsigned int, unsigned int, unsigned int *);
+typedef unsigned int (*decoder_ptr)(uint32_t code_word, uint32_t m,
+				    uint32_t log2_m, uint32_t * decoded_cw);
 struct decoder_setup {
 	/* generate_cw_f_pt generate_cw_f; /1* pointer to the code word generation function *1/ */
 	decoder_ptr decode_cw_f;
@@ -59,8 +60,8 @@ static unsigned int count_leading_ones(unsigned int value)
 }
 
 
-static unsigned int rice_decoder(uint32_t code_word, unsigned int m,
-				 unsigned int log2_m, unsigned int *decoded_cw)
+static unsigned int rice_decoder(uint32_t code_word, uint32_t m,
+				 uint32_t log2_m, uint32_t *decoded_cw)
 {
 	unsigned int q; /* quotient code */
 	unsigned int ql; /* length of the quotient code */
@@ -96,9 +97,8 @@ static unsigned int rice_decoder(uint32_t code_word, unsigned int m,
 }
 
 
-static unsigned int golomb_decoder(unsigned int code_word, unsigned int m,
-				   unsigned int log2_m, unsigned int
-				   *decoded_cw)
+static unsigned int golomb_decoder(uint32_t code_word, uint32_t m,
+				   uint32_t log2_m, uint32_t *decoded_cw)
 {
 	unsigned int q; /* quotient code */
 	unsigned int r1; /* remainder code group 1 */
@@ -166,7 +166,7 @@ static decoder_ptr select_decoder(unsigned int golomb_par)
 static int get_n_bits32(uint32_t *p_value, unsigned int n_bits, int bit_offset,
 			uint32_t *bitstream_adr, unsigned int max_stream_len)
 {
-	const unsigned int *local_adr;
+	uint32_t *local_adr;
 	unsigned int bitsLeft, bitsRight, localEndPos;
 	unsigned int mask;
 	int stream_len = (int)(n_bits + (unsigned int)bit_offset); /* overflow results in a negative return value */
@@ -234,7 +234,8 @@ static int get_n_bits32(uint32_t *p_value, unsigned int n_bits, int bit_offset,
 static int decode_normal(uint32_t *decoded_value, int stream_pos, const struct decoder_setup *setup)
 {
 	uint32_t read_val = ~0U;
-	int n_read_bits, cw_len, n_bits;
+	int n_read_bits, n_bits;
+	unsigned int cw_len;
 
 	if (stream_pos + setup->max_cw_len > setup->max_stream_len)   /* check buffer overflow */
 		n_read_bits = setup->max_stream_len - stream_pos;
@@ -250,11 +251,12 @@ static int decode_normal(uint32_t *decoded_value, int stream_pos, const struct d
 
 	read_val = read_val << (32 - n_read_bits);
 
-	cw_len = setup->decode_cw_f(read_val, setup->encoder_par1, setup->encoder_par2, decoded_value);
-	if (cw_len < 0)
+	cw_len = setup->decode_cw_f(read_val, setup->encoder_par1,
+				    setup->encoder_par2, decoded_value);
+	if (cw_len > 32)
 		return -1;
 
-	return stream_pos + cw_len;
+	return stream_pos + (int)cw_len;
 }
 
 

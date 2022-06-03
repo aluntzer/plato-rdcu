@@ -46,6 +46,7 @@
 #include <cmp_support.h>
 #include <cmp_rdcu.h>
 #include <cmp_entity.h>
+#include <cmp_data_types.h>
 
 #include <cfg.h>
 #include <demo.h>
@@ -701,15 +702,25 @@ static void rdcu_compression_cmp_lib_demo(void)
 	struct grtimer_uptime start_time, end_time;
 
 	/* set up compressor configuration */
-	example_cfg = DEFAULT_CFG_MODEL;
-	example_cfg.input_buf = data;
-	example_cfg.model_buf = model;
-	example_cfg.rdcu_data_adr = DATASTART;
-	example_cfg.rdcu_model_adr = MODELSTART;
-	example_cfg.rdcu_new_model_adr = UPDATED_MODELSTAT;
-	example_cfg.rdcu_buffer_adr = COMPRSTART;
-	example_cfg.samples = NUMSAMPLES;
-	example_cfg.buffer_length = COMPRDATALEN;
+	example_cfg = rdcu_cfg_create(DATA_TYPE_IMAGETTE_ADAPTIVE,
+				      CMP_DEF_IMA_MODEL_CMP_MODE,
+				      CMP_DEF_IMA_MODEL_MODEL_VALUE,
+				      CMP_DEF_IMA_MODEL_LOSSY_PAR);
+	if (rdcu_cfg_buffers(&example_cfg, (uint16_t *)data, NUMSAMPLES,
+			     (uint16_t *)model, DATASTART, MODELSTART,
+			     UPDATED_MODELSTAT, COMPRSTART, COMPRDATALEN)) {
+		printf("Error occur during rdcu_cfg_buffers()\n");
+		return;
+	}
+	if (rdcu_cfg_imagette(&example_cfg, CMP_DEF_IMA_MODEL_GOLOMB_PAR,
+			      CMP_DEF_IMA_MODEL_SPILL_PAR,
+			      CMP_DEF_IMA_MODEL_AP1_GOLOMB_PAR,
+			      CMP_DEF_IMA_MODEL_AP1_SPILL_PAR,
+			      CMP_DEF_IMA_MODEL_AP2_GOLOMB_PAR,
+			      CMP_DEF_IMA_MODEL_AP2_SPILL_PAR)) {
+		printf("Error occur during rdcu_cfg_imagette()\n");
+		return;
+	}
 
 	printf("\n\nDemonstrate a compression using the cmp_rdcu library\n"
 	        "===================================================\n");
@@ -796,12 +807,11 @@ static void rdcu_compression_cmp_lib_demo(void)
 		uint32_t i, s;
 
 		/* get the size of the compression entity */
-		cmp_ent_size = cmp_ent_build(NULL, DATA_TYPE_IMAGETTE_ADAPTIVE,
-					     CMP_ASW_VERSION_ID,
-					      grtimer_uptime_to_timestamp(start_time),
-					      grtimer_uptime_to_timestamp(end_time),
-					      model_id, model_counter,
-					      &example_info, &example_cfg);
+		cmp_ent_size = cmp_ent_build(NULL, CMP_ASW_VERSION_ID,
+					     grtimer_uptime_to_timestamp(start_time),
+					     grtimer_uptime_to_timestamp(end_time),
+					     model_id, model_counter, &example_cfg,
+					     example_info.cmp_size);
 		if(!cmp_ent_size) {
 			printf("Error occur during cmp_ent_build()\n");
 			return;
@@ -815,12 +825,11 @@ static void rdcu_compression_cmp_lib_demo(void)
 		}
 
 		/* now let us build the compression entity */
-		cmp_ent_size = cmp_ent_build(cmp_ent, DATA_TYPE_IMAGETTE_ADAPTIVE,
-					     CMP_ASW_VERSION_ID,
+		cmp_ent_size = cmp_ent_build(cmp_ent, CMP_ASW_VERSION_ID,
 					     grtimer_uptime_to_timestamp(start_time),
 					     grtimer_uptime_to_timestamp(end_time),
-					     model_id, model_counter,
-					     &example_info, &example_cfg);
+					     model_id, model_counter, &example_cfg,
+					     example_info.cmp_size);
 		if(!cmp_ent_size) {
 			printf("Error occur during cmp_ent_build()\n");
 			return;
@@ -863,8 +872,8 @@ static void rdcu_compression_cmp_lib_demo(void)
 	/* read updated model to some buffer and print */
 	if (1) {
 		uint32_t i;
-		uint32_t s = cmp_cal_size_of_model(example_info.samples_used,
-					   example_info.cmp_mode_used);
+		uint32_t s = cmp_cal_size_of_data(example_info.samples_used,
+						  DATA_TYPE_IMAGETTE_ADAPTIVE);
 		uint8_t *mymodel = malloc(s);
 
 		if (!mymodel) {

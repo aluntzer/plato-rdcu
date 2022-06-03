@@ -2354,22 +2354,22 @@ static void cmp_ent_parse_generic_header(struct cmp_entity *ent)
 
 		printf("Compressed with cmp_tool version: %u.%02u\n", major, minor);
 	} else
-		printf("ICU ASW Version ID: %u\n", version_id);
+		printf("ICU ASW Version ID: %lu\n", version_id);
 
 	cmp_ent_size = cmp_ent_get_size(ent);
-	printf("Compression Entity Size: %u byte\n", cmp_ent_size);
+	printf("Compression Entity Size: %lu byte\n", cmp_ent_size);
 
 	original_size = cmp_ent_get_original_size(ent);
-	printf("Original Data Size: %u byte\n", original_size);
+	printf("Original Data Size: %lu byte\n", original_size);
 
 	start_coarse_time = cmp_ent_get_coarse_start_time(ent);
-	printf("Compression Coarse Start Time: %u\n", start_coarse_time);
+	printf("Compression Coarse Start Time: %lu\n", start_coarse_time);
 
 	start_fine_time = cmp_ent_get_fine_start_time(ent);
 	printf("Compression Fine Start Time: %d\n", start_fine_time);
 
 	end_coarse_time = cmp_ent_get_coarse_end_time(ent);
-	printf("Compression Coarse End Time: %u\n", end_coarse_time);
+	printf("Compression Coarse End Time: %lu\n", end_coarse_time);
 
 	end_fine_time = cmp_ent_get_fine_end_time(ent);
 	printf("Compression Fine End Time: %d\n", end_fine_time);
@@ -2395,19 +2395,19 @@ static void cmp_ent_parse_generic_header(struct cmp_entity *ent)
 	printf("RAW bit in the Data Product Type is%s set\n", raw_bit ? "" : " not");
 
 	cmp_mode_used = cmp_ent_get_cmp_mode(ent);
-	printf("Used Compression Mode: %u\n", cmp_mode_used);
+	printf("Used Compression Mode: %lu\n", cmp_mode_used);
 
 	model_value_used = cmp_ent_get_model_value_used(ent);
-	printf("Used Model Updating Weighing Value: %u\n", model_value_used);
+	printf("Used Model Updating Weighing Value: %lu\n", model_value_used);
 
 	model_id = cmp_ent_get_model_id(ent);
-	printf("Model ID: %u\n", model_id);
+	printf("Model ID: %lu\n", model_id);
 
 	model_counter = cmp_ent_get_model_counter(ent);
-	printf("Model Counter: %u\n", model_counter);
+	printf("Model Counter: %lu\n", model_counter);
 
 	lossy_cmp_par_used = cmp_ent_get_lossy_cmp_par(ent);
-	printf("Used Lossy Compression Parameters: %u\n", lossy_cmp_par_used);
+	printf("Used Lossy Compression Parameters: %lu\n", lossy_cmp_par_used);
 }
 
 
@@ -2422,10 +2422,10 @@ static void cmp_ent_parese_imagette_header(struct cmp_entity *ent)
 	uint32_t spill_used, golomb_par_used;
 
 	spill_used = cmp_ent_get_ima_spill(ent);
-	printf("Used Spillover Threshold Parameter: %u\n", spill_used);
+	printf("Used Spillover Threshold Parameter: %lu\n", spill_used);
 
 	golomb_par_used = cmp_ent_get_ima_golomb_par(ent);
-	printf("Used Golomb Parameter: %u\n", golomb_par_used);
+	printf("Used Golomb Parameter: %lu\n", golomb_par_used);
 }
 
 
@@ -2441,22 +2441,22 @@ static void cmp_ent_parese_adaptive_imagette_header(struct cmp_entity *ent)
 		 ap1_golomb_par_used, ap2_spill_used, ap2_golomb_par_used;
 
 	spill_used = cmp_ent_get_ima_spill(ent);
-	printf("Used Spillover Threshold Parameter: %u\n", spill_used);
+	printf("Used Spillover Threshold Parameter: %lu\n", spill_used);
 
 	golomb_par_used = cmp_ent_get_ima_golomb_par(ent);
-	printf("Used Golomb Parameter: %u\n", golomb_par_used);
+	printf("Used Golomb Parameter: %lu\n", golomb_par_used);
 
 	ap1_spill_used = cmp_ent_get_ima_ap1_spill(ent);
-	printf("Used Adaptive 1 Spillover Threshold Parameter: %u\n", ap1_spill_used);
+	printf("Used Adaptive 1 Spillover Threshold Parameter: %lu\n", ap1_spill_used);
 
 	ap1_golomb_par_used = cmp_ent_get_ima_ap1_golomb_par(ent);
-	printf("Used Adaptive 1 Golomb Parameter: %u\n", ap1_golomb_par_used);
+	printf("Used Adaptive 1 Golomb Parameter: %lu\n", ap1_golomb_par_used);
 
 	ap2_spill_used = cmp_ent_get_ima_ap2_spill(ent);
-	printf("Used Adaptive 2 Spillover Threshold Parameter: %u\n", ap2_spill_used);
+	printf("Used Adaptive 2 Spillover Threshold Parameter: %lu\n", ap2_spill_used);
 
 	ap2_golomb_par_used = cmp_ent_get_ima_ap2_golomb_par(ent);
-	printf("Used Adaptive 2 Golomb Parameter: %u\n", ap2_golomb_par_used);
+	printf("Used Adaptive 2 Golomb Parameter: %lu\n", ap2_golomb_par_used);
 }
 
 
