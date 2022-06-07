@@ -75,7 +75,9 @@ struct cmp_cfg cmp_cfg_icu_create(enum cmp_data_type data_type, enum cmp_mode cm
 				  uint32_t model_value, uint32_t lossy_par)
 {
 	int cfg_valid;
-	struct cmp_cfg cfg = {0};
+	struct cmp_cfg cfg;
+
+	memset(&cfg, 0, sizeof(cfg));
 
 	cfg.data_type = data_type;
 	cfg.cmp_mode = cmp_mode;

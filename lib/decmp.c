@@ -348,7 +348,7 @@ static int decode_value(uint32_t *decoded_value, uint32_t model,
 	if (stream_pos <= 0)
 		return stream_pos;
 
-	*decoded_value = re_map_to_pos(*decoded_value); //, setup->max_used_bits);
+	*decoded_value = re_map_to_pos(*decoded_value);
 
 	*decoded_value += round_fwd(model, setup->lossy_par);
 
@@ -488,7 +488,9 @@ int decompress_cmp_entiy(struct cmp_entity *ent, void *model_buf,
 			 void *up_model_buf, void *decompressed_data)
 {
 	int err;
-	struct cmp_cfg cfg = {0};
+	struct cmp_cfg cfg;
+
+	memset(&cfg, 0, sizeof(cfg));
 
 	cfg.model_buf = model_buf;
 	cfg.icu_new_model_buf = up_model_buf;
@@ -511,7 +513,9 @@ int decompress_data(uint32_t *compressed_data, void *de_model_buf,
 		    const struct cmp_info *info, void *decompressed_data)
 {
 	int size_decomp_data;
-	struct cmp_cfg cfg = {0};
+	struct cmp_cfg cfg;
+
+	memset(&cfg, 0, sizeof(cfg));
 
 	if (!compressed_data)
 		return -1;

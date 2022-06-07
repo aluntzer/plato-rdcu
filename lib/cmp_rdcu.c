@@ -28,6 +28,7 @@
 
 #include <stdint.h>
 #include <stdio.h>
+#include <string.h>
 
 #include "rdcu_cmd.h"
 #include "cmp_support.h"
@@ -139,7 +140,9 @@ static int rdcu_cfg_gen_par_is_invalid(const struct cmp_cfg *cfg)
 struct cmp_cfg rdcu_cfg_create(enum cmp_data_type data_type, enum cmp_mode cmp_mode,
 			       uint32_t model_value, uint32_t lossy_par)
 {
-	struct cmp_cfg cfg = {0};
+	struct cmp_cfg cfg;
+
+	memset(&cfg, 0, sizeof(cfg));
 
 	cfg.data_type = data_type;
 	cfg.cmp_mode = cmp_mode;

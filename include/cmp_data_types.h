@@ -135,6 +135,7 @@ extern struct cmp_max_used_bits max_used_bits;
 #define MULTI_ENTRY_HDR_SIZE 12
 compile_time_assert(MULTI_ENTRY_HDR_SIZE % sizeof(uint32_t) == 0, N_DPU_ICU_MULTI_ENTRY_HDR_NOT_4_BYTE_ALLIED);
 
+__extension__
 struct multi_entry_hdr {
 	uint32_t timestamp_coarse;
 	uint16_t timestamp_fine;
@@ -206,6 +207,7 @@ struct f_fx_efx_ncob_ecob {
 } __attribute__((packed));
 
 
+__extension__
 struct l_fx {
 	uint32_t exp_flags:24; /* selected exposure flags (24 flags) */
 	uint32_t fx;
@@ -213,6 +215,7 @@ struct l_fx {
 } __attribute__((packed));
 
 
+__extension__
 struct l_fx_efx {
 	uint32_t exp_flags:24; /* selected exposure flags (24 flags) */
 	uint32_t fx;
@@ -221,6 +224,7 @@ struct l_fx_efx {
 } __attribute__((packed));
 
 
+__extension__
 struct l_fx_ncob {
 	uint32_t exp_flags:24; /* selected exposure flags (24 flags) */
 	uint32_t fx;
@@ -232,6 +236,7 @@ struct l_fx_ncob {
 } __attribute__((packed));
 
 
+__extension__
 struct l_fx_efx_ncob_ecob {
 	uint32_t exp_flags:24; /* selected exposure flags (24 flags) */
 	uint32_t fx;
