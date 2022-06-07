@@ -45,6 +45,7 @@
 
 #include <cmp_support.h>
 #include <cmp_rdcu.h>
+#include <cmp_icu.h>
 #include <cmp_entity.h>
 #include <cmp_data_types.h>
 
@@ -706,6 +707,11 @@ static void rdcu_compression_cmp_lib_demo(void)
 				      CMP_DEF_IMA_MODEL_CMP_MODE,
 				      CMP_DEF_IMA_MODEL_MODEL_VALUE,
 				      CMP_DEF_IMA_MODEL_LOSSY_PAR);
+	if (example_cfg.data_type == DATA_TYPE_UNKOWN) {
+		printf("Error occur during rdcu_cfg_create()\n");
+		return;
+	}
+
 	if (rdcu_cfg_buffers(&example_cfg, (uint16_t *)data, NUMSAMPLES,
 			     (uint16_t *)model, DATASTART, MODELSTART,
 			     UPDATED_MODELSTAT, COMPRSTART, COMPRDATALEN)) {
@@ -901,6 +907,114 @@ static void rdcu_compression_cmp_lib_demo(void)
 
 
 /**
+ * @brief demonstrate a compression using the cmp_icu library
+ */
+
+static void icu_compression_cmp_lib_demo(void)
+{
+	int cmp_size;
+	uint32_t s, i, cmp_data_size;
+	uint16_t *updated_model;
+	uint32_t *compressed_data;
+	struct cmp_cfg example_cfg;
+	struct cmp_max_used_bits max_used_bits =  cmp_get_max_used_bits();
+
+	/* change the max_used_bit parameter for N-CAM imagette data */
+	max_used_bits.version = 2;
+	max_used_bits.nc_imagette = 16;
+	cmp_set_max_used_bits(&max_used_bits);
+
+	/* create and setup a compression configuration */
+	example_cfg = cmp_cfg_icu_create(CMP_DEF_IMA_MODEL_DATA_TYPE, CMP_DEF_IMA_MODEL_CMP_MODE,
+					 CMP_DEF_IMA_MODEL_MODEL_VALUE, CMP_DEF_IMA_MODEL_LOSSY_PAR);
+	if (example_cfg.data_type == DATA_TYPE_UNKOWN) {
+		printf("Error occur during cmp_cfg_icu_create()\n");
+		return;
+	}
+
+	if (cmp_cfg_icu_imagette(&example_cfg, CMP_DEF_IMA_MODEL_GOLOMB_PAR,
+				 CMP_DEF_IMA_MODEL_SPILL_PAR)) {
+		printf("Error occur during cmp_cfg_icu_imagette()\n");
+		return;
+	}
+
+	updated_model = malloc(cmp_cal_size_of_data(NUMSAMPLES, example_cfg.data_type));
+	if (!updated_model) {
+		printf("malloc failed!\n");
+		return;
+	}
+
+	cmp_data_size = cmp_cfg_icu_buffers(&example_cfg, data, NUMSAMPLES,
+					    model, updated_model,
+					    NULL, COMPRDATALEN);
+	if (!cmp_data_size) {
+		printf("Error occur during cmp_cfg_icu_buffers()\n");
+		return;
+	}
+
+	compressed_data = malloc(cmp_data_size);
+	if (!compressed_data) {
+		printf("malloc failed!\n");
+		return;
+	}
+
+	/* now we compress the data on the ICU */
+	cmp_data_size = cmp_cfg_icu_buffers(&example_cfg, data, NUMSAMPLES,
+					    model, updated_model,
+					    compressed_data, COMPRDATALEN);
+	if (!cmp_data_size) {
+		printf("Error occur during cmp_cfg_icu_buffers()\n");
+		return;
+	}
+
+	cmp_size = icu_compress_data(&example_cfg);
+	if (cmp_size < 0) {
+		printf("Error occur during icu_compress_data()\n");
+		if (cmp_size == CMP_ERROR_SAMLL_BUF)
+			printf("The compressed data buffer is too small to hold the whole compressed data!\n");
+		if (cmp_size == CMP_ERROR_HIGH_VALUE)
+			printf("A data or model value is bigger than the max_used_bits parameter allows (set with the cmp_set_max_used_bits() function)!\n");
+
+		free(updated_model);
+		free(compressed_data);
+		return;
+	}
+
+	printf("\n\nHere's the compressed data (cmp_size %u):\n"
+	       "================================\n", cmp_size);
+
+	s = cmp_bit_to_4byte(cmp_size);
+
+	for (i = 0; i < s; i++) {
+		uint8_t *p = (uint8_t *)compressed_data; /* this cast only works on big-endian machines */
+
+		printf("%02X ", p[i]);
+		if (i && !((i+1) % 40))
+			printf("\n");
+	}
+	printf("\n");
+
+
+	printf("\n\nHere's the updated model (samples %lu):\n"
+	       "================================\n", example_cfg.samples);
+
+	s = cmp_cal_size_of_data(example_cfg.samples, example_cfg.data_type);
+
+	for (i = 0; i < s; i++) {
+		uint8_t *p = (uint8_t *)updated_model; /* this cast only works on big-endian machines */
+
+		printf("%02X ", p[i]);
+		if (i && !((i+1) % 40))
+			printf("\n");
+	}
+	printf("\n");
+
+	free(updated_model);
+	free(compressed_data);
+}
+
+
+/**
  * @brief exchange some stuff
  */
 
@@ -972,6 +1086,9 @@ static void rdcu_demo(void)
 	/* now do some compression work using the cmp_rdcu library and put the
 	 * result in a compression entity*/
 	rdcu_compression_cmp_lib_demo();
+
+	/* now use the software compression to compress the data */
+	icu_compression_cmp_lib_demo();
 }
 
 
