@@ -17,9 +17,9 @@
  */
 
 
-#include "cmp_data_types.h"
-#include "cmp_debug.h"
-#include "byteorder.h"
+#include <cmp_data_types.h>
+#include <cmp_debug.h>
+#include <byteorder.h>
 
 
 /* the maximum length of the different data products types in bits */

@@ -20,7 +20,7 @@
 #ifndef _CMP_ICU_H_
 #define _CMP_ICU_H_
 
-#include "cmp_support.h"
+#include <cmp_support.h>
 
 
 /* return code if the bitstream buffer is too small to store the whole bitstream */

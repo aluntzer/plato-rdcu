@@ -36,8 +36,8 @@
 
 #include <stdint.h>
 
-#include "compiler.h"
-#include "cmp_support.h"
+#include <compiler.h>
+#include <cmp_support.h>
 
 #define MAX_USED_NC_IMAGETTE_BITS		16
 #define MAX_USED_SATURATED_IMAGETTE_BITS	16 /* TBC */

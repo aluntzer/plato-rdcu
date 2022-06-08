@@ -29,8 +29,8 @@
 
 #include <stdint.h>
 
-#include "compiler.h"
-#include "cmp_support.h"
+#include <compiler.h>
+#include <cmp_support.h>
 
 
 #define GENERIC_HEADER_SIZE 32

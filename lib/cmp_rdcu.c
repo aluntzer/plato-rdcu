@@ -30,12 +30,12 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "rdcu_cmd.h"
-#include "cmp_support.h"
-#include "cmp_data_types.h"
-#include "rdcu_ctrl.h"
-#include "rdcu_rmap.h"
-#include "cmp_debug.h"
+#include <rdcu_cmd.h>
+#include <cmp_debug.h>
+#include <cmp_support.h>
+#include <cmp_data_types.h>
+#include <rdcu_ctrl.h>
+#include <rdcu_rmap.h>
 
 
 #define IMA_SAM2BYT                                                            \
