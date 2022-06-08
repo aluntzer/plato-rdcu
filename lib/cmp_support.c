@@ -378,13 +378,15 @@ unsigned int cmp_up_model(unsigned int data, unsigned int model,
 			  unsigned int model_value, unsigned int round)
 
 {
+	uint64_t weighted_model, weighted_data;
+
 	/* round and round back input because for decompression the accurate
 	 * data values are not available
 	 */
 	data = round_inv(round_fwd(data, round), round);
 	/* cast uint64_t to prevent overflow in the multiplication */
-	uint64_t weighted_model = (uint64_t)model * model_value;
-	uint64_t weighted_data = (uint64_t)data * (MAX_MODEL_VALUE - model_value);
+	weighted_model = (uint64_t)model * model_value;
+	weighted_data = (uint64_t)data * (MAX_MODEL_VALUE - model_value);
 	/* truncation is intended */
 	return (unsigned int)((weighted_model + weighted_data) / MAX_MODEL_VALUE);
 }

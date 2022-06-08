@@ -206,7 +206,7 @@ void rmap_destroy_packet(struct rmap_pkt *pkt)
  * @param pkt a struct rmap_pkt
  *
  * @note this will attempt to deallocate any pointer references assigned by the
- * 	 user
+ *	 user
  * @warning use with care
  */
 
@@ -563,7 +563,7 @@ struct rmap_pkt *rmap_pkt_from_buffer(uint8_t *buf, uint32_t len)
 
 	pkt->src   = buf[RMAP_SRC_ADDR + n];
 	pkt->tr_id = ((uint16_t) buf[RMAP_TRANS_ID_BYTE0 + n] << 8) |
-	              (uint16_t) buf[RMAP_TRANS_ID_BYTE1 + n];
+		      (uint16_t) buf[RMAP_TRANS_ID_BYTE1 + n];
 
 	/* commands have a data address */
 	if (pkt->ri.cmd_resp) {
@@ -576,10 +576,9 @@ struct rmap_pkt *rmap_pkt_from_buffer(uint8_t *buf, uint32_t len)
 
 	/* all headers have data length unless they are a write reply */
 	if (!(!pkt->ri.cmd_resp && (pkt->ri.cmd & (RMAP_CMD_BIT_WRITE)))) {
-
 		pkt->data_len = ((uint32_t) buf[RMAP_DATALEN_BYTE0 + n] << 16) |
 				((uint32_t) buf[RMAP_DATALEN_BYTE1 + n] <<  8) |
-			         (uint32_t) buf[RMAP_DATALEN_BYTE2 + n];
+				 (uint32_t) buf[RMAP_DATALEN_BYTE2 + n];
 	}
 
 	pkt->hdr_crc  = buf[RMAP_HEADER_CRC];
@@ -587,7 +586,7 @@ struct rmap_pkt *rmap_pkt_from_buffer(uint8_t *buf, uint32_t len)
 	if (pkt->data_len) {
 		if (len < RMAP_DATA_START + n + pkt->data_len + 1) {  /* +1 for data CRC */
 			printf("buffer len is smaller than the contained RMAP packet; buf len: %lu bytes vs RMAP: %lu bytes needed\n",
-				len , RMAP_DATA_START + n + pkt->data_len);
+				len, RMAP_DATA_START + n + pkt->data_len);
 			goto error;
 		}
 		if (len > RMAP_DATA_START + n + pkt->data_len + 1)  /* +1 for data CRC */
