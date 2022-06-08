@@ -45,7 +45,9 @@
 
 #include <cmp_support.h>
 #include <cmp_rdcu.h>
+#include <cmp_icu.h>
 #include <cmp_entity.h>
+#include <cmp_data_types.h>
 
 #include <cfg.h>
 #include <demo.h>
@@ -347,7 +349,7 @@ static void gr718b_cfg_router(void)
 
 
 	printf("Setting link-start bits on port addresses 0x%02X and 0x%02X.\n",
-	        RDCU_PHYS_PORT, ICU_PHYS_PORT);
+	       RDCU_PHYS_PORT, ICU_PHYS_PORT);
 
 	gr718b_set_link_start(RDCU_PHYS_PORT);
 	gr718b_set_link_start(ICU_PHYS_PORT);
@@ -486,10 +488,6 @@ static void rdcu_verify_data_transfers(void)
 
 	printf("Check complete, %d error(s) encountered (max %d listed)\n\n",
 	       cnt, MAX_ERR_CNT);
-
-
-
-	return;
 }
 
 
@@ -648,6 +646,7 @@ static void rdcu_compression_demo(void)
 		uint32_t i;
 		uint32_t s = (rdcu_get_compr_data_size_bit() + 7) >> 3;
 		uint8_t *myresult = malloc(s);
+
 		rdcu_read_sram(myresult, COMPRSTART, s);
 
 		printf("\n\nHere's the compressed data (size %lu):\n"
@@ -672,7 +671,7 @@ static void rdcu_compression_demo(void)
 
 static uint64_t grtimer_uptime_to_timestamp(struct grtimer_uptime time)
 {
-	struct grtimer_uptime time_zero = {0,0};
+	struct grtimer_uptime time_zero = {0, 0};
 	double seconds = grtimer_longcount_difftime(rtu, time, time_zero);
 	uint32_t coarse, fine;
 
@@ -700,21 +699,36 @@ static void rdcu_compression_cmp_lib_demo(void)
 	 * demonstration purposes only. */
 	struct grtimer_uptime start_time, end_time;
 
-	/* set up compressor configuration */
-	example_cfg = DEFAULT_CFG_MODEL;
-	example_cfg.input_buf = data;
-	example_cfg.model_buf = model;
-	example_cfg.rdcu_data_adr = DATASTART;
-	example_cfg.rdcu_model_adr = MODELSTART;
-	example_cfg.rdcu_new_model_adr = UPDATED_MODELSTAT;
-	example_cfg.rdcu_buffer_adr = COMPRSTART;
-	example_cfg.samples = NUMSAMPLES;
-	example_cfg.buffer_length = COMPRDATALEN;
-
-	printf("\n\nDemonstrate a compression using the cmp_rdcu library\n"
-	        "===================================================\n");
+	printf("\n\nDemonstrate a HW RDCU compression using the cmp_rdcu library\n"
+	       "============================================================\n");
 
 	grtimer_longcount_get_uptime(rtu, &start_time);
+
+	/* set up compressor configuration */
+	example_cfg = rdcu_cfg_create(DATA_TYPE_IMAGETTE_ADAPTIVE,
+				      CMP_DEF_IMA_MODEL_CMP_MODE,
+				      CMP_DEF_IMA_MODEL_MODEL_VALUE,
+				      CMP_DEF_IMA_MODEL_LOSSY_PAR);
+	if (example_cfg.data_type == DATA_TYPE_UNKOWN) {
+		printf("Error occur during rdcu_cfg_create()\n");
+		return;
+	}
+
+	if (rdcu_cfg_buffers(&example_cfg, (uint16_t *)data, NUMSAMPLES,
+			     (uint16_t *)model, DATASTART, MODELSTART,
+			     UPDATED_MODELSTAT, COMPRSTART, COMPRDATALEN)) {
+		printf("Error occur during rdcu_cfg_buffers()\n");
+		return;
+	}
+	if (rdcu_cfg_imagette(&example_cfg, CMP_DEF_IMA_MODEL_GOLOMB_PAR,
+			      CMP_DEF_IMA_MODEL_SPILL_PAR,
+			      CMP_DEF_IMA_MODEL_AP1_GOLOMB_PAR,
+			      CMP_DEF_IMA_MODEL_AP1_SPILL_PAR,
+			      CMP_DEF_IMA_MODEL_AP2_GOLOMB_PAR,
+			      CMP_DEF_IMA_MODEL_AP2_SPILL_PAR)) {
+		printf("Error occur during rdcu_cfg_imagette()\n");
+		return;
+	}
 
 	/* start HW compression */
 	if (rdcu_compress_data(&example_cfg)) {
@@ -796,32 +810,30 @@ static void rdcu_compression_cmp_lib_demo(void)
 		uint32_t i, s;
 
 		/* get the size of the compression entity */
-		cmp_ent_size = cmp_ent_build(NULL, DATA_TYPE_IMAGETTE_ADAPTIVE,
-					     CMP_ASW_VERSION_ID,
-					      grtimer_uptime_to_timestamp(start_time),
-					      grtimer_uptime_to_timestamp(end_time),
-					      model_id, model_counter,
-					      &example_info, &example_cfg);
-		if(!cmp_ent_size) {
+		cmp_ent_size = cmp_ent_build(NULL, CMP_ASW_VERSION_ID,
+					     grtimer_uptime_to_timestamp(start_time),
+					     grtimer_uptime_to_timestamp(end_time),
+					     model_id, model_counter, &example_cfg,
+					     example_info.cmp_size);
+		if (!cmp_ent_size) {
 			printf("Error occur during cmp_ent_build()\n");
 			return;
 		}
 
 		/* get memory for the compression entity */
 		cmp_ent = malloc(cmp_ent_size);
-		if(!cmp_ent) {
+		if (!cmp_ent) {
 			printf("Error occur during malloc()\n");
 			return;
 		}
 
 		/* now let us build the compression entity */
-		cmp_ent_size = cmp_ent_build(cmp_ent, DATA_TYPE_IMAGETTE_ADAPTIVE,
-					     CMP_ASW_VERSION_ID,
+		cmp_ent_size = cmp_ent_build(cmp_ent, CMP_ASW_VERSION_ID,
 					     grtimer_uptime_to_timestamp(start_time),
 					     grtimer_uptime_to_timestamp(end_time),
-					     model_id, model_counter,
-					     &example_info, &example_cfg);
-		if(!cmp_ent_size) {
+					     model_id, model_counter, &example_cfg,
+					     example_info.cmp_size);
+		if (!cmp_ent_size) {
 			printf("Error occur during cmp_ent_build()\n");
 			return;
 		}
@@ -863,8 +875,8 @@ static void rdcu_compression_cmp_lib_demo(void)
 	/* read updated model to some buffer and print */
 	if (1) {
 		uint32_t i;
-		uint32_t s = cmp_cal_size_of_model(example_info.samples_used,
-					   example_info.cmp_mode_used);
+		uint32_t s = cmp_cal_size_of_data(example_info.samples_used,
+						  DATA_TYPE_IMAGETTE_ADAPTIVE);
 		uint8_t *mymodel = malloc(s);
 
 		if (!mymodel) {
@@ -888,6 +900,117 @@ static void rdcu_compression_cmp_lib_demo(void)
 		free(mymodel);
 	}
 
+}
+
+
+/**
+ * @brief demonstrate a compression using the cmp_icu library
+ */
+
+static void icu_compression_cmp_lib_demo(void)
+{
+	int cmp_size;
+	uint32_t s, i, cmp_data_size;
+	uint16_t *updated_model;
+	uint32_t *compressed_data;
+	struct cmp_cfg example_cfg;
+	struct cmp_max_used_bits max_used_bits =  cmp_get_max_used_bits();
+
+	/* change the max_used_bit parameter for N-CAM imagette data */
+	max_used_bits.version = 2;
+	max_used_bits.nc_imagette = 16;
+	cmp_set_max_used_bits(&max_used_bits);
+
+
+	printf("\n\nDemonstrate a software compression on the ICU\n"
+	       "=============================================\n");
+
+	/* create and setup a compression configuration */
+	example_cfg = cmp_cfg_icu_create(CMP_DEF_IMA_MODEL_DATA_TYPE, CMP_DEF_IMA_MODEL_CMP_MODE,
+					 CMP_DEF_IMA_MODEL_MODEL_VALUE, CMP_DEF_IMA_MODEL_LOSSY_PAR);
+	if (example_cfg.data_type == DATA_TYPE_UNKOWN) {
+		printf("Error occur during cmp_cfg_icu_create()\n");
+		return;
+	}
+
+	if (cmp_cfg_icu_imagette(&example_cfg, CMP_DEF_IMA_MODEL_GOLOMB_PAR,
+				 CMP_DEF_IMA_MODEL_SPILL_PAR)) {
+		printf("Error occur during cmp_cfg_icu_imagette()\n");
+		return;
+	}
+
+	updated_model = malloc(cmp_cal_size_of_data(NUMSAMPLES, example_cfg.data_type));
+	if (!updated_model) {
+		printf("malloc failed!\n");
+		return;
+	}
+
+	cmp_data_size = cmp_cfg_icu_buffers(&example_cfg, data, NUMSAMPLES,
+					    model, updated_model,
+					    NULL, COMPRDATALEN);
+	if (!cmp_data_size) {
+		printf("Error occur during cmp_cfg_icu_buffers()\n");
+		return;
+	}
+
+	compressed_data = malloc(cmp_data_size);
+	if (!compressed_data) {
+		printf("malloc failed!\n");
+		return;
+	}
+
+	/* now we compress the data on the ICU */
+	cmp_data_size = cmp_cfg_icu_buffers(&example_cfg, data, NUMSAMPLES,
+					    model, updated_model,
+					    compressed_data, COMPRDATALEN);
+	if (!cmp_data_size) {
+		printf("Error occur during cmp_cfg_icu_buffers()\n");
+		return;
+	}
+
+	cmp_size = icu_compress_data(&example_cfg);
+	if (cmp_size < 0) {
+		printf("Error occur during icu_compress_data()\n");
+		if (cmp_size == CMP_ERROR_SAMLL_BUF)
+			printf("The compressed data buffer is too small to hold the whole compressed data!\n");
+		if (cmp_size == CMP_ERROR_HIGH_VALUE)
+			printf("A data or model value is bigger than the max_used_bits parameter allows (set with the cmp_set_max_used_bits() function)!\n");
+
+		free(updated_model);
+		free(compressed_data);
+		return;
+	}
+
+	printf("\n\nHere's the compressed data (cmp_size %u):\n"
+	       "================================\n", cmp_size);
+
+	s = cmp_bit_to_4byte(cmp_size);
+
+	for (i = 0; i < s; i++) {
+		uint8_t *p = (uint8_t *)compressed_data; /* this cast only works on big-endian machines */
+
+		printf("%02X ", p[i]);
+		if (i && !((i+1) % 40))
+			printf("\n");
+	}
+	printf("\n");
+
+	s = cmp_cal_size_of_data(example_cfg.samples, example_cfg.data_type);
+
+	printf("\n\nHere's the updated model (size %lu):\n"
+	       "================================\n", s);
+
+	for (i = 0; i < s; i++) {
+		uint8_t *p = (uint8_t *)updated_model; /* this cast only works on big-endian machines */
+
+		printf("%02X ", p[i]);
+		if (i && !((i+1) % 40))
+			printf("\n");
+	}
+	printf("\n");
+
+	free(updated_model);
+	free(compressed_data);
 }
 
 
@@ -963,6 +1086,9 @@ static void rdcu_demo(void)
 	/* now do some compression work using the cmp_rdcu library and put the
 	 * result in a compression entity*/
 	rdcu_compression_cmp_lib_demo();
+
+	/* now use the software compression to compress the data */
+	icu_compression_cmp_lib_demo();
 }
 
 
