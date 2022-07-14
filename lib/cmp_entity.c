@@ -443,6 +443,27 @@ int cmp_ent_set_model_counter(struct cmp_entity *ent, uint32_t model_counter)
 
 
 /**
+ * @brief set version identifier for the max. used bits registry in the
+ *	compression entity header
+ *
+ * @param ent			pointer to a compression entity
+ * @param max_used_bits_version	the identifier for the max. used bits registry
+ *
+ * @returns 0 on success, otherwise error
+ */
+
+int cmp_ent_set_max_used_bits_version(struct cmp_entity *ent, uint8_t max_used_bits_version)
+{
+	if (!ent)
+		return -1;
+
+	ent->max_used_bits_version = max_used_bits_version;
+
+	return 0;
+}
+
+
+/**
  * @brief set the used lossy compression parameter in the compression entity
  *	header
  *
@@ -1215,6 +1236,25 @@ uint8_t cmp_ent_get_model_counter(struct cmp_entity *ent)
 
 
 /**
+ * @brief get the version identifier for the max. used bits registry from the
+ *	compression entity header
+ *
+ * @param ent	pointer to a compression entity
+ *
+ * @returns the version identifier for the max. used bits registry on success,
+ *	0 on error
+ */
+
+uint8_t cmp_ent_get_max_use_bits_version(struct cmp_entity *ent)
+{
+	if (!ent)
+		return 0;
+
+	return ent->max_used_bits_version;
+}
+
+
+/**
  * @brief get the used lossy compression parameter from the compression entity header
  *
  * @param ent	pointer to a compression entity
@@ -1776,6 +1816,8 @@ int cmp_ent_write_cmp_pars(struct cmp_entity *ent, const struct cmp_cfg *cfg,
 	if (cmp_ent_set_cmp_mode(ent, cfg->cmp_mode))
 		return -1;
 	if (cmp_ent_set_model_value(ent, cfg->model_value))
+		return -1;
+	if (cmp_ent_set_max_used_bits_version(ent, cmp_get_max_used_bits_version()))
 		return -1;
 	if (cmp_ent_set_lossy_cmp_par(ent, cfg->round))
 		return -1;
@@ -2341,8 +2383,8 @@ void cmp_ent_print(struct cmp_entity *ent)
 static void cmp_ent_parse_generic_header(struct cmp_entity *ent)
 {
 	uint32_t version_id, cmp_ent_size, original_size, cmp_mode_used,
-		 model_value_used, model_id, model_counter, lossy_cmp_par_used,
-		 start_coarse_time, end_coarse_time;
+		 model_value_used, model_id, model_counter, max_used_bits_version,
+		 lossy_cmp_par_used, start_coarse_time, end_coarse_time;
 	uint16_t start_fine_time, end_fine_time;
 	enum cmp_data_type data_type;
 	int raw_bit;
@@ -2405,6 +2447,10 @@ static void cmp_ent_parse_generic_header(struct cmp_entity *ent)
 
 	model_counter = cmp_ent_get_model_counter(ent);
 	printf("Model Counter: %lu\n", model_counter);
+
+
+	max_used_bits_version = cmp_ent_get_max_use_bits_version(ent);
+	printf("Maximum Used Bits Registry Version: %lu\n", max_used_bits_version);
 
 	lossy_cmp_par_used = cmp_ent_get_lossy_cmp_par(ent);
 	printf("Used Lossy Compression Parameters: %lu\n", lossy_cmp_par_used);

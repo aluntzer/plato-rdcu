@@ -116,7 +116,7 @@ struct cmp_entity {
 	uint8_t  model_value_used;		/* used Model Updating Weighing Value */
 	uint16_t model_id;			/* Model ID */
 	uint8_t  model_counter;			/* Model Counter */
-	uint8_t  spare;
+	uint8_t  max_used_bits_version;
 	uint16_t lossy_cmp_par_used;		/* used Lossy Compression Parameters */
 	union {	/* specific Compression Entity Header for the different Data Product Types */
 		struct imagette_header ima;
@@ -174,6 +174,7 @@ int cmp_ent_set_cmp_mode(struct cmp_entity *ent, uint32_t cmp_mode_used);
 int cmp_ent_set_model_value(struct cmp_entity *ent, uint32_t model_value_used);
 int cmp_ent_set_model_id(struct cmp_entity *ent, uint32_t model_id);
 int cmp_ent_set_model_counter(struct cmp_entity *ent, uint32_t model_counter);
+int cmp_ent_set_max_used_bits_version(struct cmp_entity *ent, uint8_t max_used_bits_version);
 int cmp_ent_set_lossy_cmp_par(struct cmp_entity *ent, uint32_t lossy_cmp_par_used);
 
 
@@ -235,6 +236,7 @@ uint8_t cmp_ent_get_model_value_used(struct cmp_entity *ent);
 
 uint16_t cmp_ent_get_model_id(struct cmp_entity *ent);
 uint8_t cmp_ent_get_model_counter(struct cmp_entity *ent);
+uint8_t cmp_ent_get_max_used_bits_version(struct cmp_entity *ent);
 uint16_t cmp_ent_get_lossy_cmp_par(struct cmp_entity *ent);
 
 
@@ -285,11 +287,13 @@ ssize_t cmp_ent_get_cmp_data(struct cmp_entity *ent, uint32_t *data_buf,
 uint32_t cmp_ent_cal_hdr_size(enum cmp_data_type data_type, int raw_mode);
 
 
-#ifdef HAS_TIME_H
-#include <time.h>
+#if defined __has_include
+#  if __has_include(<time.h>)
+#    include <time.h>
 /* create a timestamp for the compression header */
 extern const struct tm EPOCH_DATE;
 uint64_t cmp_ent_create_timestamp(const struct timespec *ts);
+#  endif
 #endif
 
 /* print and parse functions */
