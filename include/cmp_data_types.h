@@ -84,7 +84,7 @@
 
 /* struct holding the maximum length of the different data products types in bits */
 struct cmp_max_used_bits {
-	unsigned int version;
+	uint8_t version;
 	unsigned int s_exp_flags;
 	unsigned int s_fx;
 	unsigned int s_efx;
@@ -127,8 +127,7 @@ struct cmp_max_used_bits {
 void cmp_set_max_used_bits(const struct cmp_max_used_bits *set_max_used_bits);
 struct cmp_max_used_bits cmp_get_max_used_bits(void);
 
-/* for internal use only! */
-extern struct cmp_max_used_bits max_used_bits;
+uint8_t cmp_get_max_used_bits_version(void);
 
 
 /* Source data header structure for multi entry packet */

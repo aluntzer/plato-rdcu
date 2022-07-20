@@ -701,7 +701,7 @@ static void rmap_process_read_reply(uint8_t *pkt)
 	for (i = 0; i < len; i++)
 		printf("%02x:", pkt[RMAP_DATA_START + i]);
 
-	printf("\b \n");
+	printf("\b\n");
 }
 
 

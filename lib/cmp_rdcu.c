@@ -77,13 +77,13 @@ static void sync(void)
 
 /**
  * @brief check if the compression data product type, compression mode, model
- *	value and the lossy rounding parameters are valid for a RDCU compression
+ *	value and the lossy rounding parameters are valid for an RDCU compression
  *
  * @param cfg	pointer to a compression configuration containing the compression
  *	data product type, compression mode, model value and the rounding parameters
  *
  * @returns 0 if the compression data type, compression mode, model value and
- *	the lossy rounding parameters are valid for a RDCU compression, non-zero
+ *	the lossy rounding parameters are valid for an RDCU compression, non-zero
  *	if parameters are invalid
  */
 
@@ -126,14 +126,14 @@ static int rdcu_cfg_gen_par_is_invalid(const struct cmp_cfg *cfg)
 
 
 /**
- * @brief create a RDCU compression configuration
+ * @brief create an RDCU compression configuration
  *
- * @param data_type	compression data product types
+ * @param data_type	compression data product type
  * @param cmp_mode	compression mode
- * @param model_value	model weighting parameter (only need for model compression mode)
+ * @param model_value	model weighting parameter (only needed for model compression mode)
  * @param lossy_par	lossy rounding parameter (use CMP_LOSSLESS for lossless compression)
  *
- * @returns compression configuration containing the chosen parameters;
+ * @returns a compression configuration containing the chosen parameters;
  *	on error the data_type record is set to DATA_TYPE_UNKOWN
  */
 
@@ -343,27 +343,26 @@ static int rdcu_cfg_buffers_is_invalid(const struct cmp_cfg *cfg)
 
 
 /**
- *@brief setup of the different data buffers for an RDCU compression
+ * @brief setup of the different data buffers for an RDCU compression
  *
  * @param cfg			pointer to a compression configuration (created
  *				with the rdcu_cfg_create() function)
  * @param data_to_compress	pointer to the data to be compressed (if NULL no
  *				data transfer to the RDCU)
- * @param data_samples		length of the data to be compressed measured in
- *				16-bit data samples (ignoring the multi entity header)
- * @param model_of_data		pointer to model data buffer (only needed for
- *				model compression mode, if NULL no model data
- *				transfer to the RDCU)
- * @param rdcu_data_adr		RDCU data to compress start address, the first
- *				data address in the RDCU SRAM
- * @param rdcu_model_adr	RDCU model start address, the first model address
- *				in the RDCU SRAM (only need for model compression mode)
- * @param rdcu_new_model_adr	RDCU new/updated model start address(can be the
- *				by the same as rdcu_model_adr for in-place model update)
- * @param rdcu_buffer_adr	RDCU compressed data start address, the first
- *				output data address in the RDCU SRAM
- * @param rdcu_buffer_lenght	length of the RDCU compressed data SRAM buffer
- *				in number of 16-bit samples
+ * @param data_samples		length of the data to be compressed (plus the
+ *				collection header) measured in 16-bit data samples
+ * @param model_of_data		pointer to the model data buffer (only needed for
+ *				model compression mode, if NULL no model data is
+ *				transferred to the RDCU)
+ * @param rdcu_data_adr		RDCU SRAM data to compress start address
+ * @param rdcu_model_adr	RDCU SRAM model start address (only needed for
+ *				model compression mode)
+ * @param rdcu_new_model_adr	RDCU SRAM new/updated model start address (can be
+ *				the same as rdcu_model_adr for in-place model update)
+ * @param rdcu_buffer_adr	RDCU SRAM compressed data start address
+ * @param compressed_data_len_samples	length of the RDCU compressed data SRAM buffer
+ *					measured in 16-bit units (same as data_samples)
+ *
  * @returns 0 if parameters are valid, non-zero if parameters are invalid
  */
 
@@ -371,7 +370,7 @@ int rdcu_cfg_buffers(struct cmp_cfg *cfg, uint16_t *data_to_compress,
 		     uint32_t data_samples, uint16_t *model_of_data,
 		     uint32_t rdcu_data_adr, uint32_t rdcu_model_adr,
 		     uint32_t rdcu_new_model_adr, uint32_t rdcu_buffer_adr,
-		     uint32_t rdcu_buffer_lenght)
+		     uint32_t compressed_data_len_samples)
 {
 	if (!cfg) {
 		debug_print("Error: pointer to the compression configuration structure is NULL.\n");
@@ -385,7 +384,7 @@ int rdcu_cfg_buffers(struct cmp_cfg *cfg, uint16_t *data_to_compress,
 	cfg->rdcu_model_adr = rdcu_model_adr;
 	cfg->rdcu_new_model_adr = rdcu_new_model_adr;
 	cfg->rdcu_buffer_adr = rdcu_buffer_adr;
-	cfg->buffer_length = rdcu_buffer_lenght;
+	cfg->buffer_length = compressed_data_len_samples;
 
 	if (rdcu_cfg_buffers_is_invalid(cfg))
 		return -1;
@@ -396,7 +395,7 @@ int rdcu_cfg_buffers(struct cmp_cfg *cfg, uint16_t *data_to_compress,
 
 /**
  * @brief check if the Golomb and spillover threshold parameter combination is
- *	invalid for a RDCU compression
+ *	invalid for an RDCU compression
  * @note also checked the adaptive Golomb and spillover threshold parameter combinations
  *
  * @param cfg	a pointer to a compression configuration
@@ -479,12 +478,12 @@ static int rdcu_cfg_imagette_is_invalid(const struct cmp_cfg *cfg)
  *
  * @param cfg			pointer to a compression configuration (created
  *				with the rdcu_cfg_create() function)
- * @param golomb_par		imagette compression parameter (Golomb parameter)
+ * @param golomb_par		imagette compression parameter
  * @param spillover_par		imagette spillover threshold parameter
- * @param ap1_golomb_par	adaptive 1 imagette compression parameter (ap1_golomb parameter)
+ * @param ap1_golomb_par	adaptive 1 imagette compression parameter
  * @param ap1_spillover_par	adaptive 1 imagette spillover threshold parameter
- * @param ap2_golomb_par	adaptive 2 imagette compression parameter (ap2_golomb parameter)
- * @param ap2_spillover_par	adaptive 1 imagette spillover threshold parameter
+ * @param ap2_golomb_par	adaptive 2 imagette compression parameter
+ * @param ap2_spillover_par	adaptive 2 imagette spillover threshold parameter
  *
  * @returns 0 if parameters are valid, non-zero if parameters are invalid
  */
@@ -514,7 +513,7 @@ int rdcu_cfg_imagette(struct cmp_cfg *cfg,
 
 
 /**
- * @brief check if the compressor configuration is invalid for a RDCU compression,
+ * @brief check if the compressor configuration is invalid for an RDCU compression,
  *	see the user manual for more information (PLATO-UVIE-PL-UM-0001).
  *
  * @param cfg	pointer to a compression configuration contains all parameters
@@ -672,10 +671,11 @@ int rdcu_start_compression(void)
  *
  * @param cfg  configuration contains all parameters required for compression
  *
- * @note when using the 1d-differencing mode or the raw mode (cmp_mode = 0,2,4),
- *      the model parameters (model_value, model_buf, rdcu_model_adr) are ignored
- * @note the validity of the cfg structure is checked before the compression is
- *	 started
+ * @note Before the rdcu_compress function can be used, an initialisation of
+ *	the RMAP library is required. This is achieved with the functions
+ *	rdcu_ctrl_init() and rdcu_rmap_init().
+ * @note The validity of the cfg structure is checked before the compression is
+ *	 started.
  *
  * @returns 0 on success, error otherwise
  */
@@ -756,7 +756,7 @@ int rdcu_read_cmp_status(struct cmp_status *status)
 
 
 /**
- * @brief read out the metadata of a RDCU compression
+ * @brief read out the metadata of an RDCU compression
  *
  * @param info  compression information contains the metadata of a compression
  *
@@ -812,15 +812,14 @@ int rdcu_read_cmp_info(struct cmp_info *info)
 /**
  * @brief read the compressed bitstream from the RDCU SRAM
  *
- * @param info  compression information contains the metadata of a compression
- *
- * @param output_buf  the buffer to store the bitstream (if NULL, the required
- *		      size is returned)
+ * @param info			compression information contains the metadata of a compression
+ * @param compressed_data	the buffer to store the bitstream (if NULL, the
+ *				required size is returned)
  *
  * @returns the number of bytes read, < 0 on error
  */
 
-int rdcu_read_cmp_bitstream(const struct cmp_info *info, void *output_buf)
+int rdcu_read_cmp_bitstream(const struct cmp_info *info, void *compressed_data)
 {
 	uint32_t s;
 
@@ -830,7 +829,7 @@ int rdcu_read_cmp_bitstream(const struct cmp_info *info, void *output_buf)
 	/* calculate the need bytes for the bitstream */
 	s = cmp_bit_to_4byte(info->cmp_size);
 
-	if (output_buf == NULL)
+	if (compressed_data == NULL)
 		return (int)s;
 
 	if (rdcu_sync_sram_to_mirror(info->rdcu_cmp_adr_used, s,
@@ -840,22 +839,22 @@ int rdcu_read_cmp_bitstream(const struct cmp_info *info, void *output_buf)
 	/* wait for it */
 	sync();
 
-	return rdcu_read_sram(output_buf, info->rdcu_cmp_adr_used, s);
+	return rdcu_read_sram(compressed_data, info->rdcu_cmp_adr_used, s);
 }
 
 
 /**
- * @brief read the model from the RDCU SRAM
+ * @brief read the updated model from the RDCU SRAM
  *
- * @param info  compression information contains the metadata of a compression
+ * @param info		compression information contains the metadata of a compression
  *
- * @param model_buf  the buffer to store the model (if NULL, the required size
- *		     is returned)
+ * @param updated_model	the buffer to store the updated model (if NULL, the required size
+ *			is returned)
  *
  * @returns the number of bytes read, < 0 on error
  */
 
-int rdcu_read_model(const struct cmp_info *info, void *model_buf)
+int rdcu_read_model(const struct cmp_info *info, void *updated_model)
 {
 	uint32_t s;
 
@@ -865,7 +864,7 @@ int rdcu_read_model(const struct cmp_info *info, void *model_buf)
 	/* calculate the need bytes for the model */
 	s = info->samples_used * IMA_SAM2BYT;
 
-	if (model_buf == NULL)
+	if (updated_model == NULL)
 		return (int)s;
 
 	if (rdcu_sync_sram_to_mirror(info->rdcu_new_model_adr_used, (s+3) & ~3U,
@@ -875,7 +874,7 @@ int rdcu_read_model(const struct cmp_info *info, void *model_buf)
 	/* wait for it */
 	sync();
 
-	return rdcu_read_sram(model_buf, info->rdcu_new_model_adr_used, s);
+	return rdcu_read_sram(updated_model, info->rdcu_new_model_adr_used, s);
 }
 
 

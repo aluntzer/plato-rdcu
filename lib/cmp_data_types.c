@@ -89,6 +89,17 @@ struct cmp_max_used_bits cmp_get_max_used_bits(void)
 
 
 /**
+ * @brief get the version record form the max used bits registry
+ *
+ * @returns version of the max used bits registry
+ */
+
+uint8_t cmp_get_max_used_bits_version(void) {
+	return max_used_bits.version;
+}
+
+
+/**
  * @brief calculate the size of a sample for the different compression data type
  *
  * @param data_type	compression data_type

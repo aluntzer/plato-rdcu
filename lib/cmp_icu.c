@@ -39,6 +39,10 @@
 #include <cmp_icu.h>
 
 
+/* maximum used bits registry */
+extern struct cmp_max_used_bits max_used_bits;
+
+
 /* pointer to a code word generation function */
 typedef uint32_t (*generate_cw_f_pt)(uint32_t value, uint32_t encoder_par1,
 				     uint32_t encoder_par2, uint32_t *cw);
@@ -60,14 +64,14 @@ struct encoder_setupt {
 
 
 /**
- * @brief create a ICU compression configuration
+ * @brief create an ICU compression configuration
  *
- * @param data_type	compression data product types
+ * @param data_type	compression data product type
  * @param cmp_mode	compression mode
- * @param model_value	model weighting parameter (only need for model compression mode)
+ * @param model_value	model weighting parameter (only needed for model compression mode)
  * @param lossy_par	lossy rounding parameter (use CMP_LOSSLESS for lossless compression)
  *
- * @returns compression configuration containing the chosen parameters;
+ * @returns a compression configuration containing the chosen parameters;
  *	on error the data_type record is set to DATA_TYPE_UNKOWN
  */
 
@@ -93,13 +97,13 @@ struct cmp_cfg cmp_cfg_icu_create(enum cmp_data_type data_type, enum cmp_mode cm
 
 
 /**
- * @brief setup of the different data buffers for an ICU compression
+ * @brief setup the different data buffers for an ICU compression
  *
  * @param cfg			pointer to a compression configuration (created
  *				with the cmp_cfg_icu_create() function)
  * @param data_to_compress	pointer to the data to be compressed
  * @param data_samples		length of the data to be compressed measured in
- *				data samples/entitys (multi entity header not
+ *				data samples/entitys (collection header not
  *				included by imagette data)
  * @param model_of_data		pointer to model data buffer (can be NULL if no
  *				model compression mode is used)
@@ -142,7 +146,7 @@ size_t cmp_cfg_icu_buffers(struct cmp_cfg *cfg, void *data_to_compress,
  * @brief set up the configuration parameters for an ICU imagette compression
  *
  * @param cfg			pointer to a compression configuration (created
- *				with the cmp_cfg_icu_create() function)
+ *				by the cmp_cfg_icu_create() function)
  * @param cmp_par		imagette compression parameter (Golomb parameter)
  * @param spillover_par		imagette spillover threshold parameter
  *
@@ -166,11 +170,11 @@ int cmp_cfg_icu_imagette(struct cmp_cfg *cfg, uint32_t cmp_par,
 
 
 /**
- * @brief set up of the configuration parameters for a flux/COB compression
+ * @brief set up the configuration parameters for a flux/COB compression
  * @note not all parameters are needed for every flux/COB compression data type
  *
  * @param cfg			pointer to a compression configuration (created
- *				with the cmp_cfg_icu_create() function)
+ *				by the cmp_cfg_icu_create() function)
  * @param cmp_par_exp_flags	exposure flags compression parameter
  * @param spillover_exp_flags	exposure flags spillover threshold parameter
  * @param cmp_par_fx		normal flux compression parameter
@@ -220,13 +224,13 @@ int cmp_cfg_fx_cob(struct cmp_cfg *cfg,
 
 
 /**
- * @brief set up of the configuration parameters for an auxiliary science data compression
+ * @brief set up the configuration parameters for an auxiliary science data compression
  * @note auxiliary compression data types are: DATA_TYPE_OFFSET, DATA_TYPE_BACKGROUND,
 	DATA_TYPE_SMEARING, DATA_TYPE_F_CAM_OFFSET, DATA_TYPE_F_CAM_BACKGROUND
- * @note not all parameters are needed for the every auxiliary compression data types
+ * @note not all parameters are needed for the every auxiliary compression data type
  *
- * @param cfg				pointer to a compression configuration (
- *					created with the cmp_cfg_icu_create() function)
+ * @param cfg				pointer to a compression configuration (created
+ *					with the cmp_cfg_icu_create() function)
  * @param cmp_par_mean			mean compression parameter
  * @param spillover_mean		mean spillover threshold parameter
  * @param cmp_par_variance		variance compression parameter
@@ -2294,7 +2298,7 @@ static int cmp_data_to_big_endian(const struct cmp_cfg *cfg, unsigned int cmp_si
 
 
 /**
- * @brief	compress data on the ICU
+ * @brief compress data on the ICU in software
  *
  * @param cfg	pointer to a compression configuration (created with the
  *		cmp_cfg_icu_create() function, setup with the cmp_cfg_xxx() functions)
@@ -2405,7 +2409,8 @@ int icu_compress_data(const struct cmp_cfg *cfg)
 
 	if (cfg->icu_output_buf && cmp_size > 0) {
 		cmp_size = pad_bitstream(cfg, cmp_size);
-		cmp_data_to_big_endian(cfg, (unsigned int)cmp_size);
+		if (cmp_data_to_big_endian(cfg, (unsigned int)cmp_size))
+			cmp_size = -1;
 	}
 
 	return cmp_size;
