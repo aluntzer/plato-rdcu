@@ -919,11 +919,13 @@ static void icu_compression_cmp_lib_demo(void)
 #define NO_CMP_MODE_RAW_USED 0
 
 	struct cmp_max_used_bits max_used_bits;
+	enum cmp_data_type example_data_type = CMP_DEF_IMA_MODEL_DATA_TYPE;
 	struct cmp_cfg example_cfg;
 	uint16_t *updated_model;
 	void *ent_cmp_data;
+	struct cmp_entity *cmp_entity;
 	int cmp_size_bits;
-	uint32_t s, i;
+	uint32_t s, i, cmp_buf_size, entity_size;
 
 	/* change the max_used_bit parameter for N-CAM imagette data */
 	max_used_bits = cmp_get_max_used_bits();
@@ -936,7 +938,7 @@ static void icu_compression_cmp_lib_demo(void)
 	       "=============================================\n");
 
 	/* create a compression configuration with default values */
-	example_cfg = cmp_cfg_icu_create(CMP_DEF_IMA_MODEL_DATA_TYPE, CMP_DEF_IMA_MODEL_CMP_MODE,
+	example_cfg = cmp_cfg_icu_create(example_data_type, CMP_DEF_IMA_MODEL_CMP_MODE,
 					 CMP_DEF_IMA_MODEL_MODEL_VALUE, CMP_DEF_IMA_MODEL_LOSSY_PAR);
 	if (example_cfg.data_type == DATA_TYPE_UNKOWN) {
 		printf("Error occurred during cmp_cfg_icu_create()\n");
@@ -951,14 +953,14 @@ static void icu_compression_cmp_lib_demo(void)
 	}
 
 	/* allocate memory for the updated model */
-	updated_model = malloc(cmp_cal_size_of_data(NUMSAMPLES, example_cfg.data_type));
+	updated_model = malloc(cmp_cal_size_of_data(NUMSAMPLES, example_data_type));
 	if (!updated_model) {
 		printf("malloc failed!\n");
 		return;
 	}
 
 	/* calculate the size of the buffer for the compressed data in bytes */
-	cmp_buf_size = cmp_cal_size_of_data(CMP_BUF_LEN_SAMPLES, example_data_type);
+	cmp_buf_size = cmp_cal_size_of_data(COMPRDATALEN, example_data_type);
 	if (!cmp_buf_size) {
 		printf("Error occurred during cmp_cal_size_of_data()\n");
 		return;
@@ -1022,7 +1024,7 @@ static void icu_compression_cmp_lib_demo(void)
 		return;
 	}
 
-	printf("Here's the compressed entity (size %u):\n"
+	printf("Here's the compressed entity (size %lu):\n"
        "=========================================\n", entity_size);
 	for (i = 0; i < entity_size; i++) {
 		uint8_t *p = (uint8_t *)cmp_entity; /* the compression entity is big-endian */
@@ -1032,7 +1034,7 @@ static void icu_compression_cmp_lib_demo(void)
 	}
 	printf("\n");
 
-	s = cmp_cal_size_of_data(NUMSAMPLES, example_cfg.data_type);
+	s = cmp_cal_size_of_data(NUMSAMPLES, example_data_type);
 
 	printf("\n\nHere's the updated model (size %lu):\n"
 	       "================================\n", s);
