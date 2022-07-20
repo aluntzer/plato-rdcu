@@ -47,21 +47,21 @@ int rdcu_cfg_imagette(struct cmp_cfg *cfg,
 		      uint32_t ap1_golomb_par, uint32_t ap1_spillover_par,
 		      uint32_t ap2_golomb_par, uint32_t ap2_spillover_par);
 
-int rdcu_cmp_cfg_is_invalid(const struct cmp_cfg *cfg);
-
 int rdcu_compress_data(const struct cmp_cfg *cfg);
 
 int rdcu_read_cmp_status(struct cmp_status *status);
 
 int rdcu_read_cmp_info(struct cmp_info *info);
 
-int rdcu_read_cmp_bitstream(const struct cmp_info *info, void *output_buf);
+int rdcu_read_cmp_bitstream(const struct cmp_info *info, void *compressed_data);
 
-int rdcu_read_model(const struct cmp_info *info, void *model_buf);
+int rdcu_read_model(const struct cmp_info *info, void *updated_model);
 
 int rdcu_interrupt_compression(void);
 
 void rdcu_enable_interrput_signal(void);
 void rdcu_disable_interrput_signal(void);
+
+int rdcu_cmp_cfg_is_invalid(const struct cmp_cfg *cfg);
 
 #endif /* _CMP_RDCU_H_ */

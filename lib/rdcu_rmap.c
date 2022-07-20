@@ -489,7 +489,7 @@ int rdcu_sync(int (*fn)(uint16_t trans_id, uint8_t *cmd),
 /**
  * @brief submit a data sync command
  *
- * @param fn a RDCU data transfer generation function
+ * @param fn an RDCU data transfer generation function
  * @param addr the remote address
  * @param data the local data address
  * @param data_len the length of the data payload

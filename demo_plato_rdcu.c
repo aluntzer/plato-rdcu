@@ -909,93 +909,130 @@ static void rdcu_compression_cmp_lib_demo(void)
 
 static void icu_compression_cmp_lib_demo(void)
 {
-	int cmp_size;
-	uint32_t s, i, cmp_data_size;
-	uint16_t *updated_model;
-	uint32_t *compressed_data;
+/* The start_time, end_time, model_id and counter have to be managed by the ASW
+ * here we use arbitrary values for demonstration */
+#define START_TIME 0
+#define END_TIME 0
+#define MODEL_ID 42
+#define MODEL_COUNTER 1
+
+#define NO_CMP_MODE_RAW_USED 0
+
+	struct cmp_max_used_bits max_used_bits;
 	struct cmp_cfg example_cfg;
-	struct cmp_max_used_bits max_used_bits =  cmp_get_max_used_bits();
+	uint16_t *updated_model;
+	void *ent_cmp_data;
+	int cmp_size_bits;
+	uint32_t s, i;
 
 	/* change the max_used_bit parameter for N-CAM imagette data */
-	max_used_bits.version = 2;
-	max_used_bits.nc_imagette = 16;
+	max_used_bits = cmp_get_max_used_bits();
+	max_used_bits.version = 0;
+	max_used_bits.nc_imagette = 16; /* an imagette value uses a maximum of 16 bits */
 	cmp_set_max_used_bits(&max_used_bits);
 
 
 	printf("\n\nDemonstrate a software compression on the ICU\n"
 	       "=============================================\n");
 
-	/* create and setup a compression configuration */
+	/* create a compression configuration with default values */
 	example_cfg = cmp_cfg_icu_create(CMP_DEF_IMA_MODEL_DATA_TYPE, CMP_DEF_IMA_MODEL_CMP_MODE,
 					 CMP_DEF_IMA_MODEL_MODEL_VALUE, CMP_DEF_IMA_MODEL_LOSSY_PAR);
 	if (example_cfg.data_type == DATA_TYPE_UNKOWN) {
-		printf("Error occur during cmp_cfg_icu_create()\n");
+		printf("Error occurred during cmp_cfg_icu_create()\n");
 		return;
 	}
 
+	/* configure imagette specific compression parameters with default values */
 	if (cmp_cfg_icu_imagette(&example_cfg, CMP_DEF_IMA_MODEL_GOLOMB_PAR,
 				 CMP_DEF_IMA_MODEL_SPILL_PAR)) {
-		printf("Error occur during cmp_cfg_icu_imagette()\n");
+		printf("Error occurred during cmp_cfg_icu_imagette()\n");
 		return;
 	}
 
+	/* allocate memory for the updated model */
 	updated_model = malloc(cmp_cal_size_of_data(NUMSAMPLES, example_cfg.data_type));
 	if (!updated_model) {
 		printf("malloc failed!\n");
 		return;
 	}
 
-	cmp_data_size = cmp_cfg_icu_buffers(&example_cfg, data, NUMSAMPLES,
-					    model, updated_model,
-					    NULL, COMPRDATALEN);
-	if (!cmp_data_size) {
-		printf("Error occur during cmp_cfg_icu_buffers()\n");
+	/* calculate the size of the buffer for the compressed data in bytes */
+	cmp_buf_size = cmp_cal_size_of_data(CMP_BUF_LEN_SAMPLES, example_data_type);
+	if (!cmp_buf_size) {
+		printf("Error occurred during cmp_cal_size_of_data()\n");
 		return;
 	}
 
-	compressed_data = malloc(cmp_data_size);
-	if (!compressed_data) {
+	/* create a compression entity */
+	entity_size = cmp_ent_create(NULL, example_data_type,
+				     NO_CMP_MODE_RAW_USED, cmp_buf_size);
+	if (!entity_size) {
+		printf("Error occurred during cmp_ent_create()\n");
+		return;
+	}
+	/* allocated memory for the compression entity */
+	cmp_entity = malloc(entity_size);
+	if (!cmp_entity) {
 		printf("malloc failed!\n");
+		return;
+	}
+	entity_size = cmp_ent_create(cmp_entity, example_data_type,
+				     NO_CMP_MODE_RAW_USED, cmp_buf_size);
+	if (!entity_size) {
+		printf("Error occurred during cmp_ent_create()\n");
+		return;
+	}
+
+	/* Configure the buffer related settings. We put the compressed data directly into
+	 * the compression entity. In this way we do not need to copy the compressed data
+	 * into the compression entity */
+	ent_cmp_data = cmp_ent_get_data_buf(cmp_entity);
+	if (!ent_cmp_data) {
+		printf("Error occurred during cmp_ent_get_data_buf()\n");
+		return;
+	}
+	cmp_buf_size = cmp_cfg_icu_buffers(&example_cfg, data, NUMSAMPLES,
+					    model, updated_model,
+					    ent_cmp_data, COMPRDATALEN);
+	if (!cmp_buf_size) {
+		printf("Error occurred during cmp_cfg_icu_buffers()\n");
 		return;
 	}
 
 	/* now we compress the data on the ICU */
-	cmp_data_size = cmp_cfg_icu_buffers(&example_cfg, data, NUMSAMPLES,
-					    model, updated_model,
-					    compressed_data, COMPRDATALEN);
-	if (!cmp_data_size) {
-		printf("Error occur during cmp_cfg_icu_buffers()\n");
-		return;
-	}
-
-	cmp_size = icu_compress_data(&example_cfg);
-	if (cmp_size < 0) {
-		printf("Error occur during icu_compress_data()\n");
-		if (cmp_size == CMP_ERROR_SAMLL_BUF)
+	cmp_size_bits = icu_compress_data(&example_cfg);
+	if (cmp_size_bits < 0) {
+		printf("Error occurred during icu_compress_data()\n");
+		if (cmp_size_bits == CMP_ERROR_SAMLL_BUF)
 			printf("The compressed data buffer is too small to hold the whole compressed data!\n");
-		if (cmp_size == CMP_ERROR_HIGH_VALUE)
+		if (cmp_size_bits == CMP_ERROR_HIGH_VALUE)
 			printf("A data or model value is bigger than the max_used_bits parameter allows (set with the cmp_set_max_used_bits() function)!\n");
 
 		free(updated_model);
-		free(compressed_data);
+		free(cmp_entity);
 		return;
 	}
 
-	printf("\n\nHere's the compressed data (cmp_size %u):\n"
-	       "================================\n", cmp_size);
+	/* now we set all the parameters in the compression entity header */
+	entity_size = cmp_ent_build(cmp_entity, CMP_ASW_VERSION_ID, START_TIME, END_TIME,
+				    MODEL_ID, MODEL_COUNTER, &example_cfg, cmp_size_bits);
+	if (!entity_size) {
+		printf("Error occurred during cmp_ent_build()\n");
+		return;
+	}
 
-	s = cmp_bit_to_4byte(cmp_size);
-
-	for (i = 0; i < s; i++) {
-		uint8_t *p = (uint8_t *)compressed_data; /* this cast only works on big-endian machines */
-
+	printf("Here's the compressed entity (size %u):\n"
+       "=========================================\n", entity_size);
+	for (i = 0; i < entity_size; i++) {
+		uint8_t *p = (uint8_t *)cmp_entity; /* the compression entity is big-endian */
 		printf("%02X ", p[i]);
 		if (i && !((i+1) % 40))
 			printf("\n");
 	}
 	printf("\n");
 
-	s = cmp_cal_size_of_data(example_cfg.samples, example_cfg.data_type);
+	s = cmp_cal_size_of_data(NUMSAMPLES, example_cfg.data_type);
 
 	printf("\n\nHere's the updated model (size %lu):\n"
 	       "================================\n", s);
@@ -1010,7 +1047,7 @@ static void icu_compression_cmp_lib_demo(void)
 	printf("\n");
 
 	free(updated_model);
-	free(compressed_data);
+	free(cmp_entity);
 }
 
 
