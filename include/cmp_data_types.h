@@ -108,8 +108,8 @@ struct cmp_max_used_bits {
 	unsigned int nc_background_mean;
 	unsigned int nc_background_variance;
 	unsigned int nc_background_outlier_pixels;
-	unsigned int smeating_mean;
-	unsigned int smeating_variance_mean;
+	unsigned int smearing_mean;
+	unsigned int smearing_variance_mean;
 	unsigned int smearing_outlier_pixels;
 	unsigned int fc_imagette;
 	unsigned int fc_offset_mean;
@@ -271,8 +271,8 @@ struct smearing {
 
 
 size_t size_of_a_sample(enum cmp_data_type data_type);
-unsigned int cmp_cal_size_of_data(unsigned int samples, enum cmp_data_type data_type);
-int cmp_input_size_to_samples(unsigned int size, enum cmp_data_type data_type);
+uint32_t cmp_cal_size_of_data(uint32_t samples, enum cmp_data_type data_type);
+int32_t cmp_input_size_to_samples(uint32_t size, enum cmp_data_type data_type);
 
 int cmp_input_big_to_cpu_endianness(void *data, uint32_t data_size_byte,
 				    enum cmp_data_type data_type);

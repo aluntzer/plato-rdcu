@@ -23,6 +23,14 @@
 #include <stddef.h>
 
 
+/* return code if the bitstream buffer is too small to store the whole bitstream */
+#define CMP_ERROR_SMALL_BUF -2
+
+/* return code if the value or the model is bigger than the max_used_bits
+ * parameter allows
+ */
+#define CMP_ERROR_HIGH_VALUE -3
+
 #define CMP_LOSSLESS	0
 #define CMP_PAR_UNUNSED	0
 
@@ -30,19 +38,19 @@
 #define MAX_MODEL_VALUE                                                        \
 	16U /* the maximal model values used in the update equation for the new model */
 
-/* valid compression parameter ranges for RDCU compression according to PLATO-UVIE-PL-UM-0001 */
+/* valid compression parameter ranges for RDCU/ICU imagette compression according to PLATO-UVIE-PL-UM-0001 */
 #define MAX_RDCU_CMP_MODE	4U
-#define MIN_RDCU_GOLOMB_PAR	1U
-#define MAX_RDCU_GOLOMB_PAR	63U
-#define MIN_RDCU_SPILL		2U
+#define MIN_IMA_GOLOMB_PAR	1U
+#define MAX_IMA_GOLOMB_PAR	63U
+#define MIN_IMA_SPILL		2U
 #define MAX_RDCU_ROUND		2U
-/* for maximum spill value look at get_max_spill function */
+/* for maximum spill value look at cmp_rdcu_max_spill function */
 
-/* valid compression parameter ranges for ICU compression */
-#define MIN_ICU_GOLOMB_PAR	1U
-#define MAX_ICU_GOLOMB_PAR	0x80000000U
-#define MIN_ICU_SPILL		2U
-/* for maximum spill value look at get_max_spill function */
+/* valid compression parameter ranges for ICU non-imagette compression */
+#define MIN_NON_IMA_GOLOMB_PAR	1U
+#define MAX_NON_IMA_GOLOMB_PAR	UINT16_MAX /* the compression entity dos not allow larger values */
+#define MIN_NON_IMA_SPILL	2U
+/* for maximum spill value look at cmp_icu_max_spill function */
 #define MAX_ICU_ROUND		3U
 #define MAX_STUFF_CMP_PAR	32U
 
@@ -83,10 +91,12 @@
 #define CMP_DEF_IMA_DIFF_RDCU_UP_MODEL_ADR	0x000000 /* not needed for 1d-differencing cmp_mode */
 #define CMP_DEF_IMA_DIFF_RDCU_BUFFER_ADR	0x600000
 
+enum check_opt {ICU_CHECK, RDCU_CHECK}; /* options for configuration check functions */
+
 
 /* defined compression data product types */
 enum cmp_data_type {
-	DATA_TYPE_UNKOWN,
+	DATA_TYPE_UNKNOWN,
 	DATA_TYPE_IMAGETTE,
 	DATA_TYPE_IMAGETTE_ADAPTIVE,
 	DATA_TYPE_SAT_IMAGETTE,
@@ -95,17 +105,17 @@ enum cmp_data_type {
 	DATA_TYPE_BACKGROUND,
 	DATA_TYPE_SMEARING,
 	DATA_TYPE_S_FX,
-	DATA_TYPE_S_FX_DFX,
+	DATA_TYPE_S_FX_EFX,
 	DATA_TYPE_S_FX_NCOB,
-	DATA_TYPE_S_FX_DFX_NCOB_ECOB,
+	DATA_TYPE_S_FX_EFX_NCOB_ECOB,
 	DATA_TYPE_L_FX,
-	DATA_TYPE_L_FX_DFX,
+	DATA_TYPE_L_FX_EFX,
 	DATA_TYPE_L_FX_NCOB,
-	DATA_TYPE_L_FX_DFX_NCOB_ECOB,
+	DATA_TYPE_L_FX_EFX_NCOB_ECOB,
 	DATA_TYPE_F_FX,
-	DATA_TYPE_F_FX_DFX,
+	DATA_TYPE_F_FX_EFX,
 	DATA_TYPE_F_FX_NCOB,
-	DATA_TYPE_F_FX_DFX_NCOB_ECOB,
+	DATA_TYPE_F_FX_EFX_NCOB_ECOB,
 	DATA_TYPE_F_CAM_IMAGETTE,
 	DATA_TYPE_F_CAM_IMAGETTE_ADAPTIVE,
 	DATA_TYPE_F_CAM_OFFSET,
@@ -145,7 +155,7 @@ struct cmp_cfg {
 	uint32_t rdcu_new_model_adr;/* RDCU updated model start address, the address in the RDCU SRAM where the updated model is stored */
 	uint32_t rdcu_buffer_adr;   /* RDCU compressed data start address, the first output data address in the RDCU SRAM */
 	enum cmp_data_type data_type; /* Compression Data Product Types */
-	uint32_t cmp_mode;          /* 0: raw mode
+	enum cmp_mode cmp_mode;     /* 0: raw mode
 				     * 1: model mode with zero escape symbol mechanism
 				     * 2: 1d differencing mode without input model with zero escape symbol mechanism
 				     * 3: model mode with multi escape symbol mechanism
@@ -223,30 +233,41 @@ struct cmp_info {
 				       */
 };
 
+/* structure containing flux/COB compression parameters pairs */
+struct fx_cob_par {
+	uint8_t exp_flags;
+	uint8_t fx;
+	uint8_t ncob;
+	uint8_t efx;
+	uint8_t ecob;
+	uint8_t fx_cob_variance;
+};
+
 
 int is_a_pow_of_2(unsigned int v);
 int ilog_2(uint32_t x);
 
 unsigned int cmp_bit_to_4byte(unsigned int cmp_size_bit);
 
-int cmp_cfg_is_valid(const struct cmp_cfg *cfg);
-int cmp_cfg_icu_gen_par_is_valid(const struct cmp_cfg *cfg);
-int cmp_cfg_icu_buffers_is_valid(const struct cmp_cfg *cfg);
-int cmp_cfg_imagette_is_valid(const struct cmp_cfg *cfg);
-int cmp_cfg_fx_cob_is_valid(const struct cmp_cfg *cfg);
-int cmp_cfg_aux_is_valid(const struct cmp_cfg *cfg);
-uint32_t get_max_spill(unsigned int golomb_par, enum cmp_data_type);
+int cmp_cfg_icu_is_invalid(const struct cmp_cfg *cfg);
+int cmp_cfg_gen_par_is_invalid(const struct cmp_cfg *cfg, enum check_opt opt);
+int cmp_cfg_icu_buffers_is_invalid(const struct cmp_cfg *cfg);
+int cmp_cfg_imagette_is_invalid(const struct cmp_cfg *cfg, enum check_opt opt);
+int cmp_cfg_fx_cob_is_invalid(const struct cmp_cfg *cfg);
+int cmp_cfg_aux_is_invalid(const struct cmp_cfg *cfg);
+uint32_t cmp_ima_max_spill(unsigned int golomb_par);
+uint32_t cmp_icu_max_spill(unsigned int cmp_par);
 
-int cmp_data_type_valid(enum cmp_data_type data_type);
+int cmp_data_type_is_invalid(enum cmp_data_type data_type);
 int rdcu_supported_data_type_is_used(enum cmp_data_type data_type);
 int cmp_imagette_data_type_is_used(enum cmp_data_type data_type);
 int cmp_ap_imagette_data_type_is_used(enum cmp_data_type data_type);
 int cmp_fx_cob_data_type_is_used(enum cmp_data_type data_type);
+int cmp_cfg_fx_cob_get_need_pars(enum cmp_data_type data_type, struct fx_cob_par *par);
 int cmp_aux_data_type_is_used(enum cmp_data_type data_type);
 
 int cmp_mode_is_supported(enum cmp_mode cmp_mode);
 int model_mode_is_used(enum cmp_mode cmp_mode);
-int diff_mode_is_used(enum cmp_mode cmp_mode);
 int raw_mode_is_used(enum cmp_mode cmp_mode);
 int rdcu_supported_cmp_mode_is_used(enum cmp_mode cmp_mode);
 int zero_escape_mech_is_used(enum cmp_mode cmp_mode);
@@ -258,7 +279,6 @@ unsigned int cmp_up_model(unsigned int data, unsigned int model,
 			  unsigned int model_value, unsigned int round);
 
 
-void print_cmp_cfg(const struct cmp_cfg *cfg);
 void print_cmp_info(const struct cmp_info *info);
 
 #endif /* CMP_SUPPORT_H */

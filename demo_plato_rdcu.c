@@ -709,7 +709,7 @@ static void rdcu_compression_cmp_lib_demo(void)
 				      CMP_DEF_IMA_MODEL_CMP_MODE,
 				      CMP_DEF_IMA_MODEL_MODEL_VALUE,
 				      CMP_DEF_IMA_MODEL_LOSSY_PAR);
-	if (example_cfg.data_type == DATA_TYPE_UNKOWN) {
+	if (example_cfg.data_type == DATA_TYPE_UNKNOWN) {
 		printf("Error occur during rdcu_cfg_create()\n");
 		return;
 	}
@@ -940,7 +940,7 @@ static void icu_compression_cmp_lib_demo(void)
 	/* create a compression configuration with default values */
 	example_cfg = cmp_cfg_icu_create(example_data_type, CMP_DEF_IMA_MODEL_CMP_MODE,
 					 CMP_DEF_IMA_MODEL_MODEL_VALUE, CMP_DEF_IMA_MODEL_LOSSY_PAR);
-	if (example_cfg.data_type == DATA_TYPE_UNKOWN) {
+	if (example_cfg.data_type == DATA_TYPE_UNKNOWN) {
 		printf("Error occurred during cmp_cfg_icu_create()\n");
 		return;
 	}
@@ -1006,7 +1006,7 @@ static void icu_compression_cmp_lib_demo(void)
 	cmp_size_bits = icu_compress_data(&example_cfg);
 	if (cmp_size_bits < 0) {
 		printf("Error occurred during icu_compress_data()\n");
-		if (cmp_size_bits == CMP_ERROR_SAMLL_BUF)
+		if (cmp_size_bits == CMP_ERROR_SMALL_BUF)
 			printf("The compressed data buffer is too small to hold the whole compressed data!\n");
 		if (cmp_size_bits == CMP_ERROR_HIGH_VALUE)
 			printf("A data or model value is bigger than the max_used_bits parameter allows (set with the cmp_set_max_used_bits() function)!\n");

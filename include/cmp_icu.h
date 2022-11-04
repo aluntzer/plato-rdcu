@@ -22,24 +22,16 @@
 
 #include <cmp_support.h>
 
-
-/* return code if the bitstream buffer is too small to store the whole bitstream */
-#define CMP_ERROR_SAMLL_BUF -2
-
-/* return code if the value or the model is bigger than the max_used_bits
- * parameter allows
- */
-#define CMP_ERROR_HIGH_VALUE -3
-
+#define CMP_PAR_UNUSED 0
 
 /* create and setup a compression configuration */
 struct cmp_cfg cmp_cfg_icu_create(enum cmp_data_type data_type, enum cmp_mode cmp_mode,
 				  uint32_t model_value, uint32_t lossy_par);
 
-size_t cmp_cfg_icu_buffers(struct cmp_cfg *cfg, void *data_to_compress,
-			   uint32_t data_samples, void *model_of_data,
-			   void *updated_model, uint32_t *compressed_data,
-			   uint32_t compressed_data_len_samples);
+uint32_t cmp_cfg_icu_buffers(struct cmp_cfg *cfg, void *data_to_compress,
+			     uint32_t data_samples, void *model_of_data,
+			     void *updated_model, uint32_t *compressed_data,
+			     uint32_t compressed_data_len_samples);
 
 int cmp_cfg_icu_imagette(struct cmp_cfg *cfg, uint32_t cmp_par,
 			 uint32_t spillover_par);
