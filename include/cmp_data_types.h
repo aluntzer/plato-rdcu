@@ -82,7 +82,7 @@
 #define MAX_USED_FC_BACKGROUND_OUTLIER_PIXELS_BITS	16 /* TBC */
 
 
-/* struct holding the maximum length of the different data products types in bits */
+/* struct holding the maximum length of the different data product types in bits */
 struct cmp_max_used_bits {
 	uint8_t version;
 	unsigned int s_exp_flags;
