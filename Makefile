@@ -10,16 +10,10 @@ TEST_DIR  := test
 BUILD_DIR := build
 UNITY_DIR := $(TEST_DIR)/Unity/src
 # flags
-CPPFLAGS  := -DDEBUGLEVEL=1 -I. -I$(INC_DIR) -I$(INC_DIR)/leon -I$(UNITY_DIR)
+CPPFLAGS  := -DNO_IASW -DDEBUGLEVEL=1 -I. -I$(INC_DIR) -I$(INC_DIR)/leon -I$(UNITY_DIR)
 CFLAGS    := -O2 -Wall -Wextra -std=gnu99 -Werror -pedantic \
              -pedantic-errors -Wno-long-long# -Wconversion
 LDFLAGS   :=
-
-# mac OS X does not support 32 bit
-ifneq ($(shell uname -s), Darwin)
-	CFLAGS += -mv8
-	LDFLAGS += -mv8
-endif
 
 
 TESTS := cmp_data_types cmp_icu cmp_entity cmp_decmp cmp_rdcu_cfg
@@ -61,6 +55,7 @@ all: $(TARGET)
 
 .PHONY: $(TARGET)
 $(TARGET): CC = sparc-elf-gcc
+$(TARGET): CFLAGS += -mv8
 $(TARGET): $(BUILD_DIR)/$(TARGET)
 
 $(BUILD_DIR)/$(TARGET): $(BUILD_DIR)/$(TARGET).o $(LIB_OBJS)
@@ -99,7 +94,7 @@ test: $(TESTS_RESULTS)
 	@echo "$(FAIL)"
 	@echo "-----------------------\nPASSED:\n-----------------------"
 	@echo "$(PASSED)"
-	@echo "\nDONE"
+	@echo "DONE"
 
 $(BUILD_DIR)/%.txt: $(BUILD_DIR)/%
 	$(LCOV) --zerocounters --directory .
