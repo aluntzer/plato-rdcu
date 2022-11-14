@@ -174,12 +174,11 @@ void test_cmp_input_size_to_samples(void)
 	data_type = DATA_TYPE_S_FX_NCOB;
 	size = MULTI_ENTRY_HDR_SIZE - 1;
 	samples_get = cmp_input_size_to_samples(size, data_type);
+	TEST_ASSERT_EQUAL(-1, samples_get);
 	data_type = DATA_TYPE_S_FX_NCOB;
 
-	data_type = DATA_TYPE_S_FX_NCOB;
 	size = MULTI_ENTRY_HDR_SIZE + 4*sizeof(struct s_fx_ncob) - 1;
 	samples_get = cmp_input_size_to_samples(size, data_type);
-	TEST_ASSERT_EQUAL(-1, samples_get);
 	TEST_ASSERT_EQUAL(-1, samples_get);
 }
 

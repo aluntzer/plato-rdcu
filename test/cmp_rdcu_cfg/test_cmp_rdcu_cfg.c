@@ -47,7 +47,7 @@ void test_rdcu_cfg_create(void)
 	cfg = rdcu_cfg_create(data_type, cmp_mode, model_value, lossy_par);
 	TEST_ASSERT_EQUAL(DATA_TYPE_UNKNOWN, cfg.data_type);
 
-	data_type = -1; /* not valid data type */
+	data_type = -1U; /* not valid data type */
 	cfg = rdcu_cfg_create(data_type, cmp_mode, model_value, lossy_par);
 	TEST_ASSERT_EQUAL(DATA_TYPE_UNKNOWN, cfg.data_type);
 
@@ -65,7 +65,7 @@ void test_rdcu_cfg_create(void)
 	cfg = rdcu_cfg_create(data_type, cmp_mode, model_value, lossy_par);
 	TEST_ASSERT_EQUAL(DATA_TYPE_UNKNOWN, cfg.data_type);
 
-	cmp_mode = -1;
+	cmp_mode = -1U;
 	cfg = rdcu_cfg_create(data_type, cmp_mode, model_value, lossy_par);
 	TEST_ASSERT_EQUAL(DATA_TYPE_UNKNOWN, cfg.data_type);
 
@@ -538,11 +538,13 @@ void test_rdcu_cfg_imagette(void)
 	error = rdcu_cfg_imagette(&cfg, golomb_par, spillover_par,
 				  ap1_golomb_par, ap1_spillover_par,
 				  ap2_golomb_par, ap2_spillover_par);
+	TEST_ASSERT_EQUAL(1, error);
 	golomb_par = MAX_IMA_GOLOMB_PAR;
 	spillover_par = cmp_ima_max_spill(golomb_par)+1;
 	error = rdcu_cfg_imagette(&cfg, golomb_par, spillover_par,
 				  ap1_golomb_par, ap1_spillover_par,
 				  ap2_golomb_par, ap2_spillover_par);
+	TEST_ASSERT_EQUAL(1, error);
 
 	golomb_par = MIN_IMA_GOLOMB_PAR;
 	spillover_par = MIN_IMA_SPILL - 1;
@@ -572,11 +574,13 @@ void test_rdcu_cfg_imagette(void)
 	error = rdcu_cfg_imagette(&cfg, golomb_par, spillover_par,
 				  ap1_golomb_par, ap1_spillover_par,
 				  ap2_golomb_par, ap2_spillover_par);
+	TEST_ASSERT_EQUAL(1, error);
 	ap1_golomb_par = MAX_IMA_GOLOMB_PAR;
 	ap1_spillover_par = cmp_ima_max_spill(golomb_par)+1;
 	error = rdcu_cfg_imagette(&cfg, golomb_par, spillover_par,
 				  ap1_golomb_par, ap1_spillover_par,
 				  ap2_golomb_par, ap2_spillover_par);
+	TEST_ASSERT_EQUAL(1, error);
 
 	ap1_golomb_par = MIN_IMA_GOLOMB_PAR;
 	ap1_spillover_par = MIN_IMA_SPILL - 1;
@@ -606,11 +610,13 @@ void test_rdcu_cfg_imagette(void)
 	error = rdcu_cfg_imagette(&cfg, golomb_par, spillover_par,
 				  ap1_golomb_par, ap1_spillover_par,
 				  ap2_golomb_par, ap2_spillover_par);
+	TEST_ASSERT_EQUAL(1, error);
 	ap2_golomb_par = MAX_IMA_GOLOMB_PAR;
 	ap2_spillover_par = cmp_ima_max_spill(golomb_par)+1;
 	error = rdcu_cfg_imagette(&cfg, golomb_par, spillover_par,
 				  ap1_golomb_par, ap1_spillover_par,
 				  ap2_golomb_par, ap2_spillover_par);
+	TEST_ASSERT_EQUAL(1, error);
 
 	ap2_golomb_par = MIN_IMA_GOLOMB_PAR;
 	ap2_spillover_par = MIN_IMA_SPILL - 1;
@@ -684,10 +690,12 @@ void test_rdcu_cmp_cfg_is_invalid(void)
 	error = rdcu_cfg_buffers(&cfg, NULL, 0, NULL, CMP_DEF_IMA_MODEL_RDCU_DATA_ADR,
 				 CMP_DEF_IMA_MODEL_RDCU_MODEL_ADR, CMP_DEF_IMA_MODEL_RDCU_UP_MODEL_ADR,
 				 CMP_DEF_IMA_MODEL_RDCU_BUFFER_ADR, 1);
+	TEST_ASSERT_FALSE(error);
 	error = rdcu_cfg_imagette(&cfg,
 				  CMP_DEF_IMA_MODEL_GOLOMB_PAR, CMP_DEF_IMA_MODEL_SPILL_PAR,
 				  CMP_DEF_IMA_MODEL_AP1_GOLOMB_PAR, CMP_DEF_IMA_MODEL_AP1_SPILL_PAR,
 				  CMP_DEF_IMA_MODEL_AP2_GOLOMB_PAR, CMP_DEF_IMA_MODEL_AP2_SPILL_PAR);
+	TEST_ASSERT_FALSE(error);
 	cfg.icu_new_model_buf = data;
 	cfg.icu_output_buf = (void *)model;
 	error = rdcu_cmp_cfg_is_invalid(&cfg);
@@ -703,10 +711,12 @@ void test_rdcu_cmp_cfg_is_invalid(void)
 	error = rdcu_cfg_buffers(&cfg, data, 1, model, CMP_DEF_IMA_MODEL_RDCU_DATA_ADR,
 				 CMP_DEF_IMA_MODEL_RDCU_MODEL_ADR, CMP_DEF_IMA_MODEL_RDCU_UP_MODEL_ADR,
 				 CMP_DEF_IMA_MODEL_RDCU_BUFFER_ADR, 0);
+	TEST_ASSERT_FALSE(error);
 	error = rdcu_cfg_imagette(&cfg,
 				  CMP_DEF_IMA_MODEL_GOLOMB_PAR, CMP_DEF_IMA_MODEL_SPILL_PAR,
 				  CMP_DEF_IMA_MODEL_AP1_GOLOMB_PAR, CMP_DEF_IMA_MODEL_AP1_SPILL_PAR,
 				  CMP_DEF_IMA_MODEL_AP2_GOLOMB_PAR, CMP_DEF_IMA_MODEL_AP2_SPILL_PAR);
+	TEST_ASSERT_FALSE(error);
 	error = rdcu_cmp_cfg_is_invalid(&cfg);
 	TEST_ASSERT_TRUE(error);
 
@@ -717,10 +727,12 @@ void test_rdcu_cmp_cfg_is_invalid(void)
 	error = rdcu_cfg_buffers(&cfg, data, 1, NULL, CMP_DEF_IMA_DIFF_RDCU_DATA_ADR,
 				 CMP_DEF_IMA_DIFF_RDCU_MODEL_ADR, CMP_DEF_IMA_DIFF_RDCU_UP_MODEL_ADR,
 				 CMP_DEF_IMA_DIFF_RDCU_BUFFER_ADR, 1);
+	TEST_ASSERT_FALSE(error);
 	error = rdcu_cfg_imagette(&cfg,
 				  CMP_DEF_IMA_DIFF_GOLOMB_PAR, CMP_DEF_IMA_DIFF_SPILL_PAR,
 				  CMP_DEF_IMA_DIFF_AP1_GOLOMB_PAR, CMP_DEF_IMA_DIFF_AP1_SPILL_PAR,
 				  CMP_DEF_IMA_DIFF_AP2_GOLOMB_PAR, CMP_DEF_IMA_DIFF_AP2_SPILL_PAR);
+	TEST_ASSERT_FALSE(error);
 	error = rdcu_cmp_cfg_is_invalid(&cfg);
 	TEST_ASSERT_TRUE(error);
 
@@ -730,10 +742,12 @@ void test_rdcu_cmp_cfg_is_invalid(void)
 	error = rdcu_cfg_buffers(&cfg, data, 1, NULL, RDCU_SRAM_END+4,
 				 CMP_DEF_IMA_DIFF_RDCU_MODEL_ADR, CMP_DEF_IMA_DIFF_RDCU_UP_MODEL_ADR,
 				 CMP_DEF_IMA_DIFF_RDCU_BUFFER_ADR, 1);
+	TEST_ASSERT_TRUE(error);
 	error = rdcu_cfg_imagette(&cfg,
 				  CMP_DEF_IMA_DIFF_GOLOMB_PAR, CMP_DEF_IMA_DIFF_SPILL_PAR,
 				  CMP_DEF_IMA_DIFF_AP1_GOLOMB_PAR, CMP_DEF_IMA_DIFF_AP1_SPILL_PAR,
 				  CMP_DEF_IMA_DIFF_AP2_GOLOMB_PAR, CMP_DEF_IMA_DIFF_AP2_SPILL_PAR);
+	TEST_ASSERT_FALSE(error);
 	error = rdcu_cmp_cfg_is_invalid(&cfg);
 	TEST_ASSERT_TRUE(error);
 
@@ -743,10 +757,12 @@ void test_rdcu_cmp_cfg_is_invalid(void)
 	error = rdcu_cfg_buffers(&cfg, data, 1, NULL, CMP_DEF_IMA_DIFF_RDCU_DATA_ADR,
 				 CMP_DEF_IMA_DIFF_RDCU_MODEL_ADR, CMP_DEF_IMA_DIFF_RDCU_UP_MODEL_ADR,
 				 CMP_DEF_IMA_DIFF_RDCU_BUFFER_ADR, 1);
+	TEST_ASSERT_FALSE(error);
 	error = rdcu_cfg_imagette(&cfg,
 				  MAX_IMA_GOLOMB_PAR+1, CMP_DEF_IMA_DIFF_SPILL_PAR,
 				  CMP_DEF_IMA_DIFF_AP1_GOLOMB_PAR, CMP_DEF_IMA_DIFF_AP1_SPILL_PAR,
 				  CMP_DEF_IMA_DIFF_AP2_GOLOMB_PAR, CMP_DEF_IMA_DIFF_AP2_SPILL_PAR);
+	TEST_ASSERT_TRUE(error);
 	error = rdcu_cmp_cfg_is_invalid(&cfg);
 	TEST_ASSERT_TRUE(error);
 }

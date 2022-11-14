@@ -21,6 +21,7 @@
 #include <limits.h>
 
 
+#include <cmp_support.h>
 #include <cmp_data_types.h>
 #include <cmp_debug.h>
 #include <byteorder.h>

@@ -59,10 +59,10 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdint.h>
 #include <string.h>
 
 #include <byteorder.h>
-#include <rmap.h>
 #include <rdcu_cmd.h>
 #include <rdcu_ctrl.h>
 #include <rdcu_rmap.h>
