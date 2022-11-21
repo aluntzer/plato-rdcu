@@ -1,6 +1,6 @@
 /**
  * @file   rdcu_cmd.c
- * @author Armin Luntzer (armin.luntzer@univie.ac.at),
+ * @author Armin Luntzer (armin.luntzer@univie.ac.at)
  * @date   2018
  *
  * @copyright GPLv2
@@ -18,9 +18,7 @@
  */
 
 
-#include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 
 #include <rmap.h>
 #include <rdcu_cmd.h>

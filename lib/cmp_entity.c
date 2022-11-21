@@ -1,6 +1,6 @@
 /**
  * @file   cmp_entity.c
- * @author Dominik Loidolt (dominik.loidolt@univie.ac.at),
+ * @author Dominik Loidolt (dominik.loidolt@univie.ac.at)
  * @date   May 2021
  *
  * @copyright GPLv2
@@ -21,7 +21,6 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
-#include <limits.h>
 #if defined __has_include
 #  if __has_include(<time.h>)
 #    include <time.h>
@@ -2291,7 +2290,7 @@ static time_t my_timegm(struct tm *tm)
 /*
  * @brief Generate a timestamp for the compression header
  *
- * @param ts	pointer to an object of type struct timespec of the 
+ * @param ts	pointer to an object of type struct timespec of the
  *	timestamp time, NULL for now
  *
  * @returns returns compression header timestamp or 0 on error

@@ -1,5 +1,5 @@
 /**
- * @file   cmp_debug.h
+ * @file   decmp.h
  * @author Dominik Loidolt (dominik.loidolt@univie.ac.at)
  * @date   2020
  *
@@ -13,22 +13,20 @@
  * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
  * more details.
  *
- * @brief compression/decompression debugging defines
+ * @brief software decompression library
  */
 
-#ifndef CMP_DEBUG_H
-#define CMP_DEBUG_H
+#ifndef DECMP_H_
+#define DECMP_H_
 
-#include <stdio.h>
+#include <cmp_entity.h>
+#include <cmp_support.h>
 
-#if defined(DEBUG) || DEBUGLEVEL > 0
-	__extension__
-	#define debug_print(...) \
-		do { fprintf(stderr, __VA_ARGS__); } while (0)
-#else
-	#define debug_print(...) \
-		do {} while (0)
-#endif
+int decompress_cmp_entiy(struct cmp_entity *ent, void *model_of_data,
+			 void *up_model_buf, void *decompressed_data);
 
+int decompress_rdcu_data(uint32_t *compressed_data, const struct cmp_info *info,
+			 uint16_t *model_of_data, uint16_t *up_model_buf,
+			 uint16_t *decompressed_data);
 
-#endif /* CMP_DEBUG_H */
+#endif /* DECMP_H_ */

@@ -1,6 +1,6 @@
 /**
  * @file   rmap.c
- * @author Armin Luntzer (armin.luntzer@univie.ac.at),
+ * @author Armin Luntzer (armin.luntzer@univie.ac.at)
  * @date   2018
  *
  * @copyright GPLv2

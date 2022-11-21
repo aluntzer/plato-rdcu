@@ -13,9 +13,9 @@
  * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
  * more details.
  *
- * @brief This is a self-created inttypes.h, since the sparc-elf-gcc toolchain
- * does not provide one.
- * WARNING: Does not fully implement the standard.
+ * @brief This is a simple inttypes.h implementation for the sparc platform,
+ *	since the sparc-elf-gcc toolchain does not provide one.
+ * @warning Does not fully implement the standard.
  */
 
 

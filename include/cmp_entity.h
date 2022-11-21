@@ -1,7 +1,7 @@
 /**
  * @file   cmp_entity.h
- * @author Dominik Loidolt (dominik.loidolt@univie.ac.at),
- * @date   Mai, 2021
+ * @author Dominik Loidolt (dominik.loidolt@univie.ac.at)
+ * @date   May, 2021
  *
  * @copyright GPLv2
  * This program is free software; you can redistribute it and/or modify it
@@ -19,8 +19,8 @@
  * @note this code can also used on a little endian machine
  *
  * @warning: If you create an entity of one data product type and use get/set
- * functions intended for another data product type, it will result in a
- * corrupted entity. Do not do this.
+ *	functions intended for another data product type, it will result in a
+ *	corrupted entity or garbage data. Do not do this.
  */
 
 
@@ -51,73 +51,93 @@
 
 #define CMP_TOOL_VERSION_ID_BIT 0x80000000U
 
+
+/**
+ * @brief PALTO CUC timestamp format
+ */
+
 __extension__
 struct timestamp_cmp_ent {
 	uint32_t coarse;
 	uint16_t fine;
 } __attribute__((packed));
 
+
+/**
+ * @brief imagette specific part of compression entity
+ */
+
 __extension__
 struct imagette_header {
-	uint16_t spill_used;		/* Spillover threshold used */
-	uint8_t  golomb_par_used;	/* Golomb parameter used */
+	uint16_t spill_used;		/**< Spillover threshold used */
+	uint8_t  golomb_par_used;	/**< Golomb parameter used */
 	union{
 		struct {
 			uint8_t spare1;
-			uint8_t ima_cmp_dat[];		/* compressed data for imagette specific header */
+			uint8_t ima_cmp_dat[];		/**< compressed data for imagette specific header */
 		} __attribute__((packed));
 		struct {
-			uint16_t ap1_spill_used;	/* Adaptive Spillover threshold used 1 */
-			uint8_t  ap1_golomb_par_used;	/* Adaptive Golomb parameter used 1 */
-			uint16_t ap2_spill_used;	/* Adaptive Spillover threshold used 2 */
-			uint8_t  ap2_golomb_par_used;	/* Adaptive Golomb parameter used 2 */
+			uint16_t ap1_spill_used;	/**< Adaptive Spillover threshold used 1 */
+			uint8_t  ap1_golomb_par_used;	/**< Adaptive Golomb parameter used 1 */
+			uint16_t ap2_spill_used;	/**< Adaptive Spillover threshold used 2 */
+			uint8_t  ap2_golomb_par_used;	/**< Adaptive Golomb parameter used 2 */
 			uint8_t  spare2;
 			uint16_t spare3;
-			uint8_t  ap_ima_cmp_data[];	/* compressed data for adaptive imagette specific header */
+			uint8_t  ap_ima_cmp_data[];	/**< compressed data for adaptive imagette specific header */
 		} __attribute__((packed));
 	};
 } __attribute__((packed));
 compile_time_assert(sizeof(struct imagette_header) == SPECIFIC_IMAGETTE_ADAPTIVE_HEADER_SIZE, AP_IMAGETTE_HEADER_T_SIZE_IS_NOT_CORRECT);
 
+
+/**
+ * @brief non-imagette specific part of compression entity
+ */
+
 __extension__
 struct non_imagette_header {
-	uint32_t spill_1_used:24;	/* spillover threshold 1 used */
-	uint16_t cmp_par_1_used;	/* compression parameter 1 used */
-	uint32_t spill_2_used:24;	/* spillover threshold 2 used */
-	uint16_t cmp_par_2_used;	/* compression parameter 2 used */
-	uint32_t spill_3_used:24;	/* spillover threshold 3 used */
-	uint16_t cmp_par_3_used;	/* compression parameter 3 used */
-	uint32_t spill_4_used:24;	/* spillover threshold 4 used */
-	uint16_t cmp_par_4_used;	/* compression parameter 4 used */
-	uint32_t spill_5_used:24;	/* spillover threshold 5 used */
-	uint16_t cmp_par_5_used;	/* compression parameter 5 used */
-	uint32_t spill_6_used:24;	/* spillover threshold 6 used */
-	uint16_t cmp_par_6_used;	/* compression parameter 6 used */
+	uint32_t spill_1_used:24;	/**< spillover threshold 1 used */
+	uint16_t cmp_par_1_used;	/**< compression parameter 1 used */
+	uint32_t spill_2_used:24;	/**< spillover threshold 2 used */
+	uint16_t cmp_par_2_used;	/**< compression parameter 2 used */
+	uint32_t spill_3_used:24;	/**< spillover threshold 3 used */
+	uint16_t cmp_par_3_used;	/**< compression parameter 3 used */
+	uint32_t spill_4_used:24;	/**< spillover threshold 4 used */
+	uint16_t cmp_par_4_used;	/**< compression parameter 4 used */
+	uint32_t spill_5_used:24;	/**< spillover threshold 5 used */
+	uint16_t cmp_par_5_used;	/**< compression parameter 5 used */
+	uint32_t spill_6_used:24;	/**< spillover threshold 6 used */
+	uint16_t cmp_par_6_used;	/**< compression parameter 6 used */
 	uint16_t spare;
 	uint8_t  cmp_data[];
 } __attribute__((packed));
 compile_time_assert(sizeof(struct non_imagette_header) == SPECIFIC_NON_IMAGETTE_HEADER_SIZE, NON_IMAGETTE_HEADER_T_SIZE_IS_NOT_CORRECT);
 
+
+/**
+ * @brief definition of the compression entity format
+ */
+
 __extension__
 struct cmp_entity {
-	uint32_t version_id;			/* ICU ASW/cmp_tool Version ID */
-	uint32_t cmp_ent_size:24;		/* Compression Entity Size */
-	uint32_t original_size:24;		/* Original Data Size */
+	uint32_t version_id;			/**< ICU ASW/cmp_tool Version ID */
+	uint32_t cmp_ent_size:24;		/**< Compression Entity Size */
+	uint32_t original_size:24;		/**< Original Data Size */
 	union {
-		uint64_t start_timestamp:48;	/* Compression Start Timestamp */
+		uint64_t start_timestamp:48;	/**< Compression Start Timestamp */
 		struct timestamp_cmp_ent start_time;
 	} __attribute__((packed));
 	union {
-		uint64_t end_timestamp:48;	/* Compression End Timestamp */
+		uint64_t end_timestamp:48;	/**< Compression End Timestamp */
 		struct timestamp_cmp_ent end_time;
 	} __attribute__((packed));
-	uint16_t data_type;			/* Data Product Type */
-	uint8_t  cmp_mode_used;			/* used Compression Mode */
-	uint8_t  model_value_used;		/* used Model Updating Weighing Value */
-	uint16_t model_id;			/* Model ID */
-	uint8_t  model_counter;			/* Model Counter */
+	uint16_t data_type;			/**< Data Product Type */
+	uint8_t  cmp_mode_used;			/**< used Compression Mode */
+	uint8_t  model_value_used;		/**< used Model Updating Weighing Value */
+	uint16_t model_id;			/**< Model ID */
+	uint8_t  model_counter;			/**< Model Counter */
 	uint8_t  max_used_bits_version;
-	uint16_t lossy_cmp_par_used;		/* used Lossy Compression Parameters */
+	uint16_t lossy_cmp_par_used;		/**< used Lossy Compression Parameters */
 	union {	/* specific Compression Entity Header for the different Data Product Types */
 		struct imagette_header ima;
 		struct non_imagette_header non_ima;
@@ -127,7 +147,8 @@ compile_time_assert(sizeof(struct cmp_entity) == NON_IMAGETTE_HEADER_SIZE, CMP_E
 
 
 
-/* create a compression entity by setting the size of the compression entity and
+/*
+ * create a compression entity by setting the size of the compression entity and
  * the data product type in the entity header
  */
 uint32_t cmp_ent_create(struct cmp_entity *ent, enum cmp_data_type data_type,
@@ -141,13 +162,15 @@ size_t cmp_ent_build(struct cmp_entity *ent, uint32_t version_id,
 /* read in a compression entity header */
 int cmp_ent_read_header(struct cmp_entity *ent, struct cmp_cfg *cfg);
 
-/* write the compression parameters from a compression configuration into the
+/*
+ * write the compression parameters from a compression configuration into the
  * compression entity header
  */
 int cmp_ent_write_cmp_pars(struct cmp_entity *ent, const struct cmp_cfg *cfg,
 			   int cmp_size_bits);
 
-/* write the parameters from the RDCU decompression information structure in the
+/*
+ * write the parameters from the RDCU decompression information structure in the
  * compression entity header
  */
 int cmp_ent_write_rdcu_cmp_pars(struct cmp_entity *ent, const struct cmp_info *info,
@@ -178,14 +201,16 @@ int cmp_ent_set_max_used_bits_version(struct cmp_entity *ent, uint8_t max_used_b
 int cmp_ent_set_lossy_cmp_par(struct cmp_entity *ent, uint32_t lossy_cmp_par_used);
 
 
-/* set functions for specific entity header for imagette and adaptive imagette
+/*
+ * set functions for specific entity header for imagette and adaptive imagette
  * data product types
  */
 int cmp_ent_set_ima_spill(struct cmp_entity *ent, uint32_t spill_used);
 int cmp_ent_set_ima_golomb_par(struct cmp_entity *ent, uint32_t golomb_par_used);
 
 
-/* set functions for specific entity header for adaptive imagette data product
+/*
+ * set functions for specific entity header for adaptive imagette data product
  * types
  */
 int cmp_ent_set_ima_ap1_spill(struct cmp_entity *ent, uint32_t ap1_spill_used);
@@ -240,14 +265,16 @@ uint8_t cmp_ent_get_max_used_bits_version(struct cmp_entity *ent);
 uint16_t cmp_ent_get_lossy_cmp_par(struct cmp_entity *ent);
 
 
-/* get functions for specific entity header for imagette and adaptive imagette
+/*
+ * get functions for specific entity header for imagette and adaptive imagette
  * data product types
  */
 uint16_t cmp_ent_get_ima_spill(struct cmp_entity *ent);
 uint8_t cmp_ent_get_ima_golomb_par(struct cmp_entity *ent);
 
 
-/* get functions for specific entity header for adaptive imagette data product
+/*
+ * get functions for specific entity header for adaptive imagette data product
  * types
  */
 uint16_t cmp_ent_get_ima_ap1_spill(struct cmp_entity *ent);
