@@ -39,7 +39,11 @@
 
 #include <stdint.h>
 
-
+#ifndef GCC_VERSION
+#define GCC_VERSION (__GNUC__ * 10000		\
+		     + __GNUC_MINOR__ * 100	\
+		     + __GNUC_PATCHLEVEL__)
+#endif
 
 #ifdef __BIG_ENDIAN
 #undef __BIG_ENDIAN
@@ -72,7 +76,7 @@
 	(((uint32_t)(x) & (uint32_t)0x00ff0000UL) >>  8) |	\
 	(((uint32_t)(x) & (uint32_t)0xff000000UL) >> 24)))
 
-#define ___constant_swab64(x) ((uint64_t)(			\
+#define ___constant_swab64(x) ((uint64_t)(				\
 	(((uint64_t)(x) & (uint64_t)0x00000000000000ffULL) << 56) |	\
 	(((uint64_t)(x) & (uint64_t)0x000000000000ff00ULL) << 40) |	\
 	(((uint64_t)(x) & (uint64_t)0x0000000000ff0000ULL) << 24) |	\

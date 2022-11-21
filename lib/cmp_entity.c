@@ -27,6 +27,7 @@
 #    include <time.h>
 #    include <stdlib.h>
 #    define HAS_TIME_H 1
+#    define my_timercmp(s, t, op) (((s)->tv_sec == (t)->tv_sec) ? ((s)->tv_nsec op (t)->tv_nsec) : ((s)->tv_sec op (t)->tv_sec))
 #  endif
 #endif
 
@@ -35,23 +36,24 @@
 #include <cmp_support.h>
 #include <cmp_data_types.h>
 #include <cmp_entity.h>
+#include <my_inttypes.h>
 
 
 #ifdef HAS_TIME_H
 /* Used as epoch Wed Jan  1 00:00:00 2020 */
 #  if defined(_WIN32) || defined(_WIN64)
-const struct tm EPOCH_DATE = { 0, 0, 0, 1, 0, 120, 0, 0, 0 };
+const struct tm PLATO_EPOCH_DATE = { 0, 0, 0, 1, 0, 120, 0, 0, 0 };
 #  else
-const struct tm EPOCH_DATE = { 0, 0, 0, 1, 0, 120, 0, 0, 0, 0, NULL };
+const struct tm PLATO_EPOCH_DATE = { 0, 0, 0, 1, 0, 120, 0, 0, 0, 0, NULL };
 #  endif /* _WIN */
 #endif /* time.h */
 
 
 /**
- * @brief calculate the size of the compression entity header based on the data
- *	product type
+ * @brief calculate the size of the compression entity header based on a
+ *	compression data product type
  *
- * @param data_type	compression entity data product type
+ * @param data_type	compression data product type
  * @param raw_mode_flag	set this flag if the raw compression mode (CMP_MODE_RAW) is used
  *
  * @returns size of the compression entity header in bytes, 0 on unknown data
@@ -63,7 +65,7 @@ uint32_t cmp_ent_cal_hdr_size(enum cmp_data_type data_type, int raw_mode_flag)
 	uint32_t size = 0;
 
 	if (raw_mode_flag) {
-		if (cmp_data_type_valid(data_type))
+		if (!cmp_data_type_is_invalid(data_type))
 			/* for raw data we do not need a specific header */
 			size = GENERIC_HEADER_SIZE;
 	} else {
@@ -82,22 +84,22 @@ uint32_t cmp_ent_cal_hdr_size(enum cmp_data_type data_type, int raw_mode_flag)
 		case DATA_TYPE_BACKGROUND:
 		case DATA_TYPE_SMEARING:
 		case DATA_TYPE_S_FX:
-		case DATA_TYPE_S_FX_DFX:
+		case DATA_TYPE_S_FX_EFX:
 		case DATA_TYPE_S_FX_NCOB:
-		case DATA_TYPE_S_FX_DFX_NCOB_ECOB:
+		case DATA_TYPE_S_FX_EFX_NCOB_ECOB:
 		case DATA_TYPE_L_FX:
-		case DATA_TYPE_L_FX_DFX:
+		case DATA_TYPE_L_FX_EFX:
 		case DATA_TYPE_L_FX_NCOB:
-		case DATA_TYPE_L_FX_DFX_NCOB_ECOB:
+		case DATA_TYPE_L_FX_EFX_NCOB_ECOB:
 		case DATA_TYPE_F_FX:
-		case DATA_TYPE_F_FX_DFX:
+		case DATA_TYPE_F_FX_EFX:
 		case DATA_TYPE_F_FX_NCOB:
-		case DATA_TYPE_F_FX_DFX_NCOB_ECOB:
+		case DATA_TYPE_F_FX_EFX_NCOB_ECOB:
 		case DATA_TYPE_F_CAM_OFFSET:
 		case DATA_TYPE_F_CAM_BACKGROUND:
 			size = NON_IMAGETTE_HEADER_SIZE;
 			break;
-		case DATA_TYPE_UNKOWN:
+		case DATA_TYPE_UNKNOWN:
 			size = 0;
 			break;
 		}
@@ -109,7 +111,7 @@ uint32_t cmp_ent_cal_hdr_size(enum cmp_data_type data_type, int raw_mode_flag)
 /**
  * @brief set ICU ASW Version ID in the compression entity header
  *
- * @param ent			pointer to a compression entity
+ * @param ent		pointer to a compression entity
  * @param version_id	the applications software version identifier
  *
  * @returns 0 on success, otherwise error
@@ -132,7 +134,7 @@ int cmp_ent_set_version_id(struct cmp_entity *ent, uint32_t version_id)
  * @param ent		pointer to a compression entity
  * @param cmp_ent_size	the compression entity size measured in bytes
  *
- * @note maximum size is 2^24-1
+ * @note maximum size is CMP_ENTITY_MAX_SIZE
  *
  * @returns 0 on success, otherwise error
  */
@@ -322,27 +324,26 @@ int cmp_ent_set_fine_end_time(struct cmp_entity *ent, uint16_t fine_time)
 
 
 /**
- * @brief set the data product type in the compression entity header
+ * @brief set the compression data product type in the compression entity header
  *
  * @param ent		pointer to a compression entity
- * @param data_type	compression entity data product type
+ * @param data_type	compression data product type
  * @param raw_mode_flag	set this flag if the raw compression mode (CMP_MODE_RAW) is used
  *
  * @returns 0 on success, otherwise error
  */
 
-int cmp_ent_set_data_type(struct cmp_entity *ent,
-			  enum cmp_data_type data_type,
+int cmp_ent_set_data_type(struct cmp_entity *ent, enum cmp_data_type data_type,
 			  int raw_mode_flag)
 {
 	if (!ent)
 		return -1;
 
+	if (data_type > 0x7FF)
+		return -1;
+
 	if (raw_mode_flag)
 		data_type |= 1U << RAW_BIT_DATA_TYPE_POS;
-
-	if (data_type > UINT16_MAX)
-		return -1;
 
 	ent->data_type = cpu_to_be16(data_type);
 
@@ -359,7 +360,7 @@ int cmp_ent_set_data_type(struct cmp_entity *ent,
  * @returns 0 on success, otherwise error
  */
 
-int cmp_ent_set_cmp_mode(struct cmp_entity *ent, uint32_t cmp_mode_used)
+int cmp_ent_set_cmp_mode(struct cmp_entity *ent, enum cmp_mode cmp_mode_used)
 {
 	if (!ent)
 		return -1;
@@ -374,10 +375,10 @@ int cmp_ent_set_cmp_mode(struct cmp_entity *ent, uint32_t cmp_mode_used)
 
 
 /**
- * @brief set the used model value in the compression entity header
+ * @brief set the used model weighing value in the compression entity header
  *
  * @param ent			pointer to a compression entity
- * @param model_value_used	used model weighting value parameter
+ * @param model_value_used	used model weighing value parameter
  *
  * @returns 0 on success, otherwise error
  */
@@ -443,11 +444,11 @@ int cmp_ent_set_model_counter(struct cmp_entity *ent, uint32_t model_counter)
 
 
 /**
- * @brief set version identifier for the max. used bits registry in the
+ * @brief set version identifier for the maximum used bits registry in the
  *	compression entity header
  *
  * @param ent			pointer to a compression entity
- * @param max_used_bits_version	the identifier for the max. used bits registry
+ * @param max_used_bits_version	the identifier for the maximum used bits registry
  *
  * @returns 0 on success, otherwise error
  */
@@ -468,7 +469,7 @@ int cmp_ent_set_max_used_bits_version(struct cmp_entity *ent, uint8_t max_used_b
  *	header
  *
  * @param ent			pointer to a compression entity
- * @param lossy_cmp_par_used	used lossy compression parameter
+ * @param lossy_cmp_par_used	used lossy compression parameter/round parameter
  *
  * @returns 0 on success, otherwise error
  */
@@ -481,7 +482,7 @@ int cmp_ent_set_lossy_cmp_par(struct cmp_entity *ent, uint32_t lossy_cmp_par_use
 	if (lossy_cmp_par_used > UINT16_MAX)
 		return -1;
 
-	ent->lossy_cmp_par_used = cpu_to_be16((uint16_t)lossy_cmp_par_used);
+	ent->lossy_cmp_par_used = cpu_to_be16(lossy_cmp_par_used);
 
 	return 0;
 }
@@ -1082,7 +1083,7 @@ uint64_t cmp_ent_get_end_timestamp(struct cmp_entity *ent)
 		return 0;
 
 #ifdef __LITTLE_ENDIAN
-	return be64_to_cpu(ent->end_timestamp << 16);
+	return be64_to_cpu(ent->end_timestamp) >> 16;
 #else
 	return ent->end_timestamp;
 #endif /* __LITTLE_ENDIAN */
@@ -1129,7 +1130,7 @@ uint16_t cmp_ent_get_fine_end_time(struct cmp_entity *ent)
  * @param ent	pointer to a compression entity
  *
  * @returns the data_type NOT including the uncompressed data bit on success,
- *	DATA_TYPE_UNKOWN on error
+ *	DATA_TYPE_UNKNOWN on error
  */
 
 enum cmp_data_type cmp_ent_get_data_type(struct cmp_entity *ent)
@@ -1137,13 +1138,13 @@ enum cmp_data_type cmp_ent_get_data_type(struct cmp_entity *ent)
 	enum cmp_data_type data_type;
 
 	if (!ent)
-		return DATA_TYPE_UNKOWN;
+		return DATA_TYPE_UNKNOWN;
 
 	data_type = be16_to_cpu(ent->data_type);
 	data_type &= (1U << RAW_BIT_DATA_TYPE_POS)-1; /* remove uncompressed data flag */
 
-	if (!cmp_data_type_valid(data_type))
-		data_type = DATA_TYPE_UNKOWN;
+	if (cmp_data_type_is_invalid(data_type))
+		data_type = DATA_TYPE_UNKNOWN;
 
 	return data_type;
 }
@@ -1171,7 +1172,7 @@ int cmp_ent_get_data_type_raw_bit(struct cmp_entity *ent)
  *
  * @param ent	pointer to a compression entity
  *
- * @returns the used compression on success, 0 on error
+ * @returns the used compression mode on success, 0 on error
  */
 
 uint8_t cmp_ent_get_cmp_mode(struct cmp_entity *ent)
@@ -1191,7 +1192,7 @@ uint8_t cmp_ent_get_cmp_mode(struct cmp_entity *ent)
  * @returns the used model value used on success, 0 on error
  */
 
-uint8_t cmp_ent_get_model_value_used(struct cmp_entity *ent)
+uint8_t cmp_ent_get_model_value(struct cmp_entity *ent)
 {
 	if (!ent)
 		return 0;
@@ -1236,16 +1237,16 @@ uint8_t cmp_ent_get_model_counter(struct cmp_entity *ent)
 
 
 /**
- * @brief get the version identifier for the max. used bits registry from the
+ * @brief get the version identifier for the maximum used bits registry from the
  *	compression entity header
  *
  * @param ent	pointer to a compression entity
  *
- * @returns the version identifier for the max. used bits registry on success,
+ * @returns the version identifier for the maximum used bits registry on success,
  *	0 on error
  */
 
-uint8_t cmp_ent_get_max_use_bits_version(struct cmp_entity *ent)
+uint8_t cmp_ent_get_max_used_bits_version(struct cmp_entity *ent)
 {
 	if (!ent)
 		return 0;
@@ -1259,7 +1260,7 @@ uint8_t cmp_ent_get_max_use_bits_version(struct cmp_entity *ent)
  *
  * @param ent	pointer to a compression entity
  *
- * @returns the used lossy compression parameter on success, 0 on error
+ * @returns the used lossy compression/round parameter on success, 0 on error
  */
 
 uint16_t cmp_ent_get_lossy_cmp_par(struct cmp_entity *ent)
@@ -1638,43 +1639,48 @@ void *cmp_ent_get_data_buf(struct cmp_entity *ent)
 	if (!ent)
 		return NULL;
 
+	data_type = cmp_ent_get_data_type(ent);
+	if (data_type == DATA_TYPE_UNKNOWN) {
+		debug_print("Error: Compression data type not supported.\n");
+		return NULL;
+	}
+
 	if (cmp_ent_get_data_type_raw_bit(ent))
 		return (uint8_t *)ent + GENERIC_HEADER_SIZE;
 
-	data_type = cmp_ent_get_data_type(ent);
-
 	switch (data_type) {
 	case DATA_TYPE_IMAGETTE:
+	case DATA_TYPE_SAT_IMAGETTE:
 	case DATA_TYPE_F_CAM_IMAGETTE:
 		return ent->ima.ima_cmp_dat;
 	case DATA_TYPE_IMAGETTE_ADAPTIVE:
+	case DATA_TYPE_SAT_IMAGETTE_ADAPTIVE:
 	case DATA_TYPE_F_CAM_IMAGETTE_ADAPTIVE:
 		return ent->ima.ap_ima_cmp_data;
-	case DATA_TYPE_SAT_IMAGETTE:
-	case DATA_TYPE_SAT_IMAGETTE_ADAPTIVE:
 	case DATA_TYPE_OFFSET:
 	case DATA_TYPE_BACKGROUND:
 	case DATA_TYPE_SMEARING:
 	case DATA_TYPE_S_FX:
-	case DATA_TYPE_S_FX_DFX:
+	case DATA_TYPE_S_FX_EFX:
 	case DATA_TYPE_S_FX_NCOB:
-	case DATA_TYPE_S_FX_DFX_NCOB_ECOB:
+	case DATA_TYPE_S_FX_EFX_NCOB_ECOB:
 	case DATA_TYPE_L_FX:
-	case DATA_TYPE_L_FX_DFX:
+	case DATA_TYPE_L_FX_EFX:
 	case DATA_TYPE_L_FX_NCOB:
-	case DATA_TYPE_L_FX_DFX_NCOB_ECOB:
+	case DATA_TYPE_L_FX_EFX_NCOB_ECOB:
 	case DATA_TYPE_F_FX:
-	case DATA_TYPE_F_FX_DFX:
+	case DATA_TYPE_F_FX_EFX:
 	case DATA_TYPE_F_FX_NCOB:
-	case DATA_TYPE_F_FX_DFX_NCOB_ECOB:
+	case DATA_TYPE_F_FX_EFX_NCOB_ECOB:
 	case DATA_TYPE_F_CAM_OFFSET:
 	case DATA_TYPE_F_CAM_BACKGROUND:
 		return ent->non_ima.cmp_data;
-	case DATA_TYPE_UNKOWN:
+	/* LCOV_EXCL_START */
+	case DATA_TYPE_UNKNOWN:
+	default:
 		return NULL;
+	/* LCOV_EXCL_STOP */
 	}
-
-	return NULL;
 }
 
 
@@ -1682,39 +1688,39 @@ void *cmp_ent_get_data_buf(struct cmp_entity *ent)
  * @brief copy the data from a compression entity to a buffer
  *
  * @param ent		pointer to the compression entity containing the compressed data
- * @param data_buf	pointer where the destination data buffer where the
- *	compressed data is copied to (can be NULL)
+ * @param data_buf	pointer to the destination data buffer to which the
+ *	compressed data are copied (can be NULL)
  * @param data_buf_size	size of the destination data buffer
  *
  * @returns the size in bytes to store the compressed data; negative on error
  *
  * @note the destination and source buffer can overlap
- * @note converts the data to the correct endianness
+ * @note converts the data to the system endianness
  */
 
-ssize_t cmp_ent_get_cmp_data(struct cmp_entity *ent, uint32_t *data_buf,
-			     size_t data_buf_size)
+int32_t cmp_ent_get_cmp_data(struct cmp_entity *ent, uint32_t *data_buf,
+			     uint32_t data_buf_size)
 {
 	uint32_t *cmp_ent_data_adr;
-	size_t cmp_size_byte;
+	uint32_t cmp_size_byte;
 
 	if (!ent)
 		return -1;
 
 	cmp_ent_data_adr = cmp_ent_get_data_buf(ent);
 	if (!cmp_ent_data_adr) {
-		fprintf(stderr, "Error: Compression data type is not supported.\n");
+		debug_print("Error: Compression data type is not supported.\n");
 		return -1;
 	}
 
 	cmp_size_byte = cmp_ent_get_cmp_data_size(ent);
 	if (cmp_size_byte & 0x3) {
-		fprintf(stderr, "Error: The compressed data are not correct formatted. Expected multiple of 4 hex words.\n");
+		debug_print("Error: The compressed data are not correct formatted. Expected multiple of 4 hex words.\n");
 		return -1;
 	}
 
 	if (data_buf) {
-		size_t i;
+		uint32_t i;
 		uint32_t cmp_data_len_32;
 
 		if (cmp_size_byte > data_buf_size) {
@@ -1729,7 +1735,7 @@ ssize_t cmp_ent_get_cmp_data(struct cmp_entity *ent, uint32_t *data_buf,
 			be32_to_cpus(&data_buf[i]);
 	}
 
-	return cmp_size_byte;
+	return (int32_t)cmp_size_byte;
 }
 
 
@@ -1775,7 +1781,7 @@ uint32_t cmp_ent_get_cmp_data_size(struct cmp_entity *ent)
 /**
  * @brief write the compression parameters from a compression configuration
  *	into the compression entity header
- * @note no compressed data are put into the entity and no change of the entity
+ * @note NO compressed data are put into the entity and NO change of the entity
  *	size
  *
  * @param ent		pointer to a compression entity
@@ -1801,6 +1807,11 @@ int cmp_ent_write_cmp_pars(struct cmp_entity *ent, const struct cmp_cfg *cfg,
 		return -1;
 	}
 
+	if (cmp_ent_get_data_type_raw_bit(ent) != (cfg->cmp_mode == CMP_MODE_RAW)) {
+		debug_print("Error: The entity's raw data bit does not match up with the compression mode.\n");
+		return -1;
+	}
+
 	ent_cmp_data_size = cmp_ent_get_cmp_data_size(ent);
 
 	/* check if the entity can hold the compressed data */
@@ -1817,20 +1828,12 @@ int cmp_ent_write_cmp_pars(struct cmp_entity *ent, const struct cmp_cfg *cfg,
 		return -1;
 	if (cmp_ent_set_model_value(ent, cfg->model_value))
 		return -1;
-	if (cmp_ent_set_max_used_bits_version(ent, cmp_get_max_used_bits_version()))
-		return -1;
+	cmp_ent_set_max_used_bits_version(ent, cmp_get_max_used_bits_version());
 	if (cmp_ent_set_lossy_cmp_par(ent, cfg->round))
 		return -1;
 
-	if (cfg->cmp_mode == CMP_MODE_RAW) {
-		/* check the raw data bit */
-		if (!cmp_ent_get_data_type_raw_bit(ent)) {
-			debug_print("Error: The entity's raw data bit is not set, but the configuration contains raw data.\n");
-			return -1;
-		}
-		/* no specific header is used for raw data we are done */
+	if (cfg->cmp_mode == CMP_MODE_RAW) /* no specific header is used for raw data we are done */
 		return 0;
-	}
 
 	switch (cmp_ent_get_data_type(ent)) {
 	case DATA_TYPE_IMAGETTE_ADAPTIVE:
@@ -1861,9 +1864,9 @@ int cmp_ent_write_cmp_pars(struct cmp_entity *ent, const struct cmp_cfg *cfg,
 		if (cmp_ent_set_non_ima_spill1(ent, cfg->spill_mean))
 			return -1;
 
-		if (cmp_ent_set_non_ima_spill2(ent, cfg->cmp_par_variance))
+		if (cmp_ent_set_non_ima_cmp_par2(ent, cfg->cmp_par_variance))
 			return -1;
-		if (cmp_ent_set_non_ima_cmp_par2(ent, cfg->spill_variance))
+		if (cmp_ent_set_non_ima_spill2(ent, cfg->spill_variance))
 			return -1;
 
 		if (cmp_ent_set_non_ima_cmp_par3(ent, cfg->cmp_par_pixels_error))
@@ -1871,33 +1874,27 @@ int cmp_ent_write_cmp_pars(struct cmp_entity *ent, const struct cmp_cfg *cfg,
 		if (cmp_ent_set_non_ima_spill3(ent, cfg->spill_pixels_error))
 			return -1;
 
-		if (cmp_ent_set_non_ima_cmp_par4(ent, 0))
-			return -1;
-		if (cmp_ent_set_non_ima_spill4(ent, 0))
-			return -1;
+		cmp_ent_set_non_ima_cmp_par4(ent, 0);
+		cmp_ent_set_non_ima_spill4(ent, 0);
 
-		if (cmp_ent_set_non_ima_cmp_par5(ent, 0))
-			return -1;
-		if (cmp_ent_set_non_ima_spill5(ent, 0))
-			return -1;
+		cmp_ent_set_non_ima_cmp_par5(ent, 0);
+		cmp_ent_set_non_ima_spill5(ent, 0);
 
-		if (cmp_ent_set_non_ima_cmp_par6(ent, 0))
-			return -1;
-		if (cmp_ent_set_non_ima_spill6(ent, 0))
-			return -1;
+		cmp_ent_set_non_ima_cmp_par6(ent, 0);
+		cmp_ent_set_non_ima_spill6(ent, 0);
 		break;
 	case DATA_TYPE_S_FX:
-	case DATA_TYPE_S_FX_DFX:
+	case DATA_TYPE_S_FX_EFX:
 	case DATA_TYPE_S_FX_NCOB:
-	case DATA_TYPE_S_FX_DFX_NCOB_ECOB:
+	case DATA_TYPE_S_FX_EFX_NCOB_ECOB:
 	case DATA_TYPE_L_FX:
-	case DATA_TYPE_L_FX_DFX:
+	case DATA_TYPE_L_FX_EFX:
 	case DATA_TYPE_L_FX_NCOB:
-	case DATA_TYPE_L_FX_DFX_NCOB_ECOB:
+	case DATA_TYPE_L_FX_EFX_NCOB_ECOB:
 	case DATA_TYPE_F_FX:
-	case DATA_TYPE_F_FX_DFX:
+	case DATA_TYPE_F_FX_EFX:
 	case DATA_TYPE_F_FX_NCOB:
-	case DATA_TYPE_F_FX_DFX_NCOB_ECOB:
+	case DATA_TYPE_F_FX_EFX_NCOB_ECOB:
 		if (cmp_ent_set_non_ima_cmp_par1(ent, cfg->cmp_par_exp_flags))
 			return -1;
 		if (cmp_ent_set_non_ima_spill1(ent, cfg->spill_exp_flags))
@@ -1931,10 +1928,8 @@ int cmp_ent_write_cmp_pars(struct cmp_entity *ent, const struct cmp_cfg *cfg,
 		break;
 	case DATA_TYPE_F_CAM_OFFSET:
 	case DATA_TYPE_F_CAM_BACKGROUND:
-		/* TODO: fix this*/
-			return -1;
-		break;
-	case DATA_TYPE_UNKOWN:
+		/* TODO: implement this*/
+	case DATA_TYPE_UNKNOWN:
 	default:
 		return -1;
 	}
@@ -1961,22 +1956,35 @@ int cmp_ent_write_rdcu_cmp_pars(struct cmp_entity *ent, const struct cmp_info *i
 				const struct cmp_cfg *cfg)
 {
 	uint32_t ent_cmp_data_size;
-	enum cmp_data_type data_type = cmp_ent_get_data_type(ent);
+	enum cmp_data_type data_type;
+
+	if (!ent)
+		return -1;
 
 	if (!info)
 		return -1;
 
-	ent_cmp_data_size = cmp_ent_get_cmp_data_size(ent);
-
-	/* check if the entity can hold the compressed data */
-	if (ent_cmp_data_size < cmp_bit_to_4byte(info->cmp_size)) {
-		debug_print("Error: The entity size is to small to hold the compressed data.\n");
-		return -2;
+	if (info->cmp_err) {
+		debug_print("Error: The decompression information contains an compression error.\n");
+		return -1;
 	}
 
+	data_type = cmp_ent_get_data_type(ent);
 	if (!rdcu_supported_data_type_is_used(data_type)) {
 		debug_print("Error: The compression data type is not one of the types supported by the RDCU.\n");
 		return -1;
+	}
+
+	if (cmp_ent_get_data_type_raw_bit(ent) != raw_mode_is_used(info->cmp_mode_used)) {
+		debug_print("Error: The entity's raw data bit does not match up with the compression mode.\n");
+		return -1;
+	}
+
+	/* check if the entity can hold the compressed data */
+	ent_cmp_data_size = cmp_ent_get_cmp_data_size(ent);
+	if (ent_cmp_data_size < cmp_bit_to_4byte(info->cmp_size)) {
+		debug_print("Error: The entity size is to small to hold the compressed data.\n");
+		return -2;
 	}
 
 	/* set compression parameter fields in the generic entity header */
@@ -1984,15 +1992,13 @@ int cmp_ent_write_rdcu_cmp_pars(struct cmp_entity *ent, const struct cmp_info *i
 		return -1;
 	if (cmp_ent_set_cmp_mode(ent, info->cmp_mode_used))
 		return -1;
-	if (cmp_ent_set_model_value(ent, info->model_value_used))
-		return -1;
-	if (cmp_ent_set_lossy_cmp_par(ent, info->round_used))
-		return -1;
+	cmp_ent_set_model_value(ent, info->model_value_used);
+	/* The RDCU data compressor does not have the maximum used bit feature,
+	 * so the field is set to 0. */
+	cmp_ent_set_max_used_bits_version(ent, 0);
 
-	if (cmp_ent_get_data_type_raw_bit(ent) != raw_mode_is_used(info->cmp_mode_used)) {
-		debug_print("Error: The raw bit is set in data product type filed, but no raw compression mode is used.\n");
-		return -1;
-	}
+	cmp_ent_set_lossy_cmp_par(ent, info->round_used);
+
 	if (raw_mode_is_used(info->cmp_mode_used))
 		/* no specific header is used for raw data we are done */
 		return 0;
@@ -2030,9 +2036,9 @@ int cmp_ent_write_rdcu_cmp_pars(struct cmp_entity *ent, const struct cmp_info *i
  *
  * @param ent		pointer to a compression entity; if NULL, the function
  *			returns the needed size
- * @param data_type	compression entity data product type
+ * @param data_type	compression data product type
  * @param raw_mode_flag	set this flag if the raw compression mode (CMP_MODE_RAW) is used
- * @param cmp_size_byte	size of the compressed data in bytes
+ * @param cmp_size_byte	size of the compressed data in bytes (should be a multiple of 4)
  *
  * @note if the entity size is smaller than the largest header, the function
  *	rounds up the entity size to the largest header
@@ -2043,7 +2049,6 @@ int cmp_ent_write_rdcu_cmp_pars(struct cmp_entity *ent, const struct cmp_info *i
 uint32_t cmp_ent_create(struct cmp_entity *ent, enum cmp_data_type data_type,
 			int raw_mode_flag, uint32_t cmp_size_byte)
 {
-	int err;
 	uint32_t hdr_size = cmp_ent_cal_hdr_size(data_type, raw_mode_flag);
 	uint32_t ent_size = hdr_size + cmp_size_byte;
 	uint32_t ent_size_cpy = ent_size;
@@ -2051,12 +2056,14 @@ uint32_t cmp_ent_create(struct cmp_entity *ent, enum cmp_data_type data_type,
 	if (!hdr_size)
 		return 0;
 
+	/* catch overflows */
 	if (cmp_size_byte > CMP_ENTITY_MAX_SIZE)
 		return 0;
-
 	if (ent_size > CMP_ENTITY_MAX_SIZE)
 		return 0;
 
+	/* to be safe a compression entity should be at least the size of the
+	 * largest entity header */
 	if (ent_size < sizeof(struct cmp_entity))
 		ent_size = sizeof(struct cmp_entity);
 
@@ -2065,13 +2072,8 @@ uint32_t cmp_ent_create(struct cmp_entity *ent, enum cmp_data_type data_type,
 
 	memset(ent, 0, hdr_size);
 
-	err = cmp_ent_set_size(ent, ent_size_cpy);
-	if (err)
-		return 0;
-
-	err = cmp_ent_set_data_type(ent, data_type, raw_mode_flag);
-	if (err)
-		return 0;
+	cmp_ent_set_size(ent, ent_size_cpy);
+	cmp_ent_set_data_type(ent, data_type, raw_mode_flag);
 
 	return ent_size;
 }
@@ -2115,16 +2117,13 @@ size_t cmp_ent_build(struct cmp_entity *ent, uint32_t version_id,
 		return 0;
 
 	if (ent) {
-		if (cmp_ent_set_version_id(ent, version_id))
-			return 0;
+		cmp_ent_set_version_id(ent, version_id);
 		if (cmp_ent_set_start_timestamp(ent, start_time))
 			return 0;
 		if (cmp_ent_set_end_timestamp(ent, end_time))
 			return 0;
-		if (cmp_ent_set_model_id(ent, model_id))
-			return 0;
-		if (cmp_ent_set_model_counter(ent, model_counter))
-			return 0;
+		cmp_ent_set_model_id(ent, model_id);
+		cmp_ent_set_model_counter(ent, model_counter);
 		if (cmp_ent_write_cmp_pars(ent, cfg, cmp_size_bits))
 			return 0;
 	}
@@ -2145,16 +2144,23 @@ size_t cmp_ent_build(struct cmp_entity *ent, uint32_t version_id,
 
 int cmp_ent_read_header(struct cmp_entity *ent, struct cmp_cfg *cfg)
 {
-	int samples;
+	int32_t samples;
+
+	if (!cfg)
+		return -1;
 
 	cfg->data_type = cmp_ent_get_data_type(ent);
-	if (!cmp_data_type_valid(cfg->data_type)) {
+	if (cmp_data_type_is_invalid(cfg->data_type)) {
 		debug_print("Error: Compression data type not supported.\n");
 		return -1;
 	}
 
 	cfg->cmp_mode = cmp_ent_get_cmp_mode(ent);
-	cfg->model_value = cmp_ent_get_model_value_used(ent);
+	if (cmp_ent_get_data_type_raw_bit(ent) != (cfg->cmp_mode == CMP_MODE_RAW)) {
+		debug_print("Error: The entity's raw data bit does not match up with the compression mode.\n");
+		return -1;
+	}
+	cfg->model_value = cmp_ent_get_model_value(ent);
 	cfg->round = cmp_ent_get_lossy_cmp_par(ent);
 	cfg->buffer_length = cmp_ent_get_cmp_data_size(ent);
 
@@ -2165,14 +2171,14 @@ int cmp_ent_read_header(struct cmp_entity *ent, struct cmp_cfg *cfg)
 		return -1;
 	}
 
-	cfg->samples = samples;
-
-	if (cmp_ent_get_data_type_raw_bit(ent) != raw_mode_is_used(cfg->cmp_mode)) {
-		debug_print("Error: The raw bit is set in data product type filed, but no raw compression mode is used.\n");
-		return -1;
-	}
+	cfg->samples = (uint32_t)samples;
 
 	cfg->icu_output_buf = cmp_ent_get_data_buf(ent);
+
+
+	if (cfg->cmp_mode == CMP_MODE_RAW)
+		/* no specific header is used for raw data we are done */
+		return 0;
 
 	switch (cfg->data_type) {
 	case DATA_TYPE_IMAGETTE_ADAPTIVE:
@@ -2200,17 +2206,17 @@ int cmp_ent_read_header(struct cmp_entity *ent, struct cmp_cfg *cfg)
 		cfg->spill_pixels_error = cmp_ent_get_non_ima_spill3(ent);
 		break;
 	case DATA_TYPE_S_FX:
-	case DATA_TYPE_S_FX_DFX:
+	case DATA_TYPE_S_FX_EFX:
 	case DATA_TYPE_S_FX_NCOB:
-	case DATA_TYPE_S_FX_DFX_NCOB_ECOB:
+	case DATA_TYPE_S_FX_EFX_NCOB_ECOB:
 	case DATA_TYPE_L_FX:
-	case DATA_TYPE_L_FX_DFX:
+	case DATA_TYPE_L_FX_EFX:
 	case DATA_TYPE_L_FX_NCOB:
-	case DATA_TYPE_L_FX_DFX_NCOB_ECOB:
+	case DATA_TYPE_L_FX_EFX_NCOB_ECOB:
 	case DATA_TYPE_F_FX:
-	case DATA_TYPE_F_FX_DFX:
+	case DATA_TYPE_F_FX_EFX:
 	case DATA_TYPE_F_FX_NCOB:
-	case DATA_TYPE_F_FX_DFX_NCOB_ECOB:
+	case DATA_TYPE_F_FX_EFX_NCOB_ECOB:
 		cfg->cmp_par_exp_flags = cmp_ent_get_non_ima_cmp_par1(ent);
 		cfg->spill_exp_flags = cmp_ent_get_non_ima_spill1(ent);
 		cfg->cmp_par_fx = cmp_ent_get_non_ima_cmp_par2(ent);
@@ -2226,12 +2232,11 @@ int cmp_ent_read_header(struct cmp_entity *ent, struct cmp_cfg *cfg)
 		break;
 	case DATA_TYPE_F_CAM_OFFSET:
 	case DATA_TYPE_F_CAM_BACKGROUND:
-		/* TODO: fix this*/
-			return -1;
-		break;
-	case DATA_TYPE_UNKOWN: /* fall through */
+	/* LCOV_EXCL_START */
+	case DATA_TYPE_UNKNOWN:
 	default:
 		return -1;
+	/* LCOV_EXCL_STOP */
 	}
 
 	return 0;
@@ -2247,9 +2252,11 @@ int cmp_ent_read_header(struct cmp_entity *ent, struct cmp_cfg *cfg)
  *	is used as a portable alternative
  * @note The function is thread-unsafe
  *
- * @param tm	pointer to a tm object specifying local calendar time to convert
+ * @param tm	pointer to a broken-down time representation, expressed in
+ *	Coordinated Universal Time (UTC)
  *
- * @returns time since epoch as a time_t object on success or -1 if time cannot be represented as a time_t object
+ * @returns time since epoch as a time_t object on success; or -1 if time cannot
+ *	be represented as a time_t object
  *
  * @see http://www.catb.org/esr/time-programming/#_unix_time_and_utc_gmt_zulu
  */
@@ -2275,33 +2282,44 @@ static time_t my_timegm(struct tm *tm)
 		unsetenv("TZ");
 	tzset();
 	return ret;
-#  endif
+#  endif /* _WIN32 || _WIN64 */
 }
+#endif /* HAS_TIME_H */
 
 
+#ifdef HAS_TIME_H
 /*
  * @brief Generate a timestamp for the compression header
  *
- * @param ts  pointer to an object of type struct timespec of the timestamp time, null for now
+ * @param ts	pointer to an object of type struct timespec of the 
+ *	timestamp time, NULL for now
  *
  * @returns returns compression header timestamp or 0 on error
  */
 
 uint64_t cmp_ent_create_timestamp(const struct timespec *ts)
 {
-	struct tm epoch_date = EPOCH_DATE;
+	struct tm epoch_date = PLATO_EPOCH_DATE;
 	struct timespec epoch = { my_timegm(&epoch_date), 0 };
 	struct timespec now = { 0, 0 };
 	double seconds;
 	uint64_t coarse, fine;
 
+	/* LCOV_EXCL_START */
+	/* if time cannot be represented as a time_t object epoch.tv_sec = -1 */
 	if (epoch.tv_sec == -1)
 		return 0;
+	/* LCOV_EXCL_STOP */
 
-	if (ts)
+	if (ts) {
+		if (my_timercmp(ts, &epoch, <)) {
+			debug_print("Error: Time is before PLATO epoch.\n");
+			return 0;
+		}
 		now = *ts;
-	else
+	} else {
 		clock_gettime(CLOCK_REALTIME, &now);
+	}
 
 	seconds = ((double)now.tv_sec + 1.0e-9 * now.tv_nsec) -
 		  ((double)epoch.tv_sec + 1.0e-9 * epoch.tv_nsec);
@@ -2309,9 +2327,9 @@ uint64_t cmp_ent_create_timestamp(const struct timespec *ts)
 	coarse = (uint64_t)seconds;
 	fine = (uint64_t)((seconds - coarse) * 256 * 256);
 
-	return coarse * 256 * 256 + fine;
+	return (coarse << 16) + fine;
 }
-#endif
+#endif /* HAS_TIME_H */
 
 
 /**
@@ -2327,11 +2345,11 @@ void cmp_ent_print_header(struct cmp_entity *ent)
 	size_t i;
 
 	for (i = 0; i < hdr_size; ++i) {
-		printf("%02X ", p[i]);
+		debug_print("%02X ", p[i]);
 		if (i && !((i+1) % 32))
-			printf("\n");
+			debug_print("\n");
 	}
-	printf("\n");
+	debug_print("\n");
 }
 
 
@@ -2351,11 +2369,11 @@ void cmp_ent_print_data(struct cmp_entity *ent)
 		return;
 
 	for (i = 0; i < data_size; ++i) {
-		printf("%02X ", p[i]);
+		debug_print("%02X ", p[i]);
 		if (i && !((i+1) % 32))
-			printf("\n");
+			debug_print("\n");
 	}
-	printf("\n");
+	debug_print("\n");
 }
 
 
@@ -2367,9 +2385,9 @@ void cmp_ent_print_data(struct cmp_entity *ent)
 
 void cmp_ent_print(struct cmp_entity *ent)
 {
-	printf("compression entity header:\n");
+	debug_print("compression entity header:\n");
 	cmp_ent_print_header(ent);
-	printf("compressed data in the compressed entity:\n");
+	debug_print("compressed data in the compressed entity:\n");
 	cmp_ent_print_data(ent);
 }
 
@@ -2394,66 +2412,62 @@ static void cmp_ent_parse_generic_header(struct cmp_entity *ent)
 		uint16_t major = (version_id & 0x7FFF0000U) >> 16U;
 		uint16_t minor = version_id & 0xFFFFU;
 
-		printf("Compressed with cmp_tool version: %u.%02u\n", major, minor);
+		debug_print("Compressed with cmp_tool version: %u.%02u\n", major, minor);
 	} else
-		printf("ICU ASW Version ID: %lu\n", version_id);
+		debug_print("ICU ASW Version ID: %" PRIu32 "\n", version_id);
 
 	cmp_ent_size = cmp_ent_get_size(ent);
-	printf("Compression Entity Size: %lu byte\n", cmp_ent_size);
+	debug_print("Compression Entity Size: %" PRIu32 " byte\n", cmp_ent_size);
 
 	original_size = cmp_ent_get_original_size(ent);
-	printf("Original Data Size: %lu byte\n", original_size);
+	debug_print("Original Data Size: %" PRIu32 " byte\n", original_size);
 
 	start_coarse_time = cmp_ent_get_coarse_start_time(ent);
-	printf("Compression Coarse Start Time: %lu\n", start_coarse_time);
+	debug_print("Compression Coarse Start Time: %" PRIu32 "\n", start_coarse_time);
 
 	start_fine_time = cmp_ent_get_fine_start_time(ent);
-	printf("Compression Fine Start Time: %d\n", start_fine_time);
+	debug_print("Compression Fine Start Time: %d\n", start_fine_time);
 
 	end_coarse_time = cmp_ent_get_coarse_end_time(ent);
-	printf("Compression Coarse End Time: %lu\n", end_coarse_time);
+	debug_print("Compression Coarse End Time: %" PRIu32 "\n", end_coarse_time);
 
 	end_fine_time = cmp_ent_get_fine_end_time(ent);
-	printf("Compression Fine End Time: %d\n", end_fine_time);
+	debug_print("Compression Fine End Time: %d\n", end_fine_time);
 
 #ifdef HAS_TIME_H
 	{
-		struct tm epoch_date = EPOCH_DATE;
+		struct tm epoch_date = PLATO_EPOCH_DATE;
 		time_t time = my_timegm(&epoch_date) + start_coarse_time;
 
-		printf("Data were compressed on (local time): %s", ctime(&time));
+		debug_print("Data were compressed on (local time): %s", ctime(&time));
 	}
 #endif
-	printf("The compression took %f second\n", end_coarse_time - start_coarse_time
+	debug_print("The compression took %f second\n", end_coarse_time - start_coarse_time
 		+ ((end_fine_time - start_fine_time)/256./256.));
 
 	data_type = cmp_ent_get_data_type(ent);
-	if (data_type != DATA_TYPE_UNKOWN)
-		printf("Data Product Type: %d\n", data_type);
-	else
-		printf("Data Product Type: unknown!");
+	debug_print("Data Product Type: %d\n", data_type);
 
 	raw_bit = cmp_ent_get_data_type_raw_bit(ent);
-	printf("RAW bit in the Data Product Type is%s set\n", raw_bit ? "" : " not");
+	debug_print("RAW bit in the Data Product Type is%s set\n", raw_bit ? "" : " not");
 
 	cmp_mode_used = cmp_ent_get_cmp_mode(ent);
-	printf("Used Compression Mode: %lu\n", cmp_mode_used);
+	debug_print("Used Compression Mode: %" PRIu32 "\n", cmp_mode_used);
 
-	model_value_used = cmp_ent_get_model_value_used(ent);
-	printf("Used Model Updating Weighing Value: %lu\n", model_value_used);
+	model_value_used = cmp_ent_get_model_value(ent);
+	debug_print("Used Model Updating Weighing Value: %" PRIu32 "\n", model_value_used);
 
 	model_id = cmp_ent_get_model_id(ent);
-	printf("Model ID: %lu\n", model_id);
+	debug_print("Model ID: %" PRIu32 "\n", model_id);
 
 	model_counter = cmp_ent_get_model_counter(ent);
-	printf("Model Counter: %lu\n", model_counter);
+	debug_print("Model Counter: %" PRIu32 "\n", model_counter);
 
-
-	max_used_bits_version = cmp_ent_get_max_use_bits_version(ent);
-	printf("Maximum Used Bits Registry Version: %lu\n", max_used_bits_version);
+	max_used_bits_version = cmp_ent_get_max_used_bits_version(ent);
+	debug_print("Maximum Used Bits Registry Version: %" PRIu32 "\n", max_used_bits_version);
 
 	lossy_cmp_par_used = cmp_ent_get_lossy_cmp_par(ent);
-	printf("Used Lossy Compression Parameters: %lu\n", lossy_cmp_par_used);
+	debug_print("Used Lossy Compression Parameters: %" PRIu32 "\n", lossy_cmp_par_used);
 }
 
 
@@ -2468,10 +2482,10 @@ static void cmp_ent_parese_imagette_header(struct cmp_entity *ent)
 	uint32_t spill_used, golomb_par_used;
 
 	spill_used = cmp_ent_get_ima_spill(ent);
-	printf("Used Spillover Threshold Parameter: %lu\n", spill_used);
+	debug_print("Used Spillover Threshold Parameter: %" PRIu32 "\n", spill_used);
 
 	golomb_par_used = cmp_ent_get_ima_golomb_par(ent);
-	printf("Used Golomb Parameter: %lu\n", golomb_par_used);
+	debug_print("Used Golomb Parameter: %" PRIu32 "\n", golomb_par_used);
 }
 
 
@@ -2487,22 +2501,22 @@ static void cmp_ent_parese_adaptive_imagette_header(struct cmp_entity *ent)
 		 ap1_golomb_par_used, ap2_spill_used, ap2_golomb_par_used;
 
 	spill_used = cmp_ent_get_ima_spill(ent);
-	printf("Used Spillover Threshold Parameter: %lu\n", spill_used);
+	debug_print("Used Spillover Threshold Parameter: %" PRIu32 "\n", spill_used);
 
 	golomb_par_used = cmp_ent_get_ima_golomb_par(ent);
-	printf("Used Golomb Parameter: %lu\n", golomb_par_used);
+	debug_print("Used Golomb Parameter: %" PRIu32 "\n", golomb_par_used);
 
 	ap1_spill_used = cmp_ent_get_ima_ap1_spill(ent);
-	printf("Used Adaptive 1 Spillover Threshold Parameter: %lu\n", ap1_spill_used);
+	debug_print("Used Adaptive 1 Spillover Threshold Parameter: %" PRIu32 "\n", ap1_spill_used);
 
 	ap1_golomb_par_used = cmp_ent_get_ima_ap1_golomb_par(ent);
-	printf("Used Adaptive 1 Golomb Parameter: %lu\n", ap1_golomb_par_used);
+	debug_print("Used Adaptive 1 Golomb Parameter: %" PRIu32 "\n", ap1_golomb_par_used);
 
 	ap2_spill_used = cmp_ent_get_ima_ap2_spill(ent);
-	printf("Used Adaptive 2 Spillover Threshold Parameter: %lu\n", ap2_spill_used);
+	debug_print("Used Adaptive 2 Spillover Threshold Parameter: %" PRIu32 "\n", ap2_spill_used);
 
 	ap2_golomb_par_used = cmp_ent_get_ima_ap2_golomb_par(ent);
-	printf("Used Adaptive 2 Golomb Parameter: %lu\n", ap2_golomb_par_used);
+	debug_print("Used Adaptive 2 Golomb Parameter: %" PRIu32 "\n", ap2_golomb_par_used);
 }
 
 
@@ -2517,7 +2531,7 @@ static void cmp_ent_parese_specific_header(struct cmp_entity *ent)
 	enum cmp_data_type data_type = cmp_ent_get_data_type(ent);
 
 	if (cmp_ent_get_data_type_raw_bit(ent)) {
-		printf("Uncompressed data bit is set no specific header is used.\n");
+		debug_print("Uncompressed data bit is set. No specific header is used.\n");
 		return;
 	}
 
@@ -2533,7 +2547,7 @@ static void cmp_ent_parese_specific_header(struct cmp_entity *ent)
 		cmp_ent_parese_adaptive_imagette_header(ent);
 		break;
 	default:
-		printf("For this data product type no parse functions is implemented!\n");
+		debug_print("For this data product type no parse functions is implemented!\n");
 		break;
 	}
 }

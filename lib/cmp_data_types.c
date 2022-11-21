@@ -17,6 +17,10 @@
  */
 
 
+#include <stdint.h>
+#include <limits.h>
+
+
 #include <cmp_data_types.h>
 #include <cmp_debug.h>
 #include <byteorder.h>
@@ -48,8 +52,8 @@ struct cmp_max_used_bits max_used_bits = {
 	MAX_USED_NC_BACKGROUND_MEAN_BITS, /* nc_background_mean */
 	MAX_USED_NC_BACKGROUND_VARIANCE_BITS, /* nc_background_variance */
 	MAX_USED_NC_BACKGROUND_OUTLIER_PIXELS_BITS, /* nc_background_outlier_pixels */
-	MAX_USED_SMEARING_MEAN_BITS, /* smeating_mean */
-	MAX_USED_SMEARING_VARIANCE_MEAN_BITS, /* smeating_variance_mean */
+	MAX_USED_SMEARING_MEAN_BITS, /* smearing_mean */
+	MAX_USED_SMEARING_VARIANCE_MEAN_BITS, /* smearing_variance_mean */
 	MAX_USED_SMEARING_OUTLIER_PIXELS_BITS, /* smearing_outlier_pixels */
 	MAX_USED_FC_IMAGETTE_BITS, /* fc_imagette */
 	MAX_USED_FC_OFFSET_MEAN_BITS, /* fc_offset_mean */
@@ -62,10 +66,10 @@ struct cmp_max_used_bits max_used_bits = {
 
 
 /**
- * @brief sets the maximum length of the different data products types
+ * @brief sets the maximum length of the different data product types
  *
  * @param set_max_used_bits	pointer to a structure with the maximum length
- *				of the different data products types in bits
+ *				of the different data product types in bits
  */
 
 void cmp_set_max_used_bits(const struct cmp_max_used_bits *set_max_used_bits)
@@ -76,10 +80,10 @@ void cmp_set_max_used_bits(const struct cmp_max_used_bits *set_max_used_bits)
 
 
 /**
- * @brief get the maximum length of the different data products types
+ * @brief get the maximum length of the different data product types
  *
  * @returns a structure with the used maximum length of the different data
- *	products types in bits
+ *	product types in bits
  */
 
 struct cmp_max_used_bits cmp_get_max_used_bits(void)
@@ -94,7 +98,8 @@ struct cmp_max_used_bits cmp_get_max_used_bits(void)
  * @returns version of the max used bits registry
  */
 
-uint8_t cmp_get_max_used_bits_version(void) {
+uint8_t cmp_get_max_used_bits_version(void)
+{
 	return max_used_bits.version;
 }
 
@@ -117,6 +122,8 @@ size_t size_of_a_sample(enum cmp_data_type data_type)
 	case DATA_TYPE_IMAGETTE_ADAPTIVE:
 	case DATA_TYPE_SAT_IMAGETTE:
 	case DATA_TYPE_SAT_IMAGETTE_ADAPTIVE:
+	case DATA_TYPE_F_CAM_IMAGETTE:
+	case DATA_TYPE_F_CAM_IMAGETTE_ADAPTIVE:
 		sample_size = sizeof(uint16_t);
 		break;
 	case DATA_TYPE_OFFSET:
@@ -131,42 +138,42 @@ size_t size_of_a_sample(enum cmp_data_type data_type)
 	case DATA_TYPE_S_FX:
 		sample_size = sizeof(struct s_fx);
 		break;
-	case DATA_TYPE_S_FX_DFX:
+	case DATA_TYPE_S_FX_EFX:
 		sample_size = sizeof(struct s_fx_efx);
 		break;
 	case DATA_TYPE_S_FX_NCOB:
 		sample_size = sizeof(struct s_fx_ncob);
 		break;
-	case DATA_TYPE_S_FX_DFX_NCOB_ECOB:
+	case DATA_TYPE_S_FX_EFX_NCOB_ECOB:
 		sample_size = sizeof(struct s_fx_efx_ncob_ecob);
 		break;
 	case DATA_TYPE_L_FX:
 		sample_size = sizeof(struct l_fx);
 		break;
-	case DATA_TYPE_L_FX_DFX:
+	case DATA_TYPE_L_FX_EFX:
 		sample_size = sizeof(struct l_fx_efx);
 		break;
 	case DATA_TYPE_L_FX_NCOB:
 		sample_size = sizeof(struct l_fx_ncob);
 		break;
-	case DATA_TYPE_L_FX_DFX_NCOB_ECOB:
+	case DATA_TYPE_L_FX_EFX_NCOB_ECOB:
 		sample_size = sizeof(struct l_fx_efx_ncob_ecob);
 		break;
 	case DATA_TYPE_F_FX:
 		sample_size = sizeof(struct f_fx);
 		break;
-	case DATA_TYPE_F_FX_DFX:
+	case DATA_TYPE_F_FX_EFX:
 		sample_size = sizeof(struct f_fx_efx);
 		break;
 	case DATA_TYPE_F_FX_NCOB:
 		sample_size = sizeof(struct f_fx_ncob);
 		break;
-	case DATA_TYPE_F_FX_DFX_NCOB_ECOB:
+	case DATA_TYPE_F_FX_EFX_NCOB_ECOB:
 		sample_size = sizeof(struct f_fx_efx_ncob_ecob);
 		break;
 	case DATA_TYPE_F_CAM_OFFSET:
 	case DATA_TYPE_F_CAM_BACKGROUND:
-	case DATA_TYPE_UNKOWN:
+	case DATA_TYPE_UNKNOWN:
 	default:
 		debug_print("Error: Compression data type is not supported.\n");
 		break;
@@ -183,22 +190,26 @@ size_t size_of_a_sample(enum cmp_data_type data_type)
  *
  * @note for non-imagette data program types the multi entry header size is added
  *
- * @returns the size in bytes to store the data sample
+ * @returns the size in bytes to store the data sample; zero on failure
  */
 
-unsigned int cmp_cal_size_of_data(unsigned int samples, enum cmp_data_type data_type)
+uint32_t cmp_cal_size_of_data(uint32_t samples, enum cmp_data_type data_type)
 {
-	unsigned int s = size_of_a_sample(data_type);
+	size_t s = size_of_a_sample(data_type);
+	uint64_t x; /* use 64 bit to catch overflow */
 
 	if (!s)
 		return 0;
 
-	s *= samples;
+	x = (uint64_t)s*samples;
 
 	if (!rdcu_supported_data_type_is_used(data_type))
-		s += MULTI_ENTRY_HDR_SIZE;
+		x += MULTI_ENTRY_HDR_SIZE;
 
-	return s;
+	if (x > UINT_MAX) /* catch overflow */
+		return 0;
+
+	return (unsigned int)x;
 }
 
 
@@ -212,9 +223,9 @@ unsigned int cmp_cal_size_of_data(unsigned int samples, enum cmp_data_type data_
  * @returns the number samples for the given compression mode; negative on error
  */
 
-int cmp_input_size_to_samples(unsigned int size, enum cmp_data_type data_type)
+int32_t cmp_input_size_to_samples(uint32_t size, enum cmp_data_type data_type)
 {
-	int samples_size = (int)size_of_a_sample(data_type);
+	uint32_t samples_size = size_of_a_sample(data_type);
 
 	if (!samples_size)
 		return -1;
@@ -228,7 +239,7 @@ int cmp_input_size_to_samples(unsigned int size, enum cmp_data_type data_type)
 	if (size % samples_size)
 		return -1;
 
-	return size/samples_size;
+	return (int)(size/samples_size);
 }
 
 
@@ -450,7 +461,7 @@ static void be_to_cpus_f_fx_efx_ncob_ecob(struct f_fx_efx_ncob_ecob *a, int samp
 int cmp_input_big_to_cpu_endianness(void *data, uint32_t data_size_byte,
 				    enum cmp_data_type data_type)
 {
-	int samples = cmp_input_size_to_samples(data_size_byte, data_type);
+	int32_t samples = cmp_input_size_to_samples(data_size_byte, data_type);
 
 	if (!data) /* nothing to do */
 		return 0;
@@ -485,46 +496,48 @@ int cmp_input_big_to_cpu_endianness(void *data, uint32_t data_size_byte,
 	case DATA_TYPE_S_FX:
 		be_to_cpus_s_fx(data, samples);
 		break;
-	case DATA_TYPE_S_FX_DFX:
+	case DATA_TYPE_S_FX_EFX:
 		be_to_cpus_s_fx_efx(data, samples);
 		break;
 	case DATA_TYPE_S_FX_NCOB:
 		be_to_cpus_s_fx_ncob(data, samples);
 		break;
-	case DATA_TYPE_S_FX_DFX_NCOB_ECOB:
+	case DATA_TYPE_S_FX_EFX_NCOB_ECOB:
 		be_to_cpus_s_fx_efx_ncob_ecob(data, samples);
 		break;
 	case DATA_TYPE_L_FX:
 		be_to_cpus_l_fx(data, samples);
 		break;
-	case DATA_TYPE_L_FX_DFX:
+	case DATA_TYPE_L_FX_EFX:
 		be_to_cpus_l_fx_efx(data, samples);
 		break;
 	case DATA_TYPE_L_FX_NCOB:
 		be_to_cpus_l_fx_ncob(data, samples);
 		break;
-	case DATA_TYPE_L_FX_DFX_NCOB_ECOB:
+	case DATA_TYPE_L_FX_EFX_NCOB_ECOB:
 		be_to_cpus_l_fx_efx_ncob_ecob(data, samples);
 		break;
 	case DATA_TYPE_F_FX:
 		be_to_cpus_f_fx(data, samples);
 		break;
-	case DATA_TYPE_F_FX_DFX:
+	case DATA_TYPE_F_FX_EFX:
 		be_to_cpus_f_fx_efx(data, samples);
 		break;
 	case DATA_TYPE_F_FX_NCOB:
 		be_to_cpus_f_fx_ncob(data, samples);
 		break;
-	case DATA_TYPE_F_FX_DFX_NCOB_ECOB:
+	case DATA_TYPE_F_FX_EFX_NCOB_ECOB:
 		be_to_cpus_f_fx_efx_ncob_ecob(data, samples);
 		break;
 	/* TODO: implement F_CAM conversion */
 	case DATA_TYPE_F_CAM_OFFSET:
 	case DATA_TYPE_F_CAM_BACKGROUND:
-	case DATA_TYPE_UNKOWN:
+	/* LCOV_EXCL_START */
+	case DATA_TYPE_UNKNOWN:
 	default:
 		debug_print("Error: Can not swap endianness for this compression data type.\n");
 		return -1;
+	/* LCOV_EXCL_STOP */
 	}
 
 	return 0;

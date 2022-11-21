@@ -36,6 +36,7 @@
 #include <cmp_data_types.h>
 #include <rdcu_ctrl.h>
 #include <rdcu_rmap.h>
+#include <my_inttypes.h>
 
 
 #define IMA_SAM2BYT                                                            \
@@ -76,56 +77,6 @@ static void sync(void)
 
 
 /**
- * @brief check if the compression data product type, compression mode, model
- *	value and the lossy rounding parameters are valid for an RDCU compression
- *
- * @param cfg	pointer to a compression configuration containing the compression
- *	data product type, compression mode, model value and the rounding parameters
- *
- * @returns 0 if the compression data type, compression mode, model value and
- *	the lossy rounding parameters are valid for an RDCU compression, non-zero
- *	if parameters are invalid
- */
-
-static int rdcu_cfg_gen_par_is_invalid(const struct cmp_cfg *cfg)
-{
-	int cfg_invalid = 0;
-
-	if (!cfg)
-		return -1;
-
-	if (!cmp_imagette_data_type_is_used(cfg->data_type)) {
-		debug_print("Error: The selected compression data type is not supported for RDCU compression");
-		cfg_invalid++;
-	}
-
-	if (cfg->cmp_mode > MAX_RDCU_CMP_MODE) {
-		debug_print("Error: selected cmp_mode: %lu is not supported. Largest supported mode is: %u.\n",
-			    cfg->cmp_mode, MAX_RDCU_CMP_MODE);
-		cfg_invalid++;
-	}
-
-	if (cfg->model_value > MAX_MODEL_VALUE) {
-		debug_print("Error: selected model_value: %lu is invalid. Largest supported value is: %u.\n",
-			    cfg->model_value, MAX_MODEL_VALUE);
-		cfg_invalid++;
-	}
-
-	if (cfg->round > MAX_RDCU_ROUND) {
-		debug_print("Error: selected round parameter: %lu is not supported. Largest supported value is: %u.\n",
-			    cfg->round, MAX_RDCU_ROUND);
-		cfg_invalid++;
-	}
-
-#ifdef SKIP_CMP_PAR_CHECK
-	return 0;
-#endif
-
-	return -cfg_invalid;
-}
-
-
-/**
  * @brief create an RDCU compression configuration
  *
  * @param data_type	compression data product type
@@ -134,7 +85,7 @@ static int rdcu_cfg_gen_par_is_invalid(const struct cmp_cfg *cfg)
  * @param lossy_par	lossy rounding parameter (use CMP_LOSSLESS for lossless compression)
  *
  * @returns a compression configuration containing the chosen parameters;
- *	on error the data_type record is set to DATA_TYPE_UNKOWN
+ *	on error the data_type record is set to DATA_TYPE_UNKNOWN
  */
 
 struct cmp_cfg rdcu_cfg_create(enum cmp_data_type data_type, enum cmp_mode cmp_mode,
@@ -149,34 +100,34 @@ struct cmp_cfg rdcu_cfg_create(enum cmp_data_type data_type, enum cmp_mode cmp_m
 	cfg.model_value = model_value;
 	cfg.round = lossy_par;
 
-	if (rdcu_cfg_gen_par_is_invalid(&cfg))
-		cfg.data_type = DATA_TYPE_UNKOWN;
+	if (cmp_cfg_gen_par_is_invalid(&cfg, RDCU_CHECK))
+		cfg.data_type = DATA_TYPE_UNKNOWN;
 
 	return cfg;
 }
 
 
 /**
- * @brief check if a buffer is in inside the RDCU SRAM
+ * @brief check if a buffer is in outside the RDCU SRAM
  *
  * @param addr	start address of the buffer
  * @param size	length of the buffer in bytes
  *
- * @returns 1 if buffer in inside the RDCU SRAM, 0 when the buffer is outside
+ * @returns 0 if buffer in inside the RDCU SRAM, 1 when the buffer is outside
  */
 
-static int in_sram_range(uint32_t addr, uint32_t size)
+static int outside_sram_range(uint32_t addr, uint32_t size)
 {
+	if (addr + size > RDCU_SRAM_END)
+		return 1;
+
 	if (addr > RDCU_SRAM_END)
-		return 0;
+		return 1;
 
 	if (size > RDCU_SRAM_SIZE)
-		return 0;
+		return 1;
 
-	if (addr + size > RDCU_SRAM_END)
-		return 0;
-
-	return 1;
+	return 0;
 }
 
 
@@ -218,7 +169,7 @@ static int rdcu_cfg_buffers_is_invalid(const struct cmp_cfg *cfg)
 
 	if (cfg->cmp_mode == CMP_MODE_RAW) {
 		if (cfg->buffer_length < cfg->samples) {
-			debug_print("rdcu_buffer_length is smaller than samples parameter. There is not enough space to copy the data in RAW mode.\n");
+			debug_print("rdcu_buffer_length is smaller than the samples parameter. There is not enough space to copy the data in RAW mode.\n");
 			cfg_invalid++;
 		}
 	}
@@ -233,12 +184,12 @@ static int rdcu_cfg_buffers_is_invalid(const struct cmp_cfg *cfg)
 		cfg_invalid++;
 	}
 
-	if (!in_sram_range(cfg->rdcu_data_adr, cfg->samples * IMA_SAM2BYT)) {
+	if (outside_sram_range(cfg->rdcu_data_adr, cfg->samples * IMA_SAM2BYT)) {
 		debug_print("Error: The RDCU data to compress buffer is outside the RDCU SRAM address space.\n");
 		cfg_invalid++;
 	}
 
-	if (!in_sram_range(cfg->rdcu_buffer_adr, cfg->buffer_length * IMA_SAM2BYT)) {
+	if (outside_sram_range(cfg->rdcu_buffer_adr, cfg->buffer_length * IMA_SAM2BYT)) {
 		debug_print("Error: The RDCU compressed data buffer is outside the RDCU SRAM address space.\n");
 		cfg_invalid++;
 	}
@@ -253,7 +204,7 @@ static int rdcu_cfg_buffers_is_invalid(const struct cmp_cfg *cfg)
 
 	if (model_mode_is_used(cfg->cmp_mode)) {
 		if (cfg->model_buf && cfg->model_buf == cfg->input_buf) {
-			debug_print("Error: The model buffer (model_buf) and the data to be compressed (input_buf) are equal.");
+			debug_print("Error: The model buffer (model_buf) and the data to be compressed (input_buf) are equal.\n");
 			cfg_invalid++;
 		}
 
@@ -262,7 +213,7 @@ static int rdcu_cfg_buffers_is_invalid(const struct cmp_cfg *cfg)
 			cfg_invalid++;
 		}
 
-		if (!in_sram_range(cfg->rdcu_model_adr, cfg->samples * IMA_SAM2BYT)) {
+		if (outside_sram_range(cfg->rdcu_model_adr, cfg->samples * IMA_SAM2BYT)) {
 			debug_print("Error: The RDCU model buffer is outside the RDCU SRAM address space.\n");
 			cfg_invalid++;
 		}
@@ -292,7 +243,7 @@ static int rdcu_cfg_buffers_is_invalid(const struct cmp_cfg *cfg)
 				cfg_invalid++;
 			}
 
-			if (!in_sram_range(cfg->rdcu_new_model_adr,
+			if (outside_sram_range(cfg->rdcu_new_model_adr,
 					   cfg->samples * IMA_SAM2BYT)) {
 				debug_print("Error: The RDCU updated model buffer is outside the RDCU SRAM address space.\n");
 				cfg_invalid++;
@@ -329,16 +280,10 @@ static int rdcu_cfg_buffers_is_invalid(const struct cmp_cfg *cfg)
 		}
 	}
 
-	if (cfg->icu_new_model_buf)
-		debug_print("Warning: ICU updated model buffer is set. This buffer is not used for an RDCU compression.\n");
-
-	if (cfg->icu_output_buf)
-		debug_print("Warning: ICU compressed data buffer is set. This buffer is not used for an RDCU compression.\n");
-
 #ifdef SKIP_CMP_PAR_CHECK
 	return 0;
 #endif
-	return -cfg_invalid;
+	return cfg_invalid;
 }
 
 
@@ -360,8 +305,8 @@ static int rdcu_cfg_buffers_is_invalid(const struct cmp_cfg *cfg)
  * @param rdcu_new_model_adr	RDCU SRAM new/updated model start address (can be
  *				the same as rdcu_model_adr for in-place model update)
  * @param rdcu_buffer_adr	RDCU SRAM compressed data start address
- * @param compressed_data_len_samples	length of the RDCU compressed data SRAM buffer
- *					measured in 16-bit units (same as data_samples)
+ * @param rdcu_buffer_lenght	length of the RDCU compressed data SRAM buffer
+ *				measured in 16-bit units (same as data_samples)
  *
  * @returns 0 if parameters are valid, non-zero if parameters are invalid
  */
@@ -370,7 +315,7 @@ int rdcu_cfg_buffers(struct cmp_cfg *cfg, uint16_t *data_to_compress,
 		     uint32_t data_samples, uint16_t *model_of_data,
 		     uint32_t rdcu_data_adr, uint32_t rdcu_model_adr,
 		     uint32_t rdcu_new_model_adr, uint32_t rdcu_buffer_adr,
-		     uint32_t compressed_data_len_samples)
+		     uint32_t rdcu_buffer_lenght)
 {
 	if (!cfg) {
 		debug_print("Error: pointer to the compression configuration structure is NULL.\n");
@@ -384,92 +329,9 @@ int rdcu_cfg_buffers(struct cmp_cfg *cfg, uint16_t *data_to_compress,
 	cfg->rdcu_model_adr = rdcu_model_adr;
 	cfg->rdcu_new_model_adr = rdcu_new_model_adr;
 	cfg->rdcu_buffer_adr = rdcu_buffer_adr;
-	cfg->buffer_length = compressed_data_len_samples;
+	cfg->buffer_length = rdcu_buffer_lenght;
 
-	if (rdcu_cfg_buffers_is_invalid(cfg))
-		return -1;
-
-	return 0;
-}
-
-
-/**
- * @brief check if the Golomb and spillover threshold parameter combination is
- *	invalid for an RDCU compression
- * @note also checked the adaptive Golomb and spillover threshold parameter combinations
- *
- * @param cfg	a pointer to a compression configuration
- *
- * @returns 0 if (adaptive) Golomb spill threshold parameter combinations are
- *	valid, otherwise the configuration is invalid
- */
-
-static int rdcu_cfg_imagette_is_invalid(const struct cmp_cfg *cfg)
-{
-	int cfg_invalid = 0;
-
-	if (cfg->golomb_par < MIN_RDCU_GOLOMB_PAR ||
-	    cfg->golomb_par > MAX_RDCU_GOLOMB_PAR) {
-		debug_print("Error: The selected Golomb parameter: %lu is not supported. The Golomb parameter has to  be between [%u, %u].\n",
-			    cfg->golomb_par, MIN_RDCU_GOLOMB_PAR, MAX_RDCU_GOLOMB_PAR);
-		cfg_invalid++;
-	}
-
-	if (cfg->ap1_golomb_par < MIN_RDCU_GOLOMB_PAR ||
-	    cfg->ap1_golomb_par > MAX_RDCU_GOLOMB_PAR) {
-		debug_print("Error: The selected adaptive 1 Golomb parameter: %lu is not supported. The Golomb parameter has to  be between [%u, %u].\n",
-			    cfg->ap1_golomb_par, MIN_RDCU_GOLOMB_PAR, MAX_RDCU_GOLOMB_PAR);
-		cfg_invalid++;
-	}
-
-	if (cfg->ap2_golomb_par < MIN_RDCU_GOLOMB_PAR ||
-	    cfg->ap2_golomb_par > MAX_RDCU_GOLOMB_PAR) {
-		debug_print("Error: The selected adaptive 2 Golomb parameter: %lu is not supported. The Golomb parameter has to be between [%u, %u].\n",
-			    cfg->ap2_golomb_par, MIN_RDCU_GOLOMB_PAR, MAX_RDCU_GOLOMB_PAR);
-		cfg_invalid++;
-	}
-
-	if (cfg->spill < MIN_RDCU_SPILL) {
-		debug_print("Error: The selected spillover threshold value: %lu is too small. Smallest possible spillover value is: %u.\n",
-			    cfg->spill, MIN_RDCU_SPILL);
-		cfg_invalid++;
-	}
-
-	if (cfg->spill > get_max_spill(cfg->golomb_par, cfg->data_type)) {
-		debug_print("Error: The selected spillover threshold value: %lu is too large for the selected Golomb parameter: %lu, the largest possible spillover value is: %lu.\n",
-			    cfg->spill, cfg->golomb_par, get_max_spill(cfg->golomb_par, cfg->data_type));
-		cfg_invalid++;
-	}
-
-	if (cfg->ap1_spill < MIN_RDCU_SPILL) {
-		debug_print("Error: The selected adaptive 1 spillover threshold value: %lu is too small. Smallest possible spillover value is: %u.\n",
-			    cfg->ap1_spill, MIN_RDCU_SPILL);
-		cfg_invalid++;
-	}
-
-	if (cfg->ap1_spill > get_max_spill(cfg->ap1_golomb_par, cfg->data_type)) {
-		debug_print("Error: The selected adaptive 1 spillover threshold value: %lu is too large for the selected adaptive 1 Golomb parameter: %lu, the largest possible adaptive 1 spillover value is: %lu.\n",
-			    cfg->ap1_spill, cfg->ap1_golomb_par, get_max_spill(cfg->ap1_golomb_par, cfg->data_type));
-		cfg_invalid++;
-	}
-
-	if (cfg->ap2_spill < MIN_RDCU_SPILL) {
-		debug_print("Error: The selected adaptive 2 spillover threshold value: %lu is too small. Smallest possible spillover value is: %u.\n",
-			    cfg->ap2_spill, MIN_RDCU_SPILL);
-		cfg_invalid++;
-	}
-
-	if (cfg->ap2_spill > get_max_spill(cfg->ap2_golomb_par, cfg->data_type)) {
-		debug_print("Error: The selected adaptive 2 spillover threshold value: %lu is too large for the selected adaptive 2 Golomb parameter: %lu, the largest possible adaptive 2 spillover value is: %lu.\n",
-			    cfg->ap2_spill, cfg->ap2_golomb_par, get_max_spill(cfg->ap2_golomb_par, cfg->data_type));
-		cfg_invalid++;
-	}
-
-#ifdef SKIP_CMP_PAR_CHECK
-	return 0;
-#endif
-
-	return -cfg_invalid;
+	return rdcu_cfg_buffers_is_invalid(cfg);
 }
 
 
@@ -505,10 +367,7 @@ int rdcu_cfg_imagette(struct cmp_cfg *cfg,
 	cfg->ap2_golomb_par = ap2_golomb_par;
 	cfg->ap2_spill = ap2_spillover_par;
 
-	if (rdcu_cfg_imagette_is_invalid(cfg))
-		return -1;
-
-	return 0;
+	return cmp_cfg_imagette_is_invalid(cfg, RDCU_CHECK);
 }
 
 
@@ -532,29 +391,32 @@ int rdcu_cmp_cfg_is_invalid(const struct cmp_cfg *cfg)
 	}
 
 	if (!cfg->input_buf)
-		debug_print("Warning: The data to compress buffer is set to NULL. No data will be transferred to the rdcu_data_adr in the RDCU-SRAM.\n");
+		debug_print("Warning: The data to compress buffer is set to NULL. No data will be transferred to the rdcu_data_adr in the RDCU SRAM.\n");
 
 	if (model_mode_is_used(cfg->cmp_mode)) {
 		if (!cfg->model_buf)
-			debug_print("Warning: The model buffer is set to NULL. No model data will be transferred to the rdcu_model_adr in the RDCU-SRAM.\n");
+			debug_print("Warning: The model buffer is set to NULL. No model data will be transferred to the rdcu_model_adr in the RDCU SRAM.\n");
 	}
 
-	if (cfg->input_buf && cfg->samples == 0)
+	if (cfg->samples == 0)
 		debug_print("Warning: The samples parameter is set to 0. No data will be compressed.\n");
+
+	if (cfg->icu_new_model_buf)
+		debug_print("Warning: ICU updated model buffer is set. This buffer is not used for an RDCU compression.\n");
+
+	if (cfg->icu_output_buf)
+		debug_print("Warning: ICU compressed data buffer is set. This buffer is not used for an RDCU compression.\n");
 
 	if (cfg->buffer_length == 0) {
 		debug_print("Error: The buffer_length is set to 0. There is no place to store the compressed data.\n");
 		cfg_invalid++;
 	}
 
-	if (rdcu_cfg_gen_par_is_invalid(cfg))
-		cfg_invalid++;
-	if (rdcu_cfg_buffers_is_invalid(cfg))
-		cfg_invalid++;
-	if (rdcu_cfg_imagette_is_invalid(cfg))
-		cfg_invalid++;
+	cfg_invalid += cmp_cfg_gen_par_is_invalid(cfg, RDCU_CHECK);
+	cfg_invalid += rdcu_cfg_buffers_is_invalid(cfg);
+	cfg_invalid += cmp_cfg_imagette_is_invalid(cfg, RDCU_CHECK);
 
-	return -cfg_invalid;
+	return cfg_invalid;
 }
 
 
@@ -920,3 +782,4 @@ void rdcu_disable_interrput_signal(void)
 {
 	interrupt_signal_enabled = RDCU_INTR_SIG_DIS;
 }
+

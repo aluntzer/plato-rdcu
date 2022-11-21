@@ -25,9 +25,7 @@
 #include <stdio.h>
 
 #include <rmap.h>
-
-
-
+#include <my_inttypes.h>
 
 
 /**
@@ -585,7 +583,7 @@ struct rmap_pkt *rmap_pkt_from_buffer(uint8_t *buf, uint32_t len)
 
 	if (pkt->data_len) {
 		if (len < RMAP_DATA_START + n + pkt->data_len + 1) {  /* +1 for data CRC */
-			printf("buffer len is smaller than the contained RMAP packet; buf len: %lu bytes vs RMAP: %lu bytes needed\n",
+			printf("buffer len is smaller than the contained RMAP packet; buf len: %" PRIu32 " bytes vs RMAP: %lu bytes needed\n",
 				len, RMAP_DATA_START + n + pkt->data_len);
 			goto error;
 		}
