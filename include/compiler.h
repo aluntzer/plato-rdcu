@@ -1,6 +1,6 @@
 /**
  * @file   compiler.h
- * @author Armin Luntzer (armin.luntzer@univie.ac.at),
+ * @author Armin Luntzer (armin.luntzer@univie.ac.at)
  * @date   2015
  *
  * @copyright GPLv2

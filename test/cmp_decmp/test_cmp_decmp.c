@@ -1,6 +1,6 @@
 /**
  * @file   test_cmp_decmp.c
- * @author Dominik Loidolt (dominik.loidolt@univie.ac.at),
+ * @author Dominik Loidolt (dominik.loidolt@univie.ac.at)
  * @date   2022
  *
  * @copyright GPLv2
@@ -13,7 +13,7 @@
  * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
  * more details.
  *
- * @brief random compression decompression test
+ * @brief random compression decompression tests
  * @details We generate random data and compress them with random parameters.
  *	After that we put the data in a compression entity. We decompress the
  *	compression entity and compare the decompressed data with the original
@@ -113,9 +113,8 @@ static void gen_ima_data(uint16_t *data, uint32_t samples)
 	uint32_t i;
 	struct cmp_max_used_bits max_used_bits = cmp_get_max_used_bits();
 
-	for (i = 0; i < samples; i++) {
+	for (i = 0; i < samples; i++)
 		data[i] = random_between(0, set_n_bits(max_used_bits.nc_imagette));
-	}
 }
 
 
@@ -218,9 +217,8 @@ static void gen_f_fx_data(struct f_fx *data, uint32_t samples)
 	uint32_t i;
 	struct cmp_max_used_bits max_used_bits = cmp_get_max_used_bits();
 
-	for (i = 0; i < samples; i++) {
+	for (i = 0; i < samples; i++)
 		data[i].fx = random_between(0, set_n_bits(max_used_bits.f_fx));
-	}
 }
 
 
@@ -351,10 +349,10 @@ void *generate_random_test_data(uint32_t samples, enum cmp_data_type data_type)
 
 	if (!rdcu_supported_data_type_is_used(data_type)) {
 		int i;
+
 		TEST_ASSERT(data_size > MULTI_ENTRY_HDR_SIZE);
-		for (i = 0; i < MULTI_ENTRY_HDR_SIZE; ++i) {
+		for (i = 0; i < MULTI_ENTRY_HDR_SIZE; ++i)
 			*p++ = random_between(0, UINT8_MAX);
-		}
 		data = p;
 	}
 

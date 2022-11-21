@@ -1,6 +1,6 @@
 /**
  * @file   cmp_rdcu.h
- * @author Dominik Loidolt (dominik.loidolt@univie.ac.at),
+ * @author Dominik Loidolt (dominik.loidolt@univie.ac.at)
  * @date   2019
  *
  * @copyright GPLv2

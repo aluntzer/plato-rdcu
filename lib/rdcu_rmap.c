@@ -1,6 +1,6 @@
 /**
  * @file   rdcu_rmap.c
- * @author Armin Luntzer (armin.luntzer@univie.ac.at),
+ * @author Armin Luntzer (armin.luntzer@univie.ac.at)
  * @date   2018
  *
  * @copyright GPLv2
@@ -36,11 +36,11 @@
  * available, please adapt all malloc/free calls to your needs, or ask us
  * to do that for you.
  *
- * NOTE: in order to run this on the GR712RC eval board, we set the SRAM mirror
+ * @note in order to run this on the GR712RC eval board, we set the SRAM mirror
  *	 image to the boards SDRAM in rdcu_ctrl_init() and just malloc() it for
  *	 the PC (see rdcu_ctrl_init)
  *
- *	 The interface requires that you provide an RX and a TX function,
+ * @note The interface requires that you provide an RX and a TX function,
  *	 see rdcu_ctrl_init for the call interface.
  *	 The TX function shall to return 0 on success, everything else
  *	 is considered an error in submission. The RX function shall return
@@ -51,12 +51,12 @@
  *	 your particular SpW interface or just redirect RX/TX to files
  *	 or via a network connection.
  *
- * NOTE: We don't have to serve more than one RDCU at any given time, so we
+ * @note We don't have to serve more than one RDCU at any given time, so we
  *	 track addresses and paths internally in a single instance. This also
  *	 makes the interface less cluttered. Besides, I'm lazy.
  *
  *
- * @warn when operational, we expect to have exclusive control of the SpW link
+ * @warning when operational, we expect to have exclusive control of the SpW link
  *
  * TODO: RMAP command response evaluation
  */

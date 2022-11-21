@@ -1,6 +1,6 @@
 /**
  * @file   rdcu_rmap.h
- * @author Armin Luntzer (armin.luntzer@univie.ac.at),
+ * @author Armin Luntzer (armin.luntzer@univie.ac.at)
  * @date   2018
  *
  * @copyright GPLv2
@@ -13,6 +13,7 @@
  * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
  * more details.
  *
+ * @brief RMAP RDCU link interface header file
  */
 
 #ifndef _RDCU_RMAP_H_

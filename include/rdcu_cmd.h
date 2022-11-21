@@ -1,6 +1,6 @@
 /**
  * @file   rdcu_cmd.h
- * @author Armin Luntzer (armin.luntzer@univie.ac.at),
+ * @author Armin Luntzer (armin.luntzer@univie.ac.at)
  * @date   2018
  *
  * @copyright GPLv2
@@ -13,6 +13,7 @@
  * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
  * more details.
  *
+ * @brief RMAP RDCU RMAP command library header file
  * @see FPGA Requirement Specification PLATO-IWF-PL-RS-005 Issue 0.6
  */
 #ifndef _RDCU_CMD_H_

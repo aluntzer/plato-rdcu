@@ -1,6 +1,6 @@
 /**
  * @file   rmap.h
- * @author Armin Luntzer (armin.luntzer@univie.ac.at),
+ * @author Armin Luntzer (armin.luntzer@univie.ac.at)
  * @date   2018
  *
  * @copyright GPLv2
@@ -134,6 +134,9 @@
 #define RMAP_MAX_DATA_LEN	   0xFFFFFFUL
 
 
+/**
+ * @brief RMAP header instruction field definition
+ */
 
 __extension__
 struct rmap_instruction {
@@ -156,32 +159,32 @@ compile_time_assert(sizeof(struct rmap_instruction) == sizeof(uint8_t), RMAP_INS
 
 
 /**
- * This structure holds the relevant contents of an RMAP packet.
+ * @brief This structure holds the relevant contents of an RMAP packet.
  *
  * @note this is NOT an actual RMAP packet!
  */
 
 __extension__
 struct rmap_pkt {
-	uint8_t		*path;		/* path to SpW target */
-	uint8_t		path_len;	/* entries in the path */
-	uint8_t		dst;		/* target logical address */
-	uint8_t		proto_id;	/* protoco id (0x1 = RMAP */
+	uint8_t		*path;		/**< path to SpW target */
+	uint8_t		path_len;	/**< entries in the path */
+	uint8_t		dst;		/**< target logical address */
+	uint8_t		proto_id;	/**< protocol id (0x1 = RMAP */
 	union {
 		struct rmap_instruction ri;
 		uint8_t	instruction;
 	};
 	union {
-		uint8_t	key;		/* command authorisation key */
-		uint8_t	status;		/* reply error/status codes */
+		uint8_t	key;		/**< command authorisation key */
+		uint8_t	status;		/**< reply error/status codes */
 	};
-	uint8_t		src;		/* initiator logical address */
-	uint8_t		*rpath;		/* reply path */
-	uint8_t		rpath_len;	/* entries in the reply path */
-	uint16_t	tr_id;		/* transaction identifier */
-	uint32_t	addr;		/* (first) data address */
+	uint8_t		src;		/**< initiator logical address */
+	uint8_t		*rpath;		/**< reply path */
+	uint8_t		rpath_len;	/**< entries in the reply path */
+	uint16_t	tr_id;		/**< transaction identifier */
+	uint32_t	addr;		/**< (first) data address */
 	uint8_t		*data;
-	uint32_t	data_len;	/* lenght of data in bytes */
+	uint32_t	data_len;	/**< length of data in bytes */
 	uint8_t		hdr_crc;
 	uint8_t		data_crc;
 };

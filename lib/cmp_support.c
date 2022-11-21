@@ -1,6 +1,6 @@
 /**
  * @file   cmp_support.c
- * @author Dominik Loidolt (dominik.loidolt@univie.ac.at),
+ * @author Dominik Loidolt (dominik.loidolt@univie.ac.at)
  * @date   2019
  *
  * @copyright GPLv2
@@ -349,6 +349,7 @@ unsigned int round_inv(unsigned int value, unsigned int round)
  * @param data		data to process
  * @param model		(current) model of the data to process
  * @param model_value	model weighting parameter
+ * @param round		routing parameter
  *
  * @returns (new) updated model
  */
@@ -725,7 +726,7 @@ int cmp_cfg_imagette_is_invalid(const struct cmp_cfg *cfg, enum check_opt opt)
  *	par struct, otherwise error
  */
 
- int cmp_cfg_fx_cob_get_need_pars(enum cmp_data_type data_type, struct fx_cob_par *par)
+int cmp_cfg_fx_cob_get_need_pars(enum cmp_data_type data_type, struct fx_cob_par *par)
 {
 	if (!par)
 		return -1;

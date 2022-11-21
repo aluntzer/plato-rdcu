@@ -1,6 +1,6 @@
 /**
- * @file   icu_cmp.c
- * @author Dominik Loidolt (dominik.loidolt@univie.ac.at),
+ * @file   cmp_icu.c
+ * @author Dominik Loidolt (dominik.loidolt@univie.ac.at)
  * @date   2020
  *
  * @copyright GPLv2
@@ -44,23 +44,29 @@
 extern struct cmp_max_used_bits max_used_bits;
 
 
-/* pointer to a code word generation function */
+/**
+ * @brief pointer to a code word generation function
+ */
+
 typedef uint32_t (*generate_cw_f_pt)(uint32_t value, uint32_t encoder_par1,
 				     uint32_t encoder_par2, uint32_t *cw);
 
 
-/* structure to hold a setup to encode a value */
+/**
+ * @brief structure to hold a setup to encode a value
+ */
+
 struct encoder_setupt {
-	generate_cw_f_pt generate_cw_f; /* function pointer to a code word encoder */
+	generate_cw_f_pt generate_cw_f; /**< function pointer to a code word encoder */
 	int (*encode_method_f)(uint32_t data, uint32_t model, int stream_len,
-			       const struct encoder_setupt *setup); /* pointer to the encoding function */
-	uint32_t *bitstream_adr; /* start address of the compressed data bitstream */
-	uint32_t max_stream_len; /* maximum length of the bitstream/icu_output_buf in bits */
-	uint32_t encoder_par1; /* encoding parameter 1 */
-	uint32_t encoder_par2; /* encoding parameter 2 */
-	uint32_t spillover_par; /* outlier parameter */
-	uint32_t lossy_par; /* lossy compression parameter */
-	uint32_t max_data_bits; /* how many bits are needed to represent the highest possible value */
+			       const struct encoder_setupt *setup); /**< pointer to the encoding function */
+	uint32_t *bitstream_adr; /**< start address of the compressed data bitstream */
+	uint32_t max_stream_len; /**< maximum length of the bitstream/icu_output_buf in bits */
+	uint32_t encoder_par1;   /**< encoding parameter 1 */
+	uint32_t encoder_par2;   /**< encoding parameter 2 */
+	uint32_t spillover_par;  /**< outlier parameter */
+	uint32_t lossy_par;      /**< lossy compression parameter */
+	uint32_t max_data_bits;  /**< how many bits are needed to represent the highest possible value */
 };
 
 

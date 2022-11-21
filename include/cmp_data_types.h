@@ -1,8 +1,8 @@
 /**
  * @file   cmp_data_types.h
- * @author Dominik Loidolt (dominik.loidolt@univie.ac.at),
+ * @author Dominik Loidolt (dominik.loidolt@univie.ac.at)
  * @date   2020
- * @brief definition of the different data types
+ * @brief definition of the different compression data types
  *
  * @copyright GPLv2
  * This program is free software; you can redistribute it and/or modify it
@@ -14,7 +14,7 @@
  * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
  * more details.
  *
- * @see for N-DPU packed definition: PLATO-LESIA-PL-RP-0031 Issue: 1.9 (N-DPU->ICU data rate)
+ * @see for N-DPU packed definition: PLATO-LESIA-PL-RP-0031 Issue: 2.9 (N-DPU->ICU data rate)
  * @see for calculation of the max used bits: PLATO-LESIA-PDC-TN-0054 Issue: 1.7
  *
  * Three data rates (for N-DPU):
@@ -26,9 +26,9 @@
  * exp_flags = selected exposure flags
  * fx = normal light flux
  * ncob = normal center of brightness
- * efx = extended flux
+ * efx = extended light flux
  * ecob = extended center of brightness
- * The prefixes F, S and L stand for Fast, Short and Long cadence
+ * The prefixes f, s and l stand for fast, short and long cadence
  */
 
 #ifndef CMP_DATA_TYPE_H
@@ -38,6 +38,10 @@
 
 #include <compiler.h>
 #include <cmp_support.h>
+
+
+/* size of the source data header structure for multi entry packet */
+#define MULTI_ENTRY_HDR_SIZE 12
 
 #define MAX_USED_NC_IMAGETTE_BITS		16
 #define MAX_USED_SATURATED_IMAGETTE_BITS	16 /* TBC */
@@ -82,7 +86,10 @@
 #define MAX_USED_FC_BACKGROUND_OUTLIER_PIXELS_BITS	16 /* TBC */
 
 
-/* struct holding the maximum length of the different data product types in bits */
+/**
+ * @brief Structure holding the maximum length of the different data product types in bits
+ */
+
 struct cmp_max_used_bits {
 	uint8_t version;
 	unsigned int s_exp_flags;
@@ -121,18 +128,12 @@ struct cmp_max_used_bits {
 };
 
 
-/* Set and read the max_used_bits, which specify how many bits are needed to
- * represent the highest possible value.
+/**
+ * @brief source data header structure for multi entry packet
+ * @note a scientific package contains a multi-entry header followed by multiple
+ *	entries of the same entry definition
+ * @see PLATO-LESIA-PL-RP-0031(N-DPU->ICU data rate)
  */
-void cmp_set_max_used_bits(const struct cmp_max_used_bits *set_max_used_bits);
-struct cmp_max_used_bits cmp_get_max_used_bits(void);
-
-uint8_t cmp_get_max_used_bits_version(void);
-
-
-/* Source data header structure for multi entry packet */
-#define MULTI_ENTRY_HDR_SIZE 12
-compile_time_assert(MULTI_ENTRY_HDR_SIZE % sizeof(uint32_t) == 0, N_DPU_ICU_MULTI_ENTRY_HDR_NOT_4_BYTE_ALLIED);
 
 __extension__
 struct multi_entry_hdr {
@@ -144,13 +145,22 @@ struct multi_entry_hdr {
 	uint8_t  entry[];
 } __attribute__((packed));
 compile_time_assert(sizeof(struct multi_entry_hdr) == MULTI_ENTRY_HDR_SIZE, N_DPU_ICU_MULTI_ENTRY_HDR_SIZE_IS_NOT_CORRECT);
+compile_time_assert(sizeof(struct multi_entry_hdr) % sizeof(uint32_t) == 0, N_DPU_ICU_MULTI_ENTRY_HDR_NOT_4_BYTE_ALLIED);
 
+
+/**
+ * @brief short cadence normal light flux entry definition
+ */
 
 struct s_fx {
-	uint8_t exp_flags; /* selected exposure flags (2 flags + 6 spare bits) */
-	uint32_t fx;       /* normal light flux */
+	uint8_t exp_flags; /**< selected exposure flags (2 flags + 6 spare bits) */
+	uint32_t fx;       /**< normal light flux */
 } __attribute__((packed));
 
+
+/**
+ * @brief short cadence normal and extended light flux entry definition
+ */
 
 struct s_fx_efx {
 	uint8_t exp_flags;
@@ -159,6 +169,10 @@ struct s_fx_efx {
 } __attribute__((packed));
 
 
+/**
+ * @brief short cadence normal light flux, normal center of brightness entry definition
+ */
+
 struct s_fx_ncob {
 	uint8_t exp_flags;
 	uint32_t fx;
@@ -166,6 +180,10 @@ struct s_fx_ncob {
 	uint32_t ncob_y;
 } __attribute__((packed));
 
+
+/**
+ * @brief short cadence normal and extended flux, normal and extended center of brightness entry definition
+ */
 
 struct s_fx_efx_ncob_ecob {
 	uint8_t exp_flags;
@@ -178,10 +196,18 @@ struct s_fx_efx_ncob_ecob {
 } __attribute__((packed));
 
 
+/**
+ * @brief fast cadence normal light flux entry definition
+ */
+
 struct f_fx {
 	uint32_t fx;
 } __attribute__((packed));
 
+
+/**
+ * @brief fast cadence normal and extended light flux entry definition
+ */
 
 struct f_fx_efx {
 	uint32_t fx;
@@ -189,12 +215,21 @@ struct f_fx_efx {
 } __attribute__((packed));
 
 
+/**
+ * @brief fast cadence normal light flux, normal center of brightness entry definition
+ */
+
 struct f_fx_ncob {
 	uint32_t fx;
 	uint32_t ncob_x;
 	uint32_t ncob_y;
 } __attribute__((packed));
 
+
+/**
+ * @brief fast cadence normal and extended flux, normal and extended center of
+ *	brightness entry definition
+ */
 
 struct f_fx_efx_ncob_ecob {
 	uint32_t fx;
@@ -206,6 +241,10 @@ struct f_fx_efx_ncob_ecob {
 } __attribute__((packed));
 
 
+/**
+ * @brief long cadence normal light flux entry definition
+ */
+
 __extension__
 struct l_fx {
 	uint32_t exp_flags:24; /* selected exposure flags (24 flags) */
@@ -213,6 +252,10 @@ struct l_fx {
 	uint32_t fx_variance;
 } __attribute__((packed));
 
+
+/**
+ * @brief long cadence normal and extended light flux entry definition
+ */
 
 __extension__
 struct l_fx_efx {
@@ -222,6 +265,10 @@ struct l_fx_efx {
 	uint32_t fx_variance;
 } __attribute__((packed));
 
+
+/**
+ * @brief long cadence normal light flux, normal center of brightness entry definition
+ */
 
 __extension__
 struct l_fx_ncob {
@@ -234,6 +281,11 @@ struct l_fx_ncob {
 	uint32_t cob_y_variance;
 } __attribute__((packed));
 
+
+/**
+ * @brief long cadence normal and extended flux, normal and extended center of
+ *	brightness entry definition
+ */
 
 __extension__
 struct l_fx_efx_ncob_ecob {
@@ -250,11 +302,19 @@ struct l_fx_efx_ncob_ecob {
 } __attribute__((packed));
 
 
+/**
+ * @brief normal offset entry definition
+ */
+
 struct nc_offset {
 	uint32_t mean;
 	uint32_t variance;
 } __attribute__((packed));
 
+
+/**
+ * @brief normal background entry definition
+ */
 
 struct nc_background {
 	uint32_t mean;
@@ -263,11 +323,24 @@ struct nc_background {
 } __attribute__((packed));
 
 
+/**
+ * @brief smearing entry definition
+ */
+
 struct smearing {
 	uint32_t mean;
 	uint16_t variance_mean;
 	uint16_t outlier_pixels;
 } __attribute__((packed));
+
+
+/*
+ * Set and read the max_used_bits registry, which specify how many bits are
+ * needed to represent the highest possible value.
+ */
+uint8_t cmp_get_max_used_bits_version(void);
+struct cmp_max_used_bits cmp_get_max_used_bits(void);
+void cmp_set_max_used_bits(const struct cmp_max_used_bits *set_max_used_bits);
 
 
 size_t size_of_a_sample(enum cmp_data_type data_type);

@@ -1,6 +1,6 @@
 /**
  * @file   rdcu_ctrl.c
- * @author Armin Luntzer (armin.luntzer@univie.ac.at),
+ * @author Armin Luntzer (armin.luntzer@univie.ac.at)
  * @date   2018
  *
  * @copyright GPLv2
@@ -48,7 +48,7 @@
  *	value = get_register_uvw();
  *
  *
- * WARNING: this has not been thoroughly tested and is in need of inspection
+ * @warning this has not been thoroughly tested and is in need of inspection
  *	    with regards to the specification, in order to locate any
  *	    register transcription errors or typos
  *	    In the PLATO-IWF-PL-RS-005 Issue 0.7 (at least the one I have),

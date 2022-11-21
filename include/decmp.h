@@ -1,6 +1,6 @@
 /**
  * @file   decmp.h
- * @author Dominik Loidolt (dominik.loidolt@univie.ac.at),
+ * @author Dominik Loidolt (dominik.loidolt@univie.ac.at)
  * @date   2020
  *
  * @copyright GPLv2

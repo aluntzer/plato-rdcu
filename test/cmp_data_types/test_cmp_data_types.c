@@ -1,6 +1,6 @@
 /**
- * @file test_cmp_entity.h
- * @author Dominik Loidolt (dominik.loidolt@univie.ac.at),
+ * @file test_cmp_data_types.c
+ * @author Dominik Loidolt (dominik.loidolt@univie.ac.at)
  * @date   2022
  *
  * @copyright GPLv2
@@ -30,6 +30,7 @@
 void test_cmp_set_max_used_bits(void)
 {
 	struct cmp_max_used_bits set_max_used_bits = cmp_get_max_used_bits();
+
 	cmp_set_max_used_bits(&set_max_used_bits);
 	cmp_set_max_used_bits(NULL);
 }
@@ -101,7 +102,7 @@ void test_size_of_a_sample(void)
 	/* test error cases */
 	size = size_of_a_sample(DATA_TYPE_UNKNOWN);
 	TEST_ASSERT_EQUAL(0, size);
-	size = size_of_a_sample(DATA_TYPE_F_CAM_BACKGROUND +1);
+	size = size_of_a_sample(DATA_TYPE_F_CAM_BACKGROUND+1);
 	TEST_ASSERT_EQUAL(0, size);
 }
 
