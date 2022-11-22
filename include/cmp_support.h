@@ -262,6 +262,32 @@ struct fx_cob_par {
 };
 
 
+/**
+ * @brief method for lossy rounding
+ * @note This function is implemented as a macro for the sake of performance
+ *
+ * @param value	the value to round
+ * @param round	rounding parameter
+ *
+ * @return rounded value
+ */
+
+#define round_fwd(value, round) ((uint32_t)(value) >> (round))
+
+
+/**
+ * @brief inverse method for lossy rounding
+ * @note This function is implemented as a macro for the sake of performance
+ *
+ * @param value	the value to round back
+ * @param round	rounding parameter
+ *
+ * @return back rounded value
+ */
+
+#define round_inv(value, round) ((uint32_t)(value) << (round))
+
+
 int is_a_pow_of_2(unsigned int v);
 int ilog_2(uint32_t x);
 
@@ -291,8 +317,6 @@ int rdcu_supported_cmp_mode_is_used(enum cmp_mode cmp_mode);
 int zero_escape_mech_is_used(enum cmp_mode cmp_mode);
 int multi_escape_mech_is_used(enum cmp_mode cmp_mode);
 
-unsigned int round_fwd(unsigned int value, unsigned int round);
-unsigned int round_inv(unsigned int value, unsigned int round);
 unsigned int cmp_up_model(unsigned int data, unsigned int model,
 			  unsigned int model_value, unsigned int round);
 
