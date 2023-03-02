@@ -16,7 +16,7 @@ CFLAGS    := -O2 -Wall -Wextra -std=gnu99 -Werror -pedantic \
 LDFLAGS   :=
 
 
-TESTS := cmp_data_types cmp_icu cmp_entity cmp_decmp cmp_rdcu_cfg
+TESTS := cmp_data_types cmp_icu cmp_entity cmp_decmp cmp_rdcu_cfg validation_tests
 # units under test
 UUT_SRCS := $(SRCS_DIR)/cmp_icu.c \
             $(SRCS_DIR)/cmp_support.c \
@@ -61,6 +61,7 @@ $(TARGET): $(BUILD_DIR)/$(TARGET)
 $(BUILD_DIR)/$(TARGET): $(BUILD_DIR)/$(TARGET).o $(LIB_OBJS)
 	$(CC) $(LDFLAGS) $^ -o $@
 
+
 .PHONY: coverage
 coverage: $(BUILD_DIR)/coverage
 
@@ -85,6 +86,16 @@ $(BUILD_DIR)/coverage: $(TESTS_RESULTS)
 PASSED = `grep -s PASS $(BUILD_DIR)/*.txt`
 FAIL = `grep -s FAIL $(BUILD_DIR)/*.txt`
 IGNORE = `grep -s IGNORE $(BUILD_DIR)/*.txt`
+
+.PHONY: validation_tests
+validation_tests: CC = sparc-elf-gcc
+validation_tests: CFLAGS += -mv8
+validation_tests: $(BUILD_DIR)/$(TEST_DIR)/validation_tests/validation_tests
+
+$(BUILD_DIR)/$(TEST_DIR)/validation_tests/validation_tests: $(BUILD_DIR)/$(TEST_DIR)/validation_tests/validation_tests.o \
+                                                            $(BUILD_DIR)/$(TEST_DIR)/validation_tests/init_rdcu.o \
+                                                            $(LIB_OBJS) $(UNITY_OBJS)
+	$(CC) $(LDFLAGS) $^ -o $@
 
 .PHONY: test
 test: $(TESTS_RESULTS)
