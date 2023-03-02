@@ -19,6 +19,9 @@ sizeof(uint16_t) /* imagette sample to byte conversion factor; one imagette samp
 void init_rdcu(void);
 
 
+void setUp(void) {}
+void tearDown(void) {}
+
 static void gen_random_data(void *buffer, size_t size)
 {
 	uint8_t *p = buffer;
