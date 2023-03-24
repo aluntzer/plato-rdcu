@@ -326,6 +326,39 @@ int rdcu_cfg_imagette(struct cmp_cfg *cfg,
 
 
 /**
+ * @brief set up the default configuration parameters for an RDCU imagette
+ *	compression based on the set compression mode
+ *
+ * @returns 0 if parameters are valid, non-zero if parameters are invalid
+ */
+
+int rdcu_cfg_imagette_default(struct cmp_cfg *cfg)
+{
+
+	if (!cfg) {
+		debug_print("Error: pointer to the compression configuration structure is NULL.\n");
+		return -1;
+	}
+
+	if (model_mode_is_used(cfg->cmp_mode)) {
+		return rdcu_cfg_imagette(cfg, CMP_DEF_IMA_MODEL_GOLOMB_PAR,
+					 CMP_DEF_IMA_MODEL_SPILL_PAR,
+					 CMP_DEF_IMA_MODEL_AP1_GOLOMB_PAR,
+					 CMP_DEF_IMA_MODEL_AP1_SPILL_PAR,
+					 CMP_DEF_IMA_MODEL_AP2_GOLOMB_PAR,
+					 CMP_DEF_IMA_MODEL_AP2_SPILL_PAR);
+	} else {
+		return rdcu_cfg_imagette(cfg, CMP_DEF_IMA_DIFF_GOLOMB_PAR,
+					 CMP_DEF_IMA_DIFF_SPILL_PAR,
+					 CMP_DEF_IMA_DIFF_AP1_GOLOMB_PAR,
+					 CMP_DEF_IMA_DIFF_AP1_SPILL_PAR,
+					 CMP_DEF_IMA_DIFF_AP2_GOLOMB_PAR,
+					 CMP_DEF_IMA_DIFF_AP2_SPILL_PAR);
+	}
+}
+
+
+/**
  * @brief check if the compressor configuration is invalid for an RDCU compression,
  *	see the user manual for more information (PLATO-UVIE-PL-UM-0001).
  *

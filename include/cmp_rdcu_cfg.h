@@ -36,6 +36,7 @@ int rdcu_cfg_imagette(struct cmp_cfg *cfg,
 		      uint32_t golomb_par, uint32_t spillover_par,
 		      uint32_t ap1_golomb_par, uint32_t ap1_spillover_par,
 		      uint32_t ap2_golomb_par, uint32_t ap2_spillover_par);
+int rdcu_cfg_imagette_default(struct cmp_cfg *cfg);
 
 int rdcu_cmp_cfg_is_invalid(const struct cmp_cfg *cfg);
 
