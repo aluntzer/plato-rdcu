@@ -37,9 +37,6 @@
 #include <rdcu_rmap.h>
 
 
-#define IMA_SAM2BYT                                                            \
-	2 /* imagette sample to byte conversion factor; one imagette samples has 16 bits (2 bytes) */
-
 #define RDCU_INTR_SIG_ENA 1 /* RDCU interrupt signal enabled */
 #define RDCU_INTR_SIG_DIS 0 /* RDCU interrupt signal disable */
 #define RDCU_INTR_SIG_DEFAULT RDCU_INTR_SIG_ENA /* default start value for RDCU interrupt signal */

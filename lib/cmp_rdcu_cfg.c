@@ -24,10 +24,7 @@
 #include <cmp_debug.h>
 #include <cmp_support.h>
 #include <rdcu_cmd.h>
-
-
-#define IMA_SAM2BYT                                                            \
-2 /* imagette sample to byte conversion factor; one imagette samples has 16 bits (2 bytes) */
+#include <cmp_rdcu_cfg.h>
 
 
 /**
