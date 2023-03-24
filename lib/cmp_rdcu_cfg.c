@@ -72,7 +72,7 @@ struct cmp_cfg rdcu_cfg_create(enum cmp_data_type data_type, enum cmp_mode cmp_m
 
 static int outside_sram_range(uint32_t addr, uint32_t size)
 {
-	if (addr + size > RDCU_SRAM_END)
+	if (addr + size > RDCU_SRAM_START + RDCU_SRAM_SIZE)
 		return 1;
 
 	if (addr > RDCU_SRAM_END)

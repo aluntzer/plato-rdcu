@@ -1564,7 +1564,7 @@ int rdcu_read_sram(void *buf, uint32_t addr, uint32_t size)
 	if (size > RDCU_SRAM_SIZE)
 		return -1;
 
-	if (addr + size > RDCU_SRAM_END)
+	if (addr + size > RDCU_SRAM_START + RDCU_SRAM_SIZE)
 		return -1;
 
 	if (buf)
@@ -1596,7 +1596,7 @@ int rdcu_write_sram(void *buf, uint32_t addr, uint32_t size)
 	if (size > RDCU_SRAM_SIZE)
 		return -1;
 
-	if (addr + size > RDCU_SRAM_END)
+	if (addr + size > RDCU_SRAM_START + RDCU_SRAM_SIZE)
 		return -1;
 
 	if (buf)
@@ -1644,15 +1644,6 @@ int rdcu_write_sram_16(uint16_t *buf, uint32_t addr, uint32_t size)
 	if (size & 0x1)
 		return -1;
 
-	if (addr > RDCU_SRAM_END)
-		return -1;
-
-	if (size > RDCU_SRAM_SIZE)
-		return -1;
-
-	if (addr + size > RDCU_SRAM_END)
-		return -1;
-
 #if !(__BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__)
 	return rdcu_write_sram(buf, addr, size);
 #else
@@ -1688,15 +1679,6 @@ int rdcu_write_sram_32(uint32_t *buf, uint32_t addr, uint32_t size)
 		return 0;
 
 	if (size & 0x3)
-		return -1;
-
-	if (addr > RDCU_SRAM_END)
-		return -1;
-
-	if (size > RDCU_SRAM_SIZE)
-		return -1;
-
-	if (addr + size > RDCU_SRAM_END)
 		return -1;
 
 #if !(__BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__)
