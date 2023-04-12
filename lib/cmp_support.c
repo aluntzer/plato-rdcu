@@ -482,7 +482,6 @@ int cmp_cfg_gen_par_is_invalid(const struct cmp_cfg *cfg, enum check_opt opt)
 #ifdef SKIP_CMP_PAR_CHECK
 	return 0;
 #endif
-
 	return cfg_invalid;
 }
 
@@ -635,6 +634,9 @@ static int cmp_pars_are_invalid(uint32_t cmp_par, uint32_t spill, enum cmp_mode 
 		break;
 	}
 
+#ifdef SKIP_CMP_PAR_CHECK
+	return 0;
+#endif
 	return cfg_invalid;
 }
 

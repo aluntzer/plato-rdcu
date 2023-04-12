@@ -1,11 +1,33 @@
+/**
+ * @file   init_rdcu.c
+ * @author Dominik Loidolt (dominik.loidolt@univie.ac.at)
+ * @date   2023
+ *
+ * @copyright GPLv2
+ * This program is free software; you can redistribute it and/or modify it
+ * under the terms and conditions of the GNU General Public License,
+ * version 2, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+ * more details.
+ *
+ * @brief initialisation of the RMAP communication between GR712 and the RDCU
+ *
+ * @note clocks and other board-dependent configuration are set up for the
+ *	 GR712RC evaluation board (such as the SDRAM as the RDCU SRAM mirror)
+ */
+
+
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-
-
 #include <irq.h>
 #include <irq_dispatch.h>
+
 #include <grspw2.h>
 #include <errors.h>
 #include <event_report.h>
@@ -15,6 +37,7 @@
 #include <rdcu_rmap.h>
 
 #include <cfg.h>
+
 
 #define MAX_PAYLOAD_SIZE	4096
 
@@ -106,6 +129,21 @@ static int32_t rmap_tx(const void *hdr,  uint32_t hdr_size,
 		       const uint8_t non_crc_bytes,
 		       const void *data, uint32_t data_size)
 {
+
+#if 0
+       uint8_t blob[8192];
+       int n, i;
+
+       n =  rdcu_package(blob, hdr, hdr_size, non_crc_bytes,
+                         data, data_size);
+
+       for (i = 0; i < n; i++) {
+               printf("%02X ", blob[i]);
+               if (i && !((i+1) % 40))
+                       printf("\n");
+       }
+       printf("\n");
+#endif
 	return grspw2_add_pkt(&spw_cfg.spw, hdr, hdr_size, non_crc_bytes, data, data_size);
 }
 
@@ -209,50 +247,50 @@ static void spw_init_core(struct spw_cfg *cfg)
 static void gr718b_cfg_router(void)
 {
 	printf("\nConfiguring GR718B SpW Router."
-	       "\nYou can ignore any messages below, unless you get stuck."
-	       "\n========================================================\n"
+	       /* "\nYou can ignore any messages below, unless you get stuck." */
+	       /* "\n========================================================\n" */
 	       "\n");
 
-	printf("Enabling routing table address control for RDCU and ICU "
-	       "logical addresses (0x%02X and 0x%02X).\n",
-	       RDCU_ADDR, ICU_ADDR);
+	/* printf("Enabling routing table address control for RDCU and ICU " */
+	/*        "logical addresses (0x%02X and 0x%02X).\n", */
+	       /* RDCU_ADDR, ICU_ADDR); */
 
 	gr718b_set_rtactrl_enabled(RDCU_ADDR);
 	gr718b_set_rtactrl_enabled(ICU_ADDR);
 
 
-	printf("Clearing header deletion bit in routing table access control "
-	       "for RDCU and ICU logical addresses.\n");
+	/* printf("Clearing header deletion bit in routing table access control " */
+	/*        "for RDCU and ICU logical addresses.\n"); */
 
 	gr718b_clear_addr_header_deletion(RDCU_ADDR);
 	gr718b_clear_addr_header_deletion(ICU_ADDR);
 
 
-	printf("Enabling routes of logical addresses 0x%02X and 0x%02X to "
-	       "physical port addresses 0x%02X and 0x%02X respectively.\n",
-	       RDCU_ADDR, ICU_ADDR, RDCU_PHYS_PORT, ICU_PHYS_PORT);
+	/* printf("Enabling routes of logical addresses 0x%02X and 0x%02X to " */
+	/*        "physical port addresses 0x%02X and 0x%02X respectively.\n", */
+	       /* RDCU_ADDR, ICU_ADDR, RDCU_PHYS_PORT, ICU_PHYS_PORT); */
 
 	gr718b_set_route_port(RDCU_ADDR, RDCU_PHYS_PORT);
 	gr718b_set_route_port(ICU_ADDR,  ICU_PHYS_PORT);
 
 
-	printf("Configuring run-state clock divisors (%d) of physical port "
-	       "addresses 0x%02X and 0x%02X.\n",
-	       SPW_CLCKDIV_RUN, RDCU_PHYS_PORT, ICU_PHYS_PORT);
+	/* printf("Configuring run-state clock divisors (%d) of physical port " */
+	/*        "addresses 0x%02X and 0x%02X.\n", */
+	       /* SPW_CLCKDIV_RUN, RDCU_PHYS_PORT, ICU_PHYS_PORT); */
 
 	gr718b_set_rt_clkdiv(RDCU_PHYS_PORT, SPW_CLCKDIV_RUN - 1);
 	gr718b_set_rt_clkdiv(ICU_PHYS_PORT, SPW_CLCKDIV_RUN - 1);
 
 
-	printf("Enabling time-code transmission on physical port addresses "
-	       "0x%02X and 0x%02X.\n", RDCU_PHYS_PORT, ICU_PHYS_PORT);
+	/* printf("Enabling time-code transmission on physical port addresses " */
+	/*        "0x%02X and 0x%02X.\n", RDCU_PHYS_PORT, ICU_PHYS_PORT); */
 
 	gr718b_set_time_code_enable(RDCU_PHYS_PORT);
 	gr718b_set_time_code_enable(ICU_PHYS_PORT);
 
 
-	printf("Setting link-start bits on port addresses 0x%02X and 0x%02X.\n",
-	       RDCU_PHYS_PORT, ICU_PHYS_PORT);
+	/* printf("Setting link-start bits on port addresses 0x%02X and 0x%02X.\n", */
+	/*        RDCU_PHYS_PORT, ICU_PHYS_PORT); */
 
 	gr718b_set_link_start(RDCU_PHYS_PORT);
 	gr718b_set_link_start(ICU_PHYS_PORT);
@@ -286,38 +324,8 @@ static void sync(void)
 
 
 /**
- * @brief retrieve and print the RMAP error counters in the RDCU
+ * @brief initialisation of the RMAP communication between GR712 and the RDCU
  */
-
-static void rdcu_show_rmap_errors(void)
-{
-	rdcu_sync_rmap_no_reply_err_cntrs();
-	rdcu_sync_rmap_last_err();
-	rdcu_sync_rmap_pckt_err_cntrs();
-	sync();
-
-	printf("RMAP incomplete header errors %d\n",
-	       rdcu_get_rmap_incomplete_hdrs());
-	printf("RMAP received reply packets %d\n",
-	       rdcu_get_rmap_recv_reply_pckts());
-	printf("RMAP received non-RMAP packets %d\n",
-	       rdcu_get_recv_non_rmap_pckts());
-
-	printf("RMAP last error user code: %X\n",
-		rdcu_get_rmap_last_error_user_code());
-	printf("RMAP last error standard code: %X\n",
-		rdcu_get_rmap_last_error_standard_code());
-
-	printf("RMAP packet with length or content error counter: %d\n",
-		rdcu_get_rmap_pckt_errs());
-	printf("RMAP operation error counter: %d\n",
-		rdcu_get_rmap_oper_errs());
-	printf("RMAP command authorization errors: %d\n",
-		rdcu_get_rmap_cmd_auth_errs());
-	printf("RMAP header errors: %d\n",
-		rdcu_get_rmap_hdr_errs());
-}
-
 
 void init_rdcu(void)
 {
@@ -373,6 +381,9 @@ void init_rdcu(void)
 	rdcu_set_destination_path(NULL, 0);
 	rdcu_set_return_path(NULL, 0);
 
+	/* get some status info from the RDCU */
+	rdcu_sync_compr_status();
+
 	/* if the compressor is busy, RMAP will respond with a "general error
 	 * code" because the control registers are blocked
 	 */
@@ -401,3 +412,56 @@ void init_rdcu(void)
 	sync();
 	printf("RDCU linkdiv now set to: %d\n", rdcu_get_spw_run_clk_div() + 1);
 }
+
+
+
+static int32_t rmap_tx_print(const void *hdr, uint32_t hdr_size,
+			       const uint8_t non_crc_bytes, const void *data,
+			       uint32_t data_size)
+{
+	uint8_t blob[8192];
+	int n, i;
+
+	n =  rdcu_package(blob, hdr, hdr_size, non_crc_bytes,
+			  data, data_size);
+
+	for (i = 0; i < n; i++) {
+		printf("%02X ", blob[i]);
+		if (i && !((i+1) % 40))
+			printf("\n");
+	}
+	printf("\n");
+	return 0;
+
+}
+
+
+/**
+ * @brief Dummy implementation of the rmap_rx function for the rdcu_rmap lib.
+ *	We do not want to receive any packages.
+ */
+
+static uint32_t rmap_rx_dummy(uint8_t *pkt)
+{
+	(void)(pkt);
+	return 0;
+}
+
+
+int init_rmap_pkt_print(void)
+{
+	uint8_t icu_addr, rdcu_addr;
+	int mtu;
+
+	icu_addr = 0xA7;
+	rdcu_addr = 0xEF;
+	mtu = 4224;
+	rdcu_ctrl_init();
+	rdcu_set_source_logical_address(icu_addr);
+	rdcu_set_destination_logical_address(rdcu_addr);
+	rdcu_set_destination_key(RDCU_DEST_KEY);
+	rdcu_rmap_init(mtu, rmap_tx_print, rmap_rx_dummy);
+
+	return 0;
+}
+

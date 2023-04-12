@@ -72,6 +72,30 @@ static void sync(void)
 
 
 /**
+ * @brief interrupt a data compression
+ *
+ * @returns 0 on success, error otherwise
+ */
+
+int rdcu_interrupt_compression(void)
+{
+	/* interrupt a compression */
+	rdcu_set_data_compr_interrupt();
+	if (rdcu_sync_compr_ctrl())
+		return -1;
+	sync();
+
+	/* clear local bit immediately, this is a write-only register.
+	 * we would not want to restart compression by accidentially calling
+	 * rdcu_sync_compr_ctrl() again
+	 */
+	rdcu_clear_data_compr_interrupt();
+
+	return 0;
+}
+
+
+/**
  * @brief set up RDCU compression register
  *
  * @param cfg  pointer to a compression configuration contains all parameters
@@ -80,10 +104,24 @@ static void sync(void)
  * @returns 0 on success, error otherwise
  */
 
-int rdcu_set_compression_register(const struct cmp_cfg *cfg)
+static int rdcu_set_compression_register(const struct cmp_cfg *cfg)
 {
 	if (rdcu_cmp_cfg_is_invalid(cfg))
 		return -1;
+#if 1
+	/*
+	 * There is a bug in the RDCU HW data compressor, when a non-raw mode
+	 * compression is performed after a raw mode compression, the compressor
+	 * gets stuck due to a deadlock condition. Performing a compression
+	 * interrupt after a raw mode compression work around this bug.
+	 */
+	if (rdcu_sync_used_param1())
+		return -1;
+	sync();
+	if (rdcu_get_compression_mode() == CMP_MODE_RAW)
+		rdcu_interrupt_compression();
+#endif
+
 
 	/* first, set compression parameters in local mirror registers */
 	if (rdcu_set_compression_mode(cfg->cmp_mode))
@@ -143,6 +181,9 @@ int rdcu_set_compression_register(const struct cmp_cfg *cfg)
 	if (rdcu_sync_compr_data_buf_len())
 		return -1;
 
+	/* wait for it */
+	sync();
+
 	return 0;
 }
 
@@ -180,6 +221,54 @@ int rdcu_start_compression(void)
 
 
 /**
+ * @brief set up RDCU SRAM for compression
+ *
+ * @param cfg  pointer to a compression configuration
+ *
+ * @returns 0 on success, error otherwise
+ */
+
+static int rdcu_transfer_sram(const struct cmp_cfg *cfg)
+{
+	if (cfg->input_buf != NULL) {
+		/* round up needed size must be a multiple of 4 bytes */
+		uint32_t size = (cfg->samples * 2 + 3) & ~3U;
+		/* now set the data in the local mirror... */
+		if (rdcu_write_sram_16(cfg->input_buf, cfg->rdcu_data_adr, cfg->samples * 2) < 0) {
+			debug_print("Error: The data to be compressed cannot be transferred to the SRAM of the RDCU.\n");
+			return -1;
+		}
+		if (rdcu_sync_mirror_to_sram(cfg->rdcu_data_adr, size, rdcu_get_data_mtu())) {
+			debug_print("Error: The data to be compressed cannot be transferred to the SRAM of the RDCU.\n");
+			return -1;
+		}
+	}
+	/*...and the model when needed */
+	if (cfg->model_buf != NULL) {
+		/* set model only when model mode is used */
+		if (model_mode_is_used(cfg->cmp_mode)) {
+			/* round up needed size must be a multiple of 4 bytes */
+			uint32_t size = (cfg->samples * 2 + 3) & ~3U;
+			/* set the model in the local mirror... */
+			if (rdcu_write_sram_16(cfg->model_buf, cfg->rdcu_model_adr, cfg->samples * 2) < 0) {
+				debug_print("Error: The model buffer cannot be transferred to the SRAM of the RDCU.\n");
+				return -1;
+			}
+			if (rdcu_sync_mirror_to_sram(cfg->rdcu_model_adr, size, rdcu_get_data_mtu())) {
+				debug_print("Error: The model buffer cannot be transferred to the SRAM of the RDCU.\n");
+				return -1;
+			}
+		}
+	}
+
+	/* ...and wait for completion */
+	sync();
+
+	return 0;
+}
+
+
+/**
  * @brief compressing data with the help of the RDCU hardware compressor
  *
  * @param cfg  configuration contains all parameters required for compression
@@ -195,44 +284,12 @@ int rdcu_start_compression(void)
 
 int rdcu_compress_data(const struct cmp_cfg *cfg)
 {
-	if (!cfg)
-		return -1;
-
 	if (rdcu_set_compression_register(cfg))
 		return -1;
 
-	if (cfg->input_buf != NULL) {
-		/* round up needed size must be a multiple of 4 bytes */
-		uint32_t size = (cfg->samples * 2 + 3) & ~3U;
-		/* now set the data in the local mirror... */
-		if (rdcu_write_sram_16(cfg->input_buf, cfg->rdcu_data_adr,
-				       cfg->samples * 2) < 0)
-			return -1;
-		if (rdcu_sync_mirror_to_sram(cfg->rdcu_data_adr, size,
-					     rdcu_get_data_mtu()))
-			return -1;
-	}
-	/*...and the model when needed */
-	if (cfg->model_buf != NULL) {
-		/* set model only when model mode is used */
-		if (model_mode_is_used(cfg->cmp_mode)) {
-			/* round up needed size must be a multiple of 4 bytes */
-			uint32_t size = (cfg->samples * 2 + 3) & ~3U;
-			/* set the model in the local mirror... */
-			if (rdcu_write_sram_16(cfg->model_buf,
-					       cfg->rdcu_model_adr,
-					       cfg->samples * 2) < 0)
-				return -1;
-			if (rdcu_sync_mirror_to_sram(cfg->rdcu_model_adr, size,
-						     rdcu_get_data_mtu()))
-				return -1;
-		}
-	}
+	if (rdcu_transfer_sram(cfg))
+		return -1;
 
-	/* ...and wait for completion */
-	sync();
-
-	/* start the compression */
 	if (rdcu_start_compression())
 		return -1;
 
@@ -317,6 +374,16 @@ int rdcu_read_cmp_info(struct cmp_info *info)
 		info->ap1_cmp_size = rdcu_get_compr_data_adaptive_1_size_bit();
 		info->ap2_cmp_size = rdcu_get_compr_data_adaptive_2_size_bit();
 		info->cmp_err = rdcu_get_compr_error();
+#ifdef FPGA_VERSION_0_7
+		/* There is a bug up to RDCU FPGA version 0.7 where the
+		 * compressed size is not updated accordingly in RAW mode.
+		 */
+		if (info->cmp_mode_used == CMP_MODE_RAW) {
+			info->cmp_size = info->samples_used * IMA_SAM2BYT * 8;
+			info->ap1_cmp_size = info->cmp_size;
+			info->ap2_cmp_size = info->cmp_size;
+		}
+#endif
 	}
 	return 0;
 }
@@ -392,30 +459,6 @@ int rdcu_read_model(const struct cmp_info *info, void *updated_model)
 
 
 /**
- * @brief interrupt a data compression
- *
- * @returns 0 on success, error otherwise
- */
-
-int rdcu_interrupt_compression(void)
-{
-	/* interrupt a compression */
-	rdcu_set_data_compr_interrupt();
-	if (rdcu_sync_compr_ctrl())
-		return -1;
-	sync();
-
-	/* clear local bit immediately, this is a write-only register.
-	 * we would not want to restart compression by accidentially calling
-	 * rdcu_sync_compr_ctrl() again
-	 */
-	rdcu_clear_data_compr_interrupt();
-
-	return 0;
-}
-
-
-/**
  * @brief enable the RDCU to signal a finished compression with an interrupt signal
  */
 
@@ -434,3 +477,113 @@ void rdcu_disable_interrput_signal(void)
 	interrupt_signal_enabled = RDCU_INTR_SIG_DIS;
 }
 
+
+/**
+ * @brief inject a SRAM edac multi bit error into the RDCU SRAM
+ *
+ * @param cfg	configuration to inject error
+ * @param addr	SRAM address to inject edac error
+ */
+
+int rdcu_inject_edac_error(struct cmp_cfg *cfg, uint32_t addr)
+{
+	uint32_t sub_chip_die_addr;
+	uint8_t buf[4] = {0};
+
+	if (rdcu_set_compression_register(cfg))
+		return -1;
+
+	if (rdcu_transfer_sram(cfg))
+		return -1;
+
+	/* disable edac */
+	for (sub_chip_die_addr = 1; sub_chip_die_addr <= 4; sub_chip_die_addr ++) {
+		rdcu_edac_set_sub_chip_die_addr(sub_chip_die_addr);
+		rdcu_edac_set_ctrl_reg_write_op();
+		rdcu_edac_set_bypass();
+		if (rdcu_sync_sram_edac_ctrl()) {
+			debug_print("Error: rdcu_sync_sram_edac_ctrl\n");
+			return -1;
+		}
+		sync();
+		/* verify bypass aktiv */
+		rdcu_edac_set_ctrl_reg_read_op();
+		if (rdcu_sync_sram_edac_ctrl()) {
+			debug_print("Error: rdcu_sync_sram_edac_ctrl\n");
+			return -1;
+		}
+		sync();
+		if (rdcu_sync_sram_edac_status()) {
+			printf("Error: rdcu_sync_sram_edac_status\n");
+			return -1;
+		}
+		sync();
+		if (rdcu_edac_get_sub_chip_die_addr() != sub_chip_die_addr) {
+			printf("Error: sub_chip_die_addr unexpected !\n");
+			return -1;
+		}
+#if 1
+		/* It looks like there is a bug when displaying the bypass status of the 2. and 4. SRAM chip. */
+		if (2 != sub_chip_die_addr && 4 != sub_chip_die_addr)
+#endif
+			if (0 == rdcu_edac_get_bypass_status()) {
+				printf("Error: bypass status unexpected !\n");
+				return -1;
+			}
+	}
+
+	/* inject multi bit error */
+	if (rdcu_sync_sram_to_mirror(addr, sizeof(buf), rdcu_get_data_mtu()))
+		return -1;
+	sync();
+	if (rdcu_read_sram(buf, addr, sizeof(buf)) < 0)
+		return -1;
+
+	buf[0] ^= 1 << 0;
+	buf[1] ^= 1 << 1;
+	buf[2] ^= 1 << 2;
+	buf[3] ^= 1 << 3;
+
+	if (rdcu_write_sram(buf, addr, sizeof(buf)) < 0)
+		return -1;
+	if (rdcu_sync_mirror_to_sram(addr, sizeof(buf), rdcu_get_data_mtu())) {
+		debug_print("Error: The data to be compressed cannot be transferred to the SRAM of the RDCU.\n");
+		return -1;
+	}
+	sync();
+
+
+	/* enable edac again */
+	for (sub_chip_die_addr = 1; sub_chip_die_addr <= 4; sub_chip_die_addr ++) {
+		if (rdcu_edac_set_sub_chip_die_addr(sub_chip_die_addr))
+			return -1;
+		rdcu_edac_set_ctrl_reg_write_op();
+		rdcu_edac_clear_bypass();
+		if (rdcu_sync_sram_edac_ctrl()) {
+			debug_print("Error: rdcu_sync_sram_edac_ctrl\n");
+			return -1;
+		}
+		sync();
+		/* verify bypass disable */
+		rdcu_edac_set_ctrl_reg_read_op();
+		if (rdcu_sync_sram_edac_ctrl()) {
+			debug_print("Error: rdcu_sync_sram_edac_ctrl\n");
+			return -1;
+		}
+		sync();
+		if (rdcu_sync_sram_edac_status()) {
+			printf("Error: rdcu_sync_sram_edac_status\n");
+			return -1;
+		}
+		sync();
+		if (rdcu_edac_get_sub_chip_die_addr() != sub_chip_die_addr) {
+			printf("Error: sub_chip_die_addr unexpected !\n");
+			return -1;
+		}
+		if (1 == rdcu_edac_get_bypass_status()) {
+			printf("Error: bypass status unexpected !\n");
+			return -1;
+		}
+	}
+	return 0;
+}

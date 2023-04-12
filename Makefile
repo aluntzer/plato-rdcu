@@ -12,7 +12,7 @@ UNITY_DIR := $(TEST_DIR)/Unity/src
 # flags
 CPPFLAGS  := -DNO_IASW -DDEBUGLEVEL=1 -I. -I$(INC_DIR) -I$(INC_DIR)/leon -I$(UNITY_DIR)
 CFLAGS    := -O2 -Wall -Wextra -std=gnu99 -Werror -pedantic \
-             -pedantic-errors -Wno-long-long# -Wconversion
+             -pedantic-errors -Wno-long-long -Wno-missing-field-initializers # -Wconversion
 LDFLAGS   :=
 
 
@@ -88,13 +88,15 @@ FAIL = `grep -s FAIL $(BUILD_DIR)/*.txt`
 IGNORE = `grep -s IGNORE $(BUILD_DIR)/*.txt`
 
 .PHONY: validation_tests
+validation_tests: CPPFLAGS += -DSKIP_CMP_PAR_CHECK
 validation_tests: CC = sparc-elf-gcc
 validation_tests: CFLAGS += -mv8
 validation_tests: $(BUILD_DIR)/$(TEST_DIR)/validation_tests/validation_tests
 
 $(BUILD_DIR)/$(TEST_DIR)/validation_tests/validation_tests: $(BUILD_DIR)/$(TEST_DIR)/validation_tests/validation_tests.o \
                                                             $(BUILD_DIR)/$(TEST_DIR)/validation_tests/init_rdcu.o \
-                                                            $(LIB_OBJS) $(UNITY_OBJS)
+                                                            $(BUILD_DIR)/$(TEST_DIR)/common_test.o \
+                                                            $(LIB_OBJS)
 	$(CC) $(LDFLAGS) $^ -o $@
 
 .PHONY: test
