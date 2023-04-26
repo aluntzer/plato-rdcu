@@ -94,6 +94,8 @@ validation_tests: CFLAGS += -mv8
 validation_tests: $(BUILD_DIR)/$(TEST_DIR)/validation_tests/validation_tests
 
 $(BUILD_DIR)/$(TEST_DIR)/validation_tests/validation_tests: $(BUILD_DIR)/$(TEST_DIR)/validation_tests/validation_tests.o \
+                                                            $(TEST_DIR)/cmp_decmp/decmp.o \
+                                                            $(BUILD_DIR)/$(TEST_DIR)/validation_tests/init_rdcu.o \
                                                             $(BUILD_DIR)/$(TEST_DIR)/validation_tests/init_rdcu.o \
                                                             $(LIB_OBJS)
 	$(CC) $(LDFLAGS) $^ -o $@
