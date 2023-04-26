@@ -95,7 +95,6 @@ validation_tests: $(BUILD_DIR)/$(TEST_DIR)/validation_tests/validation_tests
 
 $(BUILD_DIR)/$(TEST_DIR)/validation_tests/validation_tests: $(BUILD_DIR)/$(TEST_DIR)/validation_tests/validation_tests.o \
                                                             $(BUILD_DIR)/$(TEST_DIR)/validation_tests/init_rdcu.o \
-                                                            $(BUILD_DIR)/$(TEST_DIR)/common_test.o \
                                                             $(LIB_OBJS)
 	$(CC) $(LDFLAGS) $^ -o $@
 
