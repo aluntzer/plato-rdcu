@@ -947,13 +947,13 @@ int rdcu_set_spillover_threshold(uint32_t spill)
 	if (spill < 2)
 		return -1;
 
-	if (spill > 16383)
+	if (spill > 0x3FFUL)
 		return -1;
 #endif /*SKIP_CMP_PAR_CHECK*/
 
 	/* clear and set */
-	rdcu->compressor_param2 &= ~(0x3FFFUL << 8);
-	rdcu->compressor_param2 |=  (spill    << 8);
+	rdcu->compressor_param2 &= ~(0x3FFUL << 8);
+	rdcu->compressor_param2 |=  (spill   << 8);
 
 	return 0;
 }
@@ -997,13 +997,13 @@ int rdcu_set_adaptive_1_spillover_threshold(uint32_t spill)
 	if (spill < 2)
 		return -1;
 
-	if (spill > 16383)
+	if (spill > 0x3FFUL)
 		return -1;
 #endif /*SKIP_CMP_PAR_CHECK*/
 
 	/* clear and set */
-	rdcu->adaptive_param1 &= ~(0x3FFFUL << 8);
-	rdcu->adaptive_param1 |=  (spill    << 8);
+	rdcu->adaptive_param1 &= ~(0x3FFUL << 8);
+	rdcu->adaptive_param1 |=  (spill   << 8);
 
 	return 0;
 }
@@ -1048,13 +1048,13 @@ int rdcu_set_adaptive_2_spillover_threshold(uint32_t spill)
 	if (spill < 2)
 		return -1;
 
-	if (spill > 16383)
+	if (spill > 0x3FFUL)
 		return -1;
 #endif /*SKIP_CMP_PAR_CHECK*/
 
 	/* clear and set */
-	rdcu->adaptive_param2 &= ~(0x3FFFUL << 8);
-	rdcu->adaptive_param2 |=  (spill    << 8);
+	rdcu->adaptive_param2 &= ~(0x3FFUL << 8);
+	rdcu->adaptive_param2 |=  (spill   << 8);
 
 	return 0;
 }
@@ -1274,7 +1274,7 @@ uint32_t rdcu_get_weighting_param(void)
 
 uint32_t rdcu_get_spillover_threshold(void)
 {
-	return (rdcu->used_param2 >> 8) & 0x3FFFUL;
+	return (rdcu->used_param2 >> 8) & 0x3FFUL;
 }
 
 
@@ -1564,7 +1564,7 @@ int rdcu_read_sram(void *buf, uint32_t addr, uint32_t size)
 	if (size > RDCU_SRAM_SIZE)
 		return -1;
 
-	if (addr + size > RDCU_SRAM_END)
+	if (addr + size > RDCU_SRAM_START + RDCU_SRAM_SIZE)
 		return -1;
 
 	if (buf)
@@ -1596,7 +1596,7 @@ int rdcu_write_sram(void *buf, uint32_t addr, uint32_t size)
 	if (size > RDCU_SRAM_SIZE)
 		return -1;
 
-	if (addr + size > RDCU_SRAM_END)
+	if (addr + size > RDCU_SRAM_START + RDCU_SRAM_SIZE)
 		return -1;
 
 	if (buf)
@@ -1644,15 +1644,6 @@ int rdcu_write_sram_16(uint16_t *buf, uint32_t addr, uint32_t size)
 	if (size & 0x1)
 		return -1;
 
-	if (addr > RDCU_SRAM_END)
-		return -1;
-
-	if (size > RDCU_SRAM_SIZE)
-		return -1;
-
-	if (addr + size > RDCU_SRAM_END)
-		return -1;
-
 #if !(__BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__)
 	return rdcu_write_sram(buf, addr, size);
 #else
@@ -1688,15 +1679,6 @@ int rdcu_write_sram_32(uint32_t *buf, uint32_t addr, uint32_t size)
 		return 0;
 
 	if (size & 0x3)
-		return -1;
-
-	if (addr > RDCU_SRAM_END)
-		return -1;
-
-	if (size > RDCU_SRAM_SIZE)
-		return -1;
-
-	if (addr + size > RDCU_SRAM_END)
 		return -1;
 
 #if !(__BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__)

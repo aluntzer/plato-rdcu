@@ -159,8 +159,9 @@ static int gr718b_rmw_reg(uint32_t reg, uint32_t data, uint32_t mask)
 
 	while (!rmap_rx(NULL));
 	n = rmap_rx(cmd);
+#ifndef SKIP_CMP_PAR_CHECK
 	rmap_parse_pkt(cmd);
-
+#endif
 	return 0;
 }
 

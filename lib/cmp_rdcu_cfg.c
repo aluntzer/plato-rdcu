@@ -24,10 +24,7 @@
 #include <cmp_debug.h>
 #include <cmp_support.h>
 #include <rdcu_cmd.h>
-
-
-#define IMA_SAM2BYT                                                            \
-2 /* imagette sample to byte conversion factor; one imagette samples has 16 bits (2 bytes) */
+#include <cmp_rdcu_cfg.h>
 
 
 /**
@@ -72,7 +69,7 @@ struct cmp_cfg rdcu_cfg_create(enum cmp_data_type data_type, enum cmp_mode cmp_m
 
 static int outside_sram_range(uint32_t addr, uint32_t size)
 {
-	if (addr + size > RDCU_SRAM_END)
+	if (addr + size > RDCU_SRAM_START + RDCU_SRAM_SIZE)
 		return 1;
 
 	if (addr > RDCU_SRAM_END)
@@ -322,6 +319,39 @@ int rdcu_cfg_imagette(struct cmp_cfg *cfg,
 	cfg->ap2_spill = ap2_spillover_par;
 
 	return cmp_cfg_imagette_is_invalid(cfg, RDCU_CHECK);
+}
+
+
+/**
+ * @brief set up the default configuration parameters for an RDCU imagette
+ *	compression based on the set compression mode
+ *
+ * @returns 0 if parameters are valid, non-zero if parameters are invalid
+ */
+
+int rdcu_cfg_imagette_default(struct cmp_cfg *cfg)
+{
+
+	if (!cfg) {
+		debug_print("Error: pointer to the compression configuration structure is NULL.\n");
+		return -1;
+	}
+
+	if (model_mode_is_used(cfg->cmp_mode)) {
+		return rdcu_cfg_imagette(cfg, CMP_DEF_IMA_MODEL_GOLOMB_PAR,
+					 CMP_DEF_IMA_MODEL_SPILL_PAR,
+					 CMP_DEF_IMA_MODEL_AP1_GOLOMB_PAR,
+					 CMP_DEF_IMA_MODEL_AP1_SPILL_PAR,
+					 CMP_DEF_IMA_MODEL_AP2_GOLOMB_PAR,
+					 CMP_DEF_IMA_MODEL_AP2_SPILL_PAR);
+	} else {
+		return rdcu_cfg_imagette(cfg, CMP_DEF_IMA_DIFF_GOLOMB_PAR,
+					 CMP_DEF_IMA_DIFF_SPILL_PAR,
+					 CMP_DEF_IMA_DIFF_AP1_GOLOMB_PAR,
+					 CMP_DEF_IMA_DIFF_AP1_SPILL_PAR,
+					 CMP_DEF_IMA_DIFF_AP2_GOLOMB_PAR,
+					 CMP_DEF_IMA_DIFF_AP2_SPILL_PAR);
+	}
 }
 
 

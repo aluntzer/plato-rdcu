@@ -22,6 +22,8 @@
 
 #include <cmp_support.h>
 
+/* imagette sample to byte conversion factor; one imagette samples has 16 bits (2 bytes) */
+#define IMA_SAM2BYT sizeof(uint16_t)
 
 struct cmp_cfg rdcu_cfg_create(enum cmp_data_type data_type, enum cmp_mode cmp_mode,
 			       uint32_t model_value, uint32_t lossy_par);
@@ -36,6 +38,7 @@ int rdcu_cfg_imagette(struct cmp_cfg *cfg,
 		      uint32_t golomb_par, uint32_t spillover_par,
 		      uint32_t ap1_golomb_par, uint32_t ap1_spillover_par,
 		      uint32_t ap2_golomb_par, uint32_t ap2_spillover_par);
+int rdcu_cfg_imagette_default(struct cmp_cfg *cfg);
 
 int rdcu_cmp_cfg_is_invalid(const struct cmp_cfg *cfg);
 
