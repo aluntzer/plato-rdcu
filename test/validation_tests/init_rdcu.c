@@ -199,7 +199,7 @@ static void spw_alloc(struct spw_cfg *cfg)
 			& ~GRSPW2_DESCRIPTOR_TABLE_MEM_BLOCK_ALIGN);
 
 
-	/* malloc rx and tx data buffers: decriptors * packet size */
+	/* malloc rx and tx data buffers: descriptors * packet size */
 	cfg->rx_data = (uint8_t *) calloc(1, GRSPW2_RX_DESCRIPTORS
 					  * GRSPW2_DEFAULT_MTU);
 	cfg->tx_data = (uint8_t *) calloc(1, GRSPW2_TX_DESCRIPTORS
@@ -398,7 +398,7 @@ void init_rdcu(void)
 		sync();
 
 		if (rdcu_get_data_compr_active()) {
-			printf("ERRROR: compressor still active, aborting\n");
+			printf("ERROR: compressor still active, aborting\n");
 			return;
 		}
 	}

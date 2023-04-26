@@ -384,6 +384,17 @@ int rdcu_read_cmp_info(struct cmp_info *info)
 			info->ap2_cmp_size = info->cmp_size;
 		}
 #endif
+#if 1
+		/* There is a bug in RDCU FPGA version 1.1 where the compressed
+		 * size is not updated accordingly in RAW mode when the samples
+		 * parameter is smaller than 3.
+		 */
+		if (info->cmp_mode_used == CMP_MODE_RAW && info->samples_used < 3) {
+			info->cmp_size = info->samples_used * IMA_SAM2BYT * 8;
+			info->ap1_cmp_size = info->cmp_size;
+			info->ap2_cmp_size = info->cmp_size;
+		}
+#endif
 	}
 	return 0;
 }
