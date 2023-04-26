@@ -2,12 +2,9 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-/*TODO: remove this */
 #include <assert.h>
 
-#include <rdcu_ctrl.h>
-#include <rdcu_rmap.h> /* TODO: remove */
-#include "../common_test.h"
+#include "ref_data.h"
 #include "../../include/cmp_icu.h"
 #include "../../include/cmp_rdcu.h"
 #include "../../include/rdcu_cmd.h"
@@ -22,6 +19,33 @@ void init_rdcu(void);
 int rdcu_inject_edac_error(struct cmp_cfg *cfg, uint32_t addr); /* TODO: remove this */
 int rdcu_start_compression(void);
 
+
+void gen_ref_data(void* buffer, size_t size)
+{
+	uint8_t *p = buffer;
+
+	while(size > REF_DATA_SIZE) {
+		memcpy(p, ref_data2, REF_DATA_SIZE);
+		p += REF_DATA_SIZE;
+		size -= REF_DATA_SIZE;
+	}
+	if (size)
+		memcpy(p, ref_data2, size);
+}
+
+
+void gen_ref_model(void* buffer, size_t size)
+{
+	uint8_t *p = buffer;
+
+	while(size > REF_DATA_SIZE) {
+		memcpy(p, ref_data1, REF_DATA_SIZE);
+		size -= REF_DATA_SIZE;
+		p += REF_DATA_SIZE;
+	}
+	if (size)
+		memcpy(p, ref_data1, size);
+}
 
 /**
  * @brief generate a random number in a range
@@ -392,52 +416,6 @@ static uint16_t test_raw_mode_max_samples(uint16_t *data_to_compress, uint16_t *
 
 
 /**
- * @brief generate a test compressing configuration in RAW mode (output = input)
- *	using the minimum sample parameter
- *
- * @param data_to_compress	buffer to store input data
- * @param model_of_data		buffer to store the mode data (if needed)
- * @param cfg			compression configuration to test
- *
- * @returns the expect compression error
- */
-
-static uint16_t test_raw_mode_min_samples(uint16_t *data_to_compress, uint16_t *model_of_data, struct cmp_cfg *cfg)
-{
-	/* NOTE: due to a bug, the smallest sample value in raw mode must be greater than 2 */
-	uint32_t const data_samples = 3;
-	uint32_t buffer_length = data_samples;
-	uint32_t const rdcu_data_adr = 0x0;
-	uint32_t const rdcu_model_adr = 0x0; /* model not used */
-	uint32_t const rdcu_new_model_adr = 0x0; /* model not used */
-	uint32_t const rdcu_buffer_adr = 0x40;
-	int err;
-
-	model_of_data = NULL; /* model not used */
-
-#ifdef FPGA_VERSION_0_7
-	/* there is a bug in FPGA version 0.7 where in RAW mode the buffer_length
-	 * has to be at bigger than the samples parameter
-	 */
-	buffer_length += 2;
-#endif
-	*cfg = rdcu_cfg_create(DATA_TYPE_IMAGETTE_ADAPTIVE, CMP_MODE_RAW,
-			       CMP_DEF_IMA_MODEL_MODEL_VALUE, CMP_LOSSLESS);
-	assert(cfg->data_type != DATA_TYPE_UNKNOWN);
-
-	gen_random_samples(data_to_compress, data_samples);
-	err = rdcu_cfg_buffers(cfg, data_to_compress, data_samples, model_of_data, rdcu_data_adr,
-			       rdcu_model_adr, rdcu_new_model_adr, rdcu_buffer_adr, buffer_length);
-	assert(err == 0);
-
-	err = rdcu_cfg_imagette_default(cfg);
-	assert(err == 0);
-
-	return 0;
-}
-
-
-/**
  * @brief generate a 1d-diff mode default test compressing configuration
  *
  * @param data_to_compress	buffer to store input data
@@ -575,7 +553,7 @@ static uint16_t test_diff_multi(uint16_t *data_to_compress, uint16_t *model_of_d
 	uint32_t const rdcu_buffer_adr = 0x0;
 	uint32_t const rdcu_data_adr = rdcu_buffer_adr + buffer_length*IMA_SAM2BYT;
 	uint32_t const rdcu_model_adr = 0x0; /* model not used */
-	uint32_t const rdcu_new_model_adr = 0xc; /* model not used */
+	uint32_t const rdcu_new_model_adr = 0x0; /* model not used */
 
 	uint32_t const model_value = 11;
 	uint32_t const golomb_par = 4;
@@ -683,6 +661,7 @@ static uint16_t model_value_test(uint16_t *data_to_compress, uint16_t *model_of_
 		}
 		run_compression_check_results(cfg, 0);
 	}
+	cfg->model_value = random_between(0, 16);
 	return 0;
 }
 
@@ -717,14 +696,8 @@ static uint16_t small_samples_test(uint16_t *data_to_compress, uint16_t *model_o
 			assert(0);
 		}
 
-		for (cfg->samples = 0;  cfg->samples < 6; cfg->samples++) {
-#if 1
-			/* due to an error, the smallest sample value in raw mode must be greater than 2 */
-			if (cfg->cmp_mode == CMP_MODE_RAW)
-				cfg->samples+=3;
-#endif
+		for (cfg->samples = 0;  cfg->samples < 6; cfg->samples++)
 			run_compression_check_results(cfg, 0);
-		}
 	}
 	cfg->samples++;
 	return 0;
@@ -774,7 +747,7 @@ static uint16_t model_value_err_test(uint16_t *data_to_compress, uint16_t *model
 
 
 /**
- * @brief test procedures for the noraml compression and adaptive compression
+ * @brief test procedures for the normal compression and adaptive compression
  *	parameters
  *
  * @returns the expect compression error
@@ -1221,13 +1194,9 @@ int main(void)
 
 		/* setup test case */
 		switch (test_case) {
-		case 0:
-			test_name = "raw mode test; maximum samples";
-			gen_test_setup_f = test_raw_mode_max_samples;
-			break;
 		case 1:
-			test_name = "raw mode test; minimum samples";
-			gen_test_setup_f = test_raw_mode_min_samples;
+			test_name = "raw mode test";
+			gen_test_setup_f = test_raw_mode_max_samples;
 			break;
 		case 2:
 			test_name = "1d-diff mode default configuration test";
@@ -1315,7 +1284,11 @@ int main(void)
 		memset(data_to_compress, 0, RDCU_SRAM_SIZE);
 		memset(model_of_data, 0, RDCU_SRAM_SIZE);
 
+		printf("--------------------------------------------------------------------------------\n");
+		printf("--------------------------------------------------------------------------------\n");
 		printf("\n%s\n\n", test_name);
+		printf("--------------------------------------------------------------------------------\n");
+		printf("--------------------------------------------------------------------------------\n");
 		cmp_err_exp = gen_test_setup_f(data_to_compress, model_of_data, &cfg);
 
 		run_compression_check_results(&cfg, cmp_err_exp);
