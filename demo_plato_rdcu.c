@@ -1067,8 +1067,9 @@ static void rdcu_demo(void)
 	/* get some status info from the RDCU */
 	rdcu_sync_fpga_version();
 	rdcu_sync_compr_status();
+	rdcu_sync_rdcu_status();
 	sync();
-	printf("Current FPGA version: %d\n", rdcu_get_fpga_version());
+	printf("Current FPGA version: %d.%d\n", rdcu_get_fpga_version()>>8, rdcu_get_fpga_version()&0xFF);
 	printf("Compressor status ready: %s\n",
 	       rdcu_get_data_compr_ready() ? "yes" : "no");
 	printf("Compressor active: %s\n",
