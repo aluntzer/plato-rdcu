@@ -16,7 +16,7 @@ CFLAGS    := -O2 -Wall -Wextra -std=gnu99 -Werror -pedantic \
 LDFLAGS   :=
 
 
-TESTS := cmp_data_types cmp_icu cmp_entity cmp_decmp cmp_rdcu_cfg validation_tests
+TESTS := cmp_data_types cmp_icu cmp_entity cmp_decmp cmp_rdcu_cfg
 # units under test
 UUT_SRCS := $(SRCS_DIR)/cmp_icu.c \
             $(SRCS_DIR)/cmp_support.c \
@@ -30,6 +30,7 @@ TARGET = demo_plato_rdcu
 
 
 TESTS_SUB_DIRS := $(addprefix $(TEST_DIR)/, $(TESTS))
+TESTS_SUB_DIRS += $(addprefix $(TEST_DIR)/,test_validation_tests)
 TESTS_SUB_DIRS += $(UNITY_DIR)
 DIRS := $(SRCS_DIR) $(TESTS_SUB_DIRS)
 BUILD_SUB_DIRS := $(addprefix $(BUILD_DIR)/, $(DIRS))
