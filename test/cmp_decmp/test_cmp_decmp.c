@@ -54,7 +54,7 @@ void setUp(void)
 	static int n;
 
 #if HAS_TIME_H
-	seed = time(NULL) * getpid();
+	seed = (unsigned int)(time(NULL) * getpid());
 #else
 	seed = 1;
 #endif
@@ -108,221 +108,220 @@ uint32_t random_between(unsigned int min, unsigned int max)
 }
 
 
-static void gen_ima_data(uint16_t *data, uint32_t samples)
+static void gen_ima_data(uint16_t *data, uint32_t samples, const struct cmp_max_used_bits *max_used_bits)
 {
 	uint32_t i;
-	struct cmp_max_used_bits max_used_bits = cmp_get_max_used_bits();
 
 	for (i = 0; i < samples; i++)
-		data[i] = random_between(0, set_n_bits(max_used_bits.nc_imagette));
+		data[i] = (uint16_t)random_between(0, set_n_bits(max_used_bits->nc_imagette));
 }
 
 
-static void gen_offset_data(struct nc_offset *data, uint32_t samples)
+static void gen_offset_data(struct nc_offset *data, uint32_t samples,
+			    const struct cmp_max_used_bits *max_used_bits)
 {
 	uint32_t i;
-	struct cmp_max_used_bits max_used_bits = cmp_get_max_used_bits();
 
 	for (i = 0; i < samples; i++) {
-		data[i].mean = random_between(0, set_n_bits(max_used_bits.nc_offset_mean));
-		data[i].variance = random_between(0, set_n_bits(max_used_bits.nc_offset_variance));
+		data[i].mean = random_between(0, set_n_bits(max_used_bits->nc_offset_mean));
+		data[i].variance = random_between(0, set_n_bits(max_used_bits->nc_offset_variance));
 	}
 }
 
 
-static void gen_background_data(struct nc_background *data, uint32_t samples)
+static void gen_background_data(struct nc_background *data, uint32_t samples,
+				const struct cmp_max_used_bits *max_used_bits)
 {
 	uint32_t i;
-	struct cmp_max_used_bits max_used_bits = cmp_get_max_used_bits();
 
 	for (i = 0; i < samples; i++) {
-		data[i].mean = random_between(0, set_n_bits(max_used_bits.nc_background_mean));
-		data[i].variance = random_between(0, set_n_bits(max_used_bits.nc_background_variance));
-		data[i].outlier_pixels = random_between(0, set_n_bits(max_used_bits.nc_background_outlier_pixels));
+		data[i].mean = random_between(0, set_n_bits(max_used_bits->nc_background_mean));
+		data[i].variance = random_between(0, set_n_bits(max_used_bits->nc_background_variance));
+		data[i].outlier_pixels = random_between(0, set_n_bits(max_used_bits->nc_background_outlier_pixels));
 	}
 }
 
 
-static void gen_smearing_data(struct smearing *data, uint32_t samples)
+static void gen_smearing_data(struct smearing *data, uint32_t samples,
+			      const struct cmp_max_used_bits *max_used_bits)
 {
 	uint32_t i;
-	struct cmp_max_used_bits max_used_bits = cmp_get_max_used_bits();
 
 	for (i = 0; i < samples; i++) {
-		data[i].mean = random_between(0, set_n_bits(max_used_bits.smearing_mean));
-		data[i].variance_mean = random_between(0, set_n_bits(max_used_bits.smearing_variance_mean));
-		data[i].outlier_pixels = random_between(0, set_n_bits(max_used_bits.smearing_outlier_pixels));
+		data[i].mean = random_between(0, set_n_bits(max_used_bits->smearing_mean));
+		data[i].variance_mean = random_between(0, set_n_bits(max_used_bits->smearing_variance_mean));
+		data[i].outlier_pixels = random_between(0, set_n_bits(max_used_bits->smearing_outlier_pixels));
 	}
 }
 
 
-static void gen_s_fx_data(struct s_fx *data, uint32_t samples)
+static void gen_s_fx_data(struct s_fx *data, uint32_t samples,
+			  const struct cmp_max_used_bits *max_used_bits)
 {
 	uint32_t i;
-	struct cmp_max_used_bits max_used_bits = cmp_get_max_used_bits();
 
 	for (i = 0; i < samples; i++) {
-		data[i].exp_flags = random_between(0, set_n_bits(max_used_bits.s_exp_flags));
-		data[i].fx = random_between(0, set_n_bits(max_used_bits.s_fx));
+		data[i].exp_flags = random_between(0, set_n_bits(max_used_bits->s_exp_flags));
+		data[i].fx = random_between(0, set_n_bits(max_used_bits->s_fx));
 	}
 }
 
 
-static void gen_s_fx_efx_data(struct s_fx_efx *data, uint32_t samples)
+static void gen_s_fx_efx_data(struct s_fx_efx *data, uint32_t samples,
+			      const struct cmp_max_used_bits *max_used_bits)
 {
 	uint32_t i;
-	struct cmp_max_used_bits max_used_bits = cmp_get_max_used_bits();
 
 	for (i = 0; i < samples; i++) {
-		data[i].exp_flags = random_between(0, set_n_bits(max_used_bits.s_exp_flags));
-		data[i].fx = random_between(0, set_n_bits(max_used_bits.s_fx));
-		data[i].efx = random_between(0, set_n_bits(max_used_bits.s_efx));
+		data[i].exp_flags = random_between(0, set_n_bits(max_used_bits->s_exp_flags));
+		data[i].fx = random_between(0, set_n_bits(max_used_bits->s_fx));
+		data[i].efx = random_between(0, set_n_bits(max_used_bits->s_efx));
 	}
 }
 
 
-static void gen_s_fx_ncob_data(struct s_fx_ncob *data, uint32_t samples)
+static void gen_s_fx_ncob_data(struct s_fx_ncob *data, uint32_t samples,
+			       const struct cmp_max_used_bits *max_used_bits)
 {
 	uint32_t i;
-	struct cmp_max_used_bits max_used_bits = cmp_get_max_used_bits();
 
 	for (i = 0; i < samples; i++) {
-		data[i].exp_flags = random_between(0, set_n_bits(max_used_bits.s_exp_flags));
-		data[i].fx = random_between(0, set_n_bits(max_used_bits.s_fx));
-		data[i].ncob_x = random_between(0, set_n_bits(max_used_bits.s_ncob));
-		data[i].ncob_y = random_between(0, set_n_bits(max_used_bits.s_ncob));
+		data[i].exp_flags = random_between(0, set_n_bits(max_used_bits->s_exp_flags));
+		data[i].fx = random_between(0, set_n_bits(max_used_bits->s_fx));
+		data[i].ncob_x = random_between(0, set_n_bits(max_used_bits->s_ncob));
+		data[i].ncob_y = random_between(0, set_n_bits(max_used_bits->s_ncob));
 	}
 }
 
 
-static void gen_s_fx_efx_ncob_ecob_data(struct s_fx_efx_ncob_ecob *data, uint32_t samples)
+static void gen_s_fx_efx_ncob_ecob_data(struct s_fx_efx_ncob_ecob *data, uint32_t samples,
+					const struct cmp_max_used_bits *max_used_bits)
 {
 	uint32_t i;
-	struct cmp_max_used_bits max_used_bits = cmp_get_max_used_bits();
 
 	for (i = 0; i < samples; i++) {
-		data[i].exp_flags = random_between(0, set_n_bits(max_used_bits.s_exp_flags));
-		data[i].fx = random_between(0, set_n_bits(max_used_bits.s_fx));
-		data[i].ncob_x = random_between(0, set_n_bits(max_used_bits.s_ncob));
-		data[i].ncob_y = random_between(0, set_n_bits(max_used_bits.s_ncob));
-		data[i].efx = random_between(0, set_n_bits(max_used_bits.s_efx));
-		data[i].ecob_x = random_between(0, set_n_bits(max_used_bits.s_ecob));
-		data[i].ecob_y = random_between(0, set_n_bits(max_used_bits.s_ecob));
+		data[i].exp_flags = random_between(0, set_n_bits(max_used_bits->s_exp_flags));
+		data[i].fx = random_between(0, set_n_bits(max_used_bits->s_fx));
+		data[i].ncob_x = random_between(0, set_n_bits(max_used_bits->s_ncob));
+		data[i].ncob_y = random_between(0, set_n_bits(max_used_bits->s_ncob));
+		data[i].efx = random_between(0, set_n_bits(max_used_bits->s_efx));
+		data[i].ecob_x = random_between(0, set_n_bits(max_used_bits->s_ecob));
+		data[i].ecob_y = random_between(0, set_n_bits(max_used_bits->s_ecob));
 	}
 }
 
 
-static void gen_f_fx_data(struct f_fx *data, uint32_t samples)
+static void gen_f_fx_data(struct f_fx *data, uint32_t samples,
+			  const struct cmp_max_used_bits *max_used_bits)
 {
 	uint32_t i;
-	struct cmp_max_used_bits max_used_bits = cmp_get_max_used_bits();
 
 	for (i = 0; i < samples; i++)
-		data[i].fx = random_between(0, set_n_bits(max_used_bits.f_fx));
+		data[i].fx = random_between(0, set_n_bits(max_used_bits->f_fx));
 }
 
 
-static void gen_f_fx_efx_data(struct f_fx_efx *data, uint32_t samples)
+static void gen_f_fx_efx_data(struct f_fx_efx *data, uint32_t samples,
+			      const struct cmp_max_used_bits *max_used_bits)
 {
 	uint32_t i;
-	struct cmp_max_used_bits max_used_bits = cmp_get_max_used_bits();
 
 	for (i = 0; i < samples; i++) {
-		data[i].fx = random_between(0, set_n_bits(max_used_bits.f_fx));
-		data[i].efx = random_between(0, set_n_bits(max_used_bits.f_efx));
+		data[i].fx = random_between(0, set_n_bits(max_used_bits->f_fx));
+		data[i].efx = random_between(0, set_n_bits(max_used_bits->f_efx));
 	}
 }
 
 
-static void gen_f_fx_ncob_data(struct f_fx_ncob *data, uint32_t samples)
+static void gen_f_fx_ncob_data(struct f_fx_ncob *data, uint32_t samples,
+			       const struct cmp_max_used_bits *max_used_bits)
 {
 	uint32_t i;
-	struct cmp_max_used_bits max_used_bits = cmp_get_max_used_bits();
 
 	for (i = 0; i < samples; i++) {
-		data[i].fx = random_between(0, set_n_bits(max_used_bits.f_fx));
-		data[i].ncob_x = random_between(0, set_n_bits(max_used_bits.f_ncob));
-		data[i].ncob_y = random_between(0, set_n_bits(max_used_bits.f_ncob));
+		data[i].fx = random_between(0, set_n_bits(max_used_bits->f_fx));
+		data[i].ncob_x = random_between(0, set_n_bits(max_used_bits->f_ncob));
+		data[i].ncob_y = random_between(0, set_n_bits(max_used_bits->f_ncob));
 	}
 }
 
 
-static void gen_f_fx_efx_ncob_ecob_data(struct f_fx_efx_ncob_ecob *data, uint32_t samples)
+static void gen_f_fx_efx_ncob_ecob_data(struct f_fx_efx_ncob_ecob *data, uint32_t samples,
+					const struct cmp_max_used_bits *max_used_bits)
 {
 	uint32_t i;
-	struct cmp_max_used_bits max_used_bits = cmp_get_max_used_bits();
 
 	for (i = 0; i < samples; i++) {
-		data[i].fx = random_between(0, set_n_bits(max_used_bits.f_fx));
-		data[i].ncob_x = random_between(0, set_n_bits(max_used_bits.f_ncob));
-		data[i].ncob_y = random_between(0, set_n_bits(max_used_bits.f_ncob));
-		data[i].efx = random_between(0, set_n_bits(max_used_bits.f_efx));
-		data[i].ecob_x = random_between(0, set_n_bits(max_used_bits.f_ecob));
-		data[i].ecob_y = random_between(0, set_n_bits(max_used_bits.f_ecob));
+		data[i].fx = random_between(0, set_n_bits(max_used_bits->f_fx));
+		data[i].ncob_x = random_between(0, set_n_bits(max_used_bits->f_ncob));
+		data[i].ncob_y = random_between(0, set_n_bits(max_used_bits->f_ncob));
+		data[i].efx = random_between(0, set_n_bits(max_used_bits->f_efx));
+		data[i].ecob_x = random_between(0, set_n_bits(max_used_bits->f_ecob));
+		data[i].ecob_y = random_between(0, set_n_bits(max_used_bits->f_ecob));
 	}
 }
 
 
-static void gen_l_fx_data(struct l_fx *data, uint32_t samples)
+static void gen_l_fx_data(struct l_fx *data, uint32_t samples,
+			  const struct cmp_max_used_bits *max_used_bits)
 {
 	uint32_t i;
-	struct cmp_max_used_bits max_used_bits = cmp_get_max_used_bits();
 
 	for (i = 0; i < samples; i++) {
-		data[i].exp_flags = random_between(0, set_n_bits(max_used_bits.l_exp_flags));
-		data[i].fx = random_between(0, set_n_bits(max_used_bits.l_fx));
-		data[i].fx_variance = random_between(0, set_n_bits(max_used_bits.l_fx_variance));
+		data[i].exp_flags = random_between(0, set_n_bits(max_used_bits->l_exp_flags));
+		data[i].fx = random_between(0, set_n_bits(max_used_bits->l_fx));
+		data[i].fx_variance = random_between(0, set_n_bits(max_used_bits->l_fx_variance));
 	}
 }
 
 
-static void gen_l_fx_efx_data(struct l_fx_efx *data, uint32_t samples)
+static void gen_l_fx_efx_data(struct l_fx_efx *data, uint32_t samples,
+			      const struct cmp_max_used_bits *max_used_bits)
 {
 	uint32_t i;
-	struct cmp_max_used_bits max_used_bits = cmp_get_max_used_bits();
 
 	for (i = 0; i < samples; i++) {
-		data[i].exp_flags = random_between(0, set_n_bits(max_used_bits.l_exp_flags));
-		data[i].fx = random_between(0, set_n_bits(max_used_bits.l_fx));
-		data[i].efx = random_between(0, set_n_bits(max_used_bits.l_efx));
-		data[i].fx_variance = random_between(0, set_n_bits(max_used_bits.l_fx_variance));
+		data[i].exp_flags = random_between(0, set_n_bits(max_used_bits->l_exp_flags));
+		data[i].fx = random_between(0, set_n_bits(max_used_bits->l_fx));
+		data[i].efx = random_between(0, set_n_bits(max_used_bits->l_efx));
+		data[i].fx_variance = random_between(0, set_n_bits(max_used_bits->l_fx_variance));
 	}
 }
 
 
-static void gen_l_fx_ncob_data(struct l_fx_ncob *data, uint32_t samples)
+static void gen_l_fx_ncob_data(struct l_fx_ncob *data, uint32_t samples,
+			       const struct cmp_max_used_bits *max_used_bits)
 {
 	uint32_t i;
-	struct cmp_max_used_bits max_used_bits = cmp_get_max_used_bits();
 
 	for (i = 0; i < samples; i++) {
-		data[i].exp_flags = random_between(0, set_n_bits(max_used_bits.l_exp_flags));
-		data[i].fx = random_between(0, set_n_bits(max_used_bits.l_fx));
-		data[i].ncob_x = random_between(0, set_n_bits(max_used_bits.l_ncob));
-		data[i].ncob_y = random_between(0, set_n_bits(max_used_bits.l_ncob));
-		data[i].fx_variance = random_between(0, set_n_bits(max_used_bits.l_fx_variance));
-		data[i].cob_x_variance = random_between(0, set_n_bits(max_used_bits.l_cob_variance));
-		data[i].cob_y_variance = random_between(0, set_n_bits(max_used_bits.l_cob_variance));
+		data[i].exp_flags = random_between(0, set_n_bits(max_used_bits->l_exp_flags));
+		data[i].fx = random_between(0, set_n_bits(max_used_bits->l_fx));
+		data[i].ncob_x = random_between(0, set_n_bits(max_used_bits->l_ncob));
+		data[i].ncob_y = random_between(0, set_n_bits(max_used_bits->l_ncob));
+		data[i].fx_variance = random_between(0, set_n_bits(max_used_bits->l_fx_variance));
+		data[i].cob_x_variance = random_between(0, set_n_bits(max_used_bits->l_cob_variance));
+		data[i].cob_y_variance = random_between(0, set_n_bits(max_used_bits->l_cob_variance));
 	}
 }
 
 
-static void gen_l_fx_efx_ncob_ecob_data(struct l_fx_efx_ncob_ecob *data, uint32_t samples)
+static void gen_l_fx_efx_ncob_ecob_data(struct l_fx_efx_ncob_ecob *data, uint32_t samples,
+					const struct cmp_max_used_bits *max_used_bits)
 {
 	uint32_t i;
-	struct cmp_max_used_bits max_used_bits = cmp_get_max_used_bits();
 
 	for (i = 0; i < samples; i++) {
-		data[i].exp_flags = random_between(0, set_n_bits(max_used_bits.l_exp_flags));
-		data[i].fx = random_between(0, set_n_bits(max_used_bits.l_fx));
-		data[i].ncob_x = random_between(0, set_n_bits(max_used_bits.l_ncob));
-		data[i].ncob_y = random_between(0, set_n_bits(max_used_bits.l_ncob));
-		data[i].efx = random_between(0, set_n_bits(max_used_bits.l_efx));
-		data[i].ecob_x = random_between(0, set_n_bits(max_used_bits.l_ecob));
-		data[i].ecob_y = random_between(0, set_n_bits(max_used_bits.l_ecob));
-		data[i].fx_variance = random_between(0, set_n_bits(max_used_bits.l_fx_variance));
-		data[i].cob_x_variance = random_between(0, set_n_bits(max_used_bits.l_cob_variance));
-		data[i].cob_y_variance = random_between(0, set_n_bits(max_used_bits.l_cob_variance));
+		data[i].exp_flags = random_between(0, set_n_bits(max_used_bits->l_exp_flags));
+		data[i].fx = random_between(0, set_n_bits(max_used_bits->l_fx));
+		data[i].ncob_x = random_between(0, set_n_bits(max_used_bits->l_ncob));
+		data[i].ncob_y = random_between(0, set_n_bits(max_used_bits->l_ncob));
+		data[i].efx = random_between(0, set_n_bits(max_used_bits->l_efx));
+		data[i].ecob_x = random_between(0, set_n_bits(max_used_bits->l_ecob));
+		data[i].ecob_y = random_between(0, set_n_bits(max_used_bits->l_ecob));
+		data[i].fx_variance = random_between(0, set_n_bits(max_used_bits->l_fx_variance));
+		data[i].cob_x_variance = random_between(0, set_n_bits(max_used_bits->l_cob_variance));
+		data[i].cob_y_variance = random_between(0, set_n_bits(max_used_bits->l_cob_variance));
 	}
 }
 
@@ -332,11 +331,13 @@ static void gen_l_fx_efx_ncob_ecob_data(struct l_fx_efx_ncob_ecob *data, uint32_
  *
  * @param samples	number of random test samples
  * @param data_type	compression data type of the test data
+ * @param max_used_bits	pointer to a max_used_bits structure
  *
  * @returns a pointer to the generated random test data
  */
 
-void *generate_random_test_data(uint32_t samples, enum cmp_data_type data_type)
+void *generate_random_test_data(uint32_t samples, enum cmp_data_type data_type,
+				const struct cmp_max_used_bits *max_used_bits)
 {
 	size_t data_size = cmp_cal_size_of_data(samples, data_type);
 	void *data = malloc(data_size);
@@ -363,52 +364,52 @@ void *generate_random_test_data(uint32_t samples, enum cmp_data_type data_type)
 	case DATA_TYPE_SAT_IMAGETTE_ADAPTIVE:
 	case DATA_TYPE_F_CAM_IMAGETTE:
 	case DATA_TYPE_F_CAM_IMAGETTE_ADAPTIVE:
-		gen_ima_data(data, samples);
+		gen_ima_data(data, samples, max_used_bits);
 		break;
 	case DATA_TYPE_OFFSET:
-		gen_offset_data(data, samples);
+		gen_offset_data(data, samples, max_used_bits);
 		break;
 	case DATA_TYPE_BACKGROUND:
-		gen_background_data(data, samples);
+		gen_background_data(data, samples, max_used_bits);
 		break;
 	case DATA_TYPE_SMEARING:
-		gen_smearing_data(data, samples);
+		gen_smearing_data(data, samples, max_used_bits);
 		break;
 	case DATA_TYPE_S_FX:
-		gen_s_fx_data(data, samples);
+		gen_s_fx_data(data, samples, max_used_bits);
 		break;
 	case DATA_TYPE_S_FX_EFX:
-		gen_s_fx_efx_data(data, samples);
+		gen_s_fx_efx_data(data, samples, max_used_bits);
 		break;
 	case DATA_TYPE_S_FX_NCOB:
-		gen_s_fx_ncob_data(data, samples);
+		gen_s_fx_ncob_data(data, samples, max_used_bits);
 		break;
 	case DATA_TYPE_S_FX_EFX_NCOB_ECOB:
-		gen_s_fx_efx_ncob_ecob_data(data, samples);
+		gen_s_fx_efx_ncob_ecob_data(data, samples, max_used_bits);
 		break;
 	case DATA_TYPE_L_FX:
-		gen_l_fx_data(data, samples);
+		gen_l_fx_data(data, samples, max_used_bits);
 		break;
 	case DATA_TYPE_L_FX_EFX:
-		gen_l_fx_efx_data(data, samples);
+		gen_l_fx_efx_data(data, samples, max_used_bits);
 		break;
 	case DATA_TYPE_L_FX_NCOB:
-		gen_l_fx_ncob_data(data, samples);
+		gen_l_fx_ncob_data(data, samples, max_used_bits);
 		break;
 	case DATA_TYPE_L_FX_EFX_NCOB_ECOB:
-		gen_l_fx_efx_ncob_ecob_data(data, samples);
+		gen_l_fx_efx_ncob_ecob_data(data, samples, max_used_bits);
 		break;
 	case DATA_TYPE_F_FX:
-		gen_f_fx_data(data, samples);
+		gen_f_fx_data(data, samples, max_used_bits);
 		break;
 	case DATA_TYPE_F_FX_EFX:
-		gen_f_fx_efx_data(data, samples);
+		gen_f_fx_efx_data(data, samples, max_used_bits);
 		break;
 	case DATA_TYPE_F_FX_NCOB:
-		gen_f_fx_ncob_data(data, samples);
+		gen_f_fx_ncob_data(data, samples, max_used_bits);
 		break;
 	case DATA_TYPE_F_FX_EFX_NCOB_ECOB:
-		gen_f_fx_efx_ncob_ecob_data(data, samples);
+		gen_f_fx_efx_ncob_ecob_data(data, samples, max_used_bits);
 		break;
 	case DATA_TYPE_F_CAM_OFFSET: /* TODO: implement this */
 	case DATA_TYPE_F_CAM_BACKGROUND: /* TODO: implement this */
@@ -424,7 +425,6 @@ void *generate_random_test_data(uint32_t samples, enum cmp_data_type data_type)
  * @brief generate random compression configuration
  *
  * @param cfg	pointer to a compression configuration
- *
  */
 
 void generate_random_cmp_par(struct cmp_cfg *cfg)
@@ -587,8 +587,8 @@ void test_random_compression_decompression(void)
 		/* generate random data*/
 		uint32_t samples = random_between(1, 430179/CMP_BUFFER_FAKTOR);
 		uint32_t model_value = random_between(0, MAX_MODEL_VALUE);
-		void *data_to_compress1 = generate_random_test_data(samples, data_type);
-		void *data_to_compress2 = generate_random_test_data(samples, data_type);
+		void *data_to_compress1 = generate_random_test_data(samples, data_type, &MAX_USED_BITS_V1);
+		void *data_to_compress2 = generate_random_test_data(samples, data_type, &MAX_USED_BITS_V1);
 		void *updated_model = calloc(1, cmp_cal_size_of_data(samples, data_type));
 		/* for (cmp_mode = CMP_MODE_RAW; cmp_mode <= CMP_MODE_STUFF; cmp_mode++) { */
 		for (cmp_mode = CMP_MODE_RAW; cmp_mode <= CMP_MODE_DIFF_MULTI; cmp_mode++) {

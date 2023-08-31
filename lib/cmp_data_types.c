@@ -2,7 +2,6 @@
  * @file    cmp_data_types.c
  * @author  Dominik Loidolt (dominik.loidolt@univie.ac.at)
  * @date    2020
- * @brief   collection of functions to handle the different compression data types
  *
  * @copyright GPLv2
  * This program is free software; you can redistribute it and/or modify it
@@ -14,6 +13,7 @@
  * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
  * more details.
  *
+ * @brief collection of functions to handle the different compression data types
  */
 
 
@@ -26,83 +26,6 @@
 #include <cmp_debug.h>
 #include <byteorder.h>
 
-
-/* the maximum length of the different data products types in bits */
-struct cmp_max_used_bits max_used_bits = {
-	0, /* default version */
-	MAX_USED_S_FX_EXPOSURE_FLAGS_BITS, /* s_fx_exp_flags */
-	MAX_USED_S_FX_BITS, /* s_fx */
-	MAX_USED_S_EFX_BITS, /* s_efx */
-	MAX_USED_S_NCOB_BITS, /* s_ncob_x and s_ncob_y */
-	MAX_USED_S_ECOB_BITS, /* s_ecob_x and s_ncob_y */
-	MAX_USED_F_FX_BITS, /* f_fx */
-	MAX_USED_F_EFX_BITS, /* f_efx */
-	MAX_USED_F_NCOB_BITS, /* f_ncob_x and f_ncob_y */
-	MAX_USED_F_ECOB_BITS, /* f_ecob_x and f_ncob_y */
-	MAX_USED_L_FX_EXPOSURE_FLAGS_BITS, /* l_fx_exp_flags */
-	MAX_USED_L_FX_BITS, /* l_fx */
-	MAX_USED_L_FX_VARIANCE_BITS, /* l_fx_variance */
-	MAX_USED_L_EFX_BITS, /* l_efx */
-	MAX_USED_L_NCOB_BITS, /* l_ncob_x and l_ncob_y */
-	MAX_USED_L_ECOB_BITS, /* l_ecob_x and l_ncob_y */
-	MAX_USED_L_COB_VARIANCE_BITS, /* l_cob_x_variance and l_cob_y_variance */
-	MAX_USED_NC_IMAGETTE_BITS, /* nc_imagette */
-	MAX_USED_SATURATED_IMAGETTE_BITS, /* saturated_imagette */
-	MAX_USED_NC_OFFSET_MEAN_BITS, /* nc_offset_mean */
-	MAX_USED_NC_OFFSET_VARIANCE_BITS, /* nc_offset_variance */
-	MAX_USED_NC_BACKGROUND_MEAN_BITS, /* nc_background_mean */
-	MAX_USED_NC_BACKGROUND_VARIANCE_BITS, /* nc_background_variance */
-	MAX_USED_NC_BACKGROUND_OUTLIER_PIXELS_BITS, /* nc_background_outlier_pixels */
-	MAX_USED_SMEARING_MEAN_BITS, /* smearing_mean */
-	MAX_USED_SMEARING_VARIANCE_MEAN_BITS, /* smearing_variance_mean */
-	MAX_USED_SMEARING_OUTLIER_PIXELS_BITS, /* smearing_outlier_pixels */
-	MAX_USED_FC_IMAGETTE_BITS, /* fc_imagette */
-	MAX_USED_FC_OFFSET_MEAN_BITS, /* fc_offset_mean */
-	MAX_USED_FC_OFFSET_VARIANCE_BITS, /* fc_offset_variance */
-	MAX_USED_FC_OFFSET_PIXEL_IN_ERROR_BITS, /* fc_offset_pixel_in_error */
-	MAX_USED_FC_BACKGROUND_MEAN_BITS, /* fc_background_mean */
-	MAX_USED_FC_BACKGROUND_VARIANCE_BITS, /* fc_background_variance */
-	MAX_USED_FC_BACKGROUND_OUTLIER_PIXELS_BITS /* fc_background_outlier_pixels */
-};
-
-
-/**
- * @brief sets the maximum length of the different data product types
- *
- * @param set_max_used_bits	pointer to a structure with the maximum length
- *				of the different data product types in bits
- */
-
-void cmp_set_max_used_bits(const struct cmp_max_used_bits *set_max_used_bits)
-{
-	if (set_max_used_bits)
-		max_used_bits = *set_max_used_bits;
-}
-
-
-/**
- * @brief get the maximum length of the different data product types
- *
- * @returns a structure with the used maximum length of the different data
- *	product types in bits
- */
-
-struct cmp_max_used_bits cmp_get_max_used_bits(void)
-{
-	return max_used_bits;
-}
-
-
-/**
- * @brief get the version record form the max used bits registry
- *
- * @returns version of the max used bits registry
- */
-
-uint8_t cmp_get_max_used_bits_version(void)
-{
-	return max_used_bits.version;
-}
 
 
 /**
@@ -226,7 +149,7 @@ uint32_t cmp_cal_size_of_data(uint32_t samples, enum cmp_data_type data_type)
 
 int32_t cmp_input_size_to_samples(uint32_t size, enum cmp_data_type data_type)
 {
-	uint32_t samples_size = size_of_a_sample(data_type);
+	uint32_t samples_size = (uint32_t)size_of_a_sample(data_type);
 
 	if (!samples_size)
 		return -1;

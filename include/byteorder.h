@@ -13,7 +13,7 @@
  * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
  * more details.
  *
- * @brief This is a set of macros for consistent endianess conversion. They work
+ * @brief This is a set of macros for consistent endianness conversion. They work
  *	for both little and big endian cpus.
  *
  * conversion of XX-bit integers (16- or 32-) between native CPU format
@@ -53,13 +53,13 @@
 #undef __LITTLE_ENDIAN
 #endif
 
-#if (__sparc__)
+#if defined(__sparc__)
 #ifndef __BIG_ENDIAN
 #define __BIG_ENDIAN 4321
 #endif
 #endif
 
-#if (__i386__ || __x86_64__)
+#if defined(__i386__) || defined(__x86_64__)
 #ifndef __LITTLE_ENDIAN
 #define __LITTLE_ENDIAN 1234
 #endif

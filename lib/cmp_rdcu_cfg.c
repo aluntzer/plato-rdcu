@@ -50,6 +50,7 @@ struct cmp_cfg rdcu_cfg_create(enum cmp_data_type data_type, enum cmp_mode cmp_m
 	cfg.cmp_mode = cmp_mode;
 	cfg.model_value = model_value;
 	cfg.round = lossy_par;
+	cfg.max_used_bits = &MAX_USED_BITS_SAFE;
 
 	if (cmp_cfg_gen_par_is_invalid(&cfg, RDCU_CHECK))
 		cfg.data_type = DATA_TYPE_UNKNOWN;

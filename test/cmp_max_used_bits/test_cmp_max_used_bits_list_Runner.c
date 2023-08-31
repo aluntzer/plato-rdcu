@@ -2,16 +2,13 @@
 
 /*=======Automagically Detected Files To Include=====*/
 #include "unity.h"
-#include <stdint.h>
-#include <cmp_data_types.h>
+#include <string.h>
+#include <cmp_max_used_bits_list.h>
 
 /*=======External Functions This Runner Calls=====*/
 extern void setUp(void);
 extern void tearDown(void);
-extern void test_size_of_a_sample(void);
-extern void test_cmp_cal_size_of_data(void);
-extern void test_cmp_input_size_to_samples(void);
-extern void test_cmp_input_big_to_cpu_endianness(void);
+extern void test_cmp_max_used_bits_list(void);
 
 
 /*=======Mock Management=====*/
@@ -78,11 +75,8 @@ static void run_test(UnityTestFunction func, const char* name, UNITY_LINE_TYPE l
 /*=======MAIN=====*/
 int main(void)
 {
-  UnityBegin("../test/cmp_data_types/test_cmp_data_types.c");
-  run_test(test_size_of_a_sample, "test_size_of_a_sample", 30);
-  run_test(test_cmp_cal_size_of_data, "test_cmp_cal_size_of_data", 51);
-  run_test(test_cmp_input_size_to_samples, "test_cmp_input_size_to_samples", 81);
-  run_test(test_cmp_input_big_to_cpu_endianness, "test_cmp_input_big_to_cpu_endianness", 128);
+  UnityBegin("../test/cmp_max_used_bits/test_cmp_max_used_bits_list.c");
+  run_test(test_cmp_max_used_bits_list, "test_cmp_max_used_bits_list", 34);
 
   return UnityEnd();
 }

@@ -1,5 +1,5 @@
 /**
-.  @file list.h
+ * @file list.h
  * @ingroup linked_list
  *
  * @note This list implementation was shamelessly stolen and modified from the
@@ -48,7 +48,7 @@
  * slow because of how they work algorithmically (*the opposite is true*),
  * but rather because how their cache hit (or miss) rate is in
  * configurations where entries are randomly scattered in memory rather
- * than layed out in one big chunk.
+ * than laid out in one big chunk.
  *
  * Be smart. Don't do that. Allocate a pool in a __single chunk__ and enjoy the
  * cache performance. Do not use larger chunks than the page size of your
@@ -115,6 +115,65 @@ static inline void INIT_LIST_HEAD(struct list_head *list)
 #define list_entry(ptr, type, member) \
 	((type *)((char *)(ptr)-(unsigned long)(&((type *)0)->member)))
 
+/**
+ * list_first_entry - get the first element from a list
+ * @ptr:	the list head to take the element from.
+ * @type:	the type of the struct this is embedded in.
+ * @member:	the name of the list_head within the struct.
+ *
+ * Note, that list is expected to be not empty.
+ */
+#define list_first_entry(ptr, type, member) \
+	list_entry((ptr)->next, type, member)
+
+/**
+ * list_last_entry - get the last element from a list
+ * @ptr:	the list head to take the element from.
+ * @type:	the type of the struct this is embedded in.
+ * @member:	the name of the list_head within the struct.
+ *
+ * Note, that list is expected to be not empty.
+ */
+#define list_last_entry(ptr, type, member) \
+	list_entry((ptr)->prev, type, member)
+
+/**
+ * list_first_entry_or_null - get the first element from a list
+ * @ptr:	the list head to take the element from.
+ * @type:	the type of the struct this is embedded in.
+ * @member:	the name of the list_head within the struct.
+ *
+ * Note that if the list is empty, it returns NULL.
+ */
+#define list_first_entry_or_null(ptr, type, member) ({ \
+	struct list_head *head__ = (ptr); \
+	struct list_head *pos__ = READ_ONCE(head__->next); \
+	pos__ != head__ ? list_entry(pos__, type, member) : NULL; \
+})
+
+/**
+ * list_next_entry - get the next element in list
+ * @pos:	the type * to cursor
+ * @member:	the name of the list_head within the struct.
+ */
+#define list_next_entry(pos, member) \
+	list_entry((pos)->member.next, typeof(*(pos)), member)
+
+/**
+ * list_prev_entry - get the prev element in list
+ * @pos:	the type * to cursor
+ * @member:	the name of the list_head within the struct.
+ */
+#define list_prev_entry(pos, member) \
+	list_entry((pos)->member.prev, typeof(*(pos)), member)
+
+/**
+ * list_for_each	-	iterate over a list
+ * @pos:	the &struct list_head to use as a loop cursor.
+ * @head:	the head for your list.
+ */
+#define list_for_each(pos, head) \
+	for (pos = (head)->next; pos != (head); pos = pos->next)
 
 /**
  * @brief iterate over list of given type
@@ -154,7 +213,7 @@ static inline void INIT_LIST_HEAD(struct list_head *list)
  * @param note	this construction is necessary for a truly circular list that is "headless"
  * @param note	and can be iterated from any starting element without additional overhead
  * @param note	compared to the LIST_HEAD/list_for_each_entry approach
- * @param note	check if this is functional for all targets (confirmed: gcc 4.8.2)
+ * @param todo	check if this is functional for all targets (confirmed: gcc 4.8.2)
  */
 
 #define list_entry_do(pos, head, member, type)		\
@@ -181,7 +240,7 @@ static inline void INIT_LIST_HEAD(struct list_head *list)
 	}
 
 /**
- * @brief the list entry do-while equivalent fo a code block
+ * @brief the list entry do-while equivalent for a code block
  * @param pos:	the type * to use as a loop counter.
  * @param head:	the head for your list.
  * @param member:	the name of the list_struct within the struct.
@@ -263,6 +322,18 @@ static inline void list_del_init(struct list_head *entry)
 }
 
 /**
+ * @brief delete from one list and add as another's head
+ * @param list the entry to move
+ * @param head the head that will precede our entry
+ */
+static inline void list_move(struct list_head *list, struct list_head *head)
+{
+	__list_del_entry(list);
+	list_add(list, head);
+}
+
+
+/**
  * @brief add a new entry
  * @param new: new entry to be added
  * @param head: list head to add it before
@@ -294,6 +365,23 @@ static inline void list_replace(struct list_head *old,
 	new->prev->next = new;
 }
 
+
+/**
+ * @brief replace entry1 with entry2 and re-add entry1 at entry2's position
+ * @param entry1: the location to place entry2
+ * @param entry2: the location to place entry1
+ */
+static inline void list_swap(struct list_head *entry1,
+			     struct list_head *entry2)
+{
+	struct list_head *pos = entry2->prev;
+
+	list_del(entry2);
+	list_replace(entry1, entry2);
+	if (pos == entry1)
+		pos = entry2;
+	list_add(entry1, pos);
+}
 
 /**
  * @brief tests whether a list is empty

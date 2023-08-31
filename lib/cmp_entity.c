@@ -344,7 +344,7 @@ int cmp_ent_set_data_type(struct cmp_entity *ent, enum cmp_data_type data_type,
 	if (raw_mode_flag)
 		data_type |= 1U << RAW_BIT_DATA_TYPE_POS;
 
-	ent->data_type = cpu_to_be16(data_type);
+	ent->data_type = cpu_to_be16((uint16_t)data_type);
 
 	return 0;
 }
@@ -367,7 +367,7 @@ int cmp_ent_set_cmp_mode(struct cmp_entity *ent, enum cmp_mode cmp_mode_used)
 	if (cmp_mode_used > UINT8_MAX)
 		return -1;
 
-	ent->cmp_mode_used = cmp_mode_used;
+	ent->cmp_mode_used = (uint8_t)cmp_mode_used;
 
 	return 0;
 }
@@ -390,7 +390,7 @@ int cmp_ent_set_model_value(struct cmp_entity *ent, uint32_t model_value_used)
 	if (model_value_used > UINT8_MAX)
 		return -1;
 
-	ent->model_value_used = model_value_used;
+	ent->model_value_used = (uint8_t)model_value_used;
 
 	return 0;
 }
@@ -413,7 +413,7 @@ int cmp_ent_set_model_id(struct cmp_entity *ent, uint32_t model_id)
 	if (model_id > UINT16_MAX)
 		return -1;
 
-	ent->model_id = cpu_to_be16(model_id);
+	ent->model_id = cpu_to_be16((uint16_t)model_id);
 
 	return 0;
 }
@@ -436,7 +436,7 @@ int cmp_ent_set_model_counter(struct cmp_entity *ent, uint32_t model_counter)
 	if (model_counter > UINT8_MAX)
 		return -1;
 
-	ent->model_counter = model_counter;
+	ent->model_counter = (uint8_t)model_counter;
 
 	return 0;
 }
@@ -481,7 +481,7 @@ int cmp_ent_set_lossy_cmp_par(struct cmp_entity *ent, uint32_t lossy_cmp_par_use
 	if (lossy_cmp_par_used > UINT16_MAX)
 		return -1;
 
-	ent->lossy_cmp_par_used = cpu_to_be16(lossy_cmp_par_used);
+	ent->lossy_cmp_par_used = cpu_to_be16((uint16_t)lossy_cmp_par_used);
 
 	return 0;
 }
@@ -505,7 +505,7 @@ int cmp_ent_set_ima_spill(struct cmp_entity *ent, uint32_t spill_used)
 	if (spill_used > UINT16_MAX)
 		return -1;
 
-	ent->ima.spill_used = cpu_to_be16(spill_used);
+	ent->ima.spill_used = cpu_to_be16((uint16_t)spill_used);
 
 	return 0;
 }
@@ -530,7 +530,7 @@ int cmp_ent_set_ima_golomb_par(struct cmp_entity *ent, uint32_t golomb_par_used)
 	if (golomb_par_used > UINT8_MAX)
 		return -1;
 
-	ent->ima.golomb_par_used = golomb_par_used;
+	ent->ima.golomb_par_used = (uint8_t)golomb_par_used;
 
 	return 0;
 }
@@ -555,7 +555,7 @@ int cmp_ent_set_ima_ap1_spill(struct cmp_entity *ent, uint32_t ap1_spill_used)
 	if (ap1_spill_used > UINT16_MAX)
 		return -1;
 
-	ent->ima.ap1_spill_used = cpu_to_be16(ap1_spill_used);
+	ent->ima.ap1_spill_used = cpu_to_be16((uint16_t)ap1_spill_used);
 
 	return 0;
 }
@@ -580,7 +580,7 @@ int cmp_ent_set_ima_ap1_golomb_par(struct cmp_entity *ent, uint32_t ap1_golomb_p
 	if (ap1_golomb_par_used > UINT8_MAX)
 		return -1;
 
-	ent->ima.ap1_golomb_par_used = ap1_golomb_par_used;
+	ent->ima.ap1_golomb_par_used = (uint8_t)ap1_golomb_par_used;
 
 	return 0;
 }
@@ -605,7 +605,7 @@ int cmp_ent_set_ima_ap2_spill(struct cmp_entity *ent, uint32_t ap2_spill_used)
 	if (ap2_spill_used > UINT16_MAX)
 		return -1;
 
-	ent->ima.ap2_spill_used = cpu_to_be16(ap2_spill_used);
+	ent->ima.ap2_spill_used = cpu_to_be16((uint16_t)ap2_spill_used);
 
 	return 0;
 }
@@ -630,7 +630,7 @@ int cmp_ent_set_ima_ap2_golomb_par(struct cmp_entity *ent, uint32_t ap2_golomb_p
 	if (ap2_golomb_par_used > UINT8_MAX)
 		return -1;
 
-	ent->ima.ap2_golomb_par_used = ap2_golomb_par_used;
+	ent->ima.ap2_golomb_par_used = (uint8_t)ap2_golomb_par_used;
 
 	return 0;
 }
@@ -683,7 +683,7 @@ int cmp_ent_set_non_ima_cmp_par1(struct cmp_entity *ent, uint32_t cmp_par_1_used
 	if (cmp_par_1_used > UINT16_MAX)
 		return -1;
 
-	ent->non_ima.cmp_par_1_used = cpu_to_be16(cmp_par_1_used);
+	ent->non_ima.cmp_par_1_used = cpu_to_be16((uint16_t)cmp_par_1_used);
 
 	return 0;
 }
@@ -736,7 +736,7 @@ int cmp_ent_set_non_ima_cmp_par2(struct cmp_entity *ent, uint32_t cmp_par_2_used
 	if (cmp_par_2_used > UINT16_MAX)
 		return -1;
 
-	ent->non_ima.cmp_par_2_used = cpu_to_be16(cmp_par_2_used);
+	ent->non_ima.cmp_par_2_used = cpu_to_be16((uint16_t)cmp_par_2_used);
 
 	return 0;
 }
@@ -789,7 +789,7 @@ int cmp_ent_set_non_ima_cmp_par3(struct cmp_entity *ent, uint32_t cmp_par_3_used
 	if (cmp_par_3_used > UINT16_MAX)
 		return -1;
 
-	ent->non_ima.cmp_par_3_used = cpu_to_be16(cmp_par_3_used);
+	ent->non_ima.cmp_par_3_used = cpu_to_be16((uint16_t)cmp_par_3_used);
 
 	return 0;
 }
@@ -842,7 +842,7 @@ int cmp_ent_set_non_ima_cmp_par4(struct cmp_entity *ent, uint32_t cmp_par_4_used
 	if (cmp_par_4_used > UINT16_MAX)
 		return -1;
 
-	ent->non_ima.cmp_par_4_used = cpu_to_be16(cmp_par_4_used);
+	ent->non_ima.cmp_par_4_used = cpu_to_be16((uint16_t)cmp_par_4_used);
 
 	return 0;
 }
@@ -895,7 +895,7 @@ int cmp_ent_set_non_ima_cmp_par5(struct cmp_entity *ent, uint32_t cmp_par_5_used
 	if (cmp_par_5_used > UINT16_MAX)
 		return -1;
 
-	ent->non_ima.cmp_par_5_used = cpu_to_be16(cmp_par_5_used);
+	ent->non_ima.cmp_par_5_used = cpu_to_be16((uint16_t)cmp_par_5_used);
 
 	return 0;
 }
@@ -948,7 +948,7 @@ int cmp_ent_set_non_ima_cmp_par6(struct cmp_entity *ent, uint32_t cmp_par_6_used
 	if (cmp_par_6_used > UINT16_MAX)
 		return -1;
 
-	ent->non_ima.cmp_par_6_used = cpu_to_be16(cmp_par_6_used);
+	ent->non_ima.cmp_par_6_used = cpu_to_be16((uint16_t)cmp_par_6_used);
 
 	return 0;
 }
@@ -1827,7 +1827,10 @@ int cmp_ent_write_cmp_pars(struct cmp_entity *ent, const struct cmp_cfg *cfg,
 		return -1;
 	if (cmp_ent_set_model_value(ent, cfg->model_value))
 		return -1;
-	cmp_ent_set_max_used_bits_version(ent, cmp_get_max_used_bits_version());
+	if (cfg->max_used_bits)
+		cmp_ent_set_max_used_bits_version(ent, cfg->max_used_bits->version);
+	else
+		cmp_ent_set_max_used_bits_version(ent, 0);
 	if (cmp_ent_set_lossy_cmp_par(ent, cfg->round))
 		return -1;
 
@@ -2131,120 +2134,9 @@ size_t cmp_ent_build(struct cmp_entity *ent, uint32_t version_id,
 }
 
 
-/**
- * @brief read in an imagette compression entity header to a
- *	compression configuration
- *
- * @param ent	pointer to a compression entity
- * @param cfg	pointer to a compression configuration
- *
- * @returns 0 on success; otherwise error
- */
-
-int cmp_ent_read_header(struct cmp_entity *ent, struct cmp_cfg *cfg)
-{
-	int32_t samples;
-
-	if (!cfg)
-		return -1;
-
-	cfg->data_type = cmp_ent_get_data_type(ent);
-	if (cmp_data_type_is_invalid(cfg->data_type)) {
-		debug_print("Error: Compression data type not supported.\n");
-		return -1;
-	}
-
-	cfg->cmp_mode = cmp_ent_get_cmp_mode(ent);
-	if (cmp_ent_get_data_type_raw_bit(ent) != (cfg->cmp_mode == CMP_MODE_RAW)) {
-		debug_print("Error: The entity's raw data bit does not match up with the compression mode.\n");
-		return -1;
-	}
-	cfg->model_value = cmp_ent_get_model_value(ent);
-	cfg->round = cmp_ent_get_lossy_cmp_par(ent);
-	cfg->buffer_length = cmp_ent_get_cmp_data_size(ent);
-
-	samples = cmp_input_size_to_samples(cmp_ent_get_original_size(ent), cfg->data_type);
-	if (samples < 0) {
-		debug_print("Error: original_size and data product type in the compression header field are not compatible.\n");
-		cfg->samples = 0;
-		return -1;
-	}
-
-	cfg->samples = (uint32_t)samples;
-
-	cfg->icu_output_buf = cmp_ent_get_data_buf(ent);
-
-
-	if (cfg->cmp_mode == CMP_MODE_RAW)
-		/* no specific header is used for raw data we are done */
-		return 0;
-
-	switch (cfg->data_type) {
-	case DATA_TYPE_IMAGETTE_ADAPTIVE:
-	case DATA_TYPE_SAT_IMAGETTE_ADAPTIVE:
-	case DATA_TYPE_F_CAM_IMAGETTE_ADAPTIVE:
-		cfg->ap1_golomb_par = cmp_ent_get_ima_ap1_golomb_par(ent);
-		cfg->ap1_spill = cmp_ent_get_ima_ap1_spill(ent);
-		cfg->ap2_golomb_par = cmp_ent_get_ima_ap2_golomb_par(ent);
-		cfg->ap2_spill = cmp_ent_get_ima_ap2_spill(ent);
-		/* fall through */
-	case DATA_TYPE_IMAGETTE:
-	case DATA_TYPE_SAT_IMAGETTE:
-	case DATA_TYPE_F_CAM_IMAGETTE:
-		cfg->spill = cmp_ent_get_ima_spill(ent);
-		cfg->golomb_par = cmp_ent_get_ima_golomb_par(ent);
-		break;
-	case DATA_TYPE_OFFSET:
-	case DATA_TYPE_BACKGROUND:
-	case DATA_TYPE_SMEARING:
-		cfg->cmp_par_mean = cmp_ent_get_non_ima_cmp_par1(ent);
-		cfg->spill_mean = cmp_ent_get_non_ima_spill1(ent);
-		cfg->cmp_par_variance = cmp_ent_get_non_ima_cmp_par2(ent);
-		cfg->spill_variance = cmp_ent_get_non_ima_spill2(ent);
-		cfg->cmp_par_pixels_error = cmp_ent_get_non_ima_cmp_par3(ent);
-		cfg->spill_pixels_error = cmp_ent_get_non_ima_spill3(ent);
-		break;
-	case DATA_TYPE_S_FX:
-	case DATA_TYPE_S_FX_EFX:
-	case DATA_TYPE_S_FX_NCOB:
-	case DATA_TYPE_S_FX_EFX_NCOB_ECOB:
-	case DATA_TYPE_L_FX:
-	case DATA_TYPE_L_FX_EFX:
-	case DATA_TYPE_L_FX_NCOB:
-	case DATA_TYPE_L_FX_EFX_NCOB_ECOB:
-	case DATA_TYPE_F_FX:
-	case DATA_TYPE_F_FX_EFX:
-	case DATA_TYPE_F_FX_NCOB:
-	case DATA_TYPE_F_FX_EFX_NCOB_ECOB:
-		cfg->cmp_par_exp_flags = cmp_ent_get_non_ima_cmp_par1(ent);
-		cfg->spill_exp_flags = cmp_ent_get_non_ima_spill1(ent);
-		cfg->cmp_par_fx = cmp_ent_get_non_ima_cmp_par2(ent);
-		cfg->spill_fx = cmp_ent_get_non_ima_spill2(ent);
-		cfg->cmp_par_ncob = cmp_ent_get_non_ima_cmp_par3(ent);
-		cfg->spill_ncob = cmp_ent_get_non_ima_spill3(ent);
-		cfg->cmp_par_efx = cmp_ent_get_non_ima_cmp_par4(ent);
-		cfg->spill_efx = cmp_ent_get_non_ima_spill4(ent);
-		cfg->cmp_par_ecob = cmp_ent_get_non_ima_cmp_par5(ent);
-		cfg->spill_ecob = cmp_ent_get_non_ima_spill5(ent);
-		cfg->cmp_par_fx_cob_variance = cmp_ent_get_non_ima_cmp_par6(ent);
-		cfg->spill_fx_cob_variance = cmp_ent_get_non_ima_spill6(ent);
-		break;
-	case DATA_TYPE_F_CAM_OFFSET:
-	case DATA_TYPE_F_CAM_BACKGROUND:
-	/* LCOV_EXCL_START */
-	case DATA_TYPE_UNKNOWN:
-	default:
-		return -1;
-	/* LCOV_EXCL_STOP */
-	}
-
-	return 0;
-}
-
-
 #ifdef HAS_TIME_H
 /*
- * @brief Covert a calendar time expressed as a struct tm object to time since
+ * @brief Convert a calendar time expressed as a struct tm object to time since
  *	 epoch as a time_t object. The function interprets the input structure
  *	 as representing Universal Coordinated Time (UTC).
  * @note timegm is a GNU C Library extension, not standardized. This function
@@ -2320,11 +2212,11 @@ uint64_t cmp_ent_create_timestamp(const struct timespec *ts)
 		clock_gettime(CLOCK_REALTIME, &now);
 	}
 
-	seconds = ((double)now.tv_sec + 1.0e-9 * now.tv_nsec) -
-		  ((double)epoch.tv_sec + 1.0e-9 * epoch.tv_nsec);
+	seconds = ((double)now.tv_sec + 1.0e-9 * (double)now.tv_nsec) -
+		  ((double)epoch.tv_sec + 1.0e-9 * (double)epoch.tv_nsec);
 
 	coarse = (uint64_t)seconds;
-	fine = (uint64_t)((seconds - coarse) * 256 * 256);
+	fine = (uint64_t)((seconds - (double)coarse) * 256 * 256);
 
 	return (coarse << 16) + fine;
 }

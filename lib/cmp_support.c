@@ -17,6 +17,7 @@
  * @see Data Compression User Manual PLATO-UVIE-PL-UM-0001
  */
 
+#include <compiler.h>
 
 #include <cmp_support.h>
 #include <cmp_debug.h>
@@ -32,12 +33,12 @@
  * @returns the result of floor(log2(x))
  */
 
-int ilog_2(uint32_t x)
+unsigned int ilog_2(uint32_t x)
 {
 	if (!x)
-		return -1;
+		return -1U;
 
-	return 31 - __builtin_clz(x);
+	return 31 - (unsigned int)__builtin_clz(x);
 }
 
 
@@ -313,36 +314,6 @@ int cmp_aux_data_type_is_used(enum cmp_data_type data_type)
 
 
 /**
- * @brief implantation of the model update equation
- * @note check before that model_value is not greater than MAX_MODEL_VALUE
- *
- * @param data		data to process
- * @param model		(current) model of the data to process
- * @param model_value	model weighting parameter
- * @param round		routing parameter
- *
- * @returns (new) updated model
- */
-
-unsigned int cmp_up_model(unsigned int data, unsigned int model,
-			  unsigned int model_value, unsigned int round)
-
-{
-	uint64_t weighted_model, weighted_data;
-
-	/* round and round back input because for decompression the accurate
-	 * data values are not available
-	 */
-	data = round_inv(round_fwd(data, round), round);
-	/* cast uint64_t to prevent overflow in the multiplication */
-	weighted_model = (uint64_t)model * model_value;
-	weighted_data = (uint64_t)data * (MAX_MODEL_VALUE - model_value);
-	/* truncation is intended */
-	return (unsigned int)((weighted_model + weighted_data) / MAX_MODEL_VALUE);
-}
-
-
-/**
  * @brief get the maximum valid spill threshold value for a imagette
  *	compression in diff or model mode
  *
@@ -362,8 +333,7 @@ uint32_t cmp_ima_max_spill(unsigned int golomb_par)
 		452, 461, 470, 479, 488, 497, 506, 515, 524, 533, 542, 551, 560,
 		569, 578, 587, 596, 605, 614, 623 };
 
-
-	if (golomb_par > MAX_IMA_GOLOMB_PAR)
+	if (golomb_par >= ARRAY_SIZE(LUT_MAX_RDCU))
 		return 0;
 
 	return LUT_MAX_RDCU[golomb_par];
@@ -383,9 +353,9 @@ uint32_t cmp_ima_max_spill(unsigned int golomb_par)
 uint32_t cmp_icu_max_spill(unsigned int cmp_par)
 {
 	/* the ICU compressor can generate code words with a length of maximal 32 bits. */
-	unsigned int max_cw_bits = 32;
-	unsigned int cutoff = (1UL << (ilog_2(cmp_par)+1)) - cmp_par;
-	unsigned int max_n_sym_offset = max_cw_bits/2 - 1;
+	unsigned int const max_cw_bits = 32;
+	unsigned int const cutoff = (0x2U << (ilog_2(cmp_par) & 0x1FU)) - cmp_par;
+	unsigned int const max_n_sym_offset = max_cw_bits/2 - 1;
 
 	if (!cmp_par || cmp_par > MAX_NON_IMA_GOLOMB_PAR)
 		return 0;
@@ -556,6 +526,70 @@ int cmp_cfg_icu_buffers_is_invalid(const struct cmp_cfg *cfg)
 	}
 
 	return cfg_invalid;
+}
+
+
+/**
+ * @brief check if all entries in the max_used_bits structure are in the allowed range
+ *
+ * @param max_used_bits	pointer to max_used_bits structure to check
+ *
+ * @returns 0 if all entries are valid, otherwise one or more entries are invalid
+ */
+
+
+int cmp_cfg_icu_max_used_bits_out_of_limit(const struct cmp_max_used_bits *max_used_bits)
+{
+#define CHECK_MAX_USED_BITS_LIMIT(entry) \
+	do { \
+		if (max_used_bits->entry > MAX_USED_BITS_SAFE.entry) { \
+			debug_print("Error: The " #entry " entry in the max_used_bits structure is too large (actual: %x, max: %x).\n",  max_used_bits->entry, MAX_USED_BITS_SAFE.entry); \
+			error++; \
+		} \
+	} while (0)
+
+	int error = 0;
+
+	if (!max_used_bits) {
+		debug_print("Error: The pointer to the max_used_bits structure is NULL.\n");
+		return 1;
+	}
+
+	CHECK_MAX_USED_BITS_LIMIT(s_exp_flags);
+	CHECK_MAX_USED_BITS_LIMIT(s_fx);
+	CHECK_MAX_USED_BITS_LIMIT(s_efx);
+	CHECK_MAX_USED_BITS_LIMIT(s_ncob);
+	CHECK_MAX_USED_BITS_LIMIT(s_ecob);
+	CHECK_MAX_USED_BITS_LIMIT(f_fx);
+	CHECK_MAX_USED_BITS_LIMIT(f_efx);
+	CHECK_MAX_USED_BITS_LIMIT(f_ncob);
+	CHECK_MAX_USED_BITS_LIMIT(f_ecob);
+	CHECK_MAX_USED_BITS_LIMIT(l_exp_flags);
+	CHECK_MAX_USED_BITS_LIMIT(l_fx);
+	CHECK_MAX_USED_BITS_LIMIT(l_fx_variance);
+	CHECK_MAX_USED_BITS_LIMIT(l_efx);
+	CHECK_MAX_USED_BITS_LIMIT(l_ncob);
+	CHECK_MAX_USED_BITS_LIMIT(l_ecob);
+	CHECK_MAX_USED_BITS_LIMIT(l_cob_variance);
+	CHECK_MAX_USED_BITS_LIMIT(nc_imagette);
+	CHECK_MAX_USED_BITS_LIMIT(saturated_imagette);
+	CHECK_MAX_USED_BITS_LIMIT(nc_offset_mean);
+	CHECK_MAX_USED_BITS_LIMIT(nc_offset_variance);
+	CHECK_MAX_USED_BITS_LIMIT(nc_background_mean);
+	CHECK_MAX_USED_BITS_LIMIT(nc_background_variance);
+	CHECK_MAX_USED_BITS_LIMIT(nc_background_outlier_pixels);
+	CHECK_MAX_USED_BITS_LIMIT(smearing_mean);
+	CHECK_MAX_USED_BITS_LIMIT(smearing_variance_mean);
+	CHECK_MAX_USED_BITS_LIMIT(smearing_outlier_pixels);
+	CHECK_MAX_USED_BITS_LIMIT(fc_imagette);
+	CHECK_MAX_USED_BITS_LIMIT(fc_offset_mean);
+	CHECK_MAX_USED_BITS_LIMIT(fc_offset_variance);
+	CHECK_MAX_USED_BITS_LIMIT(fc_offset_pixel_in_error);
+	CHECK_MAX_USED_BITS_LIMIT(fc_background_mean);
+	CHECK_MAX_USED_BITS_LIMIT(fc_background_variance);
+	CHECK_MAX_USED_BITS_LIMIT(fc_background_outlier_pixels);
+
+	return error;
 }
 
 
@@ -873,6 +907,9 @@ int cmp_cfg_icu_is_invalid(const struct cmp_cfg *cfg)
 	cfg_invalid += cmp_cfg_gen_par_is_invalid(cfg, ICU_CHECK);
 
 	cfg_invalid += cmp_cfg_icu_buffers_is_invalid(cfg);
+
+	if (cfg->cmp_mode != CMP_MODE_RAW)
+		cfg_invalid += cmp_cfg_icu_max_used_bits_out_of_limit(cfg->max_used_bits);
 
 	if (cmp_imagette_data_type_is_used(cfg->data_type))
 		cfg_invalid += cmp_cfg_imagette_is_invalid(cfg, ICU_CHECK);

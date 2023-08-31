@@ -700,7 +700,7 @@ int rdcu_write_cmd_compr_data_buf_len(uint16_t trans_id, uint8_t *cmd)
 
 
 /**
- * @brief create a command to read the RDCU used paramter 1 register
+ * @brief create a command to read the RDCU used parameter 1 register
  *
  * @param trans_id a transaction identifier
  *
@@ -717,7 +717,7 @@ int rdcu_read_cmd_used_param1(uint16_t trans_id, uint8_t *cmd)
 
 
 /**
- * @brief create a command to read the RDCU unused paramter 2 register
+ * @brief create a command to read the RDCU unused parameter 2 register
  *
  * @param trans_id a transaction identifier
  *

@@ -159,9 +159,6 @@ size_t cmp_ent_build(struct cmp_entity *ent, uint32_t version_id,
 		     uint64_t start_time, uint64_t end_time, uint16_t model_id,
 		     uint8_t model_counter, struct cmp_cfg *cfg, int cmp_size_bits);
 
-/* read in a compression entity header */
-int cmp_ent_read_header(struct cmp_entity *ent, struct cmp_cfg *cfg);
-
 /*
  * write the compression parameters from a compression configuration into the
  * compression entity header
@@ -192,7 +189,7 @@ int cmp_ent_set_coarse_end_time(struct cmp_entity *ent, uint32_t coarse_time);
 int cmp_ent_set_fine_end_time(struct cmp_entity *ent, uint16_t fine_time);
 
 int cmp_ent_set_data_type(struct cmp_entity *ent, enum cmp_data_type data_type,
-			  int raw_mode);
+			  int raw_mode_flag);
 int cmp_ent_set_cmp_mode(struct cmp_entity *ent, enum cmp_mode cmp_mode_used);
 int cmp_ent_set_model_value(struct cmp_entity *ent, uint32_t model_value_used);
 int cmp_ent_set_model_id(struct cmp_entity *ent, uint32_t model_id);
@@ -221,23 +218,23 @@ int cmp_ent_set_ima_ap2_golomb_par(struct cmp_entity *ent, uint32_t ap2_golomb_p
 
 
 /* set functions for specific entity header for non-imagette data product types */
-int cmp_ent_set_non_ima_spill1(struct cmp_entity *ent, uint32_t spill1_used);
-int cmp_ent_set_non_ima_cmp_par1(struct cmp_entity *ent, uint32_t cmp_par1_used);
+int cmp_ent_set_non_ima_spill1(struct cmp_entity *ent, uint32_t spill_1_used);
+int cmp_ent_set_non_ima_cmp_par1(struct cmp_entity *ent, uint32_t cmp_par_1_used);
 
-int cmp_ent_set_non_ima_spill2(struct cmp_entity *ent, uint32_t spill2_used);
-int cmp_ent_set_non_ima_cmp_par2(struct cmp_entity *ent, uint32_t cmp_par2_used);
+int cmp_ent_set_non_ima_spill2(struct cmp_entity *ent, uint32_t spill_2_used);
+int cmp_ent_set_non_ima_cmp_par2(struct cmp_entity *ent, uint32_t cmp_par_2_used);
 
-int cmp_ent_set_non_ima_spill3(struct cmp_entity *ent, uint32_t spill3_used);
-int cmp_ent_set_non_ima_cmp_par3(struct cmp_entity *ent, uint32_t cmp_par3_used);
+int cmp_ent_set_non_ima_spill3(struct cmp_entity *ent, uint32_t spill_3_used);
+int cmp_ent_set_non_ima_cmp_par3(struct cmp_entity *ent, uint32_t cmp_par_3_used);
 
-int cmp_ent_set_non_ima_spill4(struct cmp_entity *ent, uint32_t spill4_used);
-int cmp_ent_set_non_ima_cmp_par4(struct cmp_entity *ent, uint32_t cmp_par4_used);
+int cmp_ent_set_non_ima_spill4(struct cmp_entity *ent, uint32_t spill_4_used);
+int cmp_ent_set_non_ima_cmp_par4(struct cmp_entity *ent, uint32_t cmp_par_4_used);
 
-int cmp_ent_set_non_ima_spill5(struct cmp_entity *ent, uint32_t spill5_used);
-int cmp_ent_set_non_ima_cmp_par5(struct cmp_entity *ent, uint32_t cmp_par5_used);
+int cmp_ent_set_non_ima_spill5(struct cmp_entity *ent, uint32_t spill_5_used);
+int cmp_ent_set_non_ima_cmp_par5(struct cmp_entity *ent, uint32_t cmp_par_5_used);
 
-int cmp_ent_set_non_ima_spill6(struct cmp_entity *ent, uint32_t spill6_used);
-int cmp_ent_set_non_ima_cmp_par6(struct cmp_entity *ent, uint32_t cmp_par6_used);
+int cmp_ent_set_non_ima_spill6(struct cmp_entity *ent, uint32_t spill_6_used);
+int cmp_ent_set_non_ima_cmp_par6(struct cmp_entity *ent, uint32_t cmp_par_6_used);
 
 
 
@@ -311,7 +308,7 @@ int32_t cmp_ent_get_cmp_data(struct cmp_entity *ent, uint32_t *data_buf,
 			     uint32_t data_buf_size);
 
 /* calculate the size of the compression entity header */
-uint32_t cmp_ent_cal_hdr_size(enum cmp_data_type data_type, int raw_mode);
+uint32_t cmp_ent_cal_hdr_size(enum cmp_data_type data_type, int raw_mode_flag);
 
 
 #if defined __has_include

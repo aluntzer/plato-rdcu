@@ -20,7 +20,7 @@
  *	All sync() calls respect the direction of the sync, i.e. read-only
  *	registers in the RDCU are synced to the local mirror
  *	and vice-versa for write-only register
- *	The only exception are SRAM (data) related syncs, they specifiy
+ *	The only exception are SRAM (data) related syncs, they specify
  *	the direction by a directional suffix, which is either _icu_rdcu
  *	for ICU->RDCU, i.e. transfer local to remote, or _rdcu_icu for a
  *	read-back
@@ -200,7 +200,7 @@ uint8_t rdcu_get_rmap_target_cmd_key(void)
 uint32_t rdcu_get_lvds_link_enabled(uint32_t link)
 {
 	if (link > 7)
-		return -1;
+		return -1U;
 
 	return (rdcu->lvds_core_status >> link) & 0x1UL;
 }
@@ -818,7 +818,7 @@ void rdcu_clear_rdcu_interrupt(void)
  * @note The bit will auto-clear in the FPGA once compression is complete.
  *	 To clear the local mirror, make sure to
  *	 rdcu_clear_data_compr_interrupt() so the FPGA does not interrupt
- *	 data compression unexepectedly when rdcu_sync_compr_ctrl()
+ *	 data compression unexpectedly when rdcu_sync_compr_ctrl()
  *	 is called, as write-only registers are not synced back from the RDCU.
  *
  */
@@ -847,7 +847,7 @@ void rdcu_clear_data_compr_interrupt(void)
  * @note The bit will auto-clear in the FPGA once compression is complete.
  *	 To clear the local mirror, make sure to
  *	 rdcu_clear_data_compr_start() so the FPGA does not start
- *	 data compression unexepectedly when rdcu_sync_compr_ctrl()
+ *	 data compression unexpectedly when rdcu_sync_compr_ctrl()
  *	 is called, as write-only registers are not synced back from the RDCU.
  */
 
@@ -1644,6 +1644,15 @@ int rdcu_write_sram_16(uint16_t *buf, uint32_t addr, uint32_t size)
 	if (size & 0x1)
 		return -1;
 
+	if (addr > RDCU_SRAM_END)
+		return -1;
+
+	if (size > RDCU_SRAM_SIZE)
+		return -1;
+
+	if (addr + size > RDCU_SRAM_START + RDCU_SRAM_SIZE)
+		return -1;
+
 #if !(__BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__)
 	return rdcu_write_sram(buf, addr, size);
 #else
@@ -1679,6 +1688,15 @@ int rdcu_write_sram_32(uint32_t *buf, uint32_t addr, uint32_t size)
 		return 0;
 
 	if (size & 0x3)
+		return -1;
+
+	if (addr > RDCU_SRAM_END)
+		return -1;
+
+	if (size > RDCU_SRAM_SIZE)
+		return -1;
+
+	if (addr + size > RDCU_SRAM_START + RDCU_SRAM_SIZE)
 		return -1;
 
 #if !(__BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__)
@@ -2242,7 +2260,7 @@ int rdcu_sync_mirror_to_sram(uint32_t addr, uint32_t size, uint32_t mtu)
 	if (size > RDCU_SRAM_SIZE)
 		return -1;
 
-	if ((addr + size) > (RDCU_SRAM_END + 1))
+	if (addr + size > RDCU_SRAM_START + RDCU_SRAM_SIZE)
 		return -1;
 
 
@@ -2316,7 +2334,7 @@ int rdcu_sync_sram_to_mirror(uint32_t addr, uint32_t size, uint32_t mtu)
 	if (size > RDCU_SRAM_SIZE)
 		return -1;
 
-	if ((addr + size) > (RDCU_SRAM_END + 1))
+	if (addr + size > RDCU_SRAM_START + RDCU_SRAM_SIZE)
 		return -1;
 
 
@@ -2379,7 +2397,7 @@ int rdcu_ctrl_init(void)
 		return -1;
 	}
 
-#if (__sparc__)
+#if defined(__sparc__)
 	rdcu->sram =  (uint8_t *) 0x60000000;
 #else /* assume PC */
 

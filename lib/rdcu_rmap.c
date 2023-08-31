@@ -91,7 +91,7 @@ static int32_t (*rmap_tx)(const void *hdr,  uint32_t hdr_size,
 			  const void *data, uint32_t data_size);
 static uint32_t (*rmap_rx)(uint8_t *pkt);
 
-static size_t data_mtu;	/* maximum data transfer size per unit */
+static uint32_t data_mtu;	/* maximum data transfer size per unit */
 
 
 
@@ -227,7 +227,7 @@ static void *trans_log_get_addr(int slot)
 
 static int rdcu_process_rx(void)
 {
-	int n;
+	uint32_t n;
 	int cnt = 0;
 
 	uint32_t *local_addr;
@@ -291,7 +291,7 @@ static int rdcu_process_rx(void)
 		if (rp->data_len) {
 			uint8_t crc8;
 
-			/* convert endianess if needed */
+			/* convert endianness if needed */
 #if (__BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__)
 			{
 				unsigned int i;
@@ -464,7 +464,7 @@ int rdcu_sync(int (*fn)(uint16_t trans_id, uint8_t *cmd),
 		return -1;
 	}
 
-	/* convert endianess if needed */
+	/* convert endianness if needed */
 #if (__BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__)
 	if (data_len) {
 		int i;
@@ -500,7 +500,7 @@ int rdcu_sync(int (*fn)(uint16_t trans_id, uint8_t *cmd),
  * @note this one is a little redundant, but otherwise we'd have a lot of
  *	 unused parameters on most of the control functions
  *
- * XXX need a paramter for read...meh...must think of something else
+ * XXX need a parameter for read...meh...must think of something else
  */
 
 
@@ -580,7 +580,7 @@ int rdcu_package(uint8_t *blob,
 {
 	int n;
 	int has_data_crc = 0;
-	struct rmap_instruction *ri;
+	const struct rmap_instruction *ri;
 
 
 	if (data_size & 0x3)	/* must be multiple of 4 */
@@ -598,7 +598,7 @@ int rdcu_package(uint8_t *blob,
 	/* allocate space for header, header crc, data, data crc */
 	n = cmd_size + 1;
 
-	ri = (struct rmap_instruction *) &cmd[non_crc_bytes + RMAP_INSTRUCTION];
+	ri = (const struct rmap_instruction *)&cmd[non_crc_bytes + RMAP_INSTRUCTION];
 
 	/* see if the type of command needs a data crc field at the end */
 	switch (ri->cmd) {
@@ -744,7 +744,7 @@ void rdcu_set_destination_key(uint8_t key)
  * @returns the mtu
  */
 
-size_t rdcu_get_data_mtu(void)
+uint32_t rdcu_get_data_mtu(void)
 {
 	return data_mtu;
 }
@@ -790,7 +790,7 @@ void rdcu_rmap_reset_log(void)
  * @returns 0 on success, otherwise error
  */
 
-int rdcu_rmap_init(size_t mtu,
+int rdcu_rmap_init(uint32_t mtu,
 		   int32_t (*tx)(const void *hdr,  uint32_t hdr_size,
 				 const uint8_t non_crc_bytes,
 				 const void *data, uint32_t data_size),

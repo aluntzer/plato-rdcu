@@ -22,6 +22,9 @@
 #include <stdint.h>
 #include <stddef.h>
 
+#include <cmp_max_used_bits.h>
+#include <cmp_cal_up_model.h>
+
 
 /* return code if the bitstream buffer is too small to store the whole bitstream */
 #define CMP_ERROR_SMALL_BUF -2
@@ -90,6 +93,9 @@
 #define CMP_DEF_IMA_DIFF_RDCU_UP_MODEL_ADR	0x000000 /* not needed for 1d-differencing cmp_mode */
 #define CMP_DEF_IMA_DIFF_RDCU_BUFFER_ADR	0x600000
 
+
+/* imagette sample to byte conversion factor; one imagette samples has 16 bits (2 bytes) */
+#define IMA_SAM2BYT  2
 
 /**
  * @brief options for configuration check functions
@@ -181,7 +187,7 @@ struct cmp_cfg {
 	uint32_t ap2_spill;         /**< Adaptive 2 Golomb parameter; HW only */
 	uint32_t cmp_par_exp_flags; /**< Compression parameter for exposure flags compression */
 	uint32_t spill_exp_flags;   /**< Spillover threshold parameter for exposure flags compression */
-	uint32_t cmp_par_fx;	    /**< Compression parameter for normal flux compression */
+	uint32_t cmp_par_fx;        /**< Compression parameter for normal flux compression */
 	uint32_t spill_fx;          /**< Spillover threshold parameter for normal flux compression */
 	uint32_t cmp_par_ncob;      /**< Compression parameter for normal center of brightness compression */
 	uint32_t spill_ncob;        /**< Spillover threshold parameter for normal center of brightness compression */
@@ -197,6 +203,7 @@ struct cmp_cfg {
 	uint32_t spill_variance;    /**< Spillover threshold parameter for auxiliary science variance compression */
 	uint32_t cmp_par_pixels_error; /**< Compression parameter for auxiliary science outlier pixels number compression */
 	uint32_t spill_pixels_error; /**< Spillover threshold parameter for auxiliary science outlier pixels number compression */
+	const struct cmp_max_used_bits *max_used_bits; /**< the maximum length of the different data products types in bits */
 };
 
 
@@ -262,40 +269,15 @@ struct fx_cob_par {
 };
 
 
-/**
- * @brief method for lossy rounding
- * @note This function is implemented as a macro for the sake of performance
- *
- * @param value	the value to round
- * @param round	rounding parameter
- *
- * @return rounded value
- */
-
-#define round_fwd(value, round) ((uint32_t)(value) >> (round))
-
-
-/**
- * @brief inverse method for lossy rounding
- * @note This function is implemented as a macro for the sake of performance
- *
- * @param value	the value to round back
- * @param round	rounding parameter
- *
- * @return back rounded value
- */
-
-#define round_inv(value, round) ((uint32_t)(value) << (round))
-
-
 int is_a_pow_of_2(unsigned int v);
-int ilog_2(uint32_t x);
+unsigned int ilog_2(uint32_t x);
 
 unsigned int cmp_bit_to_4byte(unsigned int cmp_size_bit);
 
 int cmp_cfg_icu_is_invalid(const struct cmp_cfg *cfg);
 int cmp_cfg_gen_par_is_invalid(const struct cmp_cfg *cfg, enum check_opt opt);
 int cmp_cfg_icu_buffers_is_invalid(const struct cmp_cfg *cfg);
+int cmp_cfg_icu_max_used_bits_out_of_limit(const struct cmp_max_used_bits *max_used_bits_repo);
 int cmp_cfg_imagette_is_invalid(const struct cmp_cfg *cfg, enum check_opt opt);
 int cmp_cfg_fx_cob_is_invalid(const struct cmp_cfg *cfg);
 int cmp_cfg_aux_is_invalid(const struct cmp_cfg *cfg);
@@ -316,9 +298,6 @@ int raw_mode_is_used(enum cmp_mode cmp_mode);
 int rdcu_supported_cmp_mode_is_used(enum cmp_mode cmp_mode);
 int zero_escape_mech_is_used(enum cmp_mode cmp_mode);
 int multi_escape_mech_is_used(enum cmp_mode cmp_mode);
-
-unsigned int cmp_up_model(unsigned int data, unsigned int model,
-			  unsigned int model_value, unsigned int round);
 
 
 void print_cmp_info(const struct cmp_info *info);

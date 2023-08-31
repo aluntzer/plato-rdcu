@@ -35,6 +35,15 @@
 #define likely(x)      __builtin_expect(!!(x), 1)
 #define unlikely(x)    __builtin_expect(!!(x), 0)
 
+/**
+ *
+ * ARRAY_SIZE - get the number of elements in a visible array
+ * @param x the array whose size you want
+ *
+ * This does not work on pointers, or arrays declared as [], or
+ * function parameters.  With correct compiler support, such usage
+ * will cause a build error
+ */
 
 #define ARRAY_SIZE(x) (sizeof(x)/sizeof(x[0]))
 

@@ -24,69 +24,6 @@
 
 
 /**
- * @test cmp_set_max_us
- */
-
-void test_cmp_set_max_used_bits(void)
-{
-	struct cmp_max_used_bits set_max_used_bits = cmp_get_max_used_bits();
-
-	cmp_set_max_used_bits(&set_max_used_bits);
-	cmp_set_max_used_bits(NULL);
-}
-
-
-/**
- * @test cmp_get_max_used_bits
- */
-
-void test_cmp_get_max_used_bits(void)
-{
-	struct cmp_max_used_bits max_used_bits = cmp_get_max_used_bits();
-
-	TEST_ASSERT_EQUAL_INT(max_used_bits.nc_imagette, MAX_USED_NC_IMAGETTE_BITS);
-	TEST_ASSERT_EQUAL_INT(max_used_bits.saturated_imagette, MAX_USED_SATURATED_IMAGETTE_BITS);
-	TEST_ASSERT_EQUAL_INT(max_used_bits.fc_imagette, MAX_USED_FC_IMAGETTE_BITS);
-
-	TEST_ASSERT_EQUAL_INT(max_used_bits.f_fx, MAX_USED_F_FX_BITS);
-	TEST_ASSERT_EQUAL_INT(max_used_bits.f_efx, MAX_USED_F_EFX_BITS);
-	TEST_ASSERT_EQUAL_INT(max_used_bits.f_ncob, MAX_USED_F_NCOB_BITS);
-	TEST_ASSERT_EQUAL_INT(max_used_bits.f_ecob, MAX_USED_F_ECOB_BITS);
-
-	TEST_ASSERT_EQUAL_INT(max_used_bits.s_exp_flags, MAX_USED_S_FX_EXPOSURE_FLAGS_BITS);
-	TEST_ASSERT_EQUAL_INT(max_used_bits.s_fx, MAX_USED_S_FX_BITS);
-	TEST_ASSERT_EQUAL_INT(max_used_bits.s_efx, MAX_USED_S_EFX_BITS);
-	TEST_ASSERT_EQUAL_INT(max_used_bits.s_ncob, MAX_USED_S_NCOB_BITS);
-	TEST_ASSERT_EQUAL_INT(max_used_bits.s_ecob, MAX_USED_S_ECOB_BITS);
-
-	TEST_ASSERT_EQUAL_INT(max_used_bits.l_fx_variance, MAX_USED_L_FX_VARIANCE_BITS);
-	TEST_ASSERT_EQUAL_INT(max_used_bits.l_efx, MAX_USED_L_EFX_BITS);
-	TEST_ASSERT_EQUAL_INT(max_used_bits.l_ncob, MAX_USED_L_NCOB_BITS);
-	TEST_ASSERT_EQUAL_INT(max_used_bits.l_ecob, MAX_USED_L_ECOB_BITS);
-	TEST_ASSERT_EQUAL_INT(max_used_bits.l_cob_variance, MAX_USED_L_COB_VARIANCE_BITS);
-
-	TEST_ASSERT_EQUAL_INT(max_used_bits.nc_offset_mean, MAX_USED_NC_OFFSET_MEAN_BITS);
-	TEST_ASSERT_EQUAL_INT(max_used_bits.nc_offset_variance, MAX_USED_NC_OFFSET_VARIANCE_BITS);
-
-	TEST_ASSERT_EQUAL_INT(max_used_bits.nc_background_mean, MAX_USED_NC_BACKGROUND_MEAN_BITS);
-	TEST_ASSERT_EQUAL_INT(max_used_bits.nc_background_variance, MAX_USED_NC_BACKGROUND_VARIANCE_BITS);
-	TEST_ASSERT_EQUAL_INT(max_used_bits.nc_background_outlier_pixels, MAX_USED_NC_BACKGROUND_OUTLIER_PIXELS_BITS);
-
-	TEST_ASSERT_EQUAL_INT(max_used_bits.smearing_mean, MAX_USED_SMEARING_MEAN_BITS);
-	TEST_ASSERT_EQUAL_INT(max_used_bits.smearing_variance_mean, MAX_USED_SMEARING_VARIANCE_MEAN_BITS);
-	TEST_ASSERT_EQUAL_INT(max_used_bits.smearing_outlier_pixels, MAX_USED_SMEARING_OUTLIER_PIXELS_BITS);
-
-	TEST_ASSERT_EQUAL_INT(max_used_bits.fc_offset_mean, MAX_USED_FC_OFFSET_MEAN_BITS);
-	TEST_ASSERT_EQUAL_INT(max_used_bits.fc_offset_variance, MAX_USED_FC_OFFSET_VARIANCE_BITS);
-	TEST_ASSERT_EQUAL_INT(max_used_bits.fc_offset_pixel_in_error, MAX_USED_FC_OFFSET_PIXEL_IN_ERROR_BITS);
-
-	TEST_ASSERT_EQUAL_INT(max_used_bits.fc_background_mean, MAX_USED_FC_BACKGROUND_MEAN_BITS);
-	TEST_ASSERT_EQUAL_INT(max_used_bits.fc_background_variance, MAX_USED_FC_BACKGROUND_VARIANCE_BITS);
-	TEST_ASSERT_EQUAL_INT(max_used_bits.fc_background_outlier_pixels, MAX_USED_FC_BACKGROUND_OUTLIER_PIXELS_BITS);
-}
-
-
-/**
  * @test size_of_a_sample
  */
 

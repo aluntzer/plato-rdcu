@@ -365,8 +365,8 @@ int rdcu_read_cmp_info(struct cmp_info *info)
 		info->cmp_mode_used = rdcu_get_compression_mode();
 		info->golomb_par_used = rdcu_get_golomb_param();
 		info->spill_used = rdcu_get_spillover_threshold();
-		info->model_value_used = rdcu_get_weighting_param();
-		info->round_used = rdcu_get_noise_bits_rounded();
+		info->model_value_used = (uint8_t)rdcu_get_weighting_param();
+		info->round_used = (uint8_t)rdcu_get_noise_bits_rounded();
 		info->rdcu_new_model_adr_used = rdcu_get_new_model_addr_used();
 		info->samples_used = rdcu_get_samples_used();
 		info->rdcu_cmp_adr_used = rdcu_get_compr_data_start_addr();
