@@ -1,5 +1,6 @@
 demo_plato_rdcu
 build
+test/test_*_Runner
 
 ### C ###
 # Prerequisites
@@ -46,3 +47,10 @@ build
 *.idb
 *.pdb
 
+### Gcov ###
+# gcc coverage testing tool files
+*.gcno
+*.gcda
+*.gcov
+test/*.txt
+test/coverage

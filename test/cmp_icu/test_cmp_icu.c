@@ -32,7 +32,7 @@
 #include "../test_common/test_common.h"
 
 #include <cmp_icu.h>
-#include "../lib/cmp_icu.c" /* this is a hack to test static functions */
+#include "../../lib/icu_compress/cmp_icu.c" /* this is a hack to test static functions */
 
 
 /**
