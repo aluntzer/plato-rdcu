@@ -402,7 +402,7 @@ int cmp_cfg_gen_par_is_invalid(const struct cmp_cfg *cfg, enum check_opt opt)
 	int unsupported_cmp_mode = 1;
 	int check_model_value = 1;
 	uint32_t max_round_value = 0;
-	char *str = "";
+	const char  *str = "";
 
 	if (!cfg)
 		return 1;
@@ -607,7 +607,7 @@ int cmp_cfg_icu_max_used_bits_out_of_limit(const struct cmp_max_used_bits *max_u
  */
 
 static int cmp_pars_are_invalid(uint32_t cmp_par, uint32_t spill, enum cmp_mode cmp_mode,
-				enum cmp_data_type data_type, char *par_name)
+				enum cmp_data_type data_type, const char *par_name)
 {
 	int cfg_invalid = 0;
 	uint32_t min_golomb_par;
