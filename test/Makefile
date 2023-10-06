@@ -9,8 +9,6 @@ CFLAGS   += $(DEBUGFLAGS) $(MOREFLAGS)
 LDFLAGS  += $(MOREFLAGS)
 FLAGS     = $(CPPFLAGS) $(CFLAGS) $(LDFLAGS)
 
-# define silent mode as default (verbose mode with V=1 or VERBOSE=1)
-$(V)$(VERBOSE).SILENT:
 
 ROOT_DIR  := ./..
 UNITY_DIR := unity/src
@@ -27,16 +25,14 @@ TEST_COMMON_OBJ = test_common.o pcg_basic.o
 CPPFLAGS  += -I$(LIB_DIR) -I$(LIB_DIR)/common -I$(LIB_DIR)/icu_compress \
              -I$(LIB_DIR)/rdcu_compress -I$(LIB_DIR)/decompress -I$(UNITY_DIR)
 
-
-.PHONY: default
-default: all
-
-
 .PHONY: all
 all: test_cmp_data_types_Runner test_cmp_entity_Runner test_cmp_decmp_Runner \
      test_cmp_icu_Runner test_cmp_max_used_bits_list_Runner test_cmp_rdcu_cfg_Runner \
      test_decmp_Runner
 
+# define silent mode as default (verbose mode with V=1 or VERBOSE=1)
+# Note : must be defined _after_ the default target
+$(V)$(VERBOSE).SILENT:
 
 .PHONY: test
 test: test_cmp_data_types test_cmp_entity test_cmp_decmp test_cmp_icu \

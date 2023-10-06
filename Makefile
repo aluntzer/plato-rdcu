@@ -9,8 +9,8 @@ TESTDIR     = test
 # Define nul output
 VOID = /dev/null
 
-.PHONY: default
-default: lib-release
+# default target (when runing `make` with no argument)
+lib-release:
 
 .PHONY: all
 all: lib examples testsbuild

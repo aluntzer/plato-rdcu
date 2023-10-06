@@ -1,5 +1,5 @@
 DEBUGLEVEL ?= 3 #default build is with debug info
-CPPFLAGS += -DNO_IASW -DDEBUGLEVEL=$(DEBUGLEVEL)
+CPPFLAGS += -DDEBUGLEVEL=$(DEBUGLEVEL)
 DEBUGFLAGS= -Wall -Wextra -Wcast-qual -Wshadow \
             -Wstrict-aliasing=1 -Wdeclaration-after-statement \
             -Wstrict-prototypes -Wpointer-arith \
@@ -9,7 +9,11 @@ CFLAGS   += $(DEBUGFLAGS) $(MOREFLAGS)
 LDFLAGS  += $(MOREFLAGS)
 FLAGS     = $(CPPFLAGS) $(CFLAGS) $(LDFLAGS)
 
+# default target (when runing `make` with no argument)
+lib-release:
+
 # define silent mode as default (verbose mode with V=1 or VERBOSE=1)
+# Note : must be defined _after_ the default target
 $(V)$(VERBOSE).SILENT:
 
 COMMON_FILES := $(sort $(wildcard common/*.c))
@@ -46,15 +50,14 @@ LOCAL_OBJ0 := $(LOCAL_SRC:.c=.o)
 LOCAL_OBJ := $(LOCAL_OBJ0:.S=.o)
 
 
-.PHONY: default
-default: lib-release
-
 lib-release: DEBUGFLAGS :=
+lib-release: CFLAGS := -O2
 lib-release: lib
 
 .PHONY: all
 all: lib
 
+.PHONY: libcmp.a  # must be run every time
 
 ifndef BUILD_DIR
 # determine BUILD_DIR from compilation flags
@@ -90,9 +93,6 @@ SET_CACHE_DIRECTORY = \
 libcmp.a: $(SRC_FILES)
 	$(SET_CACHE_DIRECTORY)
 
-libcmp_sparc.a: $(SRC_FILES)
-	$(SET_CACHE_DIRECTORY)
-
 else
 # BUILD_DIR is defined
 
@@ -114,13 +114,6 @@ endif
 
 .PHONY: lib
 lib: libcmp.a
-
-.PHONY: libcmp.a  # must be run every time
-
-.PHONY: lib_sparc
-lib_sparc: CC := sparc-elf-gcc
-lib_sparc: CFLAGS += -mv8 -Wno-long-long -Wno-missing-field-initializers
-lib_sparc: libcmp_sparc.a
 
 .PHONY: lib-release
 lib-release : DEBUGFLAGS :=

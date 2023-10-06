@@ -18,9 +18,6 @@ LEON_SRC := $(sort $(wildcard leon/*.c))
 LEON_SRC_LOCAL := $(notdir $(LEON_SRC))
 LEON_OBJ := $(LEON_SRC_LOCAL:.c=.o)
 
-.PHONY: default
-default: all
-
 .PHONY: all
 all: demo_plato_rdcu_sparc
 
