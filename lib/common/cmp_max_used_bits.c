@@ -18,7 +18,6 @@
 
 
 #include <stdint.h>
-#include <stdio.h>
 
 #include "cmp_data_types.h"
 
@@ -80,8 +79,7 @@ const struct cmp_max_used_bits MAX_USED_BITS_SAFE = {
 	member_bit_size(struct f_fx_efx_ncob_ecob, efx), /* f_efx */
 	member_bit_size(struct f_fx_efx_ncob_ecob, ncob_x), /* f_ncob_x and f_ncob_y */
 	member_bit_size(struct f_fx_efx_ncob_ecob, ecob_x), /* f_ecob_x and f_ncob_y */
-	/* member_bit_size(struct l_fx_efx_ncob_ecob, exp_flags), /1* l_fx_exp_flags *1/ */
-	24,
+	24, /* member_bit_size(struct l_fx_efx_ncob_ecob, exp_flags), /1* l_fx_exp_flags *1/ */
 	member_bit_size(struct l_fx_efx_ncob_ecob, fx), /* l_fx */
 	member_bit_size(struct l_fx_efx_ncob_ecob, fx_variance), /* l_fx_variance */
 	member_bit_size(struct l_fx_efx_ncob_ecob, efx), /* l_efx */
@@ -98,13 +96,13 @@ const struct cmp_max_used_bits MAX_USED_BITS_SAFE = {
 	member_bit_size(struct smearing, mean), /* smearing_mean */
 	member_bit_size(struct smearing, variance_mean), /* smearing_variance_mean */
 	member_bit_size(struct smearing, outlier_pixels), /* smearing_outlier_pixels */
-	sizeof(uint32_t)*8, /* TBC */ /* fc_imagette */
-	sizeof(uint32_t)*8, /* TBC */ /* fc_offset_mean */
-	sizeof(uint32_t)*8, /* TBC */ /* fc_offset_variance */
-	sizeof(uint32_t)*8, /* TBC */ /* fc_offset_pixel_in_error */
-	sizeof(uint32_t)*8, /* TBC */ /* fc_background_mean */
-	sizeof(uint32_t)*8, /* TBC */ /* fc_background_variance */
-	sizeof(uint32_t)*8, /* TBC */ /* fc_background_outlier_pixels */
+	sizeof(uint16_t)*8, /* TBC */ /* fc_imagette */
+	sizeof(uint32_t)*8, /* TBC TODO: update */ /* fc_offset_mean */
+	sizeof(uint32_t)*8, /* TBC TODO: update */ /* fc_offset_variance */
+	sizeof(uint32_t)*8, /* TBC TODO: update */ /* fc_offset_pixel_in_error */
+	sizeof(uint32_t)*8, /* TBC TODO: update */ /* fc_background_mean */
+	sizeof(uint32_t)*8, /* TBC TODO: update */ /* fc_background_variance */
+	sizeof(uint32_t)*8, /* TBC TODO: update */ /* fc_background_outlier_pixels */
 };
 
 

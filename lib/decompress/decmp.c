@@ -42,7 +42,7 @@
 #define MAX_CW_LEN_ICU 32 /* maximum ICU Golomb code word bit length */
 
 
-const char *please_check_str = "Please check that the compression parameters match those used to compress the data and that the compressed data are not corrupted.\n";
+static const char *please_check_str = "Please check that the compression parameters match those used to compress the data and that the compressed data are not corrupted.\n";
 
 
 /**
@@ -568,6 +568,7 @@ static int decompress_imagette(struct cmp_cfg *cfg)
 	size_t i;
 	int stream_pos = 0;
 	uint32_t decoded_value;
+	uint32_t max_data_bits;
 	struct decoder_setup setup;
 	uint16_t *data_buf = cfg->input_buf;
 	uint16_t *model_buf = cfg->model_buf;
@@ -585,8 +586,24 @@ static int decompress_imagette(struct cmp_cfg *cfg)
 		next_model_p = data_buf;
 	}
 
+	switch (cfg->data_type) {
+	case DATA_TYPE_IMAGETTE:
+	case DATA_TYPE_IMAGETTE_ADAPTIVE:
+		max_data_bits = cfg->max_used_bits->nc_imagette;
+		break;
+	case DATA_TYPE_SAT_IMAGETTE:
+	case DATA_TYPE_SAT_IMAGETTE_ADAPTIVE:
+		max_data_bits = cfg->max_used_bits->saturated_imagette;
+		break;
+	default:
+	case DATA_TYPE_F_CAM_IMAGETTE:
+	case DATA_TYPE_F_CAM_IMAGETTE_ADAPTIVE:
+		max_data_bits = cfg->max_used_bits->fc_imagette;
+		break;
+	}
+
 	if (configure_decoder_setup(&setup, cfg->golomb_par, cfg->spill,
-				    cfg->round, cfg->max_used_bits->nc_imagette, cfg))
+				    cfg->round, max_data_bits, cfg))
 		return -1;
 
 	for (i = 0; ; i++) {

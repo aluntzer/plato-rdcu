@@ -61,6 +61,7 @@
  *
  */
 
+
 #ifndef LIST_H
 #define LIST_H
 
@@ -87,8 +88,8 @@ static inline void __list_add(struct list_head *new, struct list_head *prev, str
 
 /**
  * @brief add a new entry
- * @param new: new entry to be added
- * @param head: list head to add it after
+ * @param new new entry to be added
+ * @param head list head to add it after
  *
  * Insert a new entry after the specified head.
  * This is good for implementing stacks.
@@ -108,18 +109,19 @@ static inline void INIT_LIST_HEAD(struct list_head *list)
 
 /**
  * @brief get the struct for this entry
- * @param ptr:	the &struct list_head pointer.
- * @param type:	the type of the struct this is embedded in.
- * @param member:	the name of the list_struct within the struct.
+ * @param ptr	the &struct list_head pointer.
+ * @param type	the type of the struct this is embedded in.
+ * @param member	the name of the list_struct within the struct.
+ * @note add (void *) cast to suppress wcast-align warning
  */
 #define list_entry(ptr, type, member) \
-	((type *)((char *)(ptr)-(unsigned long)(&((type *)0)->member)))
+	((type *)((void *)((char *)(ptr)-(unsigned long)(&((type *)0)->member))))
 
 /**
  * list_first_entry - get the first element from a list
- * @ptr:	the list head to take the element from.
- * @type:	the type of the struct this is embedded in.
- * @member:	the name of the list_head within the struct.
+ * @ptr		the list head to take the element from.
+ * @type	the type of the struct this is embedded in.
+ * @member	the name of the list_head within the struct.
  *
  * Note, that list is expected to be not empty.
  */
@@ -128,9 +130,9 @@ static inline void INIT_LIST_HEAD(struct list_head *list)
 
 /**
  * list_last_entry - get the last element from a list
- * @ptr:	the list head to take the element from.
- * @type:	the type of the struct this is embedded in.
- * @member:	the name of the list_head within the struct.
+ * @ptr		the list head to take the element from.
+ * @type	the type of the struct this is embedded in.
+ * @member	the name of the list_head within the struct.
  *
  * Note, that list is expected to be not empty.
  */
@@ -139,9 +141,9 @@ static inline void INIT_LIST_HEAD(struct list_head *list)
 
 /**
  * list_first_entry_or_null - get the first element from a list
- * @ptr:	the list head to take the element from.
- * @type:	the type of the struct this is embedded in.
- * @member:	the name of the list_head within the struct.
+ * @ptr		the list head to take the element from.
+ * @type	the type of the struct this is embedded in.
+ * @member	the name of the list_head within the struct.
  *
  * Note that if the list is empty, it returns NULL.
  */
@@ -153,49 +155,50 @@ static inline void INIT_LIST_HEAD(struct list_head *list)
 
 /**
  * list_next_entry - get the next element in list
- * @pos:	the type * to cursor
- * @member:	the name of the list_head within the struct.
+ * @pos		the type * to cursor
+ * @member	the name of the list_head within the struct.
+ * @note modified to use __typeof__()
  */
 #define list_next_entry(pos, member) \
-	list_entry((pos)->member.next, typeof(*(pos)), member)
+	list_entry((pos)->member.next, __typeof__(*(pos)), member)
 
 /**
  * list_prev_entry - get the prev element in list
- * @pos:	the type * to cursor
- * @member:	the name of the list_head within the struct.
+ * @pos		the type * to cursor
+ * @member	the name of the list_head within the struct.
  */
 #define list_prev_entry(pos, member) \
 	list_entry((pos)->member.prev, typeof(*(pos)), member)
 
 /**
  * list_for_each	-	iterate over a list
- * @pos:	the &struct list_head to use as a loop cursor.
- * @head:	the head for your list.
+ * @pos		the &struct list_head to use as a loop cursor.
+ * @head	the head for your list.
  */
 #define list_for_each(pos, head) \
 	for (pos = (head)->next; pos != (head); pos = pos->next)
 
 /**
  * @brief iterate over list of given type
- * @param pos:	the type * to use as a loop counter.
- * @param head:	the head for your list.
- * @param member:	the name of the list_struct within the struct.
- * @param note	modified to use __typeof__()
+ * @param pos	the type * to use as a loop counter.
+ * @param head	the head for your list.
+ * @param member	the name of the list_struct within the struct.
+ * @note modified to use __typeof__()
  */
 
 #define list_for_each_entry(pos, head, member)				\
-	for (pos = list_entry((head)->next, __typeof__(*pos), member);	\
+	for (pos = list_first_entry(head, __typeof__(*pos), member);	\
 	     &pos->member != (head); 					\
-	     pos = list_entry(pos->member.next, __typeof__(*pos), member))
-
+	     pos = list_next_entry(pos, member))
 
 /**
  * @brief iterate over list of given type safe against removal of list entry
- * @param pos:	the type * to use as a loop counter.
- * @param n:		another type * to use as temporary storage
- * @param head:	the head for your list.
- * @param member:	the name of the list_struct within the struct.
+ * @param pos	the type * to use as a loop counter.
+ * @param n		another type * to use as temporary storage
+ * @param head	the head for your list.
+ * @param member	the name of the list_struct within the struct.
  */
+
 #define list_for_each_entry_safe(pos, n, head, member)			\
 	for (pos = list_entry((head)->next, __typeof__(*pos), member),	\
 	     n = list_entry(pos->member.next, __typeof__(*pos), member);\
@@ -205,15 +208,15 @@ static inline void INIT_LIST_HEAD(struct list_head *list)
 
 /**
  * @brief iterator wrapper start
- * @param pos:	the type * to use as a loop counter.
- * @param head:	the head for your list.
- * @param member:	the name of the list_struct within the struct.
- * @param type:	the type of struct
+ * @param pos	the type * to use as a loop counter.
+ * @param head	the head for your list.
+ * @param member	the name of the list_struct within the struct.
+ * @param type	the type of struct
  * @param warning	requires list_entry_while() to close statement
- * @param note	this construction is necessary for a truly circular list that is "headless"
- * @param note	and can be iterated from any starting element without additional overhead
- * @param note	compared to the LIST_HEAD/list_for_each_entry approach
- * @param todo	check if this is functional for all targets (confirmed: gcc 4.8.2)
+ * @note this construction is necessary for a truly circular list that is "headless"
+ *	and can be iterated from any starting element without additional overhead
+ *	compared to the LIST_HEAD/list_for_each_entry approach
+ * @todo check if this is functional for all targets (confirmed: gcc 4.8.2)
  */
 
 #define list_entry_do(pos, head, member, type)		\
@@ -222,15 +225,14 @@ static inline void INIT_LIST_HEAD(struct list_head *list)
 	do						\
 	{						\
 
-
 /**
  * @brief list iterator wrapper stop
- * @param pos:	the type * to use as a loop counter.
- * @param head:	the head for your list.
- * @param member:	the name of the list_struct within the struct.
- * @param type:	the type of struct
+ * @param pos	the type * to use as a loop counter.
+ * @param head	the head for your list.
+ * @param member	the name of the list_struct within the struct.
+ * @param type	the type of struct
  * @param warning	requires list_entry_do() to open statement
- * @param note	see list_entry_while()
+ * @note see list_entry_while()
  */
 
 #define list_entry_while(pos, head, member, type)		\
@@ -241,12 +243,12 @@ static inline void INIT_LIST_HEAD(struct list_head *list)
 
 /**
  * @brief the list entry do-while equivalent for a code block
- * @param pos:	the type * to use as a loop counter.
- * @param head:	the head for your list.
- * @param member:	the name of the list_struct within the struct.
- * @param type:	the type of struct
- * @param _CODE_:	a code segment
- * @param note	see list_entry_while(), list_entry_do()
+ * @param pos	the type * to use as a loop counter.
+ * @param head	the head for your list.
+ * @param member	the name of the list_struct within the struct.
+ * @param type	the type of struct
+ * @param _CODE_	a code segment
+ * @note see list_entry_while(), list_entry_do()
  */
 
 #define list_entry_do_while(pos, head, member, type, _CODE_) \
@@ -255,13 +257,12 @@ static inline void INIT_LIST_HEAD(struct list_head *list)
 		_CODE_;					     \
 	} list_entry_while(pos,head,member,type)
 
-
 /**
  * @brief reverse iterate over list of given type
- * @param pos:	the type * to use as a loop counter.
- * @param head:	the head for your list.
- * @param member:	the name of the list_struct within the struct.
- * (slightly modified in case there is no typeof() functionality in target compiler)
+ * @param pos	the type * to use as a loop counter.
+ * @param head	the head for your list.
+ * @param member	the name of the list_struct within the struct.
+ * @note slightly modified in case there is no typeof() functionality in target compiler
  */
 
 #define list_for_each_entry_rev(pos, head, member)			\
@@ -286,7 +287,7 @@ static inline void __list_del(struct list_head *prev, struct list_head *next)
 
 /**
  * @brief deletes entry from list.
- * @param entry: the element to delete from the list.
+ * @param entry the element to delete from the list.
  * @note list_empty on entry does not return true after this,
  *       the entry is in an undefined state.
  */
@@ -301,8 +302,8 @@ static inline void list_del(struct list_head *entry)
 
 /**
  * @brief deletes entry from list.
- * @param entry: the element to delete from the list.
- * @brief list_empty() on entry does not return true after this, the entry is
+ * @param entry the element to delete from the list.
+ * @note list_empty() on entry does not return true after this, the entry is
  *        in an undefined state.
  */
 
@@ -313,7 +314,7 @@ static inline void __list_del_entry(struct list_head *entry)
 
 /**
  * @brief deletes entry from list and reinitialize it.
- * @param entry: the element to delete from the list.
+ * @param entry the element to delete from the list.
  */
 static inline void list_del_init(struct list_head *entry)
 {
@@ -335,8 +336,8 @@ static inline void list_move(struct list_head *list, struct list_head *head)
 
 /**
  * @brief add a new entry
- * @param new: new entry to be added
- * @param head: list head to add it before
+ * @param new new entry to be added
+ * @param head list head to add it before
  *
  * Insert a new entry before the specified head.
  * This is useful for implementing queues.
@@ -350,10 +351,10 @@ static inline void list_add_tail(struct list_head *new, struct list_head *head)
 
 /**
  * @brief replace old entry by new one
- * @param old : the element to be replaced
- * @param new : the new element to insert
+ * @param old	the element to be replaced
+ * @param new	the new element to insert
  *
- * If @param old was empty, it will be overwritten.
+ * If the old parameter was empty, it will be overwritten.
  */
 
 static inline void list_replace(struct list_head *old,
@@ -368,8 +369,8 @@ static inline void list_replace(struct list_head *old,
 
 /**
  * @brief replace entry1 with entry2 and re-add entry1 at entry2's position
- * @param entry1: the location to place entry2
- * @param entry2: the location to place entry1
+ * @param entry1 the location to place entry2
+ * @param entry2 the location to place entry1
  */
 static inline void list_swap(struct list_head *entry1,
 			     struct list_head *entry2)
@@ -385,7 +386,7 @@ static inline void list_swap(struct list_head *entry1,
 
 /**
  * @brief tests whether a list is empty
- * @param head: the list to test.
+ * @param head the list to test.
  */
 
 static inline int list_empty(struct list_head *head)
@@ -395,7 +396,7 @@ static inline int list_empty(struct list_head *head)
 
 /**
  * @brief tests whether there is at least one element in the list
- * @param head: the list to test.
+ * @param head the list to test.
  */
 
 static inline int list_filled(struct list_head *head)
@@ -406,8 +407,8 @@ static inline int list_filled(struct list_head *head)
 
 /**
  * @brief delete from one list and add as another's tail
- * @param list: the entry to move
- * @param head: the head that will follow our entry
+ * @param list the entry to move
+ * @param head the head that will follow our entry
  */
 
 static inline void list_move_tail(struct list_head *list,
@@ -420,7 +421,7 @@ static inline void list_move_tail(struct list_head *list,
 
 /**
  * @brief rotate the list to the left
- * @param head: the head of the list
+ * @param head the head of the list
  */
 
 static inline void list_rotate_left(struct list_head *head)

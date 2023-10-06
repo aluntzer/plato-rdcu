@@ -17,8 +17,8 @@
  * @see Data Compression User Manual PLATO-UVIE-PL-UM-0001
  */
 
-#ifndef _CMP_ICU_H_
-#define _CMP_ICU_H_
+#ifndef CMP_ICU_H
+#define CMP_ICU_H
 
 #include "common/cmp_support.h"
 
@@ -59,4 +59,4 @@ int cmp_cfg_icu_max_used_bits(struct cmp_cfg *cfg, const struct cmp_max_used_bit
 /* start the compression */
 int icu_compress_data(const struct cmp_cfg *cfg);
 
-#endif /* _CMP_ICU_H_ */
+#endif /* CMP_ICU_H */

@@ -402,7 +402,7 @@ int cmp_cfg_gen_par_is_invalid(const struct cmp_cfg *cfg, enum check_opt opt)
 	int unsupported_cmp_mode = 1;
 	int check_model_value = 1;
 	uint32_t max_round_value = 0;
-	const char  *str = "";
+	const char *str = "";
 
 	if (!cfg)
 		return 1;
@@ -423,6 +423,8 @@ int cmp_cfg_gen_par_is_invalid(const struct cmp_cfg *cfg, enum check_opt opt)
 		max_round_value = MAX_ICU_ROUND;
 		check_model_value = model_mode_is_used(cfg->cmp_mode);
 		break;
+	default:
+		return 1;
 	}
 
 	if (invalid_data_type) {
@@ -590,6 +592,8 @@ int cmp_cfg_icu_max_used_bits_out_of_limit(const struct cmp_max_used_bits *max_u
 	CHECK_MAX_USED_BITS_LIMIT(fc_background_outlier_pixels);
 
 	return error;
+
+#undef CHECK_MAX_USED_BITS_LIMIT
 }
 
 

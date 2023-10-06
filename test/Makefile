@@ -69,7 +69,7 @@ test_cmp_entity_Runner: test_cmp_entity.o $(UNITY_OBJS) $(LIB)
 
 .PHONY: test_cmp_decmp
 test_cmp_decmp: test_cmp_decmp.txt
-test_cmp_decmp_Runner: test_cmp_decmp.o $(UNITY_OBJS) $(LIB)
+test_cmp_decmp_Runner: test_cmp_decmp.o $(UNITY_OBJS) $(TEST_COMMON_OBJ) $(LIB)
 
 .PHONY: test_cmp_icu
 test_cmp_icu: test_cmp_icu.txt

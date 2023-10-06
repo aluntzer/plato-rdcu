@@ -25,10 +25,12 @@
 #include <stdlib.h>
 
 #include <unity.h>
+#include "../test_common/test_common.h"
 
 #include <cmp_icu.h>
 #include <decmp.h>
 #include <cmp_data_types.h>
+#include <my_inttypes.h>
 
 #if defined __has_include
 #  if __has_include(<time.h>)
@@ -41,8 +43,6 @@
 #define IMAX_BITS(m) ((m)/((m)%255+1) / 255%255*8 + 7-86/((m)%255+12))
 #define RAND_MAX_WIDTH IMAX_BITS(RAND_MAX)
 
-#define set_n_bits(n)  (n != 32 ? ~(~0UL << (n)):0xFFFFFFFF)
-
 
 /**
  * @brief  Seeds the pseudo-random number generator used by rand()
@@ -50,61 +50,20 @@
 
 void setUp(void)
 {
-	unsigned int seed;
+	uint64_t seed;
 	static int n;
 
 #if HAS_TIME_H
-	seed = (unsigned int)(time(NULL) * getpid());
+	seed = (uint64_t)(time(NULL) ^ getpid()  ^ (intptr_t)&setUp);
 #else
 	seed = 1;
 #endif
 
 	if (!n) {
 		n = 1;
-		srand(seed);
-		printf("seed: %u\n", seed);
+		cmp_rand_seed(seed);
+		printf("seed: %"PRIu64"\n", seed);
 	}
-}
-
-
-/**
- * @brief generate a uint32_t random number
- *
- * @return a "random" uint32_t value
- * @see https://stackoverflow.com/a/33021408
- */
-
-uint32_t rand32(void)
-{
-	int i;
-	uint32_t r = 0;
-
-	for (i = 0; i < 32; i += RAND_MAX_WIDTH) {
-		r <<= RAND_MAX_WIDTH;
-		r ^= (unsigned int) rand();
-	}
-	return r;
-}
-
-
-/**
- * @brief generate a random number in a range
- *
- * @param min minimum value (inclusive)
- * @param max maximum value (inclusive)
- *
- * @returns "random" numbers in the range [min, max]
- *
- * @see https://c-faq.com/lib/randrange.html
- */
-
-uint32_t random_between(unsigned int min, unsigned int max)
-{
-	TEST_ASSERT(min < max);
-	if (max-min < RAND_MAX)
-		return min + rand() / (RAND_MAX / (max - min + 1ULL) + 1);
-	else
-		return min + rand32() / (UINT32_MAX / (max - min + 1ULL) + 1);
 }
 
 
@@ -113,7 +72,7 @@ static void gen_ima_data(uint16_t *data, uint32_t samples, const struct cmp_max_
 	uint32_t i;
 
 	for (i = 0; i < samples; i++)
-		data[i] = (uint16_t)random_between(0, set_n_bits(max_used_bits->nc_imagette));
+		data[i] = (uint16_t)cmp_rand_nbits(max_used_bits->nc_imagette);
 }
 
 
@@ -123,8 +82,8 @@ static void gen_offset_data(struct nc_offset *data, uint32_t samples,
 	uint32_t i;
 
 	for (i = 0; i < samples; i++) {
-		data[i].mean = random_between(0, set_n_bits(max_used_bits->nc_offset_mean));
-		data[i].variance = random_between(0, set_n_bits(max_used_bits->nc_offset_variance));
+		data[i].mean = cmp_rand_nbits(max_used_bits->nc_offset_mean);
+		data[i].variance = cmp_rand_nbits(max_used_bits->nc_offset_variance);
 	}
 }
 
@@ -135,9 +94,9 @@ static void gen_background_data(struct nc_background *data, uint32_t samples,
 	uint32_t i;
 
 	for (i = 0; i < samples; i++) {
-		data[i].mean = random_between(0, set_n_bits(max_used_bits->nc_background_mean));
-		data[i].variance = random_between(0, set_n_bits(max_used_bits->nc_background_variance));
-		data[i].outlier_pixels = random_between(0, set_n_bits(max_used_bits->nc_background_outlier_pixels));
+		data[i].mean = cmp_rand_nbits(max_used_bits->nc_background_mean);
+		data[i].variance = cmp_rand_nbits(max_used_bits->nc_background_variance);
+		data[i].outlier_pixels = (__typeof__(data[i].outlier_pixels))cmp_rand_nbits(max_used_bits->nc_background_outlier_pixels);
 	}
 }
 
@@ -148,9 +107,9 @@ static void gen_smearing_data(struct smearing *data, uint32_t samples,
 	uint32_t i;
 
 	for (i = 0; i < samples; i++) {
-		data[i].mean = random_between(0, set_n_bits(max_used_bits->smearing_mean));
-		data[i].variance_mean = random_between(0, set_n_bits(max_used_bits->smearing_variance_mean));
-		data[i].outlier_pixels = random_between(0, set_n_bits(max_used_bits->smearing_outlier_pixels));
+		data[i].mean = cmp_rand_nbits(max_used_bits->smearing_mean);
+		data[i].variance_mean = (__typeof__(data[i].variance_mean))cmp_rand_nbits(max_used_bits->smearing_variance_mean);
+		data[i].outlier_pixels = (__typeof__(data[i].outlier_pixels))cmp_rand_nbits(max_used_bits->smearing_outlier_pixels);
 	}
 }
 
@@ -161,8 +120,8 @@ static void gen_s_fx_data(struct s_fx *data, uint32_t samples,
 	uint32_t i;
 
 	for (i = 0; i < samples; i++) {
-		data[i].exp_flags = random_between(0, set_n_bits(max_used_bits->s_exp_flags));
-		data[i].fx = random_between(0, set_n_bits(max_used_bits->s_fx));
+		data[i].exp_flags = (__typeof__(data[i].exp_flags))cmp_rand_nbits(max_used_bits->s_exp_flags);
+		data[i].fx = cmp_rand_nbits(max_used_bits->s_fx);
 	}
 }
 
@@ -173,9 +132,9 @@ static void gen_s_fx_efx_data(struct s_fx_efx *data, uint32_t samples,
 	uint32_t i;
 
 	for (i = 0; i < samples; i++) {
-		data[i].exp_flags = random_between(0, set_n_bits(max_used_bits->s_exp_flags));
-		data[i].fx = random_between(0, set_n_bits(max_used_bits->s_fx));
-		data[i].efx = random_between(0, set_n_bits(max_used_bits->s_efx));
+		data[i].exp_flags = (__typeof__(data[i].exp_flags))cmp_rand_nbits(max_used_bits->s_exp_flags);
+		data[i].fx = cmp_rand_nbits(max_used_bits->s_fx);
+		data[i].efx = cmp_rand_nbits(max_used_bits->s_efx);
 	}
 }
 
@@ -186,10 +145,10 @@ static void gen_s_fx_ncob_data(struct s_fx_ncob *data, uint32_t samples,
 	uint32_t i;
 
 	for (i = 0; i < samples; i++) {
-		data[i].exp_flags = random_between(0, set_n_bits(max_used_bits->s_exp_flags));
-		data[i].fx = random_between(0, set_n_bits(max_used_bits->s_fx));
-		data[i].ncob_x = random_between(0, set_n_bits(max_used_bits->s_ncob));
-		data[i].ncob_y = random_between(0, set_n_bits(max_used_bits->s_ncob));
+		data[i].exp_flags = (__typeof__(data[i].exp_flags))cmp_rand_nbits(max_used_bits->s_exp_flags);
+		data[i].fx = cmp_rand_nbits(max_used_bits->s_fx);
+		data[i].ncob_x = cmp_rand_nbits(max_used_bits->s_ncob);
+		data[i].ncob_y = cmp_rand_nbits(max_used_bits->s_ncob);
 	}
 }
 
@@ -200,13 +159,13 @@ static void gen_s_fx_efx_ncob_ecob_data(struct s_fx_efx_ncob_ecob *data, uint32_
 	uint32_t i;
 
 	for (i = 0; i < samples; i++) {
-		data[i].exp_flags = random_between(0, set_n_bits(max_used_bits->s_exp_flags));
-		data[i].fx = random_between(0, set_n_bits(max_used_bits->s_fx));
-		data[i].ncob_x = random_between(0, set_n_bits(max_used_bits->s_ncob));
-		data[i].ncob_y = random_between(0, set_n_bits(max_used_bits->s_ncob));
-		data[i].efx = random_between(0, set_n_bits(max_used_bits->s_efx));
-		data[i].ecob_x = random_between(0, set_n_bits(max_used_bits->s_ecob));
-		data[i].ecob_y = random_between(0, set_n_bits(max_used_bits->s_ecob));
+		data[i].exp_flags = (__typeof__(data[i].exp_flags))cmp_rand_nbits(max_used_bits->s_exp_flags);
+		data[i].fx = cmp_rand_nbits(max_used_bits->s_fx);
+		data[i].ncob_x = cmp_rand_nbits(max_used_bits->s_ncob);
+		data[i].ncob_y = cmp_rand_nbits(max_used_bits->s_ncob);
+		data[i].efx = cmp_rand_nbits(max_used_bits->s_efx);
+		data[i].ecob_x = cmp_rand_nbits(max_used_bits->s_ecob);
+		data[i].ecob_y = cmp_rand_nbits(max_used_bits->s_ecob);
 	}
 }
 
@@ -217,7 +176,7 @@ static void gen_f_fx_data(struct f_fx *data, uint32_t samples,
 	uint32_t i;
 
 	for (i = 0; i < samples; i++)
-		data[i].fx = random_between(0, set_n_bits(max_used_bits->f_fx));
+		data[i].fx = cmp_rand_nbits(max_used_bits->f_fx);
 }
 
 
@@ -227,8 +186,8 @@ static void gen_f_fx_efx_data(struct f_fx_efx *data, uint32_t samples,
 	uint32_t i;
 
 	for (i = 0; i < samples; i++) {
-		data[i].fx = random_between(0, set_n_bits(max_used_bits->f_fx));
-		data[i].efx = random_between(0, set_n_bits(max_used_bits->f_efx));
+		data[i].fx = cmp_rand_nbits(max_used_bits->f_fx);
+		data[i].efx = cmp_rand_nbits(max_used_bits->f_efx);
 	}
 }
 
@@ -239,9 +198,9 @@ static void gen_f_fx_ncob_data(struct f_fx_ncob *data, uint32_t samples,
 	uint32_t i;
 
 	for (i = 0; i < samples; i++) {
-		data[i].fx = random_between(0, set_n_bits(max_used_bits->f_fx));
-		data[i].ncob_x = random_between(0, set_n_bits(max_used_bits->f_ncob));
-		data[i].ncob_y = random_between(0, set_n_bits(max_used_bits->f_ncob));
+		data[i].fx = cmp_rand_nbits(max_used_bits->f_fx);
+		data[i].ncob_x = cmp_rand_nbits(max_used_bits->f_ncob);
+		data[i].ncob_y = cmp_rand_nbits(max_used_bits->f_ncob);
 	}
 }
 
@@ -252,12 +211,12 @@ static void gen_f_fx_efx_ncob_ecob_data(struct f_fx_efx_ncob_ecob *data, uint32_
 	uint32_t i;
 
 	for (i = 0; i < samples; i++) {
-		data[i].fx = random_between(0, set_n_bits(max_used_bits->f_fx));
-		data[i].ncob_x = random_between(0, set_n_bits(max_used_bits->f_ncob));
-		data[i].ncob_y = random_between(0, set_n_bits(max_used_bits->f_ncob));
-		data[i].efx = random_between(0, set_n_bits(max_used_bits->f_efx));
-		data[i].ecob_x = random_between(0, set_n_bits(max_used_bits->f_ecob));
-		data[i].ecob_y = random_between(0, set_n_bits(max_used_bits->f_ecob));
+		data[i].fx = cmp_rand_nbits(max_used_bits->f_fx);
+		data[i].ncob_x = cmp_rand_nbits(max_used_bits->f_ncob);
+		data[i].ncob_y = cmp_rand_nbits(max_used_bits->f_ncob);
+		data[i].efx = cmp_rand_nbits(max_used_bits->f_efx);
+		data[i].ecob_x = cmp_rand_nbits(max_used_bits->f_ecob);
+		data[i].ecob_y = cmp_rand_nbits(max_used_bits->f_ecob);
 	}
 }
 
@@ -268,9 +227,9 @@ static void gen_l_fx_data(struct l_fx *data, uint32_t samples,
 	uint32_t i;
 
 	for (i = 0; i < samples; i++) {
-		data[i].exp_flags = random_between(0, set_n_bits(max_used_bits->l_exp_flags));
-		data[i].fx = random_between(0, set_n_bits(max_used_bits->l_fx));
-		data[i].fx_variance = random_between(0, set_n_bits(max_used_bits->l_fx_variance));
+		data[i].exp_flags = cmp_rand_nbits(max_used_bits->l_exp_flags);
+		data[i].fx = cmp_rand_nbits(max_used_bits->l_fx);
+		data[i].fx_variance = cmp_rand_nbits(max_used_bits->l_fx_variance);
 	}
 }
 
@@ -281,10 +240,10 @@ static void gen_l_fx_efx_data(struct l_fx_efx *data, uint32_t samples,
 	uint32_t i;
 
 	for (i = 0; i < samples; i++) {
-		data[i].exp_flags = random_between(0, set_n_bits(max_used_bits->l_exp_flags));
-		data[i].fx = random_between(0, set_n_bits(max_used_bits->l_fx));
-		data[i].efx = random_between(0, set_n_bits(max_used_bits->l_efx));
-		data[i].fx_variance = random_between(0, set_n_bits(max_used_bits->l_fx_variance));
+		data[i].exp_flags = cmp_rand_nbits(max_used_bits->l_exp_flags);
+		data[i].fx = cmp_rand_nbits(max_used_bits->l_fx);
+		data[i].efx = cmp_rand_nbits(max_used_bits->l_efx);
+		data[i].fx_variance = cmp_rand_nbits(max_used_bits->l_fx_variance);
 	}
 }
 
@@ -295,13 +254,13 @@ static void gen_l_fx_ncob_data(struct l_fx_ncob *data, uint32_t samples,
 	uint32_t i;
 
 	for (i = 0; i < samples; i++) {
-		data[i].exp_flags = random_between(0, set_n_bits(max_used_bits->l_exp_flags));
-		data[i].fx = random_between(0, set_n_bits(max_used_bits->l_fx));
-		data[i].ncob_x = random_between(0, set_n_bits(max_used_bits->l_ncob));
-		data[i].ncob_y = random_between(0, set_n_bits(max_used_bits->l_ncob));
-		data[i].fx_variance = random_between(0, set_n_bits(max_used_bits->l_fx_variance));
-		data[i].cob_x_variance = random_between(0, set_n_bits(max_used_bits->l_cob_variance));
-		data[i].cob_y_variance = random_between(0, set_n_bits(max_used_bits->l_cob_variance));
+		data[i].exp_flags = cmp_rand_nbits(max_used_bits->l_exp_flags);
+		data[i].fx = cmp_rand_nbits(max_used_bits->l_fx);
+		data[i].ncob_x = cmp_rand_nbits(max_used_bits->l_ncob);
+		data[i].ncob_y = cmp_rand_nbits(max_used_bits->l_ncob);
+		data[i].fx_variance = cmp_rand_nbits(max_used_bits->l_fx_variance);
+		data[i].cob_x_variance = cmp_rand_nbits(max_used_bits->l_cob_variance);
+		data[i].cob_y_variance = cmp_rand_nbits(max_used_bits->l_cob_variance);
 	}
 }
 
@@ -312,16 +271,16 @@ static void gen_l_fx_efx_ncob_ecob_data(struct l_fx_efx_ncob_ecob *data, uint32_
 	uint32_t i;
 
 	for (i = 0; i < samples; i++) {
-		data[i].exp_flags = random_between(0, set_n_bits(max_used_bits->l_exp_flags));
-		data[i].fx = random_between(0, set_n_bits(max_used_bits->l_fx));
-		data[i].ncob_x = random_between(0, set_n_bits(max_used_bits->l_ncob));
-		data[i].ncob_y = random_between(0, set_n_bits(max_used_bits->l_ncob));
-		data[i].efx = random_between(0, set_n_bits(max_used_bits->l_efx));
-		data[i].ecob_x = random_between(0, set_n_bits(max_used_bits->l_ecob));
-		data[i].ecob_y = random_between(0, set_n_bits(max_used_bits->l_ecob));
-		data[i].fx_variance = random_between(0, set_n_bits(max_used_bits->l_fx_variance));
-		data[i].cob_x_variance = random_between(0, set_n_bits(max_used_bits->l_cob_variance));
-		data[i].cob_y_variance = random_between(0, set_n_bits(max_used_bits->l_cob_variance));
+		data[i].exp_flags = cmp_rand_nbits(max_used_bits->l_exp_flags);
+		data[i].fx = cmp_rand_nbits(max_used_bits->l_fx);
+		data[i].ncob_x = cmp_rand_nbits(max_used_bits->l_ncob);
+		data[i].ncob_y = cmp_rand_nbits(max_used_bits->l_ncob);
+		data[i].efx = cmp_rand_nbits(max_used_bits->l_efx);
+		data[i].ecob_x = cmp_rand_nbits(max_used_bits->l_ecob);
+		data[i].ecob_y = cmp_rand_nbits(max_used_bits->l_ecob);
+		data[i].fx_variance = cmp_rand_nbits(max_used_bits->l_fx_variance);
+		data[i].cob_x_variance = cmp_rand_nbits(max_used_bits->l_cob_variance);
+		data[i].cob_y_variance = cmp_rand_nbits(max_used_bits->l_cob_variance);
 	}
 }
 
@@ -353,7 +312,7 @@ void *generate_random_test_data(uint32_t samples, enum cmp_data_type data_type,
 
 		TEST_ASSERT(data_size > MULTI_ENTRY_HDR_SIZE);
 		for (i = 0; i < MULTI_ENTRY_HDR_SIZE; ++i)
-			*p++ = random_between(0, UINT8_MAX);
+			*p++ = (uint8_t)cmp_rand32();
 		data = p;
 	}
 
@@ -429,49 +388,49 @@ void *generate_random_test_data(uint32_t samples, enum cmp_data_type data_type,
 
 void generate_random_cmp_par(struct cmp_cfg *cfg)
 {
-	cfg->golomb_par = random_between(MIN_IMA_GOLOMB_PAR, MAX_IMA_GOLOMB_PAR);
-	cfg->ap1_golomb_par = random_between(MIN_IMA_GOLOMB_PAR, MAX_IMA_GOLOMB_PAR);
-	cfg->ap2_golomb_par = random_between(MIN_IMA_GOLOMB_PAR, MAX_IMA_GOLOMB_PAR);
+	cfg->golomb_par = cmp_rand_between(MIN_IMA_GOLOMB_PAR, MAX_IMA_GOLOMB_PAR);
+	cfg->ap1_golomb_par = cmp_rand_between(MIN_IMA_GOLOMB_PAR, MAX_IMA_GOLOMB_PAR);
+	cfg->ap2_golomb_par = cmp_rand_between(MIN_IMA_GOLOMB_PAR, MAX_IMA_GOLOMB_PAR);
 
-	cfg->cmp_par_exp_flags = random_between(MIN_NON_IMA_GOLOMB_PAR, MAX_NON_IMA_GOLOMB_PAR);
-	cfg->cmp_par_fx = random_between(MIN_NON_IMA_GOLOMB_PAR, MAX_NON_IMA_GOLOMB_PAR);
-	cfg->cmp_par_ncob = random_between(MIN_NON_IMA_GOLOMB_PAR, MAX_NON_IMA_GOLOMB_PAR);
-	cfg->cmp_par_efx = random_between(MIN_NON_IMA_GOLOMB_PAR, MAX_NON_IMA_GOLOMB_PAR);
-	cfg->cmp_par_ecob = random_between(MIN_NON_IMA_GOLOMB_PAR, MAX_NON_IMA_GOLOMB_PAR);
-	cfg->cmp_par_fx_cob_variance = random_between(MIN_NON_IMA_GOLOMB_PAR, MAX_NON_IMA_GOLOMB_PAR);
-	cfg->cmp_par_mean = random_between(MIN_NON_IMA_GOLOMB_PAR, MAX_NON_IMA_GOLOMB_PAR);
-	cfg->cmp_par_variance = random_between(MIN_NON_IMA_GOLOMB_PAR, MAX_NON_IMA_GOLOMB_PAR);
-	cfg->cmp_par_pixels_error = random_between(MIN_NON_IMA_GOLOMB_PAR, MAX_NON_IMA_GOLOMB_PAR);
+	cfg->cmp_par_exp_flags = cmp_rand_between(MIN_NON_IMA_GOLOMB_PAR, MAX_NON_IMA_GOLOMB_PAR);
+	cfg->cmp_par_fx = cmp_rand_between(MIN_NON_IMA_GOLOMB_PAR, MAX_NON_IMA_GOLOMB_PAR);
+	cfg->cmp_par_ncob = cmp_rand_between(MIN_NON_IMA_GOLOMB_PAR, MAX_NON_IMA_GOLOMB_PAR);
+	cfg->cmp_par_efx = cmp_rand_between(MIN_NON_IMA_GOLOMB_PAR, MAX_NON_IMA_GOLOMB_PAR);
+	cfg->cmp_par_ecob = cmp_rand_between(MIN_NON_IMA_GOLOMB_PAR, MAX_NON_IMA_GOLOMB_PAR);
+	cfg->cmp_par_fx_cob_variance = cmp_rand_between(MIN_NON_IMA_GOLOMB_PAR, MAX_NON_IMA_GOLOMB_PAR);
+	cfg->cmp_par_mean = cmp_rand_between(MIN_NON_IMA_GOLOMB_PAR, MAX_NON_IMA_GOLOMB_PAR);
+	cfg->cmp_par_variance = cmp_rand_between(MIN_NON_IMA_GOLOMB_PAR, MAX_NON_IMA_GOLOMB_PAR);
+	cfg->cmp_par_pixels_error = cmp_rand_between(MIN_NON_IMA_GOLOMB_PAR, MAX_NON_IMA_GOLOMB_PAR);
 
 
-	cfg->spill = random_between(MIN_IMA_SPILL, cmp_ima_max_spill(cfg->golomb_par));
-	cfg->ap1_spill = random_between(MIN_IMA_SPILL, cmp_ima_max_spill(cfg->ap1_golomb_par));
-	cfg->ap2_spill = random_between(MIN_IMA_SPILL, cmp_ima_max_spill(cfg->ap2_golomb_par));
+	cfg->spill = cmp_rand_between(MIN_IMA_SPILL, cmp_ima_max_spill(cfg->golomb_par));
+	cfg->ap1_spill = cmp_rand_between(MIN_IMA_SPILL, cmp_ima_max_spill(cfg->ap1_golomb_par));
+	cfg->ap2_spill = cmp_rand_between(MIN_IMA_SPILL, cmp_ima_max_spill(cfg->ap2_golomb_par));
 
-	cfg->spill_exp_flags = random_between(MIN_NON_IMA_SPILL, cmp_icu_max_spill(cfg->cmp_par_exp_flags));
-	cfg->spill_fx = random_between(MIN_NON_IMA_SPILL, cmp_icu_max_spill(cfg->cmp_par_fx));
-	cfg->spill_ncob = random_between(MIN_NON_IMA_SPILL, cmp_icu_max_spill(cfg->cmp_par_ncob));
-	cfg->spill_efx = random_between(MIN_NON_IMA_SPILL, cmp_icu_max_spill(cfg->cmp_par_efx));
-	cfg->spill_ecob = random_between(MIN_NON_IMA_SPILL, cmp_icu_max_spill(cfg->cmp_par_ecob));
-	cfg->spill_fx_cob_variance = random_between(MIN_NON_IMA_SPILL, cmp_icu_max_spill(cfg->cmp_par_fx_cob_variance));
-	cfg->spill_mean = random_between(MIN_NON_IMA_SPILL, cmp_icu_max_spill(cfg->cmp_par_mean));
-	cfg->spill_variance = random_between(MIN_NON_IMA_SPILL, cmp_icu_max_spill(cfg->cmp_par_variance));
-	cfg->spill_pixels_error = random_between(MIN_NON_IMA_SPILL, cmp_icu_max_spill(cfg->cmp_par_pixels_error));
+	cfg->spill_exp_flags = cmp_rand_between(MIN_NON_IMA_SPILL, cmp_icu_max_spill(cfg->cmp_par_exp_flags));
+	cfg->spill_fx = cmp_rand_between(MIN_NON_IMA_SPILL, cmp_icu_max_spill(cfg->cmp_par_fx));
+	cfg->spill_ncob = cmp_rand_between(MIN_NON_IMA_SPILL, cmp_icu_max_spill(cfg->cmp_par_ncob));
+	cfg->spill_efx = cmp_rand_between(MIN_NON_IMA_SPILL, cmp_icu_max_spill(cfg->cmp_par_efx));
+	cfg->spill_ecob = cmp_rand_between(MIN_NON_IMA_SPILL, cmp_icu_max_spill(cfg->cmp_par_ecob));
+	cfg->spill_fx_cob_variance = cmp_rand_between(MIN_NON_IMA_SPILL, cmp_icu_max_spill(cfg->cmp_par_fx_cob_variance));
+	cfg->spill_mean = cmp_rand_between(MIN_NON_IMA_SPILL, cmp_icu_max_spill(cfg->cmp_par_mean));
+	cfg->spill_variance = cmp_rand_between(MIN_NON_IMA_SPILL, cmp_icu_max_spill(cfg->cmp_par_variance));
+	cfg->spill_pixels_error = cmp_rand_between(MIN_NON_IMA_SPILL, cmp_icu_max_spill(cfg->cmp_par_pixels_error));
 #if 0
 	if (cfg->cmp_mode == CMP_MODE_STUFF) {
-		/* cfg->golomb_par = random_between(16, MAX_STUFF_CMP_PAR); */
+		/* cfg->golomb_par = cmp_rand_between(16, MAX_STUFF_CMP_PAR); */
 		cfg->golomb_par = 16;
-		cfg->ap1_golomb_par = random_between(0, MAX_STUFF_CMP_PAR);
-		cfg->ap2_golomb_par = random_between(0, MAX_STUFF_CMP_PAR);
-		cfg->cmp_par_exp_flags = random_between(0, MAX_STUFF_CMP_PAR);
-		cfg->cmp_par_fx = random_between(0, MAX_STUFF_CMP_PAR);
-		cfg->cmp_par_ncob = random_between(0, MAX_STUFF_CMP_PAR);
-		cfg->cmp_par_efx = random_between(0, MAX_STUFF_CMP_PAR);
-		cfg->cmp_par_ecob = random_between(0, MAX_STUFF_CMP_PAR);
-		cfg->cmp_par_fx_cob_variance = random_between(0, MAX_STUFF_CMP_PAR);
-		cfg->cmp_par_mean = random_between(0, MAX_STUFF_CMP_PAR);
-		cfg->cmp_par_variance = random_between(0, MAX_STUFF_CMP_PAR);
-		cfg->cmp_par_pixels_error = random_between(0, MAX_STUFF_CMP_PAR);
+		cfg->ap1_golomb_par = cmp_rand_between(0, MAX_STUFF_CMP_PAR);
+		cfg->ap2_golomb_par = cmp_rand_between(0, MAX_STUFF_CMP_PAR);
+		cfg->cmp_par_exp_flags = cmp_rand_between(0, MAX_STUFF_CMP_PAR);
+		cfg->cmp_par_fx = cmp_rand_between(0, MAX_STUFF_CMP_PAR);
+		cfg->cmp_par_ncob = cmp_rand_between(0, MAX_STUFF_CMP_PAR);
+		cfg->cmp_par_efx = cmp_rand_between(0, MAX_STUFF_CMP_PAR);
+		cfg->cmp_par_ecob = cmp_rand_between(0, MAX_STUFF_CMP_PAR);
+		cfg->cmp_par_fx_cob_variance = cmp_rand_between(0, MAX_STUFF_CMP_PAR);
+		cfg->cmp_par_mean = cmp_rand_between(0, MAX_STUFF_CMP_PAR);
+		cfg->cmp_par_variance = cmp_rand_between(0, MAX_STUFF_CMP_PAR);
+		cfg->cmp_par_pixels_error = cmp_rand_between(0, MAX_STUFF_CMP_PAR);
 		return;
 	}
 #endif
@@ -488,7 +447,7 @@ void generate_random_cmp_par(struct cmp_cfg *cfg)
 void compression_decompression(struct cmp_cfg *cfg)
 {
 	int cmp_size_bits, s, error;
-	int data_size, cmp_data_size;
+	uint32_t data_size, cmp_data_size, cmp_ent_size;
 	struct cmp_entity *ent;
 	void *decompressed_data;
 	static void *model_of_data;
@@ -507,14 +466,14 @@ void compression_decompression(struct cmp_cfg *cfg)
 
 	/* create a compression entity */
 	cmp_data_size = cmp_cal_size_of_data(cfg->buffer_length, cfg->data_type);
-	cmp_data_size &= ~0x3; /* the size of the compressed data should be a multiple of 4 */
+	cmp_data_size &= ~0x3U; /* the size of the compressed data should be a multiple of 4 */
 	TEST_ASSERT_NOT_EQUAL_INT(0, cmp_data_size);
 
-	s = cmp_ent_create(NULL, cfg->data_type, cfg->cmp_mode == CMP_MODE_RAW, cmp_data_size);
-	TEST_ASSERT_NOT_EQUAL_INT(0, s);
-	ent = malloc(s); TEST_ASSERT_TRUE(ent);
-	s = cmp_ent_create(ent, cfg->data_type, cfg->cmp_mode == CMP_MODE_RAW, cmp_data_size);
-	TEST_ASSERT_NOT_EQUAL_INT(0, s);
+	cmp_ent_size = cmp_ent_create(NULL, cfg->data_type, cfg->cmp_mode == CMP_MODE_RAW, cmp_data_size);
+	TEST_ASSERT_NOT_EQUAL_UINT(0, cmp_ent_size);
+	ent = malloc(cmp_ent_size); TEST_ASSERT_TRUE(ent);
+	cmp_ent_size = cmp_ent_create(ent, cfg->data_type, cfg->cmp_mode == CMP_MODE_RAW, cmp_data_size);
+	TEST_ASSERT_NOT_EQUAL_UINT(0, cmp_ent_size);
 
 	/* we put the coompressed data direct into the compression entity */
 	cfg->icu_output_buf = cmp_ent_get_data_buf(ent);
@@ -531,7 +490,7 @@ void compression_decompression(struct cmp_cfg *cfg)
 	/* allocate the buffers for decompression */
 	TEST_ASSERT_NOT_EQUAL_INT(0, data_size);
 	s = decompress_cmp_entiy(ent, model_of_data, NULL, NULL);
-	decompressed_data = malloc(s); TEST_ASSERT_NOT_NULL(decompressed_data);
+	decompressed_data = malloc((size_t)s); TEST_ASSERT_NOT_NULL(decompressed_data);
 
 	if (model_mode_is_used(cfg->cmp_mode)) {
 		updated_model = malloc(data_size);
@@ -579,14 +538,14 @@ void test_random_compression_decompression(void)
 	enum cmp_data_type data_type;
 	enum cmp_mode cmp_mode;
 	struct cmp_cfg cfg;
-	int cmp_buffer_size;
+	uint32_t cmp_buffer_size;
 
 	/* TODO: extend test for DATA_TYPE_F_CAM_BACKGROUND, DATA_TYPE_F_CAM_OFFSET  */
 	for (data_type = 1; data_type <= DATA_TYPE_F_CAM_IMAGETTE_ADAPTIVE; data_type++) {
 		/* printf("%s\n", data_type2string(data_type)); */
 		/* generate random data*/
-		uint32_t samples = random_between(1, 430179/CMP_BUFFER_FAKTOR);
-		uint32_t model_value = random_between(0, MAX_MODEL_VALUE);
+		uint32_t samples = cmp_rand_between(1, 430179/CMP_BUFFER_FAKTOR);
+		uint32_t model_value = cmp_rand_between(0, MAX_MODEL_VALUE);
 		void *data_to_compress1 = generate_random_test_data(samples, data_type, &MAX_USED_BITS_V1);
 		void *data_to_compress2 = generate_random_test_data(samples, data_type, &MAX_USED_BITS_V1);
 		void *updated_model = calloc(1, cmp_cal_size_of_data(samples, data_type));
@@ -606,7 +565,7 @@ void test_random_compression_decompression(void)
 				cmp_buffer_size = cmp_cfg_icu_buffers(&cfg, data_to_compress2,
 					samples, data_to_compress1, updated_model, NULL, samples*CMP_BUFFER_FAKTOR);
 
-			TEST_ASSERT_EQUAL_INT(cmp_buffer_size, cmp_cal_size_of_data(CMP_BUFFER_FAKTOR*samples, data_type));
+			TEST_ASSERT_EQUAL_UINT(cmp_buffer_size, cmp_cal_size_of_data(CMP_BUFFER_FAKTOR*samples, data_type));
 
 			compression_decompression(&cfg);
 		}
@@ -641,7 +600,7 @@ void test_random_compression_decompression2(void)
 
 	cmp_size_bits = icu_compress_data(&cfg);
 	TEST_ASSERT(cmp_size_bits > 0);
-	info.cmp_size = cmp_size_bits;
+	info.cmp_size = (uint32_t)cmp_size_bits;
 	info.cmp_mode_used = (uint8_t)cfg.cmp_mode;
 	info.model_value_used = (uint8_t)cfg.model_value;
 	info.round_used = (uint8_t)cfg.round;
@@ -653,7 +612,7 @@ void test_random_compression_decompression2(void)
 
 	s = decompress_rdcu_data(compressed_data, &info, NULL, NULL, NULL);
 	TEST_ASSERT(s > 0);
-	decompressed_data = malloc(s);
+	decompressed_data = malloc((size_t)s);
 	s = decompress_rdcu_data(compressed_data, &info, NULL, NULL, decompressed_data);
 	TEST_ASSERT(s > 0);
 

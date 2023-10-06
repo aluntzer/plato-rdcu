@@ -3,6 +3,7 @@
 /*=======Automagically Detected Files To Include=====*/
 #include "unity.h"
 #include <string.h>
+#include <dlfcn.h>
 #include <cmp_max_used_bits_list.h>
 
 /*=======External Functions This Runner Calls=====*/
@@ -76,7 +77,7 @@ static void run_test(UnityTestFunction func, const char* name, UNITY_LINE_TYPE l
 int main(void)
 {
   UnityBegin("../test/cmp_max_used_bits/test_cmp_max_used_bits_list.c");
-  run_test(test_cmp_max_used_bits_list, "test_cmp_max_used_bits_list", 34);
+  run_test(test_cmp_max_used_bits_list, "test_cmp_max_used_bits_list", 61);
 
   return UnityEnd();
 }

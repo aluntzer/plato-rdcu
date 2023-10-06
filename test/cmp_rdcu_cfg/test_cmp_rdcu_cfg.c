@@ -637,9 +637,55 @@ void test_rdcu_cfg_imagette(void)
 	TEST_ASSERT_EQUAL(ap1_golomb_par, cfg.ap1_golomb_par);
 	TEST_ASSERT_EQUAL(ap1_spillover_par, cfg.ap1_spill);
 	TEST_ASSERT_EQUAL(ap2_golomb_par, cfg.ap2_golomb_par);
-	TEST_ASSERT_EQUAL(ap2_spillover_par, cfg.ap2_spill); /* cfg = NULL test */ error = rdcu_cfg_imagette(NULL, golomb_par, spillover_par,
+	TEST_ASSERT_EQUAL(ap2_spillover_par, cfg.ap2_spill);
+
+	/* cfg = NULL test */
+	error = rdcu_cfg_imagette(NULL, golomb_par, spillover_par,
 				  ap1_golomb_par, ap1_spillover_par, ap2_golomb_par, ap2_spillover_par);
 	TEST_ASSERT_EQUAL(-1, error);
+}
+
+
+/**
+ * @test rdcu_cfg_imagette_default
+ */
+
+void test_rdcu_cfg_imagette_default(void)
+{
+	int error;
+	struct cmp_cfg cfg;
+
+	/* 1d configuration */
+	cfg = rdcu_cfg_create(DATA_TYPE_IMAGETTE, CMP_MODE_DIFF_ZERO, 0, CMP_LOSSLESS);
+	TEST_ASSERT_NOT_EQUAL(DATA_TYPE_UNKNOWN, cfg.data_type);
+
+	error = rdcu_cfg_imagette_default(&cfg);
+	TEST_ASSERT_FALSE(error);
+
+	TEST_ASSERT_EQUAL(CMP_DEF_IMA_DIFF_GOLOMB_PAR, cfg.golomb_par);
+	TEST_ASSERT_EQUAL(CMP_DEF_IMA_DIFF_SPILL_PAR, cfg.spill);
+	TEST_ASSERT_EQUAL(CMP_DEF_IMA_DIFF_AP1_GOLOMB_PAR, cfg.ap1_golomb_par);
+	TEST_ASSERT_EQUAL(CMP_DEF_IMA_DIFF_AP1_SPILL_PAR, cfg.ap1_spill);
+	TEST_ASSERT_EQUAL(CMP_DEF_IMA_DIFF_AP2_GOLOMB_PAR, cfg.ap2_golomb_par);
+	TEST_ASSERT_EQUAL(CMP_DEF_IMA_DIFF_AP2_SPILL_PAR, cfg.ap2_spill);
+
+	/* 1d configuration */
+	cfg = rdcu_cfg_create(DATA_TYPE_IMAGETTE_ADAPTIVE, CMP_MODE_MODEL_MULTI, 0, CMP_LOSSLESS);
+	TEST_ASSERT_NOT_EQUAL(DATA_TYPE_UNKNOWN, cfg.data_type);
+
+	error = rdcu_cfg_imagette_default(&cfg);
+	TEST_ASSERT_FALSE(error);
+
+	TEST_ASSERT_EQUAL(CMP_DEF_IMA_MODEL_GOLOMB_PAR, cfg.golomb_par);
+	TEST_ASSERT_EQUAL(CMP_DEF_IMA_MODEL_SPILL_PAR, cfg.spill);
+	TEST_ASSERT_EQUAL(CMP_DEF_IMA_MODEL_AP1_GOLOMB_PAR, cfg.ap1_golomb_par);
+	TEST_ASSERT_EQUAL(CMP_DEF_IMA_MODEL_AP1_SPILL_PAR, cfg.ap1_spill);
+	TEST_ASSERT_EQUAL(CMP_DEF_IMA_MODEL_AP2_GOLOMB_PAR, cfg.ap2_golomb_par);
+	TEST_ASSERT_EQUAL(CMP_DEF_IMA_MODEL_AP2_SPILL_PAR, cfg.ap2_spill);
+
+	/* error case */
+	error = rdcu_cfg_imagette_default(NULL);
+	TEST_ASSERT_TRUE(error);
 }
 
 

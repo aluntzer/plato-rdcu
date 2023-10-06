@@ -21,7 +21,6 @@
 
 
 #include <stdlib.h>
-#include <assert.h>
 
 #include "../common/list.h"
 #include "../common/cmp_max_used_bits.h"
@@ -32,7 +31,7 @@ struct list_item {
 	struct cmp_max_used_bits data;
 };
 
-LIST_HEAD(max_used_bits_list);
+static LIST_HEAD(max_used_bits_list);
 
 
 /**
@@ -77,17 +76,18 @@ const struct cmp_max_used_bits *cmp_max_used_bits_list_get(uint8_t version)
 int cmp_max_used_bits_list_add(struct cmp_max_used_bits const *item)
 {
 	struct list_item *item_ptr = NULL;
-	struct cmp_max_used_bits *p;
 
 	if (!item)
 		return -1;
 	if (item->version <= 16)
 		return -1;
 
-	p = (struct cmp_max_used_bits *)cmp_max_used_bits_list_get(item->version);
-	if (p) {
-		*p = *item; /* replace existing list entry */
-		return 1;
+	/* check for an existing entry */
+	list_for_each_entry(item_ptr, &max_used_bits_list, list) {
+		if (item_ptr->data.version == item->version) {
+			item_ptr->data = *item; /* replace existing list entry */
+			return 1;
+		}
 	}
 
 	item_ptr = (struct list_item *)malloc(sizeof(struct list_item));

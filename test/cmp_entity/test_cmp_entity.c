@@ -30,6 +30,7 @@
 
 #include <cmp_entity.h>
 #include <cmp_data_types.h>
+#include <decmp.h>
 
 
 /**
@@ -1420,8 +1421,6 @@ void test_cmp_ent_get_cmp_data_size(void)
 	cmp_data_size = cmp_ent_get_cmp_data_size(&ent);
 	TEST_ASSERT_EQUAL_UINT(0, cmp_data_size);
 }
-
-
 
 
 /**

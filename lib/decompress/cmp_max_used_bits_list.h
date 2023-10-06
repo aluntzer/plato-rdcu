@@ -20,8 +20,8 @@
  */
 
 
-#ifndef _CMP_MAX_USED_LIST_H_
-#define _CMP_MAX_USED_LIST_H_
+#ifndef CMP_MAX_USED_LIST_H
+#define CMP_MAX_USED_LIST_H
 
 #include <stdint.h>
 
@@ -36,4 +36,4 @@ int cmp_max_used_bits_list_delet(uint8_t version);
 
 void cmp_max_used_bits_list_empty(void);
 
-#endif /* _CMP_MAX_USED_LIST_H_ */
+#endif /* CMP_MAX_USED_LIST_H */

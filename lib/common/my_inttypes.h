@@ -18,9 +18,8 @@
  * @warning Does not fully implement the standard.
  */
 
-
-#ifndef _MY_INTTYPES_H
-#define _MY_INTTYPES_H
+#ifndef MY_INTTYPES_H
+#define MY_INTTYPES_H
 
 #ifndef __sparc__
 #  include <inttypes.h>
@@ -52,4 +51,4 @@
 
 #endif /* __sparc__ */
 
-#endif /* _MY_INTTYPES_H */
+#endif /* MY_INTTYPES_H */

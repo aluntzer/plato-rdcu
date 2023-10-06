@@ -2,11 +2,13 @@
 
 /*=======Automagically Detected Files To Include=====*/
 #include "unity.h"
+#include "../test_common/test_common.h"
 #include <string.h>
 #include <stdlib.h>
 #include <cmp_icu.h>
 #include <decmp.h>
 #include <cmp_data_types.h>
+#include <my_inttypes.h>
 
 /*=======External Functions This Runner Calls=====*/
 extern void setUp(void);
@@ -76,9 +78,9 @@ static void run_test(UnityTestFunction func, const char* name, UNITY_LINE_TYPE l
 /*=======MAIN=====*/
 int main(void)
 {
-  UnityBegin("../test/cmp_icu/test_cmp_decmp.c");
-  run_test(test_random_compression_decompression, "test_random_compression_decompression", 579);
-  run_test(test_random_compression_decompression2, "test_random_compression_decompression2", 624);
+  UnityBegin("../test/cmp_decmp/test_cmp_decmp.c");
+  run_test(test_random_compression_decompression, "test_random_compression_decompression", 556);
+  run_test(test_random_compression_decompression2, "test_random_compression_decompression2", 601);
 
   return UnityEnd();
 }

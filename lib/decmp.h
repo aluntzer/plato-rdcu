@@ -16,8 +16,8 @@
  * @brief software decompression library
  */
 
-#ifndef DECMP_H_
-#define DECMP_H_
+#ifndef DECMP_H
+#define DECMP_H
 
 #include <cmp_entity.h>
 #include <cmp_support.h>
@@ -29,4 +29,4 @@ int decompress_rdcu_data(uint32_t *compressed_data, const struct cmp_info *info,
 			 uint16_t *model_of_data, uint16_t *up_model_buf,
 			 uint16_t *decompressed_data);
 
-#endif /* DECMP_H_ */
+#endif /* DECMP_H */

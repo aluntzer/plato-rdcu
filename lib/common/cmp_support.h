@@ -37,9 +37,6 @@
 #define CMP_LOSSLESS	0
 #define CMP_PAR_UNUNSED	0
 
-/* the maximal model values used in the update equation for the new model */
-#define MAX_MODEL_VALUE 16U
-
 /* valid compression parameter ranges for RDCU/ICU imagette compression according to PLATO-UVIE-PL-UM-0001 */
 #define MAX_RDCU_CMP_MODE	4U
 #define MIN_IMA_GOLOMB_PAR	1U

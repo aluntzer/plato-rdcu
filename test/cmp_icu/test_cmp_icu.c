@@ -92,6 +92,7 @@ void test_cmp_cfg_icu_create(void)
 	TEST_ASSERT_EQUAL_INT(CMP_MODE_RAW, cfg.cmp_mode);
 	TEST_ASSERT_EQUAL_INT(0, cfg.model_value);
 	TEST_ASSERT_EQUAL_INT(0, cfg.round);
+	TEST_ASSERT_EQUAL(&MAX_USED_BITS_SAFE, cfg.max_used_bits);
 	memset(&cfg, 0, sizeof(cfg));
 
 	/* this should work */
@@ -101,6 +102,7 @@ void test_cmp_cfg_icu_create(void)
 	TEST_ASSERT_EQUAL_INT(CMP_MODE_RAW, cfg.cmp_mode);
 	TEST_ASSERT_EQUAL_INT(0, cfg.model_value);
 	TEST_ASSERT_EQUAL_INT(0, cfg.round);
+	TEST_ASSERT_EQUAL(&MAX_USED_BITS_SAFE, cfg.max_used_bits);
 	memset(&cfg, 0, sizeof(cfg));
 
 	/* wrong compression mode tests */
@@ -121,6 +123,7 @@ void test_cmp_cfg_icu_create(void)
 	TEST_ASSERT_EQUAL_INT(CMP_MODE_STUFF, cfg.cmp_mode);
 	TEST_ASSERT_EQUAL_INT(0, cfg.model_value);
 	TEST_ASSERT_EQUAL_INT(0, cfg.round);
+	TEST_ASSERT_EQUAL(&MAX_USED_BITS_SAFE, cfg.max_used_bits);
 	memset(&cfg, 0, sizeof(cfg));
 
 	/* wrong model_value tests */
@@ -140,6 +143,7 @@ void test_cmp_cfg_icu_create(void)
 	TEST_ASSERT_EQUAL_INT(CMP_MODE_MODEL_MULTI, cfg.cmp_mode);
 	TEST_ASSERT_EQUAL_INT(16, cfg.model_value);
 	TEST_ASSERT_EQUAL_INT(0, cfg.round);
+	TEST_ASSERT_EQUAL(&MAX_USED_BITS_SAFE, cfg.max_used_bits);
 
 	/* no checks for model mode -> no model cmp_mode */
 	cmp_mode = CMP_MODE_STUFF;
@@ -149,6 +153,7 @@ void test_cmp_cfg_icu_create(void)
 	TEST_ASSERT_EQUAL_INT(CMP_MODE_STUFF, cfg.cmp_mode);
 	TEST_ASSERT_EQUAL_INT(MAX_MODEL_VALUE + 1, cfg.model_value);
 	TEST_ASSERT_EQUAL_INT(0, cfg.round);
+	TEST_ASSERT_EQUAL(&MAX_USED_BITS_SAFE, cfg.max_used_bits);
 	model_value = MAX_MODEL_VALUE;
 
 	/* wrong lossy_par tests */
@@ -167,6 +172,7 @@ void test_cmp_cfg_icu_create(void)
 	TEST_ASSERT_EQUAL_INT(CMP_MODE_STUFF, cfg.cmp_mode);
 	TEST_ASSERT_EQUAL_INT(16, cfg.model_value);
 	TEST_ASSERT_EQUAL_INT(3, cfg.round);
+	TEST_ASSERT_EQUAL(&MAX_USED_BITS_SAFE, cfg.max_used_bits);
 
 	/* random test */
 	data_type = cmp_rand_between(DATA_TYPE_IMAGETTE, biggest_data_type);
@@ -178,6 +184,7 @@ void test_cmp_cfg_icu_create(void)
 	TEST_ASSERT_EQUAL_INT(cmp_mode, cfg.cmp_mode);
 	TEST_ASSERT_EQUAL_INT(model_value, cfg.model_value);
 	TEST_ASSERT_EQUAL_INT(lossy_par, cfg.round);
+	TEST_ASSERT_EQUAL(&MAX_USED_BITS_SAFE, cfg.max_used_bits);
 }
 
 
@@ -440,6 +447,34 @@ void test_cmp_cfg_icu_buffers(void)
 				model_of_data, updated_model, compressed_data,
 				compressed_data_len_samples);
 	TEST_ASSERT_EQUAL_size_t(0, s);
+}
+
+
+/**
+ * @test cmp_cfg_icu_max_used_bits
+ */
+
+void test_cmp_cfg_icu_max_used_bits(void)
+{
+	int error;
+	struct cmp_cfg cfg = cmp_cfg_icu_create(DATA_TYPE_IMAGETTE, CMP_MODE_MODEL_ZERO, 0, CMP_LOSSLESS);
+	struct cmp_max_used_bits max_used_bits = MAX_USED_BITS_SAFE;
+
+	error = cmp_cfg_icu_max_used_bits(&cfg, &max_used_bits);
+	TEST_ASSERT_FALSE(error);
+	TEST_ASSERT_EQUAL(&max_used_bits, cfg.max_used_bits);
+
+	/* error cases */
+	max_used_bits.s_fx = 33;  /* this value is to big */
+	error = cmp_cfg_icu_max_used_bits(&cfg, &max_used_bits);
+	TEST_ASSERT_TRUE(error);
+	max_used_bits.s_fx = 1;
+
+	error = cmp_cfg_icu_max_used_bits(NULL, &max_used_bits);
+	TEST_ASSERT_TRUE(error);
+
+	error = cmp_cfg_icu_max_used_bits(&cfg, NULL);
+	TEST_ASSERT_TRUE(error);
 }
 
 
@@ -1029,6 +1064,7 @@ void test_cmp_cfg_fx_cob(void)
 	TEST_ASSERT_EQUAL_INT(cmp_par_ecob, cfg.cmp_par_ecob);
 	TEST_ASSERT_EQUAL_INT(spillover_ecob, cfg.spill_ecob);
 }
+
 
 /**
  * @test cmp_cfg_aux
@@ -2212,194 +2248,6 @@ void test_encode_value(void)
 
 
 /**
- * @test configure_encoder_setup
- */
-
-void test_configure_encoder_setup(void)
-{
-	struct encoder_setupt setup;
-	uint32_t cmp_par;
-	uint32_t spillover;
-	uint32_t lossy_par;
-	uint32_t max_data_bits;
-	struct cmp_cfg cfg;
-	int error;
-
-	/* test Golomb encoder zero escape mechanism */
-	cmp_par = 42;
-	spillover = 23;
-	lossy_par = 0;
-	max_data_bits = 15;
-	cfg.data_type = DATA_TYPE_IMAGETTE;
-	cfg.cmp_mode = CMP_MODE_MODEL_ZERO;
-	cfg.icu_output_buf = (void *)123;
-	cfg.buffer_length = 2;
-	error = configure_encoder_setup(&setup, cmp_par, spillover, lossy_par,
-					max_data_bits, &cfg);
-	TEST_ASSERT_FALSE(error);
-	TEST_ASSERT_EQUAL(golomb_encoder, setup.generate_cw_f); /* pointer to the code word encoder */
-	TEST_ASSERT_EQUAL(encode_value_zero, setup.encode_method_f); /* pointer to the encoding function */
-	TEST_ASSERT_EQUAL(123, setup.bitstream_adr); /* start address of the compressed data bitstream */
-	TEST_ASSERT_EQUAL_INT(32, setup.max_stream_len); /* maximum length of the bitstream/icu_output_buf in bits */
-	TEST_ASSERT_EQUAL_INT(42, setup.encoder_par1); /* encoding parameter 1 */
-	TEST_ASSERT_EQUAL_INT(5, setup.encoder_par2); /* encoding parameter 2 */
-	TEST_ASSERT_EQUAL_INT(23, setup.spillover_par); /* outlier parameter */
-	TEST_ASSERT_EQUAL_INT(0, setup.lossy_par); /* lossy compression parameter */
-	TEST_ASSERT_EQUAL_INT(15, setup.max_data_bits); /* how many bits are needed to represent the highest possible value */
-	memset(&setup, 0, sizeof(setup));
-
-	/* test Rice encoder multi escape mechanism */
-	cmp_par = 32;
-	spillover = 23;
-	lossy_par = 0;
-	max_data_bits = 32;
-	cfg.data_type = DATA_TYPE_IMAGETTE;
-	cfg.cmp_mode = CMP_MODE_DIFF_MULTI;
-	cfg.icu_output_buf = (void *)123;
-	cfg.buffer_length = 2;
-	error = configure_encoder_setup(&setup, cmp_par, spillover, lossy_par,
-					max_data_bits, &cfg);
-	TEST_ASSERT_FALSE(error);
-	TEST_ASSERT_EQUAL(rice_encoder, setup.generate_cw_f); /* pointer to the code word encoder */
-	TEST_ASSERT_EQUAL(encode_value_multi, setup.encode_method_f); /* pointer to the encoding function */
-	TEST_ASSERT_EQUAL(123, setup.bitstream_adr); /* start address of the compressed data bitstream */
-	TEST_ASSERT_EQUAL_INT(32, setup.max_stream_len); /* maximum length of the bitstream/icu_output_buf in bits */
-	TEST_ASSERT_EQUAL_INT(32, setup.encoder_par1); /* encoding parameter 1 */
-	TEST_ASSERT_EQUAL_INT(5, setup.encoder_par2); /* encoding parameter 2 */
-	TEST_ASSERT_EQUAL_INT(23, setup.spillover_par); /* outlier parameter */
-	TEST_ASSERT_EQUAL_INT(0, setup.lossy_par); /* lossy compression parameter */
-	TEST_ASSERT_EQUAL_INT(32, setup.max_data_bits); /* how many bits are needed to represent the highest possible value */
-	memset(&setup, 0, sizeof(setup));
-
-	/* test CMP_MODE_STUFF */
-	cmp_par = 32;
-	spillover = ~0U;
-	lossy_par = 1;
-	max_data_bits = 32;
-	cfg.data_type = DATA_TYPE_IMAGETTE;
-	cfg.cmp_mode = CMP_MODE_STUFF;
-	cfg.icu_output_buf = (void *)123;
-	cfg.buffer_length = 2;
-	error = configure_encoder_setup(&setup, cmp_par, spillover, lossy_par,
-					max_data_bits, &cfg);
-	TEST_ASSERT_FALSE(error);
-	TEST_ASSERT_EQUAL(NULL, setup.generate_cw_f); /* pointer to the code word encoder */
-	TEST_ASSERT_EQUAL(encode_value_none, setup.encode_method_f); /* pointer to the encoding function */
-	TEST_ASSERT_EQUAL(123, setup.bitstream_adr); /* start address of the compressed data bitstream */
-	TEST_ASSERT_EQUAL_INT(32, setup.max_stream_len); /* maximum length of the bitstream/icu_output_buf in bits */
-	TEST_ASSERT_EQUAL_INT(32, setup.encoder_par1); /* encoding parameter 1 */
-	TEST_ASSERT_EQUAL_INT(0, setup.encoder_par2); /* encoding parameter 2 */
-	TEST_ASSERT_EQUAL_INT(0, setup.spillover_par); /* outlier parameter */
-	TEST_ASSERT_EQUAL_INT(1, setup.lossy_par); /* lossy compression parameter */
-	TEST_ASSERT_EQUAL_INT(32, setup.max_data_bits); /* how many bits are needed to represent the highest possible value */
-	memset(&setup, 0, sizeof(setup));
-
-	/* test max_used_bits = 33 */
-	cmp_par = 32;
-	spillover = 23;
-	lossy_par = 0;
-	max_data_bits = 33;
-	cfg.data_type = DATA_TYPE_IMAGETTE;
-	cfg.cmp_mode = CMP_MODE_DIFF_MULTI;
-	cfg.icu_output_buf = (void *)123;
-	cfg.buffer_length = 2;
-	error = configure_encoder_setup(&setup, cmp_par, spillover, lossy_par,
-					max_data_bits, &cfg);
-	TEST_ASSERT_TRUE(error);
-	memset(&setup, 0, sizeof(setup));
-
-	/* cmp_par = 0 test */
-	cmp_par = 0;
-	spillover = 23;
-	lossy_par = 0;
-	max_data_bits = 32;
-	cfg.data_type = DATA_TYPE_IMAGETTE;
-	cfg.cmp_mode = CMP_MODE_DIFF_MULTI;
-	cfg.icu_output_buf = (void *)123;
-	cfg.buffer_length = 2;
-	error = configure_encoder_setup(&setup, cmp_par, spillover, lossy_par,
-					max_data_bits, &cfg);
-	TEST_ASSERT_TRUE(error);
-	memset(&setup, 0, sizeof(setup));
-
-	/* cmp_par = 0 test STUFF MODE this should work*/
-	cmp_par = 0;
-	spillover = 23;
-	lossy_par = 0;
-	max_data_bits = 32;
-	cfg.data_type = DATA_TYPE_IMAGETTE;
-	cfg.cmp_mode = CMP_MODE_STUFF;
-	cfg.icu_output_buf = (void *)123;
-	cfg.buffer_length = 2;
-	error = configure_encoder_setup(&setup, cmp_par, spillover, lossy_par,
-					max_data_bits, &cfg);
-	TEST_ASSERT_FALSE(error);
-	TEST_ASSERT_EQUAL(NULL, setup.generate_cw_f); /* pointer to the code word encoder */
-	TEST_ASSERT_EQUAL(encode_value_none, setup.encode_method_f); /* pointer to the encoding function */
-	TEST_ASSERT_EQUAL(123, setup.bitstream_adr); /* start address of the compressed data bitstream */
-	TEST_ASSERT_EQUAL_INT(32, setup.max_stream_len); /* maximum length of the bitstream/icu_output_buf in bits */
-	TEST_ASSERT_EQUAL_INT(0, setup.encoder_par1); /* encoding parameter 1 */
-	TEST_ASSERT_EQUAL_INT(0, setup.encoder_par2); /* encoding parameter 2 */
-	TEST_ASSERT_EQUAL_INT(0, setup.spillover_par); /* outlier parameter */
-	TEST_ASSERT_EQUAL_INT(0, setup.lossy_par); /* lossy compression parameter */
-	TEST_ASSERT_EQUAL_INT(0, setup.max_data_bits); /* how many bits are needed to represent the highest possible value */
-	memset(&setup, 0, sizeof(setup));
-
-	/* cmp_mode = STUFF_MODE +1  */
-	cmp_par = 32;
-	spillover = 23;
-	lossy_par = 0;
-	max_data_bits = 1;
-	cfg.data_type = DATA_TYPE_IMAGETTE;
-	cfg.cmp_mode = CMP_MODE_STUFF+1;
-	cfg.icu_output_buf = (void *)123;
-	cfg.buffer_length = 2;
-	error = configure_encoder_setup(&setup, cmp_par, spillover, lossy_par,
-					max_data_bits, &cfg);
-	TEST_ASSERT_TRUE(error);
-	memset(&setup, 0, sizeof(setup));
-
-	/* setup = NULL test */
-	cmp_par = 42;
-	spillover = 23;
-	lossy_par = 0;
-	max_data_bits = 15;
-	cfg.data_type = DATA_TYPE_IMAGETTE;
-	cfg.cmp_mode = CMP_MODE_MODEL_ZERO;
-	cfg.icu_output_buf = (void *)123;
-	cfg.buffer_length = 2;
-	error = configure_encoder_setup(NULL, cmp_par, spillover, lossy_par,
-					max_data_bits, &cfg);
-	TEST_ASSERT_TRUE(error);
-	memset(&setup, 0, sizeof(setup));
-
-	/* error case: cmp_mode = CMP_MODE_RAW test */
-	cmp_par = 42;
-	spillover = 23;
-	lossy_par = 0;
-	max_data_bits = 15;
-	cfg.data_type = DATA_TYPE_IMAGETTE;
-	cfg.cmp_mode = CMP_MODE_RAW;
-	cfg.icu_output_buf = (void *)123;
-	cfg.buffer_length = 2;
-	error = configure_encoder_setup(&setup, cmp_par, spillover, lossy_par,
-					max_data_bits, &cfg);
-	TEST_ASSERT_TRUE(error);
-	memset(&setup, 0, sizeof(setup));
-
-	/* cfg = NULL test */
-	cmp_par = 42;
-	spillover = 23;
-	lossy_par = 0;
-	max_data_bits = 15;
-	error = configure_encoder_setup(&setup, cmp_par, spillover, lossy_par,
-					max_data_bits, NULL);
-	TEST_ASSERT_TRUE(error);
-	memset(&setup, 0, sizeof(setup));
-}
-
-
-/**
  * @test compress_imagette
  */
 
@@ -2540,7 +2388,8 @@ void test_compress_imagette_stuff(void)
 void test_compress_imagette_raw(void)
 {
 	uint16_t data[] = {0x0, 0x1, 0x23, 0x42, (uint16_t)INT16_MIN, INT16_MAX, UINT16_MAX};
-	uint16_t output_buf[7] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
+	uint32_t *output_buf = malloc(7*sizeof(uint16_t));
+	uint16_t cmp_data[7];
 	struct cmp_cfg cfg = {0};
 	int cmp_size;
 
@@ -2549,18 +2398,19 @@ void test_compress_imagette_raw(void)
 	cfg.model_buf = NULL;
 	cfg.input_buf = data;
 	cfg.samples = 7;
-	cfg.icu_output_buf = (uint32_t *)output_buf;
+	cfg.icu_output_buf = output_buf;
 	cfg.buffer_length = 7;
 
 	cmp_size = icu_compress_data(&cfg);
+	memcpy(cmp_data, output_buf, sizeof(cmp_data));
 	TEST_ASSERT_EQUAL_INT(7*16, cmp_size);
-	TEST_ASSERT_EQUAL_HEX16(0x0, be16_to_cpu(output_buf[0]));
-	TEST_ASSERT_EQUAL_HEX16(0x1, be16_to_cpu(output_buf[1]));
-	TEST_ASSERT_EQUAL_HEX16(0x23, be16_to_cpu(output_buf[2]));
-	TEST_ASSERT_EQUAL_HEX16(0x42, be16_to_cpu(output_buf[3]));
-	TEST_ASSERT_EQUAL_HEX16(INT16_MIN, be16_to_cpu(output_buf[4]));
-	TEST_ASSERT_EQUAL_HEX16(INT16_MAX, be16_to_cpu(output_buf[5]));
-	TEST_ASSERT_EQUAL_HEX16(UINT16_MAX, be16_to_cpu(output_buf[6]));
+	TEST_ASSERT_EQUAL_HEX16(0x0, be16_to_cpu(cmp_data[0]));
+	TEST_ASSERT_EQUAL_HEX16(0x1, be16_to_cpu(cmp_data[1]));
+	TEST_ASSERT_EQUAL_HEX16(0x23, be16_to_cpu(cmp_data[2]));
+	TEST_ASSERT_EQUAL_HEX16(0x42, be16_to_cpu(cmp_data[3]));
+	TEST_ASSERT_EQUAL_HEX16(INT16_MIN, be16_to_cpu(cmp_data[4]));
+	TEST_ASSERT_EQUAL_HEX16(INT16_MAX, be16_to_cpu(cmp_data[5]));
+	TEST_ASSERT_EQUAL_HEX16(UINT16_MAX, be16_to_cpu(cmp_data[6]));
 
 
 	/* compressed data buf = NULL test */
@@ -2581,7 +2431,7 @@ void test_compress_imagette_raw(void)
 	cfg.data_type = DATA_TYPE_IMAGETTE;
 	cfg.input_buf = NULL; /* no data to compress */
 	cfg.samples = 7;
-	cfg.icu_output_buf = (uint32_t *)output_buf;
+	cfg.icu_output_buf = output_buf;
 	cfg.buffer_length = 7;
 	cfg.max_used_bits = &MAX_USED_BITS_SAFE;
 
@@ -2594,12 +2444,14 @@ void test_compress_imagette_raw(void)
 	cfg.data_type = DATA_TYPE_IMAGETTE;
 	cfg.input_buf = data;
 	cfg.samples = 7;
-	cfg.icu_output_buf = (uint32_t *)output_buf;
+	cfg.icu_output_buf = output_buf;
 	cfg.buffer_length = 6; /* the buffer is to small */
 	cfg.max_used_bits = &MAX_USED_BITS_SAFE;
 
 	cmp_size = icu_compress_data(&cfg);
 	TEST_ASSERT_EQUAL_INT(CMP_ERROR_SMALL_BUF, cmp_size);
+
+	free(output_buf);
 }
 
 
@@ -2612,7 +2464,7 @@ void test_compress_imagette_error_cases(void)
 	uint16_t data[] = {0xFFFF, 1, 0, 42, 0x8000, 0x7FFF, 0xFFFF};
 	uint32_t output_buf[2] = {0xFFFF, 0xFFFF};
 	struct cmp_cfg cfg = {0};
-	int cmp_size, error;
+	int cmp_size;
 	struct cmp_max_used_bits my_max_used_bits;
 
 	cfg.data_type = DATA_TYPE_IMAGETTE;
@@ -2674,11 +2526,11 @@ void test_compress_imagette_error_cases(void)
 	cmp_size = icu_compress_data(&cfg);
 	TEST_ASSERT_EQUAL_INT(-1, cmp_size);
 
-	/* error in setup */
+	/* error my_max_used_bits.nc_imagette value is to high */
 	my_max_used_bits = MAX_USED_BITS_SAFE;
 	my_max_used_bits.nc_imagette = 33;
-	error = cmp_cfg_icu_max_used_bits(&cfg, &my_max_used_bits);
-	TEST_ASSERT_TRUE(error);
+
+	cfg.max_used_bits = &my_max_used_bits;
 	cfg.data_type = DATA_TYPE_IMAGETTE;
 	cfg.cmp_mode = CMP_MODE_DIFF_ZERO;
 	cfg.input_buf = data;
@@ -2687,11 +2539,71 @@ void test_compress_imagette_error_cases(void)
 	cfg.spill = 8;
 	cfg.icu_output_buf = (uint32_t *)output_buf;
 	cfg.buffer_length = 4;
-	cfg.max_used_bits = &my_max_used_bits;
 
 	cmp_size = icu_compress_data(&cfg);
 	TEST_ASSERT_EQUAL_INT(-1, cmp_size);
 
+	/* error my_max_used_bits.saturated_imagette value is to high */
+	my_max_used_bits = MAX_USED_BITS_SAFE;
+	my_max_used_bits.saturated_imagette = 17;
+
+	cfg.max_used_bits = &my_max_used_bits;
+	cfg.data_type = DATA_TYPE_SAT_IMAGETTE_ADAPTIVE;
+	cfg.cmp_mode = CMP_MODE_DIFF_ZERO;
+	cfg.input_buf = data;
+	cfg.samples = 2;
+	cfg.golomb_par = 1;
+	cfg.spill = 8;
+	cfg.icu_output_buf = (uint32_t *)output_buf;
+	cfg.buffer_length = 4;
+
+	cmp_size = icu_compress_data(&cfg);
+	TEST_ASSERT_EQUAL_INT(-1, cmp_size);
+
+	/* error my_max_used_bits.fc_imagette value is to high */
+	my_max_used_bits = MAX_USED_BITS_SAFE;
+	my_max_used_bits.fc_imagette = 17;
+
+	cfg.max_used_bits = &my_max_used_bits;
+	cfg.data_type = DATA_TYPE_F_CAM_IMAGETTE;
+	cfg.cmp_mode = CMP_MODE_DIFF_ZERO;
+	cfg.input_buf = data;
+	cfg.samples = 2;
+	cfg.golomb_par = 1;
+	cfg.spill = 8;
+	cfg.icu_output_buf = (uint32_t *)output_buf;
+	cfg.buffer_length = 4;
+
+	cmp_size = icu_compress_data(&cfg);
+	TEST_ASSERT_EQUAL_INT(-1, cmp_size);
+
+	/* test unknown cmp_mode */
+	cfg.max_used_bits = &MAX_USED_BITS_SAFE;
+	cfg.data_type = DATA_TYPE_F_CAM_IMAGETTE;
+	cfg.cmp_mode = CMP_MODE_STUFF+1;
+	cfg.input_buf = data;
+	cfg.samples = 2;
+	cfg.golomb_par = 1;
+	cfg.spill = 8;
+	cfg.icu_output_buf = (uint32_t *)output_buf;
+	cfg.buffer_length = 4;
+
+	cmp_size = icu_compress_data(&cfg);
+	TEST_ASSERT_EQUAL_INT(-1, cmp_size);
+
+	/* test golomb_par = 0 */
+	cfg.max_used_bits = &MAX_USED_BITS_SAFE;
+	cfg.data_type = DATA_TYPE_F_CAM_IMAGETTE;
+	cfg.cmp_mode = CMP_MODE_DIFF_ZERO;
+	cfg.input_buf = data;
+	cfg.samples = 2;
+	cfg.golomb_par = 0;
+	cfg.spill = 8;
+	cfg.icu_output_buf = (uint32_t *)output_buf;
+	cfg.buffer_length = 4;
+
+	cmp_size = icu_compress_data(&cfg);
+	TEST_ASSERT_EQUAL_INT(-1, cmp_size);
 }
 
 
@@ -3110,20 +3022,20 @@ void test_compress_s_fx_efx_error_cases(void)
 	cmp_bits = icu_compress_data(&cfg);
 	TEST_ASSERT_EQUAL_INT(CMP_ERROR_HIGH_VALUE, cmp_bits);
 
-	/* error case exp_flag setup */
+	/* error case exp_flag */
 	my_max_used_bits.s_exp_flags = 33;
 	cmp_cfg_icu_max_used_bits(&cfg, &my_max_used_bits);
 	cmp_bits = icu_compress_data(&cfg);
 	TEST_ASSERT_EQUAL_INT(-1, cmp_bits);
 
-	/* error case fx setup */
+	/* error case fx */
 	my_max_used_bits.s_exp_flags = 2;
 	my_max_used_bits.s_fx = 33;
 	cmp_cfg_icu_max_used_bits(&cfg, &my_max_used_bits);
 	cmp_bits = icu_compress_data(&cfg);
 	TEST_ASSERT_EQUAL_INT(-1, cmp_bits);
 
-	/* error case efx setup */
+	/* error case efx */
 	my_max_used_bits.s_fx = 21;
 	my_max_used_bits.s_efx = 33;
 	cmp_cfg_icu_max_used_bits(&cfg, &my_max_used_bits);
@@ -3194,20 +3106,20 @@ void test_compress_s_fx_ncob_error_cases(void)
 	TEST_ASSERT_EQUAL_INT(CMP_ERROR_HIGH_VALUE, cmp_bits);
 	data_p[0].ncob_y = 0x7FFFFFFF; /* value to high */
 
-	/* error case exp_flag setup */
+	/* error case exp_flag */
 	my_max_used_bits.s_exp_flags = 33;
 	cmp_cfg_icu_max_used_bits(&cfg, &my_max_used_bits);
 	cmp_bits = icu_compress_data(&cfg);
 	TEST_ASSERT_EQUAL_INT(-1, cmp_bits);
 
-	/* error case fx setup */
+	/* error case fx */
 	my_max_used_bits.s_exp_flags = 2;
 	my_max_used_bits.s_fx = 33;
 	cmp_cfg_icu_max_used_bits(&cfg, &my_max_used_bits);
 	cmp_bits = icu_compress_data(&cfg);
 	TEST_ASSERT_EQUAL_INT(-1, cmp_bits);
 
-	/* error case efx setup */
+	/* error case efx */
 	my_max_used_bits.s_fx = 21;
 	my_max_used_bits.s_ncob = 33;
 	cmp_cfg_icu_max_used_bits(&cfg, &my_max_used_bits);
@@ -3299,20 +3211,20 @@ void test_compress_s_fx_efx_ncob_ecob_error_cases(void)
 	TEST_ASSERT_EQUAL_INT(CMP_ERROR_HIGH_VALUE, cmp_bits);
 	data_p[1].ecob_y = 0x7F;
 
-	/* error case exp_flag setup */
+	/* error case exp_flag */
 	my_max_used_bits.s_exp_flags = 33;
 	cmp_cfg_icu_max_used_bits(&cfg, &my_max_used_bits);
 	cmp_bits = icu_compress_data(&cfg);
 	TEST_ASSERT_EQUAL_INT(-1, cmp_bits);
 
-	/* error case fx setup */
+	/* error case fx */
 	my_max_used_bits.s_exp_flags = 32;
 	my_max_used_bits.s_fx = 33;
 	cmp_cfg_icu_max_used_bits(&cfg, &my_max_used_bits);
 	cmp_bits = icu_compress_data(&cfg);
 	TEST_ASSERT_EQUAL_INT(-1, cmp_bits);
 
-	/* error case efx setup */
+	/* error case efx */
 	my_max_used_bits.s_fx = 32;
 	my_max_used_bits.s_ncob = 33;
 	cmp_cfg_icu_max_used_bits(&cfg, &my_max_used_bits);
@@ -3417,6 +3329,13 @@ void test_compress_f_fx_efx_error_cases(void)
 	data_p[0].efx = 42;
 	cmp_bits = icu_compress_data(&cfg);
 	TEST_ASSERT_EQUAL_INT(CMP_ERROR_SMALL_BUF, cmp_bits);
+
+	/* fx value is to big for the max used bits values */
+	data_p[0].fx = 0x800000;
+	cmp_cfg_icu_max_used_bits(&cfg, &my_max_used_bits);
+	cmp_bits = icu_compress_data(&cfg);
+	TEST_ASSERT_EQUAL_INT(CMP_ERROR_HIGH_VALUE, cmp_bits);
+	data_p[0].fx = 0x7FFFFF;
 
 	/* efx value is to big for the max used bits values */
 	data_p[0].efx = 0x80000000;
@@ -4396,9 +4315,12 @@ void test_zero_escape_mech_is_used(void)
 
 void test_support_function_call_NULL(void)
 {
+	struct cmp_cfg cfg = cmp_cfg_icu_create(DATA_TYPE_IMAGETTE, CMP_MODE_DIFF_ZERO, 16, CMP_LOSSLESS);
+
 	TEST_ASSERT_TRUE(cmp_cfg_gen_par_is_invalid(NULL, ICU_CHECK));
+	TEST_ASSERT_TRUE(cmp_cfg_gen_par_is_invalid(&cfg, RDCU_CHECK+1));
 	TEST_ASSERT_TRUE(cmp_cfg_icu_buffers_is_invalid(NULL));
-	TEST_ASSERT_TRUE(cmp_cfg_imagette_is_invalid(NULL, ICU_CHECK));
+	TEST_ASSERT_TRUE(cmp_cfg_imagette_is_invalid(NULL, RDCU_CHECK));
 	TEST_ASSERT_TRUE(cmp_cfg_fx_cob_is_invalid(NULL));
 	TEST_ASSERT_TRUE(cmp_cfg_aux_is_invalid(NULL));
 	TEST_ASSERT_TRUE(cmp_cfg_icu_is_invalid(NULL));

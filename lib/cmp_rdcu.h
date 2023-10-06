@@ -17,9 +17,8 @@
  * @see Data Compression User Manual PLATO-UVIE-PL-UM-0001
  */
 
-
-#ifndef _CMP_RDCU_H_
-#define _CMP_RDCU_H_
+#ifndef CMP_RDCU_H
+#define CMP_RDCU_H
 
 #include "common/cmp_support.h"
 #include "rdcu_compress/cmp_rdcu_cfg.h"
@@ -53,4 +52,4 @@ int rdcu_interrupt_compression(void);
 void rdcu_enable_interrput_signal(void);
 void rdcu_disable_interrput_signal(void);
 
-#endif /* _CMP_RDCU_H_ */
+#endif /* CMP_RDCU_H */
