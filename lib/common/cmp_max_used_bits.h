@@ -22,6 +22,10 @@
 #include <stdint.h>
 
 
+/* Until this number, the maximum used bits registry versions cannot be used by the user. */
+#define CMP_MAX_USED_BITS_RESERVED_VERSIONS 32
+
+
 /* predefined maximum used bits registry constants */
 extern const struct cmp_max_used_bits MAX_USED_BITS_SAFE;
 extern const struct cmp_max_used_bits MAX_USED_BITS_V1;

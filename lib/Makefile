@@ -1,10 +1,13 @@
+# This is based on the Makefiles from the zstd see:
+# https://github.com/facebook/zstd/blob/dev/lib/Makefile
+# by @author Yann Collet et al.
+
 DEBUGLEVEL ?= 3 #default build is with debug info
 CPPFLAGS += -DDEBUGLEVEL=$(DEBUGLEVEL)
-DEBUGFLAGS= -Wall -Wextra -Wcast-qual -Wshadow \
-            -Wstrict-aliasing=1 -Wdeclaration-after-statement \
-            -Wstrict-prototypes -Wpointer-arith \
-            -Wvla -Wformat=2 -Winit-self -Wfloat-equal -Wwrite-strings \
-            # -Wcast-align -Wredundant-decls -Wmissing-prototypes -Wundef -Wswitch-enum
+DEBUGFLAGS= -Wall -Wextra -Wcast-qual -Wshadow -Wdeclaration-after-statement \
+            -Wstrict-prototypes -Wpointer-arith -Wvla -Wformat=2 -Winit-self \
+            -Wfloat-equal -Wwrite-strings \
+            # -Wstrict-aliasing=1 -Wcast-align -Wredundant-decls -Wmissing-prototypes -Wundef -Wswitch-enum
 CFLAGS   += $(DEBUGFLAGS) $(MOREFLAGS)
 LDFLAGS  += $(MOREFLAGS)
 FLAGS     = $(CPPFLAGS) $(CFLAGS) $(LDFLAGS)
