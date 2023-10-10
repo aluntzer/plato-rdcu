@@ -663,14 +663,14 @@ void rdcu_clear_rdcu_board_reset(void)
  * @note value is scaling factor minus 1
  */
 
-int rdcu_set_spw_link_run_clkdiv(uint8_t div)
+int rdcu_set_spw_link_run_clkdiv(uint8_t divisor)
 {
-	if (div > 49)
+	if (divisor > 49)
 		return -1;
 
 	/* clear and set */
 	rdcu->spw_link_ctrl &= ~(0x3FUL << 8);
-	rdcu->spw_link_ctrl |= ((uint32_t) div << 8);
+	rdcu->spw_link_ctrl |= ((uint32_t) divisor << 8);
 
 	return 0;
 }

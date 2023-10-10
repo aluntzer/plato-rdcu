@@ -192,7 +192,7 @@ void rdcu_clear_rdcu_spw_error_cntr_reset(void);
 void rdcu_set_rdcu_board_reset(void);
 void rdcu_clear_rdcu_board_reset(void);
 
-int rdcu_set_spw_link_run_clkdiv(uint8_t div);
+int rdcu_set_spw_link_run_clkdiv(uint8_t divisor);
 
 int rdcu_set_lvds_link_enabled(uint32_t link);
 int rdcu_set_lvds_link_disabled(uint32_t link);
