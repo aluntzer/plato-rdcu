@@ -24,9 +24,9 @@
 
 enum prty {PRIORITY_NOW, PRIORITY_LATER};
 
-int32_t irq_dispatch_enable();
+int32_t irq_dispatch_enable(void);
 
-void irq_queue_execute();
+void irq_queue_execute(void);
 
 void irq_set_level(uint32_t irq_mask, uint32_t level);
 

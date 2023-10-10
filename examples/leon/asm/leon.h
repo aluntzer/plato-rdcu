@@ -37,7 +37,7 @@
 
 
 __attribute__((unused))
-static uint32_t leon3_asr17()
+static uint32_t leon3_asr17(void)
 {
 	uint32_t asr17;
 
@@ -50,7 +50,7 @@ static uint32_t leon3_asr17()
 }
 
 __attribute__((unused))
-static uint32_t leon3_cpuid()
+static uint32_t leon3_cpuid(void)
 {
 	uint32_t cpuid;
 
@@ -75,7 +75,7 @@ static void leon3_powerdown_safe(uint32_t phys_memaddr)
 }
 
 __attribute__((unused))
-static void leon3_flush()
+static void leon3_flush(void)
 {
 	__asm__ __volatile__(
 			"flush			\n\t"
@@ -88,7 +88,7 @@ static void leon3_flush()
 }
 
 __attribute__((unused))
-static void leon3_enable_icache()
+static void leon3_enable_icache(void)
 {
 	__asm__ __volatile__(
 			"lda	[%0] %1, %%l1		\n\t"
@@ -102,7 +102,7 @@ static void leon3_enable_icache()
 }
 
 __attribute__((unused))
-static void leon3_enable_dcache()
+static void leon3_enable_dcache(void)
 {
 	__asm__ __volatile__(
 			"lda	[%0] %1, %%l1		\n\t"
@@ -117,7 +117,7 @@ static void leon3_enable_dcache()
 
 
 __attribute__((unused))
-static void leon3_enable_snooping()
+static void leon3_enable_snooping(void)
 {
 	__asm__ __volatile__(
 			"lda	[%0] %1, %%l1		\n\t"
@@ -131,7 +131,7 @@ static void leon3_enable_snooping()
 }
 
 __attribute__((unused))
-static void leon3_enable_fault_tolerant()
+static void leon3_enable_fault_tolerant(void)
 {
 	__asm__ __volatile__(
 			"lda	[%0] %1, %%l1		\n\t"
@@ -177,14 +177,14 @@ static void leon_reg_win_flush(void)
 
 #if (__unused__)
 __attribute__((unused))
-static uint32_t leon3_asr17()
+static uint32_t leon3_asr17(void)
 {
 	return 0;
 }
 #endif
 
 __attribute__((unused))
-static uint32_t leon3_cpuid()
+static uint32_t leon3_cpuid(void)
 {
 	return 0;
 }

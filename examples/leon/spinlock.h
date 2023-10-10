@@ -46,7 +46,7 @@ struct spinlock {
  * @warning make sure to call a save/restore pair from within the same stack frame
  */
 
-static uint32_t spin_lock_save_irq()
+static uint32_t spin_lock_save_irq(void)
 {
 	uint32_t psr;
 	uint32_t tmp;
@@ -208,7 +208,7 @@ static void spin_unlock(struct spinlock *p_lock)
 #else /*!(__sparc__)*/
 
 __attribute__((unused))
-static uint32_t spin_lock_save_irq()
+static uint32_t spin_lock_save_irq(void)
 {
 	return 0;
 }
