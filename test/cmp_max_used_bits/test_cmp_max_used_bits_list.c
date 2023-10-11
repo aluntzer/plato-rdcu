@@ -60,31 +60,31 @@ void* malloc(size_t size)
 
 void test_cmp_max_used_bits_list(void)
 {
-	struct cmp_max_used_bits i_17, i_21, i_22, i_23, i_255, i_0;
+	struct cmp_max_used_bits i_32, i_34, i_35, i_36, i_255, i_0;
 	struct cmp_max_used_bits *p;
 	int return_val;
 
 	/* set up max_used_bits item */
-	memset(&i_17, 17, sizeof(struct cmp_max_used_bits));
-	i_17.version = 17;
-	memset(&i_21, 21, sizeof(struct cmp_max_used_bits));
-	i_21.version = 21;
-	memset(&i_22, 22, sizeof(struct cmp_max_used_bits));
-	i_22.version = 22;
-	memset(&i_23, 23, sizeof(struct cmp_max_used_bits));
-	i_23.version = 23;
+	memset(&i_32, 32, sizeof(struct cmp_max_used_bits));
+	i_32.version = 32;
+	memset(&i_34, 34, sizeof(struct cmp_max_used_bits));
+	i_34.version = 34;
+	memset(&i_35, 35, sizeof(struct cmp_max_used_bits));
+	i_35.version = 35;
+	memset(&i_36, 36, sizeof(struct cmp_max_used_bits));
+	i_36.version = 36;
 	memset(&i_255, 0xFF, sizeof(struct cmp_max_used_bits));
 	i_255.version = 255;
 	memset(&i_0, 0, sizeof(struct cmp_max_used_bits));
 	i_0.version = 0;
 
-	return_val = cmp_max_used_bits_list_add(&i_17);
+	return_val = cmp_max_used_bits_list_add(&i_32);
 	TEST_ASSERT_EQUAL_INT(return_val, 0);
-	return_val = cmp_max_used_bits_list_add(&i_21);
+	return_val = cmp_max_used_bits_list_add(&i_34);
 	TEST_ASSERT_EQUAL_INT(return_val, 0);
-	return_val = cmp_max_used_bits_list_add(&i_22);
+	return_val = cmp_max_used_bits_list_add(&i_35);
 	TEST_ASSERT_EQUAL_INT(return_val, 0);
-	return_val = cmp_max_used_bits_list_add(&i_23);
+	return_val = cmp_max_used_bits_list_add(&i_36);
 	TEST_ASSERT_EQUAL_INT(return_val, 0);
 	return_val = cmp_max_used_bits_list_add(&i_255);
 	TEST_ASSERT_EQUAL_INT(return_val, 0);
@@ -94,29 +94,29 @@ void test_cmp_max_used_bits_list(void)
 	TEST_ASSERT_EQUAL_INT(return_val, -1);
 	return_val = cmp_max_used_bits_list_add(&i_0);
 	TEST_ASSERT_EQUAL_INT(return_val, -1);
-	i_0.version = 16;
+	i_0.version = CMP_MAX_USED_BITS_RESERVED_VERSIONS-1;
 	return_val = cmp_max_used_bits_list_add(&i_0);
 	TEST_ASSERT_EQUAL_INT(return_val, -1);
 
-	p = cmp_max_used_bits_list_get(17);
-	TEST_ASSERT_EQUAL_INT(p->version, 17);
-	TEST_ASSERT(!memcmp(p, &i_17, sizeof(struct cmp_max_used_bits)));
+	p = cmp_max_used_bits_list_get(32);
+	TEST_ASSERT_EQUAL_INT(p->version, 32);
+	TEST_ASSERT(!memcmp(p, &i_32, sizeof(struct cmp_max_used_bits)));
 
-	p = cmp_max_used_bits_list_get(23);
-	TEST_ASSERT_EQUAL_INT(p->version, 23);
-	TEST_ASSERT(!memcmp(p, &i_23, sizeof(struct cmp_max_used_bits)));
+	p = cmp_max_used_bits_list_get(36);
+	TEST_ASSERT_EQUAL_INT(p->version, 36);
+	TEST_ASSERT(!memcmp(p, &i_36, sizeof(struct cmp_max_used_bits)));
 
-	p = cmp_max_used_bits_list_get(22);
-	TEST_ASSERT_EQUAL_INT(p->version, 22);
-	TEST_ASSERT(!memcmp(p, &i_22, sizeof(struct cmp_max_used_bits)));
+	p = cmp_max_used_bits_list_get(35);
+	TEST_ASSERT_EQUAL_INT(p->version, 35);
+	TEST_ASSERT(!memcmp(p, &i_35, sizeof(struct cmp_max_used_bits)));
 
 	p = cmp_max_used_bits_list_get(255);
 	TEST_ASSERT_EQUAL_INT(p->version, 255);
 	TEST_ASSERT(!memcmp(p, &i_255, sizeof(struct cmp_max_used_bits)));
 
-	p = cmp_max_used_bits_list_get(21);
-	TEST_ASSERT_EQUAL_INT(p->version, 21);
-	TEST_ASSERT(!memcmp(p, &i_21, sizeof(struct cmp_max_used_bits)));
+	p = cmp_max_used_bits_list_get(34);
+	TEST_ASSERT_EQUAL_INT(p->version, 34);
+	TEST_ASSERT(!memcmp(p, &i_34, sizeof(struct cmp_max_used_bits)));
 
 	p = cmp_max_used_bits_list_get(0);
 	TEST_ASSERT_EQUAL_INT(p->version, 0);
@@ -135,30 +135,30 @@ void test_cmp_max_used_bits_list(void)
 
 
 	/* overwrite a list item */
-	memset(&i_22, 0x42, sizeof(struct cmp_max_used_bits));
-	i_22.version = 22;
-	return_val = cmp_max_used_bits_list_add(&i_22);
+	memset(&i_35, 0x42, sizeof(struct cmp_max_used_bits));
+	i_35.version = 35;
+	return_val = cmp_max_used_bits_list_add(&i_35);
 	TEST_ASSERT_EQUAL_INT(return_val, 1);
-	p = cmp_max_used_bits_list_get(22);
-	TEST_ASSERT_EQUAL_INT(p->version, 22);
-	TEST_ASSERT(!memcmp(p, &i_22, sizeof(struct cmp_max_used_bits)));
+	p = cmp_max_used_bits_list_get(35);
+	TEST_ASSERT_EQUAL_INT(p->version, 35);
+	TEST_ASSERT(!memcmp(p, &i_35, sizeof(struct cmp_max_used_bits)));
 
 	/* delete item */
-	cmp_max_used_bits_list_delet(22);
-	p = cmp_max_used_bits_list_get(22);
+	cmp_max_used_bits_list_delet(35);
+	p = cmp_max_used_bits_list_get(35);
 	TEST_ASSERT_NULL(p);
 
-	cmp_max_used_bits_list_delet(21);
-	p = cmp_max_used_bits_list_get(21);
+	cmp_max_used_bits_list_delet(34);
+	p = cmp_max_used_bits_list_get(34);
 	TEST_ASSERT_NULL(p);
 
 	/* empty item */
 	cmp_max_used_bits_list_empty();
-	p = cmp_max_used_bits_list_get(23);
+	p = cmp_max_used_bits_list_get(36);
 	TEST_ASSERT_NULL(p);
 
 	cmp_max_used_bits_list_empty();
-	p = cmp_max_used_bits_list_get(21);
+	p = cmp_max_used_bits_list_get(34);
 	TEST_ASSERT_NULL(p);
 
 	p = cmp_max_used_bits_list_get(0);
@@ -169,18 +169,18 @@ void test_cmp_max_used_bits_list(void)
 	TEST_ASSERT_EQUAL_INT(p->version, 1);
 	TEST_ASSERT(!memcmp(p, &MAX_USED_BITS_V1, sizeof(struct cmp_max_used_bits)));
 
-	return_val = cmp_max_used_bits_list_add(&i_23);
+	return_val = cmp_max_used_bits_list_add(&i_36);
 	TEST_ASSERT_EQUAL_INT(return_val, 0);
 
-	p = cmp_max_used_bits_list_get(23);
-	TEST_ASSERT_EQUAL_INT(p->version, 23);
-	TEST_ASSERT(!memcmp(p, &i_23, sizeof(struct cmp_max_used_bits)));
+	p = cmp_max_used_bits_list_get(36);
+	TEST_ASSERT_EQUAL_INT(p->version, 36);
+	TEST_ASSERT(!memcmp(p, &i_36, sizeof(struct cmp_max_used_bits)));
 
 	cmp_max_used_bits_list_empty();
 
 	/* error case */
 	malloc_fail = 1;
-	return_val = cmp_max_used_bits_list_add(&i_23);
+	return_val = cmp_max_used_bits_list_add(&i_36);
 	TEST_ASSERT_EQUAL_INT(return_val, -1);
 	malloc_fail = 0;
 }
