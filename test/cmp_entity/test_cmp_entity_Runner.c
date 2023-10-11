@@ -5,8 +5,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <cmp_entity.h>
-#include <cmp_icu.h>
 #include <cmp_data_types.h>
+#include <decmp.h>
 
 /*=======External Functions This Runner Calls=====*/
 extern void setUp(void);
@@ -49,11 +49,9 @@ extern void test_ent_non_ima_cmp_par6(void);
 extern void test_cmp_ent_get_data_buf(void);
 extern void test_cmp_ent_get_cmp_data(void);
 extern void test_cmp_ent_get_cmp_data_size(void);
-extern void test_cmp_ent_write_cmp_pars(void);
 extern void test_cmp_ent_write_rdcu_cmp_pars(void);
 extern void test_cmp_ent_create(void);
 extern void test_cmp_ent_build(void);
-extern void test_cmp_ent_read_header_error_cases(void);
 extern void test_cmp_ent_create_timestamp(void);
 extern void test_cmp_ent_print(void);
 extern void test_cmp_ent_parse(void);
@@ -124,52 +122,50 @@ static void run_test(UnityTestFunction func, const char* name, UNITY_LINE_TYPE l
 int main(void)
 {
   UnityBegin("../test/cmp_entity/test_cmp_entity.c");
-  run_test(test_cmp_ent_cal_hdr_size, "test_cmp_ent_cal_hdr_size", 41);
-  run_test(test_ent_version_id, "test_ent_version_id", 98);
-  run_test(test_ent_size, "test_ent_size", 132);
-  run_test(test_ent_original_size, "test_ent_original_size", 168);
-  run_test(test_ent_start_timestamp, "test_ent_start_timestamp", 204);
-  run_test(test_ent_coarse_start_time, "test_ent_coarse_start_time", 250);
-  run_test(test_ent_fine_start_time, "test_ent_fine_start_time", 284);
-  run_test(test_ent_end_timestamp, "test_ent_end_timestamp", 316);
-  run_test(test_ent_coarse_end_time, "test_ent_coarse_end_time", 362);
-  run_test(test_ent_fine_end_time, "test_ent_fine_end_time", 396);
-  run_test(test_cmp_ent_data_type, "test_cmp_ent_data_type", 429);
-  run_test(test_ent_cmp_mode, "test_ent_cmp_mode", 486);
-  run_test(test_ent_model_value, "test_ent_model_value", 519);
-  run_test(test_ent_model_id, "test_ent_model_id", 552);
-  run_test(test_ent_model_counter, "test_ent_model_counter", 586);
-  run_test(test_ent_max_used_bits_version, "test_ent_max_used_bits_version", 619);
-  run_test(test_ent_lossy_cmp_par, "test_ent_lossy_cmp_par", 649);
-  run_test(test_ent_ima_spill, "test_ent_ima_spill", 683);
-  run_test(test_ent_ima_golomb_par, "test_ent_ima_golomb_par", 717);
-  run_test(test_ent_ima_ap1_spill, "test_ent_ima_ap1_spill", 750);
-  run_test(test_ent_ima_ap1_golomb_par, "test_ent_ima_ap1_golomb_par", 784);
-  run_test(test_ent_ima_ap2_spill, "test_ent_ima_ap2_spill", 817);
-  run_test(test_ent_ima_ap2_golomb_par, "test_ent_ima_ap2_golomb_par", 851);
-  run_test(test_ent_non_ima_spill1, "test_ent_non_ima_spill1", 884);
-  run_test(test_ent_non_ima_cmp_par1, "test_ent_non_ima_cmp_par1", 919);
-  run_test(test_ent_non_ima_spill2, "test_ent_non_ima_spill2", 953);
-  run_test(test_ent_non_ima_cmp_par2, "test_ent_non_ima_cmp_par2", 988);
-  run_test(test_ent_non_ima_spill3, "test_ent_non_ima_spill3", 1022);
-  run_test(test_ent_non_ima_cmp_par3, "test_ent_non_ima_cmp_par3", 1057);
-  run_test(test_ent_non_ima_spill4, "test_ent_non_ima_spill4", 1091);
-  run_test(test_ent_non_ima_cmp_par4, "test_ent_non_ima_cmp_par4", 1126);
-  run_test(test_ent_non_ima_spill5, "test_ent_non_ima_spill5", 1160);
-  run_test(test_ent_non_ima_cmp_par5, "test_ent_non_ima_cmp_par5", 1195);
-  run_test(test_ent_non_ima_spill6, "test_ent_non_ima_spill6", 1229);
-  run_test(test_ent_non_ima_cmp_par6, "test_ent_non_ima_cmp_par6", 1264);
-  run_test(test_cmp_ent_get_data_buf, "test_cmp_ent_get_data_buf", 1297);
-  run_test(test_cmp_ent_get_cmp_data, "test_cmp_ent_get_cmp_data", 1349);
-  run_test(test_cmp_ent_get_cmp_data_size, "test_cmp_ent_get_cmp_data_size", 1403);
-  run_test(test_cmp_ent_write_cmp_pars, "test_cmp_ent_write_cmp_pars", 1432);
-  run_test(test_cmp_ent_write_rdcu_cmp_pars, "test_cmp_ent_write_rdcu_cmp_pars", 1970);
-  run_test(test_cmp_ent_create, "test_cmp_ent_create", 2234);
-  run_test(test_cmp_ent_build, "test_cmp_ent_build", 2345);
-  run_test(test_cmp_ent_read_header_error_cases, "test_cmp_ent_read_header_error_cases", 2478);
-  run_test(test_cmp_ent_create_timestamp, "test_cmp_ent_create_timestamp", 2546);
-  run_test(test_cmp_ent_print, "test_cmp_ent_print", 2588);
-  run_test(test_cmp_ent_parse, "test_cmp_ent_parse", 2643);
+  run_test(test_cmp_ent_cal_hdr_size, "test_cmp_ent_cal_hdr_size", 40);
+  run_test(test_ent_version_id, "test_ent_version_id", 97);
+  run_test(test_ent_size, "test_ent_size", 131);
+  run_test(test_ent_original_size, "test_ent_original_size", 167);
+  run_test(test_ent_start_timestamp, "test_ent_start_timestamp", 203);
+  run_test(test_ent_coarse_start_time, "test_ent_coarse_start_time", 249);
+  run_test(test_ent_fine_start_time, "test_ent_fine_start_time", 283);
+  run_test(test_ent_end_timestamp, "test_ent_end_timestamp", 315);
+  run_test(test_ent_coarse_end_time, "test_ent_coarse_end_time", 361);
+  run_test(test_ent_fine_end_time, "test_ent_fine_end_time", 395);
+  run_test(test_cmp_ent_data_type, "test_cmp_ent_data_type", 428);
+  run_test(test_ent_cmp_mode, "test_ent_cmp_mode", 485);
+  run_test(test_ent_model_value, "test_ent_model_value", 518);
+  run_test(test_ent_model_id, "test_ent_model_id", 551);
+  run_test(test_ent_model_counter, "test_ent_model_counter", 585);
+  run_test(test_ent_max_used_bits_version, "test_ent_max_used_bits_version", 618);
+  run_test(test_ent_lossy_cmp_par, "test_ent_lossy_cmp_par", 648);
+  run_test(test_ent_ima_spill, "test_ent_ima_spill", 682);
+  run_test(test_ent_ima_golomb_par, "test_ent_ima_golomb_par", 716);
+  run_test(test_ent_ima_ap1_spill, "test_ent_ima_ap1_spill", 749);
+  run_test(test_ent_ima_ap1_golomb_par, "test_ent_ima_ap1_golomb_par", 783);
+  run_test(test_ent_ima_ap2_spill, "test_ent_ima_ap2_spill", 816);
+  run_test(test_ent_ima_ap2_golomb_par, "test_ent_ima_ap2_golomb_par", 850);
+  run_test(test_ent_non_ima_spill1, "test_ent_non_ima_spill1", 883);
+  run_test(test_ent_non_ima_cmp_par1, "test_ent_non_ima_cmp_par1", 918);
+  run_test(test_ent_non_ima_spill2, "test_ent_non_ima_spill2", 952);
+  run_test(test_ent_non_ima_cmp_par2, "test_ent_non_ima_cmp_par2", 987);
+  run_test(test_ent_non_ima_spill3, "test_ent_non_ima_spill3", 1021);
+  run_test(test_ent_non_ima_cmp_par3, "test_ent_non_ima_cmp_par3", 1056);
+  run_test(test_ent_non_ima_spill4, "test_ent_non_ima_spill4", 1090);
+  run_test(test_ent_non_ima_cmp_par4, "test_ent_non_ima_cmp_par4", 1125);
+  run_test(test_ent_non_ima_spill5, "test_ent_non_ima_spill5", 1159);
+  run_test(test_ent_non_ima_cmp_par5, "test_ent_non_ima_cmp_par5", 1194);
+  run_test(test_ent_non_ima_spill6, "test_ent_non_ima_spill6", 1228);
+  run_test(test_ent_non_ima_cmp_par6, "test_ent_non_ima_cmp_par6", 1263);
+  run_test(test_cmp_ent_get_data_buf, "test_cmp_ent_get_data_buf", 1296);
+  run_test(test_cmp_ent_get_cmp_data, "test_cmp_ent_get_cmp_data", 1348);
+  run_test(test_cmp_ent_get_cmp_data_size, "test_cmp_ent_get_cmp_data_size", 1402);
+  run_test(test_cmp_ent_write_rdcu_cmp_pars, "test_cmp_ent_write_rdcu_cmp_pars", 1430);
+  run_test(test_cmp_ent_create, "test_cmp_ent_create", 1686);
+  run_test(test_cmp_ent_build, "test_cmp_ent_build", 1797);
+  run_test(test_cmp_ent_create_timestamp, "test_cmp_ent_create_timestamp", 1930);
+  run_test(test_cmp_ent_print, "test_cmp_ent_print", 1972);
+  run_test(test_cmp_ent_parse, "test_cmp_ent_parse", 2027);
 
   return UnityEnd();
 }

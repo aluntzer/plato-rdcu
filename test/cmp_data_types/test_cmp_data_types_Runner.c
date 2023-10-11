@@ -8,12 +8,11 @@
 /*=======External Functions This Runner Calls=====*/
 extern void setUp(void);
 extern void tearDown(void);
-extern void test_cmp_set_max_used_bits(void);
-extern void test_cmp_get_max_used_bits(void);
 extern void test_size_of_a_sample(void);
 extern void test_cmp_cal_size_of_data(void);
 extern void test_cmp_input_size_to_samples(void);
 extern void test_cmp_input_big_to_cpu_endianness(void);
+extern void test_cmp_input_big_to_cpu_endianness_error_cases(void);
 
 
 /*=======Mock Management=====*/
@@ -81,12 +80,11 @@ static void run_test(UnityTestFunction func, const char* name, UNITY_LINE_TYPE l
 int main(void)
 {
   UnityBegin("../test/cmp_data_types/test_cmp_data_types.c");
-  run_test(test_cmp_set_max_used_bits, "test_cmp_set_max_used_bits", 30);
-  run_test(test_cmp_get_max_used_bits, "test_cmp_get_max_used_bits", 42);
-  run_test(test_size_of_a_sample, "test_size_of_a_sample", 92);
-  run_test(test_cmp_cal_size_of_data, "test_cmp_cal_size_of_data", 113);
-  run_test(test_cmp_input_size_to_samples, "test_cmp_input_size_to_samples", 143);
-  run_test(test_cmp_input_big_to_cpu_endianness, "test_cmp_input_big_to_cpu_endianness", 191);
+  run_test(test_size_of_a_sample, "test_size_of_a_sample", 30);
+  run_test(test_cmp_cal_size_of_data, "test_cmp_cal_size_of_data", 76);
+  run_test(test_cmp_input_size_to_samples, "test_cmp_input_size_to_samples", 110);
+  run_test(test_cmp_input_big_to_cpu_endianness, "test_cmp_input_big_to_cpu_endianness", 175);
+  run_test(test_cmp_input_big_to_cpu_endianness_error_cases, "test_cmp_input_big_to_cpu_endianness_error_cases", 482);
 
   return UnityEnd();
 }

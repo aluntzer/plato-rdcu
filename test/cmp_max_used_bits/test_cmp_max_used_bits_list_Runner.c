@@ -2,19 +2,14 @@
 
 /*=======Automagically Detected Files To Include=====*/
 #include "unity.h"
-#include <stdint.h>
-#include <cmp_rdcu_cfg.h>
-#include <rdcu_cmd.h>
+#include <string.h>
+#include <dlfcn.h>
+#include <cmp_max_used_bits_list.h>
 
 /*=======External Functions This Runner Calls=====*/
 extern void setUp(void);
 extern void tearDown(void);
-extern void test_rdcu_cfg_create(void);
-extern void test_rdcu_cfg_buffers_raw_diff(void);
-extern void test_rdcu_cfg_buffers_model(void);
-extern void test_rdcu_cfg_imagette(void);
-extern void test_rdcu_cfg_imagette_default(void);
-extern void test_rdcu_cmp_cfg_is_invalid(void);
+extern void test_cmp_max_used_bits_list(void);
 
 
 /*=======Mock Management=====*/
@@ -81,13 +76,8 @@ static void run_test(UnityTestFunction func, const char* name, UNITY_LINE_TYPE l
 /*=======MAIN=====*/
 int main(void)
 {
-  UnityBegin("../test/cmp_rdcu_cfg/test_cmp_rdcu_cfg.c");
-  run_test(test_rdcu_cfg_create, "test_rdcu_cfg_create", 30);
-  run_test(test_rdcu_cfg_buffers_raw_diff, "test_rdcu_cfg_buffers_raw_diff", 143);
-  run_test(test_rdcu_cfg_buffers_model, "test_rdcu_cfg_buffers_model", 272);
-  run_test(test_rdcu_cfg_imagette, "test_rdcu_cfg_imagette", 426);
-  run_test(test_rdcu_cfg_imagette_default, "test_rdcu_cfg_imagette_default", 653);
-  run_test(test_rdcu_cmp_cfg_is_invalid, "test_rdcu_cmp_cfg_is_invalid", 696);
+  UnityBegin("../test/cmp_max_used_bits/test_cmp_max_used_bits_list.c");
+  run_test(test_cmp_max_used_bits_list, "test_cmp_max_used_bits_list", 61);
 
   return UnityEnd();
 }
