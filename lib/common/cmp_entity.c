@@ -1723,7 +1723,7 @@ int32_t cmp_ent_get_cmp_data(struct cmp_entity *ent, uint32_t *data_buf,
 		uint32_t cmp_data_len_32;
 
 		if (cmp_size_byte > data_buf_size) {
-			fprintf(stderr, "Error: data_buf size to small to hold the data.\n");
+			debug_print("Error: data_buf size to small to hold the data.\n");
 			return -1;
 		}
 
