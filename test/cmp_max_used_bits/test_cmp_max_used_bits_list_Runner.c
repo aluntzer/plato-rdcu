@@ -3,7 +3,6 @@
 /*=======Automagically Detected Files To Include=====*/
 #include "unity.h"
 #include <string.h>
-#include <dlfcn.h>
 #include <cmp_max_used_bits_list.h>
 
 /*=======External Functions This Runner Calls=====*/

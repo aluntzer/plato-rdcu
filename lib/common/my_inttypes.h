@@ -49,6 +49,30 @@
 #  define PRIX32 "lX"
 #endif /*PRIX32*/
 
+#ifndef PRId64
+#  define PRId64 "lld"
+#endif /*PRId64*/
+
+#ifndef PRIi64
+#  define PRIi64 "lli"
+#endif /*PRIi64*/
+
+#ifndef PRIo64
+#  define PRIo64 "llo"
+#endif /*PRIo64*/
+
+#ifndef PRIu64
+#  define PRIu64 "llu"
+#endif /* PRIu64 */
+
+#ifndef PRIx64
+#  define PRIx64 "llx"
+#endif /*PRIx64*/
+
+#ifndef PRIX64
+#  define PRIX64 "llX"
+#endif /*PRIX64*/
+
 #endif /* __sparc__ */
 
 #endif /* MY_INTTYPES_H */

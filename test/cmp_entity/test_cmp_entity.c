@@ -210,7 +210,7 @@ void test_ent_start_timestamp(void)
 	uint16_t fine_start_timestamp_read;
 	uint8_t *entity_p = (uint8_t *)&ent;
 
-	start_timestamp	= 0x123456789ABC;
+	start_timestamp = 0x123456789ABCULL;
 	error = cmp_ent_set_start_timestamp(&ent, start_timestamp);
 	TEST_ASSERT_FALSE(error);
 
@@ -231,7 +231,7 @@ void test_ent_start_timestamp(void)
 	TEST_ASSERT_EQUAL_UINT64(0x9ABC, fine_start_timestamp_read);
 
 	/* error cases */
-	start_timestamp = 0x1000000000000;
+	start_timestamp = 0x1000000000000ULL;
 	error = cmp_ent_set_start_timestamp(&ent, start_timestamp);
 	TEST_ASSERT_TRUE(error);
 	error = cmp_ent_set_start_timestamp(NULL, start_timestamp);
@@ -322,7 +322,7 @@ void test_ent_end_timestamp(void)
 	uint16_t fine_end_timestamp_read;
 	uint8_t *entity_p = (uint8_t *)&ent;
 
-	end_timestamp	= 0x123456789ABC;
+	end_timestamp	= 0x123456789ABCULL;
 	error = cmp_ent_set_end_timestamp(&ent, end_timestamp);
 	TEST_ASSERT_FALSE(error);
 
@@ -343,7 +343,7 @@ void test_ent_end_timestamp(void)
 	TEST_ASSERT_EQUAL_UINT64(0x9ABC, fine_end_timestamp_read);
 
 	/* error cases */
-	end_timestamp = 0x1000000000000;
+	end_timestamp = 0x1000000000000ULL;
 	error = cmp_ent_set_end_timestamp(&ent, end_timestamp);
 	TEST_ASSERT_TRUE(error);
 	error = cmp_ent_set_end_timestamp(NULL, end_timestamp);
@@ -1887,23 +1887,23 @@ void test_cmp_ent_build(void)
 #endif
 
 	/* start_time to high */
-	start_time = 0x1000000000000;
+	start_time = 0x1000000000000ULL;
 	size = cmp_ent_build(ent, version_id, start_time, end_time, model_id,
 			     model_counter, &cfg, cmp_size_bits);
 	TEST_ASSERT_EQUAL_UINT(0, size);
 	/* this should work */
-	start_time = 0xFFFFFFFFFFFF;
+	start_time = 0xFFFFFFFFFFFFULL;
 	size = cmp_ent_build(ent, version_id, start_time, end_time, model_id,
 			     model_counter, &cfg, cmp_size_bits);
 	TEST_ASSERT_EQUAL_UINT(IMAGETTE_ADAPTIVE_HEADER_SIZE+60, size);
 
 	/* end_time to high */
-	end_time = 0x1000000000000;
+	end_time = 0x1000000000000ULL;
 	size = cmp_ent_build(ent, version_id, start_time, end_time, model_id,
 			     model_counter, &cfg, cmp_size_bits);
 	TEST_ASSERT_EQUAL_UINT(0, size);
 	/* this should work */
-	end_time = 0xFFFFFFFFFFFF;
+	end_time = 0xFFFFFFFFFFFFULL;
 	size = cmp_ent_build(ent, version_id, start_time, end_time, model_id,
 			     model_counter, &cfg, cmp_size_bits);
 	TEST_ASSERT_EQUAL_UINT(IMAGETTE_ADAPTIVE_HEADER_SIZE+60, size);

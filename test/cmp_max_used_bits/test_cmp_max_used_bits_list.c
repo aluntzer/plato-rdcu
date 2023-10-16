@@ -18,12 +18,12 @@
 
 
 #include <string.h>
-#include <dlfcn.h>
 
 #include <unity.h>
 
 #include <cmp_max_used_bits_list.h>
 
+#ifndef __sparc__
 /* if set the mock malloc will fail (return NULL) */
 static int malloc_fail;
 
@@ -32,6 +32,7 @@ static int malloc_fail;
  * mock of the malloc function; can controlled with the global malloc_fail variable
  * see:https://jayconrod.com/posts/23/tutorial--function-interposition-in-linux
  */
+#include <dlfcn.h>
 
 void* malloc(size_t size)
 {
@@ -49,6 +50,7 @@ void* malloc(size_t size)
 	fprintf(stderr, "malloc(%zu)\n", size);
 	return real_malloc(size);
 }
+#endif
 
 
 /**
@@ -179,8 +181,10 @@ void test_cmp_max_used_bits_list(void)
 	cmp_max_used_bits_list_empty();
 
 	/* error case */
+#ifndef __sparc__
 	malloc_fail = 1;
 	return_val = cmp_max_used_bits_list_add(&i_36);
 	TEST_ASSERT_EQUAL_INT(return_val, -1);
 	malloc_fail = 0;
+#endif
 }
