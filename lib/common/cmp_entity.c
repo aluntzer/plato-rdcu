@@ -35,7 +35,7 @@
 #include "cmp_support.h"
 #include "cmp_data_types.h"
 #include "cmp_entity.h"
-#include "my_inttypes.h"
+#include "leon_inttypes.h"
 
 
 #ifdef HAS_TIME_H

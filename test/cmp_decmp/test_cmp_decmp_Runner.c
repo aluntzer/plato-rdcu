@@ -8,7 +8,7 @@
 #include <cmp_icu.h>
 #include <decmp.h>
 #include <cmp_data_types.h>
-#include <my_inttypes.h>
+#include <leon_inttypes.h>
 
 /*=======External Functions This Runner Calls=====*/
 extern void setUp(void);
