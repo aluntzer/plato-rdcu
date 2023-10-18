@@ -38,6 +38,7 @@ Other available options include:
 
 - `make test`: create and run all unit tests
 - `make coverage`: create an coverage report of all unit tests
+- `make all`: build all tests and examples
 
 For advanced use cases, specialized compilation flags which control binary generation
 are documented in [`lib/README.md`](lib/README.md#modular-build).
