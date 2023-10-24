@@ -2101,11 +2101,12 @@ uint32_t cmp_ent_create(struct cmp_entity *ent, enum cmp_data_type data_type,
  * @returns the size of the compression entity or 0 on error
  */
 
-size_t cmp_ent_build(struct cmp_entity *ent, uint32_t version_id,
-		     uint64_t start_time, uint64_t end_time, uint16_t model_id,
-		     uint8_t model_counter, struct cmp_cfg *cfg, int cmp_size_bits)
+uint32_t cmp_ent_build(struct cmp_entity *ent, uint32_t version_id,
+		       uint64_t start_time, uint64_t end_time, uint16_t model_id,
+		       uint8_t model_counter, struct cmp_cfg *cfg, int cmp_size_bits)
 {
-	uint32_t ent_size;
+	uint32_t cmp_size_bytes = cmp_bit_to_4byte((unsigned int)cmp_size_bits); /* TODO: do we need to round up to 4 bytes? */
+	uint32_t hdr_size;
 
 	if (!cfg)
 		return 0;
@@ -2113,9 +2114,7 @@ size_t cmp_ent_build(struct cmp_entity *ent, uint32_t version_id,
 	if (cmp_size_bits < 0)
 		return 0;
 
-	ent_size = cmp_ent_create(ent, cfg->data_type, cfg->cmp_mode == CMP_MODE_RAW,
-				  cmp_bit_to_4byte((unsigned int)cmp_size_bits));
-	if (!ent_size)
+	if (!cmp_ent_create(ent, cfg->data_type, cfg->cmp_mode == CMP_MODE_RAW, cmp_size_bytes))
 		return 0;
 
 	if (ent) {
@@ -2130,7 +2129,11 @@ size_t cmp_ent_build(struct cmp_entity *ent, uint32_t version_id,
 			return 0;
 	}
 
-	return ent_size;
+	hdr_size = cmp_ent_cal_hdr_size(cfg->data_type, cfg->cmp_mode == CMP_MODE_RAW);
+	if (!hdr_size)
+		return 0;
+
+	return hdr_size + cmp_size_bytes;
 }
 
 

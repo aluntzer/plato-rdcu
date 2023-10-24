@@ -1858,6 +1858,15 @@ void test_cmp_ent_build(void)
 	TEST_ASSERT_EQUAL_INT(cfg.ap2_spill, cmp_ent_get_ima_ap2_spill(ent));
 	TEST_ASSERT_EQUAL_INT(cfg.ap2_golomb_par, cmp_ent_get_ima_ap2_golomb_par(ent));
 
+	/* entity size is smaller than */
+	cmp_size_bits = 2;
+	size = cmp_ent_build(NULL, version_id, start_time, end_time, model_id,
+			     model_counter, &cfg, cmp_size_bits);
+	TEST_ASSERT_EQUAL_UINT(IMAGETTE_ADAPTIVE_HEADER_SIZE+4, size);
+	size = cmp_ent_build(ent, version_id, start_time, end_time, model_id,
+			     model_counter, &cfg, cmp_size_bits);
+	TEST_ASSERT_EQUAL_UINT(IMAGETTE_ADAPTIVE_HEADER_SIZE+4, size);
+
 	/** error cases **/
 	/* cfg = NULL */
 	size = cmp_ent_build(NULL, version_id, start_time, end_time, model_id,
