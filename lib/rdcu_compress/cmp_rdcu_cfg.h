@@ -16,9 +16,8 @@
  * @brief hardware compressor configuration library
  */
 
-
-#ifndef _CMP_RDCU_CFG_H_
-#define _CMP_RDCU_CFG_H_
+#ifndef CMP_RDCU_CFG_H
+#define CMP_RDCU_CFG_H
 
 #include "../common/cmp_support.h"
 
@@ -40,4 +39,4 @@ int rdcu_cfg_imagette_default(struct cmp_cfg *cfg);
 
 int rdcu_cmp_cfg_is_invalid(const struct cmp_cfg *cfg);
 
-#endif /* _CMP_RDCU_CFG_H_ */
+#endif /* CMP_RDCU_CFG_H */

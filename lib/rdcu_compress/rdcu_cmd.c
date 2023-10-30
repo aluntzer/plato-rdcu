@@ -18,8 +18,6 @@
  */
 
 
-#include <stdlib.h>
-
 #include "rmap.h"
 #include "rdcu_cmd.h"
 #include "rdcu_rmap.h"
