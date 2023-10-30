@@ -365,7 +365,7 @@ static void gr718b_cfg_router(void)
  * @note prints abort message if pending status is non-zero after 10 retries
  */
 
-static void sync(void)
+static void demo_sync(void)
 {
 	int cnt = 0;
 	printf("syncing...");
@@ -391,7 +391,7 @@ static void rdcu_show_rmap_errors(void)
 	rdcu_sync_rmap_no_reply_err_cntrs();
 	rdcu_sync_rmap_last_err();
 	rdcu_sync_rmap_pckt_err_cntrs();
-	sync();
+	demo_sync();
 
 	printf("RMAP incomplete header errors %d\n",
 	       rdcu_get_rmap_incomplete_hdrs());
@@ -460,7 +460,7 @@ static void rdcu_verify_data_transfers(void)
 	/* now sync the sram chunks to the RDCU */
 	if (rdcu_sync_mirror_to_sram(DATASTART, RDCU_SRAM_SIZE, rdcu_get_data_mtu()))
 		printf("BIG FAT TRANSFER ERROR!\n");
-	sync();
+	demo_sync();
 	printf("\nDONE\n");
 
 	printf("Zeroing mirror...\n");
@@ -471,7 +471,7 @@ static void rdcu_verify_data_transfers(void)
 	/* now sync the sram chunks to the RDCU */
 	if (rdcu_sync_sram_to_mirror(DATASTART, RDCU_SRAM_SIZE, rdcu_get_data_mtu()))
 		printf("BIG FAT TRANSFER ERROR!\n");
-	sync();
+	demo_sync();
 	printf("\nDONE\n");
 
 
@@ -549,7 +549,7 @@ static void rdcu_compression_demo(void)
 	rdcu_sync_num_samples();
 
 	/* ...and wait for completion */
-	sync();
+	demo_sync();
 
 
 	/* now set the data in the local mirror... */
@@ -564,13 +564,13 @@ static void rdcu_compression_demo(void)
 
 
 	/* wait */
-	sync();
+	demo_sync();
 
 
 	printf("Configuring compression start bit and starting compression\n");
 	rdcu_set_data_compr_start();
 	rdcu_sync_compr_ctrl();
-	sync();
+	demo_sync();
 
 	/* clear local bit immediately, this is a write-only register.
 	 * we would not want to restart compression by accidentially calling
@@ -581,13 +581,13 @@ static void rdcu_compression_demo(void)
 
 	/* start polling the compression status */
 	rdcu_sync_compr_status();
-	sync();
+	demo_sync();
 	cnt = 0;
 	while (!rdcu_get_data_compr_ready()) {
 
 		/* check compression status */
 		rdcu_sync_compr_status();
-		sync();
+		demo_sync();
 		cnt++;
 
 		if (cnt < 5)	/* wait for 5 polls */
@@ -599,12 +599,12 @@ static void rdcu_compression_demo(void)
 
 		rdcu_set_data_compr_interrupt();
 		rdcu_sync_compr_ctrl();
-		sync();
+		demo_sync();
 		rdcu_clear_data_compr_interrupt(); /* always clear locally */
 
 		/* now we may read the error code */
 		rdcu_sync_compr_error();
-		sync();
+		demo_sync();
 		printf("Compressor error code: 0x%02X\n",
 		       rdcu_get_compr_error());
 
@@ -621,13 +621,13 @@ static void rdcu_compression_demo(void)
 
 	/* now we may read the error code */
 	rdcu_sync_compr_error();
-	sync();
+	demo_sync();
 	printf("Compressor error code: 0x%02X\n",
 	       rdcu_get_compr_error());
 
 
 	rdcu_sync_compr_data_size();
-	sync();
+	demo_sync();
 	printf("Compressed data size: %ld\n", (rdcu_get_compr_data_size_bit() + 7) >> 3);
 
 
@@ -639,7 +639,7 @@ static void rdcu_compression_demo(void)
 	}
 
 	/* wait for it */
-	sync();
+	demo_sync();
 
 	/* read compressed data to some buffer and print */
 	if (1) {
@@ -1067,7 +1067,7 @@ static void rdcu_demo(void)
 	rdcu_sync_fpga_version();
 	rdcu_sync_compr_status();
 	rdcu_sync_rdcu_status();
-	sync();
+	demo_sync();
 	printf("Current FPGA version: %d.%d\n", rdcu_get_fpga_version()>>8, rdcu_get_fpga_version()&0xFF);
 	printf("Compressor status ready: %s\n",
 	       rdcu_get_data_compr_ready() ? "yes" : "no");
@@ -1086,10 +1086,10 @@ static void rdcu_demo(void)
 		       "access the data compressor control registers\n");
 		rdcu_set_data_compr_interrupt();
 		rdcu_sync_compr_ctrl();
-		sync();
+		demo_sync();
 		rdcu_clear_data_compr_interrupt(); /* always clear locally */
 		rdcu_sync_compr_status(); /* read back status */
-		sync();
+		demo_sync();
 
 		if (rdcu_get_data_compr_active()) {
 			printf("ERRROR: compressor still active, aborting\n");
@@ -1101,9 +1101,9 @@ static void rdcu_demo(void)
 	/* change the RDCU link speed to 100 Mbit (divider:1 -> CLKDIV:0) */
 	rdcu_set_spw_link_run_clkdiv(0);
 	rdcu_sync_spw_link_ctrl();
-	sync();
+	demo_sync();
 	rdcu_sync_spw_link_status();
-	sync();
+	demo_sync();
 	printf("RDCU linkdiv now set to: %d\n", rdcu_get_spw_run_clk_div() + 1);
 
 
@@ -1180,7 +1180,7 @@ int main(void)
 	/* update target logical address in RDCU core control */
 	rdcu_set_rmap_target_logical_address(RDCU_ADDR);
 	rdcu_sync_core_ctrl();
-	sync();
+	demo_sync();
 
 
 	/* a direct route has been configured and the remote logical address

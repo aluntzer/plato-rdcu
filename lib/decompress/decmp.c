@@ -2312,8 +2312,9 @@ int decompress_cmp_entiy(struct cmp_entity *ent, void *model_of_data,
 			 void *up_model_buf, void *decompressed_data)
 {
 	int err;
-	struct cmp_cfg cfg = {0};
+	struct cmp_cfg cfg;
 
+	memset(&cfg, 0, sizeof(struct cmp_cfg));
 	cfg.model_buf = model_of_data;
 	cfg.icu_new_model_buf = up_model_buf;
 	cfg.input_buf = decompressed_data;
@@ -2351,7 +2352,7 @@ int decompress_rdcu_data(uint32_t *compressed_data, const struct cmp_info *info,
 			 uint16_t *decompressed_data)
 
 {
-	struct cmp_cfg cfg = {0};
+	struct cmp_cfg cfg;
 
 	if (!compressed_data)
 		return -1;
@@ -2361,6 +2362,8 @@ int decompress_rdcu_data(uint32_t *compressed_data, const struct cmp_info *info,
 
 	if (info->cmp_err)
 		return -1;
+
+	memset(&cfg, 0, sizeof(struct cmp_cfg));
 
 	cfg.data_type = DATA_TYPE_IMAGETTE;
 	cfg.model_buf = model_of_data;

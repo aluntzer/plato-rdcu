@@ -20,12 +20,15 @@
 
 #include <stdint.h>
 #include <string.h>
-#if defined __has_include
-#  if __has_include(<time.h>)
-#    include <time.h>
-#    include <stdlib.h>
-#    define HAS_TIME_H 1
-#    define my_timercmp(s, t, op) (((s)->tv_sec == (t)->tv_sec) ? ((s)->tv_nsec op (t)->tv_nsec) : ((s)->tv_sec op (t)->tv_sec))
+
+#ifndef ICU_ASW
+#  if defined __has_include
+#    if __has_include(<time.h>)
+#      include <time.h>
+#      include <stdlib.h>
+#      define HAS_TIME_H 1
+#      define my_timercmp(s, t, op) (((s)->tv_sec == (t)->tv_sec) ? ((s)->tv_nsec op (t)->tv_nsec) : ((s)->tv_sec op (t)->tv_sec))
+#    endif
 #  endif
 #endif
 
@@ -1692,7 +1695,6 @@ void *cmp_ent_get_data_buf(struct cmp_entity *ent)
  *
  * @returns the size in bytes to store the compressed data; negative on error
  *
- * @note the destination and source buffer can overlap
  * @note converts the data to the system endianness
  */
 
@@ -1726,7 +1728,7 @@ int32_t cmp_ent_get_cmp_data(struct cmp_entity *ent, uint32_t *data_buf,
 			return -1;
 		}
 
-		memmove(data_buf, cmp_ent_data_adr, cmp_size_byte);
+		memcpy(data_buf, cmp_ent_data_adr, cmp_size_byte);
 
 		cmp_data_len_32 = cmp_size_byte/sizeof(uint32_t);
 		for (i = 0; i < cmp_data_len_32; i++)

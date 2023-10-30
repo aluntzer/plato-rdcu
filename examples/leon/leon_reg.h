@@ -24,14 +24,6 @@
 
 #include <stdint.h>
 
-/**
- * helper macro to fill unused 4-byte slots with "unusedXX" variables
- * yes, this needs to be done exactly like that, or __COUNTER__ will not be expanded
- */
-#define CONCAT(x, y)		x##y
-#define MACRO_CONCAT(x, y) 	CONCAT(x, y)
-#define UNUSED_UINT32_SLOT	 uint32_t MACRO_CONCAT(unused, __COUNTER__)
-
 
 #define CORE1553BRM_REG_BASE		0xFFF00000
 
@@ -82,48 +74,48 @@ struct leon3_irqctrl_registermap {
 	uint32_t irq_clear;			/* 0x0C */
 	uint32_t mp_status;			/* 0x10 */
 	uint32_t mp_broadcast;			/* 0x14 */
-	UNUSED_UINT32_SLOT;			/* 0x18 */
-	UNUSED_UINT32_SLOT;			/* 0x1C */
-	UNUSED_UINT32_SLOT;			/* 0x20 */
-	UNUSED_UINT32_SLOT;			/* 0x24 */
-	UNUSED_UINT32_SLOT;			/* 0x28 */
-	UNUSED_UINT32_SLOT;			/* 0x2C */
-	UNUSED_UINT32_SLOT;			/* 0x30 */
-	UNUSED_UINT32_SLOT;			/* 0x34 */
-	UNUSED_UINT32_SLOT;			/* 0x38 */
-	UNUSED_UINT32_SLOT;			/* 0x3C */
+	uint32_t unused_0;			/* 0x18 */
+	uint32_t unused_1;			/* 0x1C */
+	uint32_t unused_2;			/* 0x20 */
+	uint32_t unused_3;			/* 0x24 */
+	uint32_t unused_4;			/* 0x28 */
+	uint32_t unused_5;			/* 0x2C */
+	uint32_t unused_6;			/* 0x30 */
+	uint32_t unused_7;			/* 0x34 */
+	uint32_t unused_8;			/* 0x38 */
+	uint32_t unused_9;			/* 0x3C */
 	uint32_t irq_mpmask[2];			/* 0x40 CPU 0 */
 						/* 0x44 CPU 1 */
-	UNUSED_UINT32_SLOT;			/* 0x48 */
-	UNUSED_UINT32_SLOT;			/* 0x4C */
-	UNUSED_UINT32_SLOT;			/* 0x50 */
-	UNUSED_UINT32_SLOT;			/* 0x54 */
-	UNUSED_UINT32_SLOT;			/* 0x58 */
-	UNUSED_UINT32_SLOT;			/* 0x5C */
-	UNUSED_UINT32_SLOT;			/* 0x60 */
-	UNUSED_UINT32_SLOT;			/* 0x64 */
-	UNUSED_UINT32_SLOT;			/* 0x68 */
-	UNUSED_UINT32_SLOT;			/* 0x6C */
-	UNUSED_UINT32_SLOT;			/* 0x70 */
-	UNUSED_UINT32_SLOT;			/* 0x74 */
-	UNUSED_UINT32_SLOT;			/* 0x78 */
-	UNUSED_UINT32_SLOT;			/* 0x7C */
+	uint32_t unused_10;			/* 0x48 */
+	uint32_t unused_11;			/* 0x4C */
+	uint32_t unused_12;			/* 0x50 */
+	uint32_t unused_13;			/* 0x54 */
+	uint32_t unused_14;			/* 0x58 */
+	uint32_t unused_15;			/* 0x5C */
+	uint32_t unused_16;			/* 0x60 */
+	uint32_t unused_17;			/* 0x64 */
+	uint32_t unused_18;			/* 0x68 */
+	uint32_t unused_19;			/* 0x6C */
+	uint32_t unused_20;			/* 0x70 */
+	uint32_t unused_21;			/* 0x74 */
+	uint32_t unused_22;			/* 0x78 */
+	uint32_t unused_23;			/* 0x7C */
 	uint32_t irq_mpforce[2];		/* 0x80 CPU 0*/
 						/* 0x84 CPU 1*/
-	UNUSED_UINT32_SLOT;			/* 0x88 */
-	UNUSED_UINT32_SLOT;			/* 0x8C */
-	UNUSED_UINT32_SLOT;			/* 0x90 */
-	UNUSED_UINT32_SLOT;			/* 0x94 */
-	UNUSED_UINT32_SLOT;			/* 0x98 */
-	UNUSED_UINT32_SLOT;			/* 0x9C */
-	UNUSED_UINT32_SLOT;			/* 0xA0 */
-	UNUSED_UINT32_SLOT;			/* 0xA4 */
-	UNUSED_UINT32_SLOT;			/* 0xA8 */
-	UNUSED_UINT32_SLOT;			/* 0xAC */
-	UNUSED_UINT32_SLOT;			/* 0xB0 */
-	UNUSED_UINT32_SLOT;			/* 0xB4 */
-	UNUSED_UINT32_SLOT;			/* 0xB8 */
-	UNUSED_UINT32_SLOT;			/* 0xBC */
+	uint32_t unused_24;			/* 0x88 */
+	uint32_t unused_25;			/* 0x8C */
+	uint32_t unused_26;			/* 0x90 */
+	uint32_t unused_27;			/* 0x94 */
+	uint32_t unused_28;			/* 0x98 */
+	uint32_t unused_29;			/* 0x9C */
+	uint32_t unused_30;			/* 0xA0 */
+	uint32_t unused_31;			/* 0xA4 */
+	uint32_t unused_32;			/* 0xA8 */
+	uint32_t unused_33;			/* 0xAC */
+	uint32_t unused_34;			/* 0xB0 */
+	uint32_t unused_35;			/* 0xB4 */
+	uint32_t unused_36;			/* 0xB8 */
+	uint32_t unused_37;			/* 0xBC */
 	uint32_t extended_irq_id[2];		/* 0xC0 CPU 0*/
 						/* 0xC4 CPU 1*/
 };

@@ -54,7 +54,7 @@ static int interrupt_signal_enabled = RDCU_INTR_SIG_DEFAULT;
  * @note prints abort message if pending status is non-zero after 10 retries
  */
 
-static void sync(void)
+static void rdcu_syncing(void)
 {
 	int cnt = 0;
 	printf("syncing...");
@@ -83,7 +83,7 @@ int rdcu_interrupt_compression(void)
 	rdcu_set_data_compr_interrupt();
 	if (rdcu_sync_compr_ctrl())
 		return -1;
-	sync();
+	rdcu_syncing();
 
 	/* clear local bit immediately, this is a write-only register.
 	 * we would not want to restart compression by accidentially calling
@@ -117,7 +117,7 @@ static int rdcu_set_compression_register(const struct cmp_cfg *cfg)
 	 */
 	if (rdcu_sync_used_param1())
 		return -1;
-	sync();
+	rdcu_syncing();
 	if (rdcu_get_compression_mode() == CMP_MODE_RAW)
 		rdcu_interrupt_compression();
 #endif
@@ -182,7 +182,7 @@ static int rdcu_set_compression_register(const struct cmp_cfg *cfg)
 		return -1;
 
 	/* wait for it */
-	sync();
+	rdcu_syncing();
 
 	return 0;
 }
@@ -208,7 +208,7 @@ int rdcu_start_compression(void)
 	rdcu_set_data_compr_start();
 	if (rdcu_sync_compr_ctrl())
 		return -1;
-	sync();
+	rdcu_syncing();
 
 	/* clear local bit immediately, this is a write-only register.
 	 * we would not want to restart compression by accidentally calling
@@ -262,7 +262,7 @@ static int rdcu_transfer_sram(const struct cmp_cfg *cfg)
 	}
 
 	/* ...and wait for completion */
-	sync();
+	rdcu_syncing();
 
 	return 0;
 }
@@ -312,7 +312,7 @@ int rdcu_read_cmp_status(struct cmp_status *status)
 
 	if (rdcu_sync_compr_status())
 		return -1;
-	sync();
+	rdcu_syncing();
 
 	if (status) {
 		status->data_valid = (uint8_t)rdcu_get_compr_status_valid();
@@ -358,7 +358,7 @@ int rdcu_read_cmp_info(struct cmp_info *info)
 	if (rdcu_sync_samples_used())
 		return -1;
 
-	sync();
+	rdcu_syncing();
 
 	if (info) {
 		/* put the data in the cmp_info structure */
@@ -428,7 +428,7 @@ int rdcu_read_cmp_bitstream(const struct cmp_info *info, void *compressed_data)
 		return -1;
 
 	/* wait for it */
-	sync();
+	rdcu_syncing();
 
 	return rdcu_read_sram(compressed_data, info->rdcu_cmp_adr_used, s);
 }
@@ -463,7 +463,7 @@ int rdcu_read_model(const struct cmp_info *info, void *updated_model)
 		return -1;
 
 	/* wait for it */
-	sync();
+	rdcu_syncing();
 
 	return rdcu_read_sram(updated_model, info->rdcu_new_model_adr_used, s);
 }
@@ -516,19 +516,19 @@ int rdcu_inject_edac_error(struct cmp_cfg *cfg, uint32_t addr)
 			debug_print("Error: rdcu_sync_sram_edac_ctrl\n");
 			return -1;
 		}
-		sync();
+		rdcu_syncing();
 		/* verify bypass aktiv */
 		rdcu_edac_set_ctrl_reg_read_op();
 		if (rdcu_sync_sram_edac_ctrl()) {
 			debug_print("Error: rdcu_sync_sram_edac_ctrl\n");
 			return -1;
 		}
-		sync();
+		rdcu_syncing();
 		if (rdcu_sync_sram_edac_status()) {
 			printf("Error: rdcu_sync_sram_edac_status\n");
 			return -1;
 		}
-		sync();
+		rdcu_syncing();
 		if (rdcu_edac_get_sub_chip_die_addr() != sub_chip_die_addr) {
 			printf("Error: sub_chip_die_addr unexpected !\n");
 			return -1;
@@ -546,7 +546,7 @@ int rdcu_inject_edac_error(struct cmp_cfg *cfg, uint32_t addr)
 	/* inject multi bit error */
 	if (rdcu_sync_sram_to_mirror(addr, sizeof(buf), rdcu_get_data_mtu()))
 		return -1;
-	sync();
+	rdcu_syncing();
 	if (rdcu_read_sram(buf, addr, sizeof(buf)) < 0)
 		return -1;
 
@@ -561,7 +561,7 @@ int rdcu_inject_edac_error(struct cmp_cfg *cfg, uint32_t addr)
 		debug_print("Error: The data to be compressed cannot be transferred to the SRAM of the RDCU.\n");
 		return -1;
 	}
-	sync();
+	rdcu_syncing();
 
 
 	/* enable edac again */
@@ -574,19 +574,19 @@ int rdcu_inject_edac_error(struct cmp_cfg *cfg, uint32_t addr)
 			debug_print("Error: rdcu_sync_sram_edac_ctrl\n");
 			return -1;
 		}
-		sync();
+		rdcu_syncing();
 		/* verify bypass disable */
 		rdcu_edac_set_ctrl_reg_read_op();
 		if (rdcu_sync_sram_edac_ctrl()) {
 			debug_print("Error: rdcu_sync_sram_edac_ctrl\n");
 			return -1;
 		}
-		sync();
+		rdcu_syncing();
 		if (rdcu_sync_sram_edac_status()) {
 			printf("Error: rdcu_sync_sram_edac_status\n");
 			return -1;
 		}
-		sync();
+		rdcu_syncing();
 		if (rdcu_edac_get_sub_chip_die_addr() != sub_chip_die_addr) {
 			printf("Error: sub_chip_die_addr unexpected !\n");
 			return -1;

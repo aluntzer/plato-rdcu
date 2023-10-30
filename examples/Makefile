@@ -1,12 +1,12 @@
 CC_SPARK  = sparc-elf-gcc
 CC_SPARK_AVAILABLE := $(shell command -v $(CC_SPARK) 2> /dev/null)
-MOREFLAGS_SPARC = -O2 -mv8 -Wno-long-long -Wno-missing-field-initializers
+MOREFLAGS_SPARC = -std=gnu89 -O2
 LIBDIR    = ../lib
 CPPFLAGS += -DNO_IASW -I$(LIBDIR) -I$(LIBDIR)/common
 DEBUGFLAGS= -Wall -Wextra -pedantic -Wcast-qual -Wshadow \
             -Wstrict-aliasing=1 -Wdeclaration-after-statement \
             -Wstrict-prototypes -Wpointer-arith \
-            -Wvla -Wformat=2 -Winit-self -Wfloat-equal -Wwrite-strings \
+            -Wformat=2 -Winit-self -Wfloat-equal -Wwrite-strings \
             #-Wcast-align -Wredundant-decls -Wmissing-prototypes -Wundef -Wswitch-enum
 CFLAGS   += $(DEBUGFLAGS) $(MOREFLAGS)
 LIB       = $(LIBDIR)/libcmp.a

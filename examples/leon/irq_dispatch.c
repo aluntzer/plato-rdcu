@@ -66,7 +66,7 @@ int catch_interrupt(__attribute__((unused)) int func,
 	return 0;
 }
 #else
-#include <asm-leon/irq.h>
+#include "irq.h"
 #endif
 
 
