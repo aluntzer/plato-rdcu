@@ -1660,9 +1660,9 @@ int rdcu_write_sram_16(uint16_t *buf, uint32_t addr, uint32_t size)
 		uint32_t i;
 
 		for (i = 0; i < size/sizeof(uint16_t); i++) {
-			uint16_t *sram_buf = (uint16_t *)&rdcu->sram[addr];
+			uint16_t tmp = cpu_to_be16(buf[i]);
 
-			sram_buf[i] = cpu_to_be16(buf[i]);
+			memcpy(&rdcu->sram[addr+i*sizeof(tmp)], &tmp, sizeof(tmp));
 		}
 	}
 	return (int)size; /* lol */
@@ -1706,9 +1706,9 @@ int rdcu_write_sram_32(uint32_t *buf, uint32_t addr, uint32_t size)
 		uint32_t i;
 
 		for (i = 0; i < size/sizeof(uint32_t); i++) {
-			uint32_t *sram_buf = (uint32_t *)&rdcu->sram[addr];
+			uint32_t tmp = cpu_to_be32(buf[i]);
 
-			sram_buf[i] = cpu_to_be32(buf[i]);
+			memcpy(&rdcu->sram[addr+i*sizeof(tmp)], &tmp, sizeof(tmp));
 		}
 	}
 	return (int)size; /* lol */
@@ -2375,12 +2375,6 @@ int rdcu_sync_sram_to_mirror(uint32_t addr, uint32_t size, uint32_t mtu)
 
 	return 0;
 }
-
-
-
-
-
-
 
 
 /**
