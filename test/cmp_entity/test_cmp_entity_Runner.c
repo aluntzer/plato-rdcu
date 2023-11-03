@@ -163,9 +163,9 @@ int main(void)
   run_test(test_cmp_ent_write_rdcu_cmp_pars, "test_cmp_ent_write_rdcu_cmp_pars", 1430);
   run_test(test_cmp_ent_create, "test_cmp_ent_create", 1686);
   run_test(test_cmp_ent_build, "test_cmp_ent_build", 1797);
-  run_test(test_cmp_ent_create_timestamp, "test_cmp_ent_create_timestamp", 1930);
-  run_test(test_cmp_ent_print, "test_cmp_ent_print", 1972);
-  run_test(test_cmp_ent_parse, "test_cmp_ent_parse", 2027);
+  run_test(test_cmp_ent_create_timestamp, "test_cmp_ent_create_timestamp", 1939);
+  run_test(test_cmp_ent_print, "test_cmp_ent_print", 1981);
+  run_test(test_cmp_ent_parse, "test_cmp_ent_parse", 2036);
 
   return UnityEnd();
 }

@@ -949,11 +949,11 @@ void test_cmp_decmp_n_imagette_raw(void)
 	cmp_size = icu_compress_data(&cfg);
 	TEST_ASSERT_EQUAL_INT(sizeof(data)*CHAR_BIT, cmp_size);
 
-	s = cmp_ent_build(NULL, 0, 0, 0, 0, 0, &cfg, (int)cmp_bit_to_4byte((unsigned int)cmp_size));
+	s = cmp_ent_build(NULL, 0, 0, 0, 0, 0, &cfg, cmp_size);
 	TEST_ASSERT_TRUE(s);
 	ent = malloc(s);
 	TEST_ASSERT_TRUE(ent);
-	s = cmp_ent_build(ent, 0, 0, 0, 0, 0, &cfg, (int)cmp_bit_to_4byte((unsigned int)cmp_size));
+	s = cmp_ent_build(ent, 0, 0, 0, 0, 0, &cfg, cmp_size);
 	TEST_ASSERT_TRUE(s);
 	memcpy(cmp_ent_get_data_buf(ent), compressed_data, ((unsigned int)cmp_size+7)/8);
 

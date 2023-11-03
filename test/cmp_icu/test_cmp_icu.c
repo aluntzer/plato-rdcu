@@ -2388,7 +2388,7 @@ void test_compress_imagette_stuff(void)
 void test_compress_imagette_raw(void)
 {
 	uint16_t data[] = {0x0, 0x1, 0x23, 0x42, (uint16_t)INT16_MIN, INT16_MAX, UINT16_MAX};
-	uint32_t *output_buf = malloc(7*sizeof(uint16_t));
+	void *output_buf = malloc(7*sizeof(uint16_t));
 	uint16_t cmp_data[7];
 	struct cmp_cfg cfg = {0};
 	int cmp_size;
