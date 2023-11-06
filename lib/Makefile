@@ -8,7 +8,7 @@ DEBUGFLAGS= -Wall -Wextra -Wcast-qual -Wshadow -Wdeclaration-after-statement \
             -Wstrict-prototypes -Wpointer-arith -Wformat=2 -Winit-self \
             -Wfloat-equal -Wwrite-strings \
             # -Wstrict-aliasing=1 -Wcast-align -Wredundant-decls -Wmissing-prototypes -Wundef -Wswitch-enum
-CFLAGS   += $(DEBUGFLAGS) $(MOREFLAGS)
+CFLAGS   += -Icommon -std=gnu99 $(DEBUGFLAGS) $(MOREFLAGS)
 LDFLAGS  += $(MOREFLAGS)
 FLAGS     = $(CPPFLAGS) $(CFLAGS) $(LDFLAGS)
 
@@ -54,7 +54,7 @@ LOCAL_OBJ := $(LOCAL_OBJ0:.S=.o)
 
 
 lib-release: DEBUGFLAGS :=
-lib-release: CFLAGS := -O2
+lib-release: CFLAGS := -Icommon -O2 $(MOREFLAGS)
 lib-release: lib
 
 .PHONY: all

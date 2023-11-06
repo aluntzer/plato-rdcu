@@ -5,7 +5,7 @@ DEBUGFLAGS= -Wall -Wextra -pedantic -Wcast-qual -Wshadow \
             -Wstrict-prototypes -Wpointer-arith \
             -Wvla -Wformat=2 -Winit-self -Wfloat-equal -Wwrite-strings \
             #-Wcast-align -Wredundant-decls -Wmissing-prototypes -Wundef -Wswitch-enum
-CFLAGS   += $(DEBUGFLAGS) $(MOREFLAGS)
+CFLAGS   += -std=gnu99 $(DEBUGFLAGS) $(MOREFLAGS)
 LDFLAGS  += $(MOREFLAGS)
 FLAGS     = $(CPPFLAGS) $(CFLAGS) $(LDFLAGS)
 

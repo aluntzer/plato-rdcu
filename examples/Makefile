@@ -1,8 +1,8 @@
 CC_SPARK  = sparc-elf-gcc
 CC_SPARK_AVAILABLE := $(shell command -v $(CC_SPARK) 2> /dev/null)
-MOREFLAGS_SPARC = -std=gnu89 -O2
+MOREFLAGS_SPARC = -O2
 LIBDIR    = ../lib
-CPPFLAGS += -DNO_IASW -I$(LIBDIR) -I$(LIBDIR)/common
+CPPFLAGS += -std=gnu99 -DNO_IASW -I$(LIBDIR) -I$(LIBDIR)/common
 DEBUGFLAGS= -Wall -Wextra -pedantic -Wcast-qual -Wshadow \
             -Wstrict-aliasing=1 -Wdeclaration-after-statement \
             -Wstrict-prototypes -Wpointer-arith \
