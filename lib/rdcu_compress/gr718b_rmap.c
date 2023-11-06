@@ -134,6 +134,7 @@ int gr718b_gen_cmd(uint16_t trans_id, uint8_t *cmd,
 static int gr718b_rmw_reg(uint32_t reg, uint32_t data, uint32_t mask)
 {
 	int n;
+	uint32_t s = 0;
 
 	uint8_t cmd[32];
 	uint8_t payload[8];
@@ -157,8 +158,14 @@ static int gr718b_rmw_reg(uint32_t reg, uint32_t data, uint32_t mask)
 		return -1;
 	}
 
-	while (!rmap_rx(NULL));
-	n = rmap_rx(cmd);
+	do {
+		s = rmap_rx(NULL);
+	} while (!s);
+	if (s > sizeof(cmd)) {
+		printf("Error in rmap_rx(). Response larger than expected.\n");
+		return -1;
+	}
+	rmap_rx(cmd);
 #ifndef SKIP_CMP_PAR_CHECK
 	rmap_parse_pkt(cmd);
 #endif
