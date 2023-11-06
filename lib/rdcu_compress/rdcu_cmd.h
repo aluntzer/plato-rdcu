@@ -16,8 +16,9 @@
  * @brief RMAP RDCU RMAP command library header file
  * @see FPGA Requirement Specification PLATO-IWF-PL-RS-005 Issue 0.6
  */
-#ifndef _RDCU_CMD_H_
-#define _RDCU_CMD_H_
+
+#ifndef RDCU_CMD_H
+#define RDCU_CMD_H
 
 #include <stdint.h>
 
@@ -159,5 +160,4 @@ int rdcu_read_cmd_sram_edac_status(uint16_t trans_id, uint8_t *cmd);
 /* SRAM EDAC write accessors */
 int rdcu_write_cmd_sram_edac_ctrl(uint16_t trans_id, uint8_t *cmd);
 
-
-#endif /* _RDCU_CMD_H_ */
+#endif /* RDCU_CMD_H */

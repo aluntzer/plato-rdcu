@@ -17,9 +17,8 @@
  * @see FPGA Requirement Specification PLATO-IWF-PL-RS-005 Issue 0.6
  */
 
-
-#ifndef _RDCU_CTRL_H_
-#define _RDCU_CTRL_H_
+#ifndef RDCU_CTRL_H
+#define RDCU_CTRL_H
 
 #include <stdint.h>
 
@@ -139,6 +138,7 @@ uint16_t rdcu_get_fpga_version(void);
 
 uint32_t rdcu_get_rdcu_status_board_serial_number(void);
 uint32_t rdcu_get_rdcu_status_fpga_core_power_good(void);
+uint32_t rdcu_get_rdcu_status_core_power_good(void);
 uint32_t rdcu_get_rdcu_status_io_power_good(void);
 uint32_t rdcu_get_rdcu_status_reset_by_register(void);
 uint32_t rdcu_get_rdcu_status_power_on_reset(void);
@@ -289,5 +289,4 @@ int rdcu_write_sram_32(uint32_t *buf, uint32_t addr, uint32_t size);
 
 int rdcu_ctrl_init(void);
 
-
-#endif /* _RDCU_CTRL_H_ */
+#endif /* RDCU_CTRL_H */

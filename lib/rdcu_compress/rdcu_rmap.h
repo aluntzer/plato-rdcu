@@ -16,8 +16,8 @@
  * @brief RMAP RDCU link interface header file
  */
 
-#ifndef _RDCU_RMAP_H_
-#define _RDCU_RMAP_H_
+#ifndef RDCU_RMAP_H
+#define RDCU_RMAP_H
 
 #include <stdint.h>
 
@@ -63,4 +63,4 @@ int rdcu_rmap_init(uint32_t mtu,
 
 
 
-#endif /* _RDCU_RMAP_H_ */
+#endif /* RDCU_RMAP_H */

@@ -1,5 +1,5 @@
 /**
- * @file   my_inttypes.h
+ * @file   leon_inttypes.h
  * @author Dominik Loidolt (dominik.loidolt@univie.ac.at)
  * @date   2021
  *
@@ -18,8 +18,8 @@
  * @warning Does not fully implement the standard.
  */
 
-#ifndef MY_INTTYPES_H
-#define MY_INTTYPES_H
+#ifndef LEON_INTTYPES_H
+#define LEON_INTTYPES_H
 
 #ifndef __sparc__
 #  include <inttypes.h>
@@ -75,4 +75,4 @@
 
 #endif /* __sparc__ */
 
-#endif /* MY_INTTYPES_H */
+#endif /* LEON_INTTYPES_H */

@@ -21,7 +21,7 @@
 
 #include "cmp_support.h"
 #include "cmp_debug.h"
-#include "my_inttypes.h"
+#include "leon_inttypes.h"
 
 
 /**

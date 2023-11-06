@@ -24,7 +24,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#include "../common/my_inttypes.h"
+#include "../common/leon_inttypes.h"
 #include "rmap.h"
 
 

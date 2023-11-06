@@ -4,7 +4,7 @@
 #include "unity.h"
 #include "../test_common/test_common.h"
 #include <stdlib.h>
-#include <my_inttypes.h>
+#include <leon_inttypes.h>
 #include <cmp_icu.h>
 
 /*=======External Functions This Runner Calls=====*/
