@@ -19,9 +19,11 @@
 #ifndef CMP_DEBUG_H
 #define CMP_DEBUG_H
 
-#include <stdio.h>
+#ifndef ICU_ASW
+#endif
 
-#if defined(DEBUG) || DEBUGLEVEL > 0
+#if !defined(ICU_ASW) && (defined(DEBUG) || DEBUGLEVEL > 0)
+	#include <stdio.h>
 	__extension__
 	#define debug_print(...) \
 		do { fprintf(stderr, __VA_ARGS__); } while (0)

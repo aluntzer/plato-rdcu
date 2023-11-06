@@ -22,6 +22,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include <leon_inttypes.h>
+
 #include <cmp_entity.h>
 #include <cmp_icu.h>
 
@@ -140,7 +142,7 @@ int demo_icu_compression(void) {
 		goto fail;
 	}
 
-	printf("Here's the compressed entity (size %u):\n"
+	printf("Here's the compressed entity (size %"PRIu32"):\n"
 	       "=========================================\n", entity_size);
 	for (i = 0; i < entity_size; i++) {
 		uint8_t *p = (uint8_t *)cmp_entity; /* the compression entity is big-endian */
@@ -168,5 +170,5 @@ fail:
 
 int main(void)
 {
-	demo_icu_compression();
+	return demo_icu_compression();
 }
