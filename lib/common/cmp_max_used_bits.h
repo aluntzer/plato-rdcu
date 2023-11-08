@@ -66,7 +66,6 @@ struct cmp_max_used_bits {
 	unsigned int fc_imagette;
 	unsigned int fc_offset_mean;
 	unsigned int fc_offset_variance;
-	unsigned int fc_offset_pixel_in_error;
 	unsigned int fc_background_mean;
 	unsigned int fc_background_variance;
 	unsigned int fc_background_outlier_pixels;

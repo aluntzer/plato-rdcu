@@ -219,20 +219,20 @@ struct l_fx_efx_ncob_ecob {
 
 
 /**
- * @brief normal offset entry definition
+ * @brief normal and fast offset entry definition
  */
 
-struct nc_offset {
+struct offset {
 	uint32_t mean;
 	uint32_t variance;
 } __attribute__((packed));
 
 
 /**
- * @brief normal background entry definition
+ * @brief normal and fast background entry definition
  */
 
-struct nc_background {
+struct background {
 	uint32_t mean;
 	uint32_t variance;
 	uint16_t outlier_pixels;

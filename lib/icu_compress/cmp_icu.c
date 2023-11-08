@@ -1880,7 +1880,7 @@ static int compress_l_fx_efx_ncob_ecob(const struct cmp_cfg *cfg)
 
 
 /**
- * @brief compress offset data from the normal cameras
+ * @brief compress offset data from the normal and fast cameras
  *
  * @param cfg	pointer to the compression configuration structure
  * @returns the bit length of the bitstream on success; negative on error,
@@ -1888,16 +1888,16 @@ static int compress_l_fx_efx_ncob_ecob(const struct cmp_cfg *cfg)
  *	value in the bitstream
  */
 
-static int compress_nc_offset(const struct cmp_cfg *cfg)
+static int compress_offset(const struct cmp_cfg *cfg)
 {
 	int stream_len = 0;
 	size_t i;
 
-	struct nc_offset *data_buf = cfg->input_buf;
-	struct nc_offset *model_buf = cfg->model_buf;
-	struct nc_offset *up_model_buf = NULL;
-	struct nc_offset *next_model_p;
-	struct nc_offset model;
+	struct offset *data_buf = cfg->input_buf;
+	struct offset *model_buf = cfg->model_buf;
+	struct offset *up_model_buf = NULL;
+	struct offset *next_model_p;
+	struct offset model;
 	struct encoder_setupt setup_mean, setup_var;
 
 	if (model_mode_is_used(cfg->cmp_mode))
@@ -1914,10 +1914,25 @@ static int compress_nc_offset(const struct cmp_cfg *cfg)
 		next_model_p = data_buf;
 	}
 
-	configure_encoder_setup(&setup_mean, cfg->cmp_par_mean, cfg->spill_mean,
-				cfg->round, cfg->max_used_bits->nc_offset_mean, cfg);
-	configure_encoder_setup(&setup_var, cfg->cmp_par_variance, cfg->spill_variance,
-				cfg->round, cfg->max_used_bits->nc_offset_variance, cfg);
+	{
+		unsigned int mean_bits_used, variance_bits_used;
+
+		switch (cfg->data_type) {
+		case DATA_TYPE_F_CAM_OFFSET:
+			mean_bits_used = cfg->max_used_bits->fc_offset_mean;
+			variance_bits_used = cfg->max_used_bits->fc_offset_variance;
+			break;
+		case DATA_TYPE_OFFSET:
+		default:
+			mean_bits_used = cfg->max_used_bits->nc_offset_mean;
+			variance_bits_used = cfg->max_used_bits->nc_offset_variance;
+			break;
+		}
+		configure_encoder_setup(&setup_mean, cfg->cmp_par_mean, cfg->spill_mean,
+					cfg->round, mean_bits_used, cfg);
+		configure_encoder_setup(&setup_var, cfg->cmp_par_variance, cfg->spill_variance,
+					cfg->round, variance_bits_used, cfg);
+	}
 
 	for (i = 0;; i++) {
 		stream_len = encode_value(data_buf[i].mean, model.mean,
@@ -1946,7 +1961,7 @@ static int compress_nc_offset(const struct cmp_cfg *cfg)
 
 
 /**
- * @brief compress background data from the normal cameras
+ * @brief compress background data from the normal and fast cameras
  *
  * @param cfg	pointer to the compression configuration structure
  * @returns the bit length of the bitstream on success; negative on error,
@@ -1954,16 +1969,16 @@ static int compress_nc_offset(const struct cmp_cfg *cfg)
  *	value in the bitstream
  */
 
-static int compress_nc_background(const struct cmp_cfg *cfg)
+static int compress_background(const struct cmp_cfg *cfg)
 {
 	int stream_len = 0;
 	size_t i;
 
-	struct nc_background *data_buf = cfg->input_buf;
-	struct nc_background *model_buf = cfg->model_buf;
-	struct nc_background *up_model_buf = NULL;
-	struct nc_background *next_model_p;
-	struct nc_background model;
+	struct background *data_buf = cfg->input_buf;
+	struct background *model_buf = cfg->model_buf;
+	struct background *up_model_buf = NULL;
+	struct background *next_model_p;
+	struct background model;
 	struct encoder_setupt setup_mean, setup_var, setup_pix;
 
 	if (model_mode_is_used(cfg->cmp_mode))
@@ -1980,12 +1995,29 @@ static int compress_nc_background(const struct cmp_cfg *cfg)
 		next_model_p = data_buf;
 	}
 
-	configure_encoder_setup(&setup_mean, cfg->cmp_par_mean, cfg->spill_mean,
-				cfg->round, cfg->max_used_bits->nc_background_mean, cfg);
-	configure_encoder_setup(&setup_var, cfg->cmp_par_variance, cfg->spill_variance,
-				cfg->round, cfg->max_used_bits->nc_background_variance, cfg);
-	configure_encoder_setup(&setup_pix, cfg->cmp_par_pixels_error, cfg->spill_pixels_error,
-				cfg->round, cfg->max_used_bits->nc_background_outlier_pixels, cfg);
+	{
+		unsigned int mean_used_bits, varinace_used_bits, pixels_error_used_bits;
+
+		switch (cfg->data_type) {
+		case DATA_TYPE_F_CAM_BACKGROUND:
+			mean_used_bits = cfg->max_used_bits->fc_background_mean;
+			varinace_used_bits = cfg->max_used_bits->fc_background_variance;
+			pixels_error_used_bits = cfg->max_used_bits->fc_background_outlier_pixels;
+			break;
+		case DATA_TYPE_BACKGROUND:
+		default:
+			mean_used_bits = cfg->max_used_bits->nc_background_mean;
+			varinace_used_bits = cfg->max_used_bits->nc_background_variance;
+			pixels_error_used_bits = cfg->max_used_bits->nc_background_outlier_pixels;
+			break;
+		}
+		configure_encoder_setup(&setup_mean, cfg->cmp_par_mean, cfg->spill_mean,
+					cfg->round, mean_used_bits, cfg);
+		configure_encoder_setup(&setup_var, cfg->cmp_par_variance, cfg->spill_variance,
+					cfg->round, varinace_used_bits, cfg);
+		configure_encoder_setup(&setup_pix, cfg->cmp_par_pixels_error, cfg->spill_pixels_error,
+					cfg->round, pixels_error_used_bits, cfg);
+	}
 
 	for (i = 0;; i++) {
 		stream_len = encode_value(data_buf[i].mean, model.mean,
@@ -2274,17 +2306,17 @@ int icu_compress_data(const struct cmp_cfg *cfg)
 			break;
 
 		case DATA_TYPE_OFFSET:
-			bitsize = compress_nc_offset(cfg);
+		case DATA_TYPE_F_CAM_OFFSET:
+			bitsize = compress_offset(cfg);
 			break;
 		case DATA_TYPE_BACKGROUND:
-			bitsize = compress_nc_background(cfg);
+		case DATA_TYPE_F_CAM_BACKGROUND:
+			bitsize = compress_background(cfg);
 			break;
 		case DATA_TYPE_SMEARING:
 			bitsize = compress_smearing(cfg);
 			break;
 
-		case DATA_TYPE_F_CAM_OFFSET:
-		case DATA_TYPE_F_CAM_BACKGROUND:
 		/* LCOV_EXCL_START */
 		case DATA_TYPE_UNKNOWN:
 		default:

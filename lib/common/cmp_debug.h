@@ -19,9 +19,6 @@
 #ifndef CMP_DEBUG_H
 #define CMP_DEBUG_H
 
-#ifndef ICU_ASW
-#endif
-
 #if !defined(ICU_ASW) && (defined(DEBUG) || DEBUGLEVEL > 0)
 	#include <stdio.h>
 	__extension__

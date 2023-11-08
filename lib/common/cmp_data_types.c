@@ -50,10 +50,12 @@ size_t size_of_a_sample(enum cmp_data_type data_type)
 		sample_size = sizeof(uint16_t);
 		break;
 	case DATA_TYPE_OFFSET:
-		sample_size = sizeof(struct nc_offset);
+	case DATA_TYPE_F_CAM_OFFSET:
+		sample_size = sizeof(struct offset);
 		break;
 	case DATA_TYPE_BACKGROUND:
-		sample_size = sizeof(struct nc_background);
+	case DATA_TYPE_F_CAM_BACKGROUND:
+		sample_size = sizeof(struct background);
 		break;
 	case DATA_TYPE_SMEARING:
 		sample_size = sizeof(struct smearing);
@@ -94,8 +96,6 @@ size_t size_of_a_sample(enum cmp_data_type data_type)
 	case DATA_TYPE_F_FX_EFX_NCOB_ECOB:
 		sample_size = sizeof(struct f_fx_efx_ncob_ecob);
 		break;
-	case DATA_TYPE_F_CAM_OFFSET:
-	case DATA_TYPE_F_CAM_BACKGROUND:
 	case DATA_TYPE_UNKNOWN:
 	default:
 		debug_print("Error: Compression data type is not supported.\n");
@@ -181,7 +181,7 @@ static void be_to_cpus_16(uint16_t *a, int samples)
 }
 
 
-static void be_to_cpus_nc_offset(struct nc_offset *a, int samples)
+static void be_to_cpus_offset(struct offset *a, int samples)
 {
 	int i;
 
@@ -192,7 +192,7 @@ static void be_to_cpus_nc_offset(struct nc_offset *a, int samples)
 }
 
 
-static void be_to_cpus_nc_background(struct nc_background *a, int samples)
+static void be_to_cpus_background(struct background *a, int samples)
 {
 	int i;
 
@@ -408,10 +408,12 @@ int cmp_input_big_to_cpu_endianness(void *data, uint32_t data_size_byte,
 		be_to_cpus_16(data, samples);
 		break;
 	case DATA_TYPE_OFFSET:
-		be_to_cpus_nc_offset(data, samples);
+	case DATA_TYPE_F_CAM_OFFSET:
+		be_to_cpus_offset(data, samples);
 		break;
 	case DATA_TYPE_BACKGROUND:
-		be_to_cpus_nc_background(data, samples);
+	case DATA_TYPE_F_CAM_BACKGROUND:
+		be_to_cpus_background(data, samples);
 		break;
 	case DATA_TYPE_SMEARING:
 		be_to_cpus_smearing(data, samples);
@@ -452,9 +454,6 @@ int cmp_input_big_to_cpu_endianness(void *data, uint32_t data_size_byte,
 	case DATA_TYPE_F_FX_EFX_NCOB_ECOB:
 		be_to_cpus_f_fx_efx_ncob_ecob(data, samples);
 		break;
-	/* TODO: implement F_CAM conversion */
-	case DATA_TYPE_F_CAM_OFFSET:
-	case DATA_TYPE_F_CAM_BACKGROUND:
 	/* LCOV_EXCL_START */
 	case DATA_TYPE_UNKNOWN:
 	default:

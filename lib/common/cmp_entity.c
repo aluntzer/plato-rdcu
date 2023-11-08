@@ -1860,7 +1860,9 @@ int cmp_ent_write_cmp_pars(struct cmp_entity *ent, const struct cmp_cfg *cfg,
 			return -1;
 		break;
 	case DATA_TYPE_OFFSET:
+	case DATA_TYPE_F_CAM_OFFSET:
 	case DATA_TYPE_BACKGROUND:
+	case DATA_TYPE_F_CAM_BACKGROUND:
 	case DATA_TYPE_SMEARING:
 		if (cmp_ent_set_non_ima_cmp_par1(ent, cfg->cmp_par_mean))
 			return -1;
@@ -1929,9 +1931,6 @@ int cmp_ent_write_cmp_pars(struct cmp_entity *ent, const struct cmp_cfg *cfg,
 			return -1;
 
 		break;
-	case DATA_TYPE_F_CAM_OFFSET:
-	case DATA_TYPE_F_CAM_BACKGROUND:
-		/* TODO: implement this*/
 	case DATA_TYPE_UNKNOWN:
 	default:
 		return -1;

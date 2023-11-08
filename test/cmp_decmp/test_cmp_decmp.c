@@ -76,8 +76,8 @@ static void gen_ima_data(uint16_t *data, uint32_t samples, const struct cmp_max_
 }
 
 
-static void gen_offset_data(struct nc_offset *data, uint32_t samples,
-			    const struct cmp_max_used_bits *max_used_bits)
+static void gen_nc_offset_data(struct offset *data, uint32_t samples,
+			       const struct cmp_max_used_bits *max_used_bits)
 {
 	uint32_t i;
 
@@ -88,7 +88,19 @@ static void gen_offset_data(struct nc_offset *data, uint32_t samples,
 }
 
 
-static void gen_background_data(struct nc_background *data, uint32_t samples,
+static void gen_fc_offset_data(struct offset *data, uint32_t samples,
+			       const struct cmp_max_used_bits *max_used_bits)
+{
+	uint32_t i;
+
+	for (i = 0; i < samples; i++) {
+		data[i].mean = cmp_rand_nbits(max_used_bits->fc_offset_mean);
+		data[i].variance = cmp_rand_nbits(max_used_bits->fc_offset_variance);
+	}
+}
+
+
+static void gen_nc_background_data(struct background *data, uint32_t samples,
 				const struct cmp_max_used_bits *max_used_bits)
 {
 	uint32_t i;
@@ -97,6 +109,19 @@ static void gen_background_data(struct nc_background *data, uint32_t samples,
 		data[i].mean = cmp_rand_nbits(max_used_bits->nc_background_mean);
 		data[i].variance = cmp_rand_nbits(max_used_bits->nc_background_variance);
 		data[i].outlier_pixels = (__typeof__(data[i].outlier_pixels))cmp_rand_nbits(max_used_bits->nc_background_outlier_pixels);
+	}
+}
+
+
+static void gen_fc_background_data(struct background *data, uint32_t samples,
+				const struct cmp_max_used_bits *max_used_bits)
+{
+	uint32_t i;
+
+	for (i = 0; i < samples; i++) {
+		data[i].mean = cmp_rand_nbits(max_used_bits->fc_background_mean);
+		data[i].variance = cmp_rand_nbits(max_used_bits->fc_background_variance);
+		data[i].outlier_pixels = (__typeof__(data[i].outlier_pixels))cmp_rand_nbits(max_used_bits->fc_background_outlier_pixels);
 	}
 }
 
@@ -326,10 +351,10 @@ void *generate_random_test_data(uint32_t samples, enum cmp_data_type data_type,
 		gen_ima_data(data, samples, max_used_bits);
 		break;
 	case DATA_TYPE_OFFSET:
-		gen_offset_data(data, samples, max_used_bits);
+		gen_nc_offset_data(data, samples, max_used_bits);
 		break;
 	case DATA_TYPE_BACKGROUND:
-		gen_background_data(data, samples, max_used_bits);
+		gen_nc_background_data(data, samples, max_used_bits);
 		break;
 	case DATA_TYPE_SMEARING:
 		gen_smearing_data(data, samples, max_used_bits);
@@ -370,8 +395,12 @@ void *generate_random_test_data(uint32_t samples, enum cmp_data_type data_type,
 	case DATA_TYPE_F_FX_EFX_NCOB_ECOB:
 		gen_f_fx_efx_ncob_ecob_data(data, samples, max_used_bits);
 		break;
-	case DATA_TYPE_F_CAM_OFFSET: /* TODO: implement this */
-	case DATA_TYPE_F_CAM_BACKGROUND: /* TODO: implement this */
+	case DATA_TYPE_F_CAM_OFFSET:
+		gen_fc_offset_data(data, samples, max_used_bits);
+		break;
+	case DATA_TYPE_F_CAM_BACKGROUND:
+		gen_fc_background_data(data, samples, max_used_bits);
+		break;
 	default:
 		TEST_FAIL();
 	}
@@ -540,8 +569,7 @@ void test_random_compression_decompression(void)
 	struct cmp_cfg cfg;
 	uint32_t cmp_buffer_size;
 
-	/* TODO: extend test for DATA_TYPE_F_CAM_BACKGROUND, DATA_TYPE_F_CAM_OFFSET  */
-	for (data_type = 1; data_type <= DATA_TYPE_F_CAM_IMAGETTE_ADAPTIVE; data_type++) {
+	for (data_type = 1; data_type <= DATA_TYPE_F_CAM_BACKGROUND; data_type++) {
 		/* printf("%s\n", data_type2string(data_type)); */
 		/* generate random data*/
 		uint32_t samples = cmp_rand_between(1, 430179/CMP_BUFFER_FAKTOR);

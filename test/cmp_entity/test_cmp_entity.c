@@ -45,9 +45,7 @@ void test_cmp_ent_cal_hdr_size(void)
 
 	/* raw_mode test */
 	raw_mode_flag = 1;
-	/*TODO: implement: DATA_TYPE_F_CAM_OFFSET, DATA_TYPE_F_CAM_BACKGROUND */
-	/* for (data_type = DATA_TYPE_IMAGETTE; data_type <= DATA_TYPE_F_CAM_BACKGROUND; data_type++) { */
-	for (data_type = DATA_TYPE_IMAGETTE; data_type <= DATA_TYPE_F_CAM_IMAGETTE_ADAPTIVE; data_type++) {
+	for (data_type = DATA_TYPE_IMAGETTE; data_type <= DATA_TYPE_F_CAM_BACKGROUND; data_type++) {
 		hdr_size = cmp_ent_cal_hdr_size(data_type, raw_mode_flag);
 		TEST_ASSERT_EQUAL_INT(GENERIC_HEADER_SIZE, hdr_size);
 
@@ -1295,14 +1293,14 @@ void test_ent_non_ima_cmp_par6(void)
 
 void test_cmp_ent_get_data_buf(void)
 {
-	enum cmp_data_type data_type;/*TODO: implement: DATA_TYPE_F_CAM_OFFSET, DATA_TYPE_F_CAM_BACKGROUND */
+	enum cmp_data_type data_type;
 	struct cmp_entity ent = {0};
 	char *adr;
 	uint32_t s, hdr_size;
 	int error;
 
 	for (data_type = DATA_TYPE_IMAGETTE;
-	     data_type <= DATA_TYPE_F_CAM_IMAGETTE_ADAPTIVE;
+	     data_type <= DATA_TYPE_F_CAM_BACKGROUND;
 	     data_type++) {
 		s = cmp_ent_create(&ent, data_type, 0, 0);
 		TEST_ASSERT_NOT_EQUAL_INT(0, s);
@@ -1316,7 +1314,7 @@ void test_cmp_ent_get_data_buf(void)
 
 	/* RAW mode test */
 	for (data_type = DATA_TYPE_IMAGETTE;
-	     data_type <= DATA_TYPE_F_CAM_IMAGETTE_ADAPTIVE;
+	     data_type <= DATA_TYPE_F_CAM_BACKGROUND;
 	     data_type++) {
 		s = cmp_ent_create(&ent, data_type, 1, 0);
 		TEST_ASSERT_NOT_EQUAL_INT(0, s);

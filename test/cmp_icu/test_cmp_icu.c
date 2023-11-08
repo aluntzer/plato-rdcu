@@ -68,9 +68,7 @@ void test_cmp_cfg_icu_create(void)
 	enum cmp_data_type data_type;
 	enum cmp_mode cmp_mode;
 	uint32_t model_value, lossy_par;
-	/* TODO: change that when DATA_TYPE_BACKGROUND and
-	 * DATA_TYPE_F_CAM_BACKGROUND are implemented */
-	const enum cmp_data_type biggest_data_type = DATA_TYPE_F_CAM_IMAGETTE_ADAPTIVE;
+	const enum cmp_data_type biggest_data_type = DATA_TYPE_F_CAM_BACKGROUND;
 
 	/* wrong data type tests */
 	data_type = DATA_TYPE_UNKNOWN; /* not valid data type */
@@ -1089,9 +1087,9 @@ void test_cmp_cfg_aux(void)
 				    cmp_par_pixels_error, spillover_pixels_error);
 		if (data_type == DATA_TYPE_OFFSET ||
 		    data_type == DATA_TYPE_BACKGROUND ||
-		    data_type == DATA_TYPE_SMEARING
-		    /* data_type == DATA_TYPE_F_CAM_OFFSET || */
-		    /* data_type == DATA_TYPE_F_CAM_BACKGROUND */
+		    data_type == DATA_TYPE_SMEARING ||
+		    data_type == DATA_TYPE_F_CAM_OFFSET ||
+		    data_type == DATA_TYPE_F_CAM_BACKGROUND
 		    ) {
 			TEST_ASSERT_FALSE(error);
 			TEST_ASSERT_EQUAL_INT(data_type, cfg.data_type);
@@ -3948,10 +3946,10 @@ void test_compress_nc_offset_error_cases(void)
 	uint32_t spillover_mean = 2;
 	uint32_t cmp_par_variance = MAX_NON_IMA_GOLOMB_PAR;
 	uint32_t spillover_variance = cmp_icu_max_spill(MAX_NON_IMA_GOLOMB_PAR);
-	uint8_t data_to_compress[MULTI_ENTRY_HDR_SIZE+3*sizeof(struct nc_offset)] = {0};
-	uint8_t compressed_data[MULTI_ENTRY_HDR_SIZE+1*sizeof(struct nc_offset)] = {0};
+	uint8_t data_to_compress[MULTI_ENTRY_HDR_SIZE+3*sizeof(struct offset)] = {0};
+	uint8_t compressed_data[MULTI_ENTRY_HDR_SIZE+1*sizeof(struct offset)] = {0};
 	struct cmp_max_used_bits my_max_used_bits = MAX_USED_BITS_SAFE;
-	struct nc_offset *data_p = (struct nc_offset *)&data_to_compress[MULTI_ENTRY_HDR_SIZE];
+	struct offset *data_p = (struct offset *)&data_to_compress[MULTI_ENTRY_HDR_SIZE];
 
 	cfg = cmp_cfg_icu_create(DATA_TYPE_OFFSET, CMP_MODE_DIFF_MULTI, 0, CMP_LOSSLESS);
 	TEST_ASSERT(cfg.data_type != DATA_TYPE_UNKNOWN);
@@ -4009,10 +4007,10 @@ void test_compress_nc_background_error_cases(void)
 	uint32_t spillover_variance = cmp_icu_max_spill(MAX_NON_IMA_GOLOMB_PAR);
 	uint32_t cmp_par_pixels_error = 23;
 	uint32_t spillover_pixels_error = 42;
-	uint8_t data_to_compress[MULTI_ENTRY_HDR_SIZE+3*sizeof(struct nc_background)] = {0};
-	uint8_t compressed_data[MULTI_ENTRY_HDR_SIZE+1*sizeof(struct nc_background)] = {0};
+	uint8_t data_to_compress[MULTI_ENTRY_HDR_SIZE+3*sizeof(struct background)] = {0};
+	uint8_t compressed_data[MULTI_ENTRY_HDR_SIZE+1*sizeof(struct background)] = {0};
 	struct cmp_max_used_bits my_max_used_bits = MAX_USED_BITS_SAFE;
-	struct nc_background *data_p = (struct nc_background *)&data_to_compress[MULTI_ENTRY_HDR_SIZE];
+	struct background *data_p = (struct background *)&data_to_compress[MULTI_ENTRY_HDR_SIZE];
 
 	cfg = cmp_cfg_icu_create(DATA_TYPE_BACKGROUND, CMP_MODE_DIFF_MULTI, 0, CMP_LOSSLESS);
 	TEST_ASSERT(cfg.data_type != DATA_TYPE_UNKNOWN);

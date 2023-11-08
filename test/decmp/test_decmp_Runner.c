@@ -106,11 +106,11 @@ int main(void)
   run_test(test_cmp_decmp_n_imagette_raw, "test_cmp_decmp_n_imagette_raw", 930);
   run_test(test_decompress_imagette_model, "test_decompress_imagette_model", 977);
   run_test(test_cmp_decmp_s_fx_diff, "test_cmp_decmp_s_fx_diff", 1018);
-  run_test(test_s_fx_diff, "test_s_fx_diff", 1079);
-  run_test(test_s_fx_model, "test_s_fx_model", 1119);
-  run_test(test_cmp_ent_write_cmp_pars, "test_cmp_ent_write_cmp_pars", 1195);
-  run_test(test_cmp_ent_read_header_error_cases, "test_cmp_ent_read_header_error_cases", 1732);
-  run_test(test_decompression_error_cases, "test_decompression_error_cases", 1796);
+  run_test(test_s_fx_diff, "test_s_fx_diff", 1088);
+  run_test(test_s_fx_model, "test_s_fx_model", 1128);
+  run_test(test_cmp_ent_write_cmp_pars, "test_cmp_ent_write_cmp_pars", 1204);
+  run_test(test_cmp_ent_read_header_error_cases, "test_cmp_ent_read_header_error_cases", 1741);
+  run_test(test_decompression_error_cases, "test_decompression_error_cases", 1805);
 
   return UnityEnd();
 }

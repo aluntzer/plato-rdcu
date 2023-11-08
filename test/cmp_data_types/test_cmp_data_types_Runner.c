@@ -81,10 +81,10 @@ int main(void)
 {
   UnityBegin("../test/cmp_data_types/test_cmp_data_types.c");
   run_test(test_size_of_a_sample, "test_size_of_a_sample", 30);
-  run_test(test_cmp_cal_size_of_data, "test_cmp_cal_size_of_data", 76);
-  run_test(test_cmp_input_size_to_samples, "test_cmp_input_size_to_samples", 110);
-  run_test(test_cmp_input_big_to_cpu_endianness, "test_cmp_input_big_to_cpu_endianness", 175);
-  run_test(test_cmp_input_big_to_cpu_endianness_error_cases, "test_cmp_input_big_to_cpu_endianness_error_cases", 482);
+  run_test(test_cmp_cal_size_of_data, "test_cmp_cal_size_of_data", 70);
+  run_test(test_cmp_input_size_to_samples, "test_cmp_input_size_to_samples", 104);
+  run_test(test_cmp_input_big_to_cpu_endianness, "test_cmp_input_big_to_cpu_endianness", 170);
+  run_test(test_cmp_input_big_to_cpu_endianness_error_cases, "test_cmp_input_big_to_cpu_endianness_error_cases", 497);
 
   return UnityEnd();
 }

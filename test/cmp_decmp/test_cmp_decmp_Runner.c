@@ -79,8 +79,8 @@ static void run_test(UnityTestFunction func, const char* name, UNITY_LINE_TYPE l
 int main(void)
 {
   UnityBegin("../test/cmp_decmp/test_cmp_decmp.c");
-  run_test(test_random_compression_decompression, "test_random_compression_decompression", 556);
-  run_test(test_random_compression_decompression2, "test_random_compression_decompression2", 601);
+  run_test(test_random_compression_decompression, "test_random_compression_decompression", 565);
+  run_test(test_random_compression_decompression2, "test_random_compression_decompression2", 609);
 
   return UnityEnd();
 }
