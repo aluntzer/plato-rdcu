@@ -2130,8 +2130,6 @@ uint32_t cmp_ent_build(struct cmp_entity *ent, uint32_t version_id,
 	}
 
 	hdr_size = cmp_ent_cal_hdr_size(cfg->data_type, cfg->cmp_mode == CMP_MODE_RAW);
-	if (!hdr_size)
-		return 0;
 
 	return hdr_size + cmp_size_bytes;
 }

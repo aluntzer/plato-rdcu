@@ -1138,6 +1138,31 @@ void test_cmp_cfg_aux(void)
 
 
 	/* DATA_TYPE_BACKGROUND */
+	cfg = cmp_cfg_icu_create(DATA_TYPE_F_CAM_OFFSET, CMP_MODE_DIFF_MULTI, 7, CMP_LOSSLESS);
+	cmp_par_mean = MIN_NON_IMA_GOLOMB_PAR;
+	spillover_mean = cmp_icu_max_spill(MIN_NON_IMA_GOLOMB_PAR);
+	cmp_par_variance = MIN_NON_IMA_GOLOMB_PAR;
+	spillover_variance = MIN_NON_IMA_SPILL;
+	cmp_par_pixels_error = ~0U;
+	spillover_pixels_error = ~0U;
+
+	error = cmp_cfg_aux(&cfg, cmp_par_mean, spillover_mean,
+			    cmp_par_variance, spillover_variance,
+			    cmp_par_pixels_error, spillover_pixels_error);
+	TEST_ASSERT_FALSE(error);
+	TEST_ASSERT_EQUAL_INT(MIN_NON_IMA_GOLOMB_PAR, cfg.cmp_par_mean);
+	TEST_ASSERT_EQUAL_INT(cmp_icu_max_spill(MIN_NON_IMA_GOLOMB_PAR), cfg.spill_mean);
+	TEST_ASSERT_EQUAL_INT(MIN_NON_IMA_GOLOMB_PAR, cfg.cmp_par_variance);
+	TEST_ASSERT_EQUAL_INT(2, cfg.spill_variance);
+
+	/* This should fail */
+	cmp_par_variance = MIN_NON_IMA_GOLOMB_PAR-1;
+	error = cmp_cfg_aux(&cfg, cmp_par_mean, spillover_mean,
+			    cmp_par_variance, spillover_variance,
+			    cmp_par_pixels_error, spillover_pixels_error);
+	TEST_ASSERT_TRUE(error);
+
+
 	cfg = cmp_cfg_icu_create(DATA_TYPE_BACKGROUND, CMP_MODE_DIFF_ZERO, 7, CMP_LOSSLESS);
 	cmp_par_mean = MAX_NON_IMA_GOLOMB_PAR;
 	spillover_mean = cmp_icu_max_spill(MAX_NON_IMA_GOLOMB_PAR);
@@ -1159,6 +1184,62 @@ void test_cmp_cfg_aux(void)
 
 	/* This should fail */
 	cmp_par_variance = MIN_NON_IMA_GOLOMB_PAR-1;
+	error = cmp_cfg_aux(&cfg, cmp_par_mean, spillover_mean,
+			    cmp_par_variance, spillover_variance,
+			    cmp_par_pixels_error, spillover_pixels_error);
+	TEST_ASSERT_TRUE(error);
+
+
+	/* DATA_TYPE_BACKGROUND */
+	cfg = cmp_cfg_icu_create(DATA_TYPE_BACKGROUND, CMP_MODE_DIFF_ZERO, 7, CMP_LOSSLESS);
+	cmp_par_mean = MAX_NON_IMA_GOLOMB_PAR;
+	spillover_mean = cmp_icu_max_spill(MAX_NON_IMA_GOLOMB_PAR);
+	cmp_par_variance = MIN_NON_IMA_GOLOMB_PAR;
+	spillover_variance = MIN_NON_IMA_SPILL;
+	cmp_par_pixels_error = 42;
+	spillover_pixels_error = 23;
+
+	error = cmp_cfg_aux(&cfg, cmp_par_mean, spillover_mean,
+			    cmp_par_variance, spillover_variance,
+			    cmp_par_pixels_error, spillover_pixels_error);
+	TEST_ASSERT_FALSE(error);
+	TEST_ASSERT_EQUAL_INT(MAX_NON_IMA_GOLOMB_PAR, cfg.cmp_par_mean);
+	TEST_ASSERT_EQUAL_INT(cmp_icu_max_spill(MAX_NON_IMA_GOLOMB_PAR), cfg.spill_mean);
+	TEST_ASSERT_EQUAL_INT(MIN_NON_IMA_GOLOMB_PAR, cfg.cmp_par_variance);
+	TEST_ASSERT_EQUAL_INT(MIN_NON_IMA_SPILL, cfg.spill_variance);
+	TEST_ASSERT_EQUAL_INT(42, cfg.cmp_par_pixels_error);
+	TEST_ASSERT_EQUAL_INT(23, cfg.spill_pixels_error);
+
+	/* This should fail */
+	cmp_par_variance = MIN_NON_IMA_GOLOMB_PAR-1;
+	error = cmp_cfg_aux(&cfg, cmp_par_mean, spillover_mean,
+			    cmp_par_variance, spillover_variance,
+			    cmp_par_pixels_error, spillover_pixels_error);
+	TEST_ASSERT_TRUE(error);
+
+
+	/* DATA_TYPE_F_CAM_BACKGROUND */
+	cfg = cmp_cfg_icu_create(DATA_TYPE_F_CAM_BACKGROUND, CMP_MODE_DIFF_MULTI, 7, CMP_LOSSLESS);
+	cmp_par_mean = MAX_NON_IMA_GOLOMB_PAR;
+	spillover_mean = cmp_icu_max_spill(MAX_NON_IMA_GOLOMB_PAR);
+	cmp_par_variance = MIN_NON_IMA_GOLOMB_PAR;
+	spillover_variance = MIN_NON_IMA_SPILL;
+	cmp_par_pixels_error = 42;
+	spillover_pixels_error = 23;
+
+	error = cmp_cfg_aux(&cfg, cmp_par_mean, spillover_mean,
+			    cmp_par_variance, spillover_variance,
+			    cmp_par_pixels_error, spillover_pixels_error);
+	TEST_ASSERT_FALSE(error);
+	TEST_ASSERT_EQUAL_INT(MAX_NON_IMA_GOLOMB_PAR, cfg.cmp_par_mean);
+	TEST_ASSERT_EQUAL_INT(cmp_icu_max_spill(MAX_NON_IMA_GOLOMB_PAR), cfg.spill_mean);
+	TEST_ASSERT_EQUAL_INT(MIN_NON_IMA_GOLOMB_PAR, cfg.cmp_par_variance);
+	TEST_ASSERT_EQUAL_INT(MIN_NON_IMA_SPILL, cfg.spill_variance);
+	TEST_ASSERT_EQUAL_INT(42, cfg.cmp_par_pixels_error);
+	TEST_ASSERT_EQUAL_INT(23, cfg.spill_pixels_error);
+
+	/* This should fail */
+	cmp_par_pixels_error = MIN_NON_IMA_GOLOMB_PAR-1;
 	error = cmp_cfg_aux(&cfg, cmp_par_mean, spillover_mean,
 			    cmp_par_variance, spillover_variance,
 			    cmp_par_pixels_error, spillover_pixels_error);
@@ -1191,14 +1272,6 @@ void test_cmp_cfg_aux(void)
 			    cmp_par_variance, spillover_variance,
 			    cmp_par_pixels_error, spillover_pixels_error);
 	TEST_ASSERT_TRUE(error);
-
-#if 0
-TODO: implemented F_CAM DATA_TYPE_F_CAM_OFFSET and DATA_TYPE_F_CAM_BACKGROUND
-	/* DATA_TYPE_F_CAM_OFFSET */
-	cfg = cmp_cfg_icu_create(DATA_TYPE_F_CAM_OFFSET, CMP_MODE_DIFF_ZERO, 7, CMP_LOSSLESS);
-	/* DATA_TYPE_F_CAM_BACKGROUND */
-	cfg = cmp_cfg_icu_create(DATA_TYPE_F_CAM_BACKGROUND, CMP_MODE_DIFF_ZERO, 7, CMP_LOSSLESS);
-#endif
 }
 
 
@@ -3934,10 +4007,10 @@ void test_compress_l_fx_efx_ncob_ecob_error_cases(void)
 
 
 /**
- * @test compress_nc_offset
+ * @test compress_offset
  */
 
-void test_compress_nc_offset_error_cases(void)
+void test_compress_offset_error_cases(void)
 {
 	int error, cmp_bits;
 	uint32_t compressed_data_size;
@@ -3989,14 +4062,27 @@ void test_compress_nc_offset_error_cases(void)
 	cmp_cfg_icu_max_used_bits(&cfg, &my_max_used_bits);
 	cmp_bits = icu_compress_data(&cfg);
 	TEST_ASSERT_EQUAL_INT(-1, cmp_bits);
+
+
+	cfg.data_type = DATA_TYPE_F_CAM_OFFSET;
+	my_max_used_bits.fc_offset_mean = 33; /* more than 32 bits are not allowed */
+	cmp_cfg_icu_max_used_bits(&cfg, &my_max_used_bits);
+	cmp_bits = icu_compress_data(&cfg);
+	TEST_ASSERT_EQUAL_INT(-1, cmp_bits);
+
+	my_max_used_bits.fc_offset_mean = 32;
+	my_max_used_bits.fc_offset_variance = 33; /* more than 32 bits are not allowed */
+	cmp_cfg_icu_max_used_bits(&cfg, &my_max_used_bits);
+	cmp_bits = icu_compress_data(&cfg);
+	TEST_ASSERT_EQUAL_INT(-1, cmp_bits);
 }
 
 
 /**
- * @test compress_nc_background
+ * @test compress_background
  */
 
-void test_compress_nc_background_error_cases(void)
+void test_compress_background_error_cases(void)
 {
 	int error, cmp_bits;
 	uint32_t compressed_data_size;
@@ -4059,6 +4145,25 @@ void test_compress_nc_background_error_cases(void)
 
 	my_max_used_bits.nc_background_variance = 32;
 	my_max_used_bits.nc_background_outlier_pixels = 33; /* more than 32 bits are not allowed */
+	cmp_cfg_icu_max_used_bits(&cfg, &my_max_used_bits);
+	cmp_bits = icu_compress_data(&cfg);
+	TEST_ASSERT_EQUAL_INT(-1, cmp_bits);
+
+
+	cfg.data_type = DATA_TYPE_F_CAM_BACKGROUND;
+	my_max_used_bits.fc_background_mean = 33; /* more than 32 bits are not allowed */
+	cmp_cfg_icu_max_used_bits(&cfg, &my_max_used_bits);
+	cmp_bits = icu_compress_data(&cfg);
+	TEST_ASSERT_EQUAL_INT(-1, cmp_bits);
+
+	my_max_used_bits.fc_background_mean = 32;
+	my_max_used_bits.fc_background_variance = 33; /* more than 32 bits are not allowed */
+	cmp_cfg_icu_max_used_bits(&cfg, &my_max_used_bits);
+	cmp_bits = icu_compress_data(&cfg);
+	TEST_ASSERT_EQUAL_INT(-1, cmp_bits);
+
+	my_max_used_bits.fc_background_variance = 32;
+	my_max_used_bits.fc_background_outlier_pixels = 33; /* more than 32 bits are not allowed */
 	cmp_cfg_icu_max_used_bits(&cfg, &my_max_used_bits);
 	cmp_bits = icu_compress_data(&cfg);
 	TEST_ASSERT_EQUAL_INT(-1, cmp_bits);

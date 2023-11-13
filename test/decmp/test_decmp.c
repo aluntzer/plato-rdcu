@@ -1311,7 +1311,7 @@ void test_cmp_ent_write_cmp_pars(void)
 	cfg.ap1_golomb_par = 14;
 	cfg.ap2_spill = 333;
 	cfg.ap2_golomb_par = 43;
-	cfg.max_used_bits = cmp_max_used_bits_list_get(42);
+	cfg.max_used_bits = NULL; /* no max_used_bits is set */
 
 	/* create a compression entity */
 	size = cmp_ent_create(NULL, cfg.data_type, cfg.cmp_mode == CMP_MODE_RAW, 12);
@@ -1330,7 +1330,8 @@ void test_cmp_ent_write_cmp_pars(void)
 	TEST_ASSERT_EQUAL_INT(cmp_cal_size_of_data(cfg.samples, cfg.data_type), cmp_ent_get_original_size(ent));
 	TEST_ASSERT_EQUAL_INT(cfg.cmp_mode, cmp_ent_get_cmp_mode(ent));
 	TEST_ASSERT_EQUAL_INT(cfg.model_value, cmp_ent_get_model_value(ent));
-	TEST_ASSERT_EQUAL_INT(max_used_bits.version, cmp_ent_get_max_used_bits_version(ent));
+	/* zero is expected when max_used_bits = NULL */
+	TEST_ASSERT_EQUAL_INT(0, cmp_ent_get_max_used_bits_version(ent));
 	TEST_ASSERT_EQUAL_INT(cfg.round, cmp_ent_get_lossy_cmp_par(ent));
 
 	TEST_ASSERT_EQUAL_INT(cfg.spill, cmp_ent_get_ima_spill(ent));
@@ -1344,6 +1345,7 @@ void test_cmp_ent_write_cmp_pars(void)
 	TEST_ASSERT_FALSE(error);
 	cfg.icu_output_buf = cmp_ent_get_data_buf(ent); /* quick fix that both cfg are equal */
 	cfg.buffer_length = 12; /* quick fix that both cfg are equal */
+	cfg.max_used_bits = &MAX_USED_BITS_SAFE;
 	TEST_ASSERT_EQUAL_MEMORY(&cfg, &cfg_read, sizeof(struct cmp_cfg));
 
 	free(ent);
@@ -1769,6 +1771,9 @@ void test_cmp_ent_read_header_error_cases(void)
 
 	/* unknown data type */
 	cmp_ent_set_data_type(ent, DATA_TYPE_UNKNOWN, 1);
+	error = cmp_ent_read_header(ent, &cfg);
+	TEST_ASSERT_TRUE(error);
+	cmp_ent_set_data_type(ent, (enum cmp_data_type)1000, 1);
 	error = cmp_ent_read_header(ent, &cfg);
 	TEST_ASSERT_TRUE(error);
 	/* unknown data type */
