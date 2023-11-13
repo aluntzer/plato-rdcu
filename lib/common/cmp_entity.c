@@ -20,6 +20,7 @@
 
 #include <stdint.h>
 #include <string.h>
+#include <stdio.h>
 
 #ifndef ICU_ASW
 #  if defined __has_include
@@ -964,7 +965,7 @@ int cmp_ent_set_non_ima_cmp_par6(struct cmp_entity *ent, uint32_t cmp_par_6_used
  * @returns the ASW version identifier on success, 0 on error
  */
 
-uint32_t cmp_ent_get_version_id(struct cmp_entity *ent)
+uint32_t cmp_ent_get_version_id(const struct cmp_entity *ent)
 {
 	if (!ent)
 		return 0;
@@ -981,7 +982,7 @@ uint32_t cmp_ent_get_version_id(struct cmp_entity *ent)
  * @returns the size of the compression entity in bytes on success, 0 on error
  */
 
-uint32_t cmp_ent_get_size(struct cmp_entity *ent)
+uint32_t cmp_ent_get_size(const struct cmp_entity *ent)
 {
 	if (!ent)
 		return 0;
@@ -1002,7 +1003,7 @@ uint32_t cmp_ent_get_size(struct cmp_entity *ent)
  * @returns the original size of the compressed data in bytes on success, 0 on error
  */
 
-uint32_t cmp_ent_get_original_size(struct cmp_entity *ent)
+uint32_t cmp_ent_get_original_size(const struct cmp_entity *ent)
 {
 	if (!ent)
 		return 0;
@@ -1023,7 +1024,7 @@ uint32_t cmp_ent_get_original_size(struct cmp_entity *ent)
  * @returns the compression start timestamp on success, 0 on error
  */
 
-uint64_t cmp_ent_get_start_timestamp(struct cmp_entity *ent)
+uint64_t cmp_ent_get_start_timestamp(const struct cmp_entity *ent)
 {
 	if (!ent)
 		return 0;
@@ -1044,7 +1045,7 @@ uint64_t cmp_ent_get_start_timestamp(struct cmp_entity *ent)
  *	error
  */
 
-uint32_t cmp_ent_get_coarse_start_time(struct cmp_entity *ent)
+uint32_t cmp_ent_get_coarse_start_time(const struct cmp_entity *ent)
 {
 	if (!ent)
 		return 0;
@@ -1061,7 +1062,7 @@ uint32_t cmp_ent_get_coarse_start_time(struct cmp_entity *ent)
  *	error
  */
 
-uint16_t cmp_ent_get_fine_start_time(struct cmp_entity *ent)
+uint16_t cmp_ent_get_fine_start_time(const struct cmp_entity *ent)
 {
 	if (!ent)
 		return 0;
@@ -1078,7 +1079,7 @@ uint16_t cmp_ent_get_fine_start_time(struct cmp_entity *ent)
  * @returns the compression end timestamp on success, 0 on error
  */
 
-uint64_t cmp_ent_get_end_timestamp(struct cmp_entity *ent)
+uint64_t cmp_ent_get_end_timestamp(const struct cmp_entity *ent)
 {
 	if (!ent)
 		return 0;
@@ -1099,7 +1100,7 @@ uint64_t cmp_ent_get_end_timestamp(struct cmp_entity *ent)
  *	error
  */
 
-uint32_t cmp_ent_get_coarse_end_time(struct cmp_entity *ent)
+uint32_t cmp_ent_get_coarse_end_time(const struct cmp_entity *ent)
 {
 	if (!ent)
 		return 0;
@@ -1116,7 +1117,7 @@ uint32_t cmp_ent_get_coarse_end_time(struct cmp_entity *ent)
  *	error
  */
 
-uint16_t cmp_ent_get_fine_end_time(struct cmp_entity *ent)
+uint16_t cmp_ent_get_fine_end_time(const struct cmp_entity *ent)
 {
 	if (!ent)
 		return 0;
@@ -1134,7 +1135,7 @@ uint16_t cmp_ent_get_fine_end_time(struct cmp_entity *ent)
  *	DATA_TYPE_UNKNOWN on error
  */
 
-enum cmp_data_type cmp_ent_get_data_type(struct cmp_entity *ent)
+enum cmp_data_type cmp_ent_get_data_type(const struct cmp_entity *ent)
 {
 	enum cmp_data_type data_type;
 
@@ -1159,7 +1160,7 @@ enum cmp_data_type cmp_ent_get_data_type(struct cmp_entity *ent)
  * @returns the data_type raw bit on success, 0 on error
  */
 
-int cmp_ent_get_data_type_raw_bit(struct cmp_entity *ent)
+int cmp_ent_get_data_type_raw_bit(const struct cmp_entity *ent)
 {
 	if (!ent)
 		return 0;
@@ -1176,7 +1177,7 @@ int cmp_ent_get_data_type_raw_bit(struct cmp_entity *ent)
  * @returns the used compression mode on success, 0 on error
  */
 
-uint8_t cmp_ent_get_cmp_mode(struct cmp_entity *ent)
+uint8_t cmp_ent_get_cmp_mode(const struct cmp_entity *ent)
 {
 	if (!ent)
 		return 0;
@@ -1193,7 +1194,7 @@ uint8_t cmp_ent_get_cmp_mode(struct cmp_entity *ent)
  * @returns the used model value used on success, 0 on error
  */
 
-uint8_t cmp_ent_get_model_value(struct cmp_entity *ent)
+uint8_t cmp_ent_get_model_value(const struct cmp_entity *ent)
 {
 	if (!ent)
 		return 0;
@@ -1211,7 +1212,7 @@ uint8_t cmp_ent_get_model_value(struct cmp_entity *ent)
  * @returns the model identifier on success, 0 on error
  */
 
-uint16_t cmp_ent_get_model_id(struct cmp_entity *ent)
+uint16_t cmp_ent_get_model_id(const struct cmp_entity *ent)
 {
 	if (!ent)
 		return 0;
@@ -1228,7 +1229,7 @@ uint16_t cmp_ent_get_model_id(struct cmp_entity *ent)
  * @returns the model counter on success, 0 on error
  */
 
-uint8_t cmp_ent_get_model_counter(struct cmp_entity *ent)
+uint8_t cmp_ent_get_model_counter(const struct cmp_entity *ent)
 {
 	if (!ent)
 		return 0;
@@ -1247,7 +1248,7 @@ uint8_t cmp_ent_get_model_counter(struct cmp_entity *ent)
  *	0 on error
  */
 
-uint8_t cmp_ent_get_max_used_bits_version(struct cmp_entity *ent)
+uint8_t cmp_ent_get_max_used_bits_version(const struct cmp_entity *ent)
 {
 	if (!ent)
 		return 0;
@@ -1264,7 +1265,7 @@ uint8_t cmp_ent_get_max_used_bits_version(struct cmp_entity *ent)
  * @returns the used lossy compression/round parameter on success, 0 on error
  */
 
-uint16_t cmp_ent_get_lossy_cmp_par(struct cmp_entity *ent)
+uint16_t cmp_ent_get_lossy_cmp_par(const struct cmp_entity *ent)
 {
 	if (!ent)
 		return 0;
@@ -1282,7 +1283,7 @@ uint16_t cmp_ent_get_lossy_cmp_par(struct cmp_entity *ent)
  * @returns the used spillover threshold on success, 0 on error
  */
 
-uint16_t cmp_ent_get_ima_spill(struct cmp_entity *ent)
+uint16_t cmp_ent_get_ima_spill(const struct cmp_entity *ent)
 {
 	if (!ent)
 		return 0;
@@ -1300,7 +1301,7 @@ uint16_t cmp_ent_get_ima_spill(struct cmp_entity *ent)
  * @returns the used Golomb parameter on success, 0 on error
  */
 
-uint8_t cmp_ent_get_ima_golomb_par(struct cmp_entity *ent)
+uint8_t cmp_ent_get_ima_golomb_par(const struct cmp_entity *ent)
 {
 	if (!ent)
 		return 0;
@@ -1318,7 +1319,7 @@ uint8_t cmp_ent_get_ima_golomb_par(struct cmp_entity *ent)
  * @returns the used adaptive 1 spillover threshold on success, 0 on error
  */
 
-uint16_t cmp_ent_get_ima_ap1_spill(struct cmp_entity *ent)
+uint16_t cmp_ent_get_ima_ap1_spill(const struct cmp_entity *ent)
 {
 	if (!ent)
 		return 0;
@@ -1336,7 +1337,7 @@ uint16_t cmp_ent_get_ima_ap1_spill(struct cmp_entity *ent)
  * @returns the used adaptive 1 Golomb parameter on success, 0 on error
  */
 
-uint8_t cmp_ent_get_ima_ap1_golomb_par(struct cmp_entity *ent)
+uint8_t cmp_ent_get_ima_ap1_golomb_par(const struct cmp_entity *ent)
 {
 	if (!ent)
 		return 0;
@@ -1354,7 +1355,7 @@ uint8_t cmp_ent_get_ima_ap1_golomb_par(struct cmp_entity *ent)
  * @returns the used adaptive 2 spillover threshold on success, 0 on error
  */
 
-uint16_t cmp_ent_get_ima_ap2_spill(struct cmp_entity *ent)
+uint16_t cmp_ent_get_ima_ap2_spill(const struct cmp_entity *ent)
 {
 	if (!ent)
 		return 0;
@@ -1372,7 +1373,7 @@ uint16_t cmp_ent_get_ima_ap2_spill(struct cmp_entity *ent)
  * @returns the used adaptive 2 Golomb parameter on success, 0 on error
  */
 
-uint8_t cmp_ent_get_ima_ap2_golomb_par(struct cmp_entity *ent)
+uint8_t cmp_ent_get_ima_ap2_golomb_par(const struct cmp_entity *ent)
 {
 	if (!ent)
 		return 0;
@@ -1390,7 +1391,7 @@ uint8_t cmp_ent_get_ima_ap2_golomb_par(struct cmp_entity *ent)
  * @returns the used spillover threshold 1 parameter on success, 0 on error
  */
 
-uint32_t cmp_ent_get_non_ima_spill1(struct cmp_entity *ent)
+uint32_t cmp_ent_get_non_ima_spill1(const struct cmp_entity *ent)
 {
 	if (!ent)
 		return 0;
@@ -1412,7 +1413,7 @@ uint32_t cmp_ent_get_non_ima_spill1(struct cmp_entity *ent)
  * @returns the used compression parameter 1 on success, 0 on error
  */
 
-uint16_t cmp_ent_get_non_ima_cmp_par1(struct cmp_entity *ent)
+uint16_t cmp_ent_get_non_ima_cmp_par1(const struct cmp_entity *ent)
 {
 	if (!ent)
 		return 0;
@@ -1430,7 +1431,7 @@ uint16_t cmp_ent_get_non_ima_cmp_par1(struct cmp_entity *ent)
  * @returns the used spillover threshold 2 parameter on success, 0 on error
  */
 
-uint32_t cmp_ent_get_non_ima_spill2(struct cmp_entity *ent)
+uint32_t cmp_ent_get_non_ima_spill2(const struct cmp_entity *ent)
 {
 	if (!ent)
 		return 0;
@@ -1452,7 +1453,7 @@ uint32_t cmp_ent_get_non_ima_spill2(struct cmp_entity *ent)
  * @returns the used compression parameter 2 on success, 0 on error
  */
 
-uint16_t cmp_ent_get_non_ima_cmp_par2(struct cmp_entity *ent)
+uint16_t cmp_ent_get_non_ima_cmp_par2(const struct cmp_entity *ent)
 {
 	if (!ent)
 		return 0;
@@ -1470,7 +1471,7 @@ uint16_t cmp_ent_get_non_ima_cmp_par2(struct cmp_entity *ent)
  * @returns the used spillover threshold 3 parameter on success, 0 on error
  */
 
-uint32_t cmp_ent_get_non_ima_spill3(struct cmp_entity *ent)
+uint32_t cmp_ent_get_non_ima_spill3(const struct cmp_entity *ent)
 {
 	if (!ent)
 		return 0;
@@ -1492,7 +1493,7 @@ uint32_t cmp_ent_get_non_ima_spill3(struct cmp_entity *ent)
  * @returns the used compression parameter 3 on success, 0 on error
  */
 
-uint16_t cmp_ent_get_non_ima_cmp_par3(struct cmp_entity *ent)
+uint16_t cmp_ent_get_non_ima_cmp_par3(const struct cmp_entity *ent)
 {
 	if (!ent)
 		return 0;
@@ -1510,7 +1511,7 @@ uint16_t cmp_ent_get_non_ima_cmp_par3(struct cmp_entity *ent)
  * @returns the used spillover threshold 4 parameter on success, 0 on error
  */
 
-uint32_t cmp_ent_get_non_ima_spill4(struct cmp_entity *ent)
+uint32_t cmp_ent_get_non_ima_spill4(const struct cmp_entity *ent)
 {
 	if (!ent)
 		return 0;
@@ -1532,7 +1533,7 @@ uint32_t cmp_ent_get_non_ima_spill4(struct cmp_entity *ent)
  * @returns the used compression parameter 4 on success, 0 on error
  */
 
-uint16_t cmp_ent_get_non_ima_cmp_par4(struct cmp_entity *ent)
+uint16_t cmp_ent_get_non_ima_cmp_par4(const struct cmp_entity *ent)
 {
 	if (!ent)
 		return 0;
@@ -1550,7 +1551,7 @@ uint16_t cmp_ent_get_non_ima_cmp_par4(struct cmp_entity *ent)
  * @returns the used spillover threshold 5 parameter on success, 0 on error
  */
 
-uint32_t cmp_ent_get_non_ima_spill5(struct cmp_entity *ent)
+uint32_t cmp_ent_get_non_ima_spill5(const struct cmp_entity *ent)
 {
 	if (!ent)
 		return 0;
@@ -1572,7 +1573,7 @@ uint32_t cmp_ent_get_non_ima_spill5(struct cmp_entity *ent)
  * @returns the used compression parameter 5 on success, 0 on error
  */
 
-uint16_t cmp_ent_get_non_ima_cmp_par5(struct cmp_entity *ent)
+uint16_t cmp_ent_get_non_ima_cmp_par5(const struct cmp_entity *ent)
 {
 	if (!ent)
 		return 0;
@@ -1590,7 +1591,7 @@ uint16_t cmp_ent_get_non_ima_cmp_par5(struct cmp_entity *ent)
  * @returns the used spillover threshold 6 parameter on success, 0 on error
  */
 
-uint32_t cmp_ent_get_non_ima_spill6(struct cmp_entity *ent)
+uint32_t cmp_ent_get_non_ima_spill6(const struct cmp_entity *ent)
 {
 	if (!ent)
 		return 0;
@@ -1612,7 +1613,7 @@ uint32_t cmp_ent_get_non_ima_spill6(struct cmp_entity *ent)
  * @returns the used compression parameter 6 on success, 0 on error
  */
 
-uint16_t cmp_ent_get_non_ima_cmp_par6(struct cmp_entity *ent)
+uint16_t cmp_ent_get_non_ima_cmp_par6(const struct cmp_entity *ent)
 {
 	if (!ent)
 		return 0;
@@ -1748,7 +1749,7 @@ int32_t cmp_ent_get_cmp_data(struct cmp_entity *ent, uint32_t *data_buf,
  * @returns the size of the entity header in bytes on success, 0 on error
  */
 
-static uint32_t cmp_ent_get_hdr_size(struct cmp_entity *ent)
+static uint32_t cmp_ent_get_hdr_size(const struct cmp_entity *ent)
 {
 	return cmp_ent_cal_hdr_size(cmp_ent_get_data_type(ent),
 				    cmp_ent_get_data_type_raw_bit(ent));
@@ -1764,7 +1765,7 @@ static uint32_t cmp_ent_get_hdr_size(struct cmp_entity *ent)
  * @returns the size of the compressed data in bytes on success, 0 on error
  */
 
-uint32_t cmp_ent_get_cmp_data_size(struct cmp_entity *ent)
+uint32_t cmp_ent_get_cmp_data_size(const struct cmp_entity *ent)
 {
 	uint32_t cmp_ent_size, header_size;
 
@@ -2103,7 +2104,7 @@ uint32_t cmp_ent_create(struct cmp_entity *ent, enum cmp_data_type data_type,
 
 uint32_t cmp_ent_build(struct cmp_entity *ent, uint32_t version_id,
 		       uint64_t start_time, uint64_t end_time, uint16_t model_id,
-		       uint8_t model_counter, struct cmp_cfg *cfg, int cmp_size_bits)
+		       uint8_t model_counter, const struct cmp_cfg *cfg, int cmp_size_bits)
 {
 	uint32_t cmp_size_bytes = cmp_bit_to_4byte((unsigned int)cmp_size_bits); /* TODO: do we need to round up to 4 bytes? */
 	uint32_t hdr_size;
@@ -2230,9 +2231,9 @@ uint64_t cmp_ent_create_timestamp(const struct timespec *ts)
  * @param ent	pointer to a compression entity
  */
 
-void cmp_ent_print_header(struct cmp_entity *ent)
+void cmp_ent_print_header(const struct cmp_entity *ent)
 {
-	uint8_t *p = (uint8_t *)ent;
+	const uint8_t *p = (const uint8_t *)ent;
 	uint32_t hdr_size = cmp_ent_get_hdr_size(ent);
 	size_t i;
 
@@ -2253,7 +2254,7 @@ void cmp_ent_print_header(struct cmp_entity *ent)
 
 void cmp_ent_print_data(struct cmp_entity *ent)
 {
-	uint8_t *p = cmp_ent_get_data_buf(ent);
+	const uint8_t *p = cmp_ent_get_data_buf(ent);
 	size_t data_size = cmp_ent_get_cmp_data_size(ent);
 	size_t i;
 
@@ -2290,7 +2291,7 @@ void cmp_ent_print(struct cmp_entity *ent)
  * @param ent	pointer to a compression entity
  */
 
-static void cmp_ent_parse_generic_header(struct cmp_entity *ent)
+static void cmp_ent_parse_generic_header(const struct cmp_entity *ent)
 {
 	uint32_t version_id, cmp_ent_size, original_size, cmp_mode_used,
 		 model_value_used, model_id, model_counter, max_used_bits_version,
@@ -2369,7 +2370,7 @@ static void cmp_ent_parse_generic_header(struct cmp_entity *ent)
  * @param ent	pointer to a compression entity
  */
 
-static void cmp_ent_parese_imagette_header(struct cmp_entity *ent)
+static void cmp_ent_parese_imagette_header(const struct cmp_entity *ent)
 {
 	uint32_t spill_used, golomb_par_used;
 
@@ -2387,7 +2388,7 @@ static void cmp_ent_parese_imagette_header(struct cmp_entity *ent)
  * @param ent	pointer to a compression entity
  */
 
-static void cmp_ent_parese_adaptive_imagette_header(struct cmp_entity *ent)
+static void cmp_ent_parese_adaptive_imagette_header(const struct cmp_entity *ent)
 {
 	uint32_t spill_used, golomb_par_used, ap1_spill_used,
 		 ap1_golomb_par_used, ap2_spill_used, ap2_golomb_par_used;
@@ -2418,7 +2419,7 @@ static void cmp_ent_parese_adaptive_imagette_header(struct cmp_entity *ent)
  * @param ent	pointer to a compression entity
  */
 
-static void cmp_ent_parese_specific_header(struct cmp_entity *ent)
+static void cmp_ent_parese_specific_header(const struct cmp_entity *ent)
 {
 	enum cmp_data_type data_type = cmp_ent_get_data_type(ent);
 

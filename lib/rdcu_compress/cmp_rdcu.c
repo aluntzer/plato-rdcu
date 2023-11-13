@@ -496,7 +496,7 @@ void rdcu_disable_interrput_signal(void)
  * @param addr	SRAM address to inject edac error
  */
 
-int rdcu_inject_edac_error(struct cmp_cfg *cfg, uint32_t addr)
+int rdcu_inject_edac_error(const struct cmp_cfg *cfg, uint32_t addr)
 {
 	uint32_t sub_chip_die_addr;
 	uint8_t buf[4] = {0};

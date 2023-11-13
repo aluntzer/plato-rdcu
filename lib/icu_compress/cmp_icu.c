@@ -119,6 +119,20 @@ struct cmp_cfg cmp_cfg_icu_create(enum cmp_data_type data_type, enum cmp_mode cm
  *
  * @returns the size of the compressed_data buffer on success; 0 if the
  *	parameters are invalid
+ *
+ * @note There is a difference in the data_samples parameter when compressing
+ * imagette data compared to compressing non-imagette data!
+ * When compressing non-imagette data, the compressor expects that the
+ * collection header will always prefix the non-imagette data. Therefore, the
+ * data_samples parameter is simply the number of entries in the collection. It
+ * is not intended to join multiple non-imagette collections and compress them
+ * together.
+ * When compressing imagette data, the length of the entire data to be
+ * compressed, including the collection header, is measured in 16-bit samples.
+ * The compressor makes in this case no distinction between header and imagette
+ * data. Therefore, the data_samples parameter is the number of 16-bit imagette
+ * pixels plus the length of the collection header, measured in 16-bit units.
+ * The compression of multiple joined collections is possible.
  */
 
 uint32_t cmp_cfg_icu_buffers(struct cmp_cfg *cfg, void *data_to_compress,
