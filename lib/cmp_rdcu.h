@@ -22,6 +22,8 @@
 
 #include "common/cmp_support.h"
 #include "rdcu_compress/cmp_rdcu_cfg.h"
+#include "rdcu_compress/rdcu_ctrl.h"
+#include "rdcu_compress/rdcu_rmap.h"
 
 
 /* Compression Error Register bits definition, see RDCU-FRS-FN-0952 */

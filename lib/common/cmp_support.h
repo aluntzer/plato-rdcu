@@ -274,7 +274,7 @@ unsigned int cmp_bit_to_4byte(unsigned int cmp_size_bit);
 int cmp_cfg_icu_is_invalid(const struct cmp_cfg *cfg);
 int cmp_cfg_gen_par_is_invalid(const struct cmp_cfg *cfg, enum check_opt opt);
 int cmp_cfg_icu_buffers_is_invalid(const struct cmp_cfg *cfg);
-int cmp_cfg_icu_max_used_bits_out_of_limit(const struct cmp_max_used_bits *max_used_bits_repo);
+int cmp_cfg_icu_max_used_bits_out_of_limit(const struct cmp_max_used_bits *max_used_bits);
 int cmp_cfg_imagette_is_invalid(const struct cmp_cfg *cfg, enum check_opt opt);
 int cmp_cfg_fx_cob_is_invalid(const struct cmp_cfg *cfg);
 int cmp_cfg_aux_is_invalid(const struct cmp_cfg *cfg);

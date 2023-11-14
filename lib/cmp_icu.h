@@ -54,7 +54,7 @@ int cmp_cfg_aux(struct cmp_cfg *cfg,
 		uint32_t cmp_par_pixels_error, uint32_t spillover_pixels_error);
 
 /* set up the max_used_bits used for the compression */
-int cmp_cfg_icu_max_used_bits(struct cmp_cfg *cfg, const struct cmp_max_used_bits *max_used_bits_repo);
+int cmp_cfg_icu_max_used_bits(struct cmp_cfg *cfg, const struct cmp_max_used_bits *max_used_bits);
 
 /* start the compression */
 int icu_compress_data(const struct cmp_cfg *cfg);
