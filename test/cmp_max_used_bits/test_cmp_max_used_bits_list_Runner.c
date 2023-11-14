@@ -76,7 +76,7 @@ static void run_test(UnityTestFunction func, const char* name, UNITY_LINE_TYPE l
 int main(void)
 {
   UnityBegin("../test/cmp_max_used_bits/test_cmp_max_used_bits_list.c");
-  run_test(test_cmp_max_used_bits_list, "test_cmp_max_used_bits_list", 61);
+  run_test(test_cmp_max_used_bits_list, "test_cmp_max_used_bits_list", 63);
 
   return UnityEnd();
 }

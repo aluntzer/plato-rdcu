@@ -30,11 +30,6 @@
 void test_size_of_a_sample(void)
 {
 	size_t size;
-	/* TODO: implied DATA_TYPE_F_CAM_OFFSET and DATA_TYPE_F_CAM_BACKGROUND DATA_TYPE_F_CAM_BACKGROUND*/
-	size = size_of_a_sample(DATA_TYPE_F_CAM_OFFSET);
-	TEST_ASSERT_EQUAL(0, size);
-	size = size_of_a_sample(DATA_TYPE_F_CAM_BACKGROUND);
-	TEST_ASSERT_EQUAL(0, size);
 
 	/* test error cases */
 	size = size_of_a_sample(DATA_TYPE_UNKNOWN);
@@ -42,13 +37,12 @@ void test_size_of_a_sample(void)
 	size = size_of_a_sample(DATA_TYPE_F_CAM_BACKGROUND+1);
 	TEST_ASSERT_EQUAL(0, size);
 
-
 	TEST_ASSERT_EQUAL(sizeof(uint16_t), size_of_a_sample(DATA_TYPE_IMAGETTE));
 	TEST_ASSERT_EQUAL(sizeof(uint16_t), size_of_a_sample(DATA_TYPE_IMAGETTE_ADAPTIVE));
 	TEST_ASSERT_EQUAL(sizeof(uint16_t), size_of_a_sample(DATA_TYPE_SAT_IMAGETTE));
 	TEST_ASSERT_EQUAL(sizeof(uint16_t), size_of_a_sample(DATA_TYPE_SAT_IMAGETTE_ADAPTIVE));
-	TEST_ASSERT_EQUAL(sizeof(struct nc_offset), size_of_a_sample(DATA_TYPE_OFFSET));
-	TEST_ASSERT_EQUAL(sizeof(struct nc_background), size_of_a_sample(DATA_TYPE_BACKGROUND));
+	TEST_ASSERT_EQUAL(sizeof(struct offset), size_of_a_sample(DATA_TYPE_OFFSET));
+	TEST_ASSERT_EQUAL(sizeof(struct background), size_of_a_sample(DATA_TYPE_BACKGROUND));
 	TEST_ASSERT_EQUAL(sizeof(struct smearing), size_of_a_sample(DATA_TYPE_SMEARING));
 	TEST_ASSERT_EQUAL(sizeof(struct s_fx), size_of_a_sample(DATA_TYPE_S_FX));
 	TEST_ASSERT_EQUAL(sizeof(struct s_fx_efx), size_of_a_sample(DATA_TYPE_S_FX_EFX));
@@ -64,8 +58,8 @@ void test_size_of_a_sample(void)
 	TEST_ASSERT_EQUAL(sizeof(struct f_fx_efx_ncob_ecob), size_of_a_sample(DATA_TYPE_F_FX_EFX_NCOB_ECOB));
 	TEST_ASSERT_EQUAL(sizeof(uint16_t), size_of_a_sample(DATA_TYPE_F_CAM_IMAGETTE));
 	TEST_ASSERT_EQUAL(sizeof(uint16_t), size_of_a_sample(DATA_TYPE_F_CAM_IMAGETTE_ADAPTIVE));
-	/* TODO: TEST_ASSERT_EQUAL(sizeof(struct ), size_of_a_sample(DATA_TYPE_F_CAM_OFFSET)); */
-	/* TODO: TEST_ASSERT_EQUAL(sizeof(struct ), size_of_a_sample(DATA_TYPE_F_CAM_BACKGROUND */
+	TEST_ASSERT_EQUAL(sizeof(struct offset), size_of_a_sample(DATA_TYPE_F_CAM_OFFSET));
+	TEST_ASSERT_EQUAL(sizeof(struct background), size_of_a_sample(DATA_TYPE_F_CAM_BACKGROUND));
 }
 
 
@@ -191,10 +185,19 @@ void test_cmp_input_big_to_cpu_endianness(void)
 	{
 		struct {
 			uint8_t hdr[MULTI_ENTRY_HDR_SIZE];
-			struct nc_offset entry[2];
+			struct offset entry[2];
 		} __attribute__((packed)) data = {0};
 
 		data_type = DATA_TYPE_OFFSET;
+
+		data.entry[0].mean     = 0x00010203;
+		data.entry[0].variance = 0x04050607;
+		data.entry[1].mean     = 0x08090A0B;
+		data.entry[1].variance = 0x0C0D0E0F;
+
+		check_endianness(&data, sizeof(data), data_type);
+
+		data_type = DATA_TYPE_F_CAM_OFFSET;
 
 		data.entry[0].mean     = 0x00010203;
 		data.entry[0].variance = 0x04050607;
@@ -206,10 +209,21 @@ void test_cmp_input_big_to_cpu_endianness(void)
 	{
 		struct {
 			uint8_t hdr[MULTI_ENTRY_HDR_SIZE];
-			struct nc_background entry[2];
+			struct background entry[2];
 		} __attribute__((packed)) data = {0};
 
 		data_type = DATA_TYPE_BACKGROUND;
+
+		data.entry[0].mean           = 0x00010203;
+		data.entry[0].variance       = 0x04050607;
+		data.entry[0].outlier_pixels = 0x0809;
+		data.entry[1].mean           = 0x0A0B0C0D;
+		data.entry[1].variance       = 0x0E0F1011;
+		data.entry[1].outlier_pixels = 0x1213;
+
+		check_endianness(&data, sizeof(data), data_type);
+
+		data_type = DATA_TYPE_F_CAM_BACKGROUND;
 
 		data.entry[0].mean           = 0x00010203;
 		data.entry[0].variance       = 0x04050607;

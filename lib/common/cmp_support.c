@@ -69,12 +69,7 @@ int is_a_pow_of_2(unsigned int v)
 
 int cmp_data_type_is_invalid(enum cmp_data_type data_type)
 {
-	if (data_type == DATA_TYPE_F_CAM_OFFSET)
-		debug_print("Error: DATA_TYPE_F_CAM_OFFSET is TBD and not implemented yet.\n");
-	if (data_type == DATA_TYPE_F_CAM_BACKGROUND)
-		debug_print("Error: DATA_TYPE_F_CAM_BACKGROUND is TBD  and not implemented yet.\n");
-
-	if (data_type <= DATA_TYPE_UNKNOWN || data_type > DATA_TYPE_F_CAM_IMAGETTE_ADAPTIVE)
+	if (data_type <= DATA_TYPE_UNKNOWN || data_type > DATA_TYPE_F_CAM_BACKGROUND)
 		return 1;
 
 	return 0;
@@ -586,7 +581,6 @@ int cmp_cfg_icu_max_used_bits_out_of_limit(const struct cmp_max_used_bits *max_u
 	CHECK_MAX_USED_BITS_LIMIT(fc_imagette);
 	CHECK_MAX_USED_BITS_LIMIT(fc_offset_mean);
 	CHECK_MAX_USED_BITS_LIMIT(fc_offset_variance);
-	CHECK_MAX_USED_BITS_LIMIT(fc_offset_pixel_in_error);
 	CHECK_MAX_USED_BITS_LIMIT(fc_background_mean);
 	CHECK_MAX_USED_BITS_LIMIT(fc_background_variance);
 	CHECK_MAX_USED_BITS_LIMIT(fc_background_outlier_pixels);
@@ -864,7 +858,6 @@ int cmp_cfg_fx_cob_is_invalid(const struct cmp_cfg *cfg)
  *
  * @returns 0 if the auxiliary science specific parameters are valid, otherwise
  *	invalid
- * TODO: implemented DATA_TYPE_F_CAM_OFFSET and DATA_TYPE_F_CAM_BACKGROUND
  */
 
 int cmp_cfg_aux_is_invalid(const struct cmp_cfg *cfg)
@@ -884,8 +877,7 @@ int cmp_cfg_aux_is_invalid(const struct cmp_cfg *cfg)
 	cfg_invalid += cmp_pars_are_invalid(cfg->cmp_par_variance, cfg->spill_variance,
 					    cfg->cmp_mode, cfg->data_type, "variance");
 
-	/* if (cfg->data_type != DATA_TYPE_OFFSET && cfg->data_type != DATA_TYPE_F_CAM_OFFSET) */
-	if (cfg->data_type != DATA_TYPE_OFFSET)
+	if (cfg->data_type != DATA_TYPE_OFFSET && cfg->data_type != DATA_TYPE_F_CAM_OFFSET)
 		cfg_invalid += cmp_pars_are_invalid(cfg->cmp_par_pixels_error, cfg->spill_pixels_error,
 						    cfg->cmp_mode, cfg->data_type, "outlier pixls num");
 

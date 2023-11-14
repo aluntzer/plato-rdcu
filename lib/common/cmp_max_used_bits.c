@@ -21,6 +21,7 @@
 
 #include "cmp_data_types.h"
 
+
 #define MAX_USED_NC_IMAGETTE_BITS		16
 #define MAX_USED_SATURATED_IMAGETTE_BITS	16 /* TBC */
 #define MAX_USED_FC_IMAGETTE_BITS		16 /* TBC */
@@ -88,21 +89,20 @@ const struct cmp_max_used_bits MAX_USED_BITS_SAFE = {
 	member_bit_size(struct l_fx_efx_ncob_ecob, cob_x_variance), /* l_cob_x_variance and l_cob_y_variance */
 	sizeof(uint16_t)*8, /* nc_imagette */
 	sizeof(uint16_t)*8, /* saturated_imagette */
-	member_bit_size(struct nc_offset, mean), /* nc_offset_mean */
-	member_bit_size(struct nc_offset, variance), /* nc_offset_variance */
-	member_bit_size(struct nc_background, mean), /* nc_background_mean */
-	member_bit_size(struct nc_background, variance), /* nc_background_variance */
-	member_bit_size(struct nc_background, outlier_pixels), /* nc_background_outlier_pixels */
+	member_bit_size(struct offset, mean), /* nc_offset_mean */
+	member_bit_size(struct offset, variance), /* nc_offset_variance */
+	member_bit_size(struct background, mean), /* nc_background_mean */
+	member_bit_size(struct background, variance), /* nc_background_variance */
+	member_bit_size(struct background, outlier_pixels), /* nc_background_outlier_pixels */
 	member_bit_size(struct smearing, mean), /* smearing_mean */
 	member_bit_size(struct smearing, variance_mean), /* smearing_variance_mean */
 	member_bit_size(struct smearing, outlier_pixels), /* smearing_outlier_pixels */
-	sizeof(uint16_t)*8, /* TBC */ /* fc_imagette */
-	sizeof(uint32_t)*8, /* TBC TODO: update */ /* fc_offset_mean */
-	sizeof(uint32_t)*8, /* TBC TODO: update */ /* fc_offset_variance */
-	sizeof(uint32_t)*8, /* TBC TODO: update */ /* fc_offset_pixel_in_error */
-	sizeof(uint32_t)*8, /* TBC TODO: update */ /* fc_background_mean */
-	sizeof(uint32_t)*8, /* TBC TODO: update */ /* fc_background_variance */
-	sizeof(uint32_t)*8, /* TBC TODO: update */ /* fc_background_outlier_pixels */
+	sizeof(uint16_t)*8, /* fc_imagette */
+	member_bit_size(struct offset, mean), /* fc_offset_mean */
+	member_bit_size(struct offset, variance), /* fc_offset_variance */
+	member_bit_size(struct background, mean), /* fc_background_mean */
+	member_bit_size(struct background, variance), /* fc_background_variance */
+	member_bit_size(struct background, outlier_pixels), /* fc_background_outlier_pixels */
 };
 
 
@@ -138,7 +138,6 @@ const struct cmp_max_used_bits MAX_USED_BITS_V1 = {
 	MAX_USED_FC_IMAGETTE_BITS, /* fc_imagette */
 	MAX_USED_FC_OFFSET_MEAN_BITS, /* fc_offset_mean */
 	MAX_USED_FC_OFFSET_VARIANCE_BITS, /* fc_offset_variance */
-	MAX_USED_FC_OFFSET_PIXEL_IN_ERROR_BITS, /* fc_offset_pixel_in_error */
 	MAX_USED_FC_BACKGROUND_MEAN_BITS, /* fc_background_mean */
 	MAX_USED_FC_BACKGROUND_VARIANCE_BITS, /* fc_background_variance */
 	MAX_USED_FC_BACKGROUND_OUTLIER_PIXELS_BITS /* fc_background_outlier_pixels */
