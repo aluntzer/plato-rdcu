@@ -25,6 +25,8 @@
 #include "cmp_max_used_bits.h"
 #include "cmp_cal_up_model.h"
 
+#define CMP_COLLECTION_FILD_SIZE 2
+
 
 /* return code if the bitstream buffer is too small to store the whole bitstream */
 #define CMP_ERROR_SMALL_BUF -2
@@ -129,7 +131,8 @@ enum cmp_data_type {
 	DATA_TYPE_F_CAM_IMAGETTE,
 	DATA_TYPE_F_CAM_IMAGETTE_ADAPTIVE,
 	DATA_TYPE_F_CAM_OFFSET,
-	DATA_TYPE_F_CAM_BACKGROUND
+	DATA_TYPE_F_CAM_BACKGROUND,
+	DATA_TYPE_CHUNK
 };
 
 
@@ -147,6 +150,46 @@ enum cmp_mode {
 };
 
 
+struct cmp_par {
+	enum cmp_mode cmp_mode;		/**< compression mode parameter */
+	uint32_t model_value;		/**< model weighting parameter */
+	uint32_t lossy_par;		/**< lossy compression parameter */
+
+	uint32_t nc_imagette;		/**< compression parameter for imagette data compression */
+
+	uint32_t s_exp_flags;		/**< compression parameter for exposure flags compression */
+	uint32_t s_fx;			/**< compression parameter for normal flux compression */
+	uint32_t s_ncob;		/**< compression parameter for normal center of brightness compression */
+	uint32_t s_efx;			/**< compression parameter for extended flux compression */
+	uint32_t s_ecob;		/**< compression parameter for executed center of brightness compression */
+
+	uint32_t l_exp_flags;		/**< compression parameter for exposure flags compression */
+	uint32_t l_fx;			/**< compression parameter for normal flux compression */
+	uint32_t l_ncob;		/**< compression parameter for normal center of brightness compression */
+	uint32_t l_efx;			/**< compression parameter for extended flux compression */
+	uint32_t l_ecob;		/**< compression parameter for executed center of brightness compression */
+	uint32_t l_fx_cob_variance;	/**< compression parameter for flux/COB variance compression */
+
+	uint32_t saturated_imagette;	/**< compression parameter for saturated  imagette data compression */
+
+	uint32_t nc_offset_mean;
+	uint32_t nc_offset_variance;
+	uint32_t nc_background_mean;
+	uint32_t nc_background_variance;
+	uint32_t nc_background_outlier_pixels;
+
+	uint32_t smearing_mean;
+	uint32_t smearing_variance_mean;
+	uint32_t smearing_outlier_pixels;
+
+	uint32_t fc_imagette;
+	uint32_t fc_offset_mean;
+	uint32_t fc_offset_variance;
+	uint32_t fc_background_mean;
+	uint32_t fc_background_variance;
+	uint32_t fc_background_outlier_pixels;
+};
+
 /**
  * @brief The cmp_cfg structure can contain the complete configuration of the HW as
  *	well as the SW compressor.
@@ -154,6 +197,7 @@ enum cmp_mode {
  * @note the rdcu_***_adr parameters are ignored for SW compression
  */
 
+__extension__
 struct cmp_cfg {
 	void *input_buf;            /**< Pointer to the data to compress buffer */
 	void *model_buf;            /**< Pointer to the model buffer */
@@ -176,31 +220,84 @@ struct cmp_cfg {
 				     */
 	uint32_t model_value;       /**< Model weighting parameter */
 	uint32_t round;             /**< lossy compression parameter */
-	uint32_t golomb_par;        /**< Golomb parameter for imagette data compression */
-	uint32_t spill;             /**< Spillover threshold parameter for imagette compression */
-	uint32_t ap1_golomb_par;    /**< Adaptive 1 spillover threshold for imagette data; HW only */
-	uint32_t ap1_spill;         /**< Adaptive 1 Golomb parameter for imagette data; HW only */
-	uint32_t ap2_golomb_par;    /**< Adaptive 2 spillover threshold for imagette data; HW only */
-	uint32_t ap2_spill;         /**< Adaptive 2 Golomb parameter; HW only */
-	uint32_t cmp_par_exp_flags; /**< Compression parameter for exposure flags compression */
-	uint32_t spill_exp_flags;   /**< Spillover threshold parameter for exposure flags compression */
-	uint32_t cmp_par_fx;        /**< Compression parameter for normal flux compression */
-	uint32_t spill_fx;          /**< Spillover threshold parameter for normal flux compression */
-	uint32_t cmp_par_ncob;      /**< Compression parameter for normal center of brightness compression */
-	uint32_t spill_ncob;        /**< Spillover threshold parameter for normal center of brightness compression */
-	uint32_t cmp_par_efx;       /**< Compression parameter for extended flux compression */
-	uint32_t spill_efx;         /**< Spillover threshold parameter for extended flux compression */
-	uint32_t cmp_par_ecob;      /**< Compression parameter for executed center of brightness compression */
-	uint32_t spill_ecob;        /**< Spillover threshold parameter for executed center of brightness compression */
-	uint32_t cmp_par_fx_cob_variance; /**< Compression parameter for flux/COB variance compression */
-	uint32_t spill_fx_cob_variance; /**< Spillover threshold parameter for flux/COB variance compression */
-	uint32_t cmp_par_mean;      /**< Compression parameter for auxiliary science mean compression */
-	uint32_t spill_mean;        /**< Spillover threshold parameter for auxiliary science mean compression */
-	uint32_t cmp_par_variance;  /**< Compression parameter for auxiliary science variance compression */
-	uint32_t spill_variance;    /**< Spillover threshold parameter for auxiliary science variance compression */
-	uint32_t cmp_par_pixels_error; /**< Compression parameter for auxiliary science outlier pixels number compression */
-	uint32_t spill_pixels_error; /**< Spillover threshold parameter for auxiliary science outlier pixels number compression */
-	const struct cmp_max_used_bits *max_used_bits; /**< the maximum length of the different data products types in bits */
+	union {
+		uint32_t cmp_par_1;
+		uint32_t golomb_par;        /* TODO: remove this */      /**< Golomb parameter for imagette data compression */
+		uint32_t cmp_par_imagette;  /**< Golomb parameter for imagette data compression */
+		uint32_t cmp_par_exp_flags; /**< Compression parameter for exposure flags compression */
+	};
+	union {
+		uint32_t spill_par_1;
+		uint32_t spill;             /* TODO: remove this */           /**< Spillover threshold parameter for imagette data compression */
+		uint32_t spill_imagette;    /**< Spillover threshold parameter for imagette data compression */
+		uint32_t spill_exp_flags;   /**< Spillover threshold parameter for exposure flags compression */
+	};
+
+	union {
+		uint32_t cmp_par_2;
+		uint32_t ap1_golomb_par;      /**< Adaptive 2 spillover threshold for imagette data; HW only */
+		uint32_t cmp_par_fx;          /**< Compression parameter for normal flux compression */
+		uint32_t cmp_par_offset_mean; /**< Compression parameter for auxiliary science mean compression */
+	};
+	union {
+		uint32_t spill_par_2;
+		uint32_t ap1_spill;         /**< Adaptive 2 Golomb parameter; HW only */
+		uint32_t spill_fx;          /**< Spillover threshold parameter for normal flux compression */
+		uint32_t spill_offset_mean; /**< Spillover threshold parameter for auxiliary science mean compression */
+	};
+
+	union {
+		uint32_t cmp_par_3;
+		uint32_t ap2_golomb_par;           /**< Adaptive 2 spillover threshold for imagette data; HW only */
+		uint32_t cmp_par_ncob;             /**< Compression parameter for normal center of brightness compression */
+		uint32_t cmp_par_offset_variance;  /**< Compression parameter for auxiliary science variance compression */
+	};
+	union {
+		uint32_t spill_par_3;
+		uint32_t ap2_spill;                 /**< Adaptive 2 Golomb parameter; HW only */
+		uint32_t spill_ncob;                /**< Spillover threshold parameter for normal center of brightness compression */
+		uint32_t spill_offset_variance;     /**< Spillover threshold parameter for auxiliary science variance compression */
+	};
+
+	union {
+		uint32_t cmp_par_4;
+		uint32_t cmp_par_efx;                /**< Compression parameter for extended flux compression */
+		uint32_t cmp_par_background_mean;    /**< Compression parameter for auxiliary science mean compression */
+		uint32_t cmp_par_smearing_mean;      /**< Compression parameter for auxiliary science mean compression */
+	};
+	union {
+		uint32_t spill_par_4;
+		uint32_t spill_efx;                  /**< Spillover threshold parameter for extended flux compression */
+		uint32_t spill_background_mean;      /**< Spillover threshold parameter for auxiliary science mean compression */
+		uint32_t spill_smearing_mean;        /**< Spillover threshold parameter for auxiliary science mean compression */
+	};
+
+	union {
+		uint32_t cmp_par_5;
+		uint32_t cmp_par_ecob;                /**< Compression parameter for executed center of brightness compression */
+		uint32_t cmp_par_background_variance; /**< Compression parameter for auxiliary science variance compression */
+		uint32_t cmp_par_smearing_variance;   /**< Compression parameter for auxiliary science variance compression */
+	};
+	union {
+		uint32_t spill_par_5;
+		uint32_t spill_ecob;                 /**< Spillover threshold parameter for executed center of brightness compression */
+		uint32_t spill_background_variance;  /**< Spillover threshold parameter for auxiliary science variance compression */
+		uint32_t spill_smearing_variance;    /**< Spillover threshold parameter for auxiliary science variance compression */
+	};
+
+	union {
+		uint32_t cmp_par_6;
+		uint32_t cmp_par_fx_cob_variance;         /**< Compression parameter for flux/COB variance compression */
+		uint32_t cmp_par_background_pixels_error; /**< Compression parameter for auxiliary science outlier pixels number compression */
+		uint32_t cmp_par_smearing_pixels_error;   /**< Compression parameter for auxiliary science outlier pixels number compression */
+	};
+	union {
+		uint32_t spill_par_6;
+		uint32_t spill_fx_cob_variance;         /**< Spillover threshold parameter for flux/COB variance compression */
+		uint32_t spill_background_pixels_error; /**< Spillover threshold parameter for auxiliary science outlier pixels number compression */
+		uint32_t spill_smearing_pixels_error;   /**< Spillover threshold parameter for auxiliary science outlier pixels number compression */
+	};
+	const struct cmp_max_used_bits *max_used_bits;  /**< the maximum length of the different data products types in bits */
 };
 
 
@@ -269,6 +366,7 @@ struct fx_cob_par {
 int is_a_pow_of_2(unsigned int v);
 unsigned int ilog_2(uint32_t x);
 
+unsigned int cmp_bit_to_byte(unsigned int cmp_size_bit);
 unsigned int cmp_bit_to_4byte(unsigned int cmp_size_bit);
 
 int cmp_cfg_icu_is_invalid(const struct cmp_cfg *cfg);

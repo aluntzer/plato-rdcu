@@ -52,4 +52,6 @@
 
 #define cpu_relax() barrier()
 
+#define UNUSED(x) (void)(x)
+
 #endif

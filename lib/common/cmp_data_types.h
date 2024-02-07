@@ -40,28 +40,75 @@
 #include "../common/cmp_support.h"
 
 
-/* size of the source data header structure for multi entry packet */
-#define MULTI_ENTRY_HDR_SIZE 12
+/* subservice types for service 212 */
+#define SST_NCxx_S_SCIENCE_IMAGETTE		3 /* N-Camera image data */
+#define SST_NCxx_S_SCIENCE_SAT_IMAGETTE		4 /* Extended imagettes for saturated star extra pixels */
+#define SST_NCxx_S_SCIENCE_OFFSET		5 /* Offset values Mean of the pixels of offset windows */
+#define SST_NCxx_S_SCIENCE_BACKGROUND		6 /* Background values Mean of the pixels of background windows */
+#define SST_NCxx_S_SCIENCE_SMEARING		7 /* Smearing array values */
+/* subservice Type 8 is not defined */
+#define SST_NCxx_S_SCIENCE_S_FX			9 /* Short cadence FX data using normal masks */
+#define SST_NCxx_S_SCIENCE_S_FX_EFX		10 /* Short cadence FX data using normal and extended masks */
+#define SST_NCxx_S_SCIENCE_S_FX_NCOB		11 /* Short cadence FX and CoB using normal masks */
+#define SST_NCxx_S_SCIENCE_S_FX_EFX_NCOB_ECOB	12 /* Short cadence FX and CoB using normal and extended masks */
+#define SST_NCxx_S_SCIENCE_L_FX			13 /* Long cadence FX data using normal masks */
+#define SST_NCxx_S_SCIENCE_L_FX_EFX		14 /* Long cadence FX data using normal and extended masks */
+#define SST_NCxx_S_SCIENCE_L_FX_NCOB		15 /* Long cadence FX and CoB data using normal masks */
+#define SST_NCxx_S_SCIENCE_L_FX_EFX_NCOB_ECOB	16 /* Long cadence FX and CoB data using normal and extended masks */
+#define SST_NCxx_S_SCIENCE_F_FX			17 /* Fast cadence FX data using normal masks */
+#define SST_NCxx_S_SCIENCE_F_FX_EFX		18 /* Fast cadence FX and CoB using normal and extended masks */
+#define SST_NCxx_S_SCIENCE_F_FX_NCOB		19 /* Fast cadence FX and CoB using normal masks */
+#define SST_NCxx_S_SCIENCE_F_FX_EFX_NCOB_ECOB	20 /* Fast cadence FX and CoB using normal and extended masks */
+
+/* subservice types for service 228 */
+#define SST_FCx_S_SCIENCE_IMAGETTE	1 /* Imagettes from F-camera. */
+#define SST_FCx_S_SCIENCE_OFFSET_VALUES	2 /* Offset values Mean of the pixels of offset windows */
+#define SST_FCx_S_BACKGROUND_VALUES	3 /* Background values. Mean of the pixels of background windows */
+
+/* size of a collection (multi entry) header */
+#define COLLECTION_HDR_SIZE 12
+
+enum col_packet_type {
+	COL_WINDOW_PKT_TYPE = 0,
+	COL_SCI_PKTS_TYPE = 1
+};
 
 
 /**
- * @brief source data header structure for multi entry packet
- * @note a scientific package contains a multi-entry header followed by multiple
- *	entries of the same entry definition
+ * @brief source data header structure for collection packet
+ * @note a collection package contains a collection header followed by multiple
+ *	entries of the same science data
  * @see PLATO-LESIA-PL-RP-0031(N-DPU->ICU data rate)
  */
+union collection_id {
+	uint16_t collection_id;
+	__extension__
+	struct {
+#ifdef __LITTLE_ENDIAN
+		uint16_t sequence_num:7;
+		uint16_t ccd_id:2;
+		uint16_t subservice:6;
+		uint16_t pkt_type:1;
+#else
+		uint16_t pkt_type:1;
+		uint16_t subservice:6;
+		uint16_t ccd_id:2;
+		uint16_t sequence_num:7;
+#endif
+	} field __attribute__((packed));
+} __attribute__((packed));
 
 __extension__
-struct multi_entry_hdr {
-	uint32_t timestamp_coarse;
-	uint16_t timestamp_fine;
-	uint16_t configuration_id;
-	uint16_t collection_id;
-	uint16_t collection_length;
-	uint8_t  entry[];
+struct collection_hdr {
+	uint64_t timestamp:48;		/**< Time when the science observation was made */
+	uint16_t configuration_id;	/**< ID of the configuration of the instrument */
+	uint16_t collection_id;		/**< ID of a collection */
+	uint16_t collection_length;	/**< Expected number of data bytes in the target science packet */
+	char  entry[];
 } __attribute__((packed));
-compile_time_assert(sizeof(struct multi_entry_hdr) == MULTI_ENTRY_HDR_SIZE, N_DPU_ICU_MULTI_ENTRY_HDR_SIZE_IS_NOT_CORRECT);
-compile_time_assert(sizeof(struct multi_entry_hdr) % sizeof(uint32_t) == 0, N_DPU_ICU_MULTI_ENTRY_HDR_NOT_4_BYTE_ALLIED);
+compile_time_assert(sizeof(struct collection_hdr) == COLLECTION_HDR_SIZE, N_DPU_ICU_COLLECTION_HDR_SIZE_IS_NOT_CORRECT);
+compile_time_assert(sizeof(struct collection_hdr) % sizeof(uint32_t) == 0, N_DPU_ICU_COLLECTION_HDR_NOT_4_BYTE_ALLIED);
+/* TODO: compile_time_assert(sizeof(struct collection_hdr.collection_id) == sizeof(union collection_id), N_DPU_ICU_COLLECTION_COLLECTION_ID_DO_NOT_MATCH); */
 
 
 /**
@@ -250,6 +297,33 @@ struct smearing {
 } __attribute__((packed));
 
 
+/* collection header setter functions */
+uint64_t cmp_col_get_timestamp(const struct collection_hdr *col);
+uint16_t cmp_col_get_configuration_id(const struct collection_hdr *col);
+
+uint16_t cmp_col_get_col_id(const struct collection_hdr *col);
+uint8_t  cmp_col_get_pkt_type(const struct collection_hdr *col);
+uint8_t  cmp_col_get_subservice(const struct collection_hdr *col);
+uint8_t  cmp_col_get_ccd_id(const struct collection_hdr *col);
+uint8_t  cmp_col_get_sequence_num(const struct collection_hdr *col);
+
+uint16_t cmp_col_get_data_length(const struct collection_hdr *col);
+uint32_t cmp_col_get_size(const struct collection_hdr *col);
+
+
+/* collection header getter functions */
+int cmp_col_set_timestamp(struct collection_hdr *col, uint64_t timestamp);
+int cmp_col_set_configuration_id(struct collection_hdr *col, uint16_t configuration_id);
+
+int cmp_col_set_col_id(struct collection_hdr *col, uint16_t collection_id);
+int cmp_col_set_pkt_type(struct collection_hdr *col, uint8_t pkt_type);
+int cmp_col_set_subservice(struct collection_hdr *col, uint8_t subservice);
+int cmp_col_set_ccd_id(struct collection_hdr *col, uint8_t ccd_id);
+int cmp_col_set_sequence_num(struct collection_hdr *col, uint8_t sequence_num);
+
+int cmp_col_set_data_length(struct collection_hdr *col, uint16_t length);
+
+enum cmp_data_type convert_subservice_to_cmp_data_type(uint8_t subservice);
 
 size_t size_of_a_sample(enum cmp_data_type data_type);
 uint32_t cmp_cal_size_of_data(uint32_t samples, enum cmp_data_type data_type);

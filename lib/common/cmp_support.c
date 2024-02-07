@@ -69,7 +69,7 @@ int is_a_pow_of_2(unsigned int v)
 
 int cmp_data_type_is_invalid(enum cmp_data_type data_type)
 {
-	if (data_type <= DATA_TYPE_UNKNOWN || data_type > DATA_TYPE_F_CAM_BACKGROUND)
+	if (data_type <= DATA_TYPE_UNKNOWN || data_type > DATA_TYPE_CHUNK)
 		return 1;
 
 	return 0;
@@ -366,12 +366,26 @@ uint32_t cmp_icu_max_spill(unsigned int cmp_par)
  * @param cmp_size_bit	compressed data size, measured in bits
  *
  * @returns the size in bytes to store the hole bitstream
+ */
+
+unsigned int cmp_bit_to_byte(unsigned int cmp_size_bit)
+{
+	return (cmp_size_bit + 7) / 8;
+}
+
+
+/**
+ * @brief calculate the need bytes to hold a bitstream
  * @note we round up the result to multiples of 4 bytes
+ *
+ * @param cmp_size_bit	compressed data size, measured in bits
+ *
+ * @returns the size in bytes to store the hole bitstream
  */
 
 unsigned int cmp_bit_to_4byte(unsigned int cmp_size_bit)
 {
-	return (((cmp_size_bit + 7) / 8) + 3) & ~0x3UL;
+	return (cmp_bit_to_byte(cmp_size_bit) + 3) & ~0x3UL;
 }
 
 
@@ -393,9 +407,9 @@ unsigned int cmp_bit_to_4byte(unsigned int cmp_size_bit)
 int cmp_cfg_gen_par_is_invalid(const struct cmp_cfg *cfg, enum check_opt opt)
 {
 	int cfg_invalid = 0;
-	int invalid_data_type = 1;
-	int unsupported_cmp_mode = 1;
-	int check_model_value = 1;
+	int invalid_data_type;
+	int unsupported_cmp_mode;
+	int check_model_value;
 	uint32_t max_round_value = 0;
 	const char *str = "";
 
@@ -867,20 +881,35 @@ int cmp_cfg_aux_is_invalid(const struct cmp_cfg *cfg)
 	if (!cfg)
 		return 1;
 
-	if (!cmp_aux_data_type_is_used(cfg->data_type)) {
+	switch (cfg->data_type) {
+	case DATA_TYPE_OFFSET:
+	case DATA_TYPE_F_CAM_OFFSET:
+		cfg_invalid += cmp_pars_are_invalid(cfg->cmp_par_offset_mean, cfg->spill_offset_mean,
+				cfg->cmp_mode, cfg->data_type, "offset mean");
+		cfg_invalid += cmp_pars_are_invalid(cfg->cmp_par_offset_variance, cfg->spill_offset_variance,
+				cfg->cmp_mode, cfg->data_type, "offset variance");
+		break;
+	case DATA_TYPE_BACKGROUND:
+	case DATA_TYPE_F_CAM_BACKGROUND:
+		cfg_invalid += cmp_pars_are_invalid(cfg->cmp_par_background_mean, cfg->spill_background_mean,
+				cfg->cmp_mode, cfg->data_type, "background mean");
+		cfg_invalid += cmp_pars_are_invalid(cfg->cmp_par_background_variance, cfg->spill_background_variance,
+				cfg->cmp_mode, cfg->data_type, "background variance");
+		cfg_invalid += cmp_pars_are_invalid(cfg->cmp_par_background_pixels_error, cfg->spill_background_pixels_error,
+				cfg->cmp_mode, cfg->data_type, "background outlier pixls num");
+		break;
+	case DATA_TYPE_SMEARING:
+		cfg_invalid += cmp_pars_are_invalid(cfg->cmp_par_smearing_mean, cfg->spill_smearing_mean,
+				cfg->cmp_mode, cfg->data_type, "smearing mean");
+		cfg_invalid += cmp_pars_are_invalid(cfg->cmp_par_smearing_variance, cfg->spill_smearing_variance,
+				cfg->cmp_mode, cfg->data_type, "smearing variance");
+		cfg_invalid += cmp_pars_are_invalid(cfg->cmp_par_smearing_pixels_error, cfg->spill_smearing_pixels_error,
+				cfg->cmp_mode, cfg->data_type, "smearing outlier pixls num");
+		break;
+	default:
 		debug_print("Error: The compression data type is not an auxiliary science compression data type.\n");
 		cfg_invalid++;
 	}
-
-	cfg_invalid += cmp_pars_are_invalid(cfg->cmp_par_mean, cfg->spill_mean,
-					    cfg->cmp_mode, cfg->data_type, "mean");
-	cfg_invalid += cmp_pars_are_invalid(cfg->cmp_par_variance, cfg->spill_variance,
-					    cfg->cmp_mode, cfg->data_type, "variance");
-
-	if (cfg->data_type != DATA_TYPE_OFFSET && cfg->data_type != DATA_TYPE_F_CAM_OFFSET)
-		cfg_invalid += cmp_pars_are_invalid(cfg->cmp_par_pixels_error, cfg->spill_pixels_error,
-						    cfg->cmp_mode, cfg->data_type, "outlier pixls num");
-
 	return cfg_invalid;
 }
 

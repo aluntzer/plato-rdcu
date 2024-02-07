@@ -56,6 +56,8 @@
  * @brief implantation of the model update equation
  * @note check before that model_value is not greater than MAX_MODEL_VALUE
  *
+ * @warning: Do not use this macro with types larger than uint32_t
+ *
  * @param data		data to process
  * @param model		(current) model of the data to process
  * @param model_value	model weighting parameter
@@ -64,20 +66,20 @@
  * @returns (new) updated model
  */
 
-#define cmp_up_model(data, model, model_value, round)								\
-	__extension__												\
-	({													\
-		__typeof__(data) __ret;										\
-		switch (sizeof(data)) {										\
-			case sizeof(uint8_t):									\
-			case sizeof(uint16_t):									\
-				__ret = (__typeof__(__ret))cmp_up_model16(data, model, model_value, round);	\
-				break;										\
-			case sizeof(uint32_t):									\
-				__ret = (__typeof__(__ret))cmp_up_model32(data, model, model_value, round);	\
-				break;										\
-		}												\
-		__ret;												\
+#define cmp_up_model(data, model, model_value, round)							\
+	__extension__											\
+	({												\
+		__typeof__(data) __ret;									\
+		switch (sizeof(data)) {									\
+		case sizeof(uint8_t):									\
+		case sizeof(uint16_t):									\
+			__ret = (__typeof__(__ret))cmp_up_model16(data, model, model_value, round);	\
+			break;										\
+		case sizeof(uint32_t):									\
+			__ret = (__typeof__(__ret))cmp_up_model32(data, model, model_value, round);	\
+			break;										\
+		}											\
+		__ret;											\
 	})
 
 

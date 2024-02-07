@@ -39,6 +39,35 @@
 #include "../common/cmp_entity.h"
 
 #include "../cmp_icu.h"
+#include "../cmp_chunk.h"
+
+
+/**
+ * @brief default implementation of the get_timestamp() function
+ *
+ * @returns 0
+ */
+
+static uint64_t default_get_timestamp(void)
+{
+	return 0;
+}
+
+
+/**
+ * @brief function pointer to a function returning a current PLATO timestamp
+ * initialised with the compress_chunk_init() function
+ */
+
+static uint64_t (*get_timestamp)(void) = default_get_timestamp;
+
+
+/**
+ * @brief holding the version_identifier for the compression header
+ * initialised with the compress_chunk_init() function
+ */
+
+static uint32_t version_identifier;
 
 
 /**
@@ -67,6 +96,20 @@ struct encoder_setupt {
 };
 
 
+/* TODO: doc string */
+
+enum chunk_type {
+	CHUNK_TYPE_UNKNOWN,
+	CHUNK_TYPE_NCAM_IMGAETTE,
+	CHUNK_TYPE_SHORT_CADENCE,
+	CHUNK_TYPE_LONG_CADENCE,
+	CHUNK_TYPE_SAT_IMGAETTE,
+	CHUNK_TYPE_OFFSET_BACKGROUND, /* N-CAM */
+	CHUNK_TYPE_SMEARING,
+	CHUNK_TYPE_F_CHAIN,
+};
+
+
 /**
  * @brief create an ICU compression configuration
  *
@@ -92,7 +135,7 @@ struct cmp_cfg cmp_cfg_icu_create(enum cmp_data_type data_type, enum cmp_mode cm
 	cfg.round = lossy_par;
 	cfg.max_used_bits = &MAX_USED_BITS_SAFE;
 
-	if (cmp_cfg_gen_par_is_invalid(&cfg, ICU_CHECK))
+	if (cmp_cfg_gen_par_is_invalid(&cfg, ICU_CHECK) || data_type == DATA_TYPE_CHUNK)
 		cfg.data_type = DATA_TYPE_UNKNOWN;
 
 	return cfg;
@@ -152,6 +195,7 @@ uint32_t cmp_cfg_icu_buffers(struct cmp_cfg *cfg, void *data_to_compress,
 	cfg->samples = data_samples;
 	cfg->icu_new_model_buf = updated_model;
 	cfg->icu_output_buf = compressed_data;
+	/* cfg->buffer_length = cmp_data_size; */
 	cfg->buffer_length = compressed_data_len_samples;
 
 	if (cmp_cfg_icu_buffers_is_invalid(cfg))
@@ -305,13 +349,35 @@ int cmp_cfg_aux(struct cmp_cfg *cfg,
 	if (!cfg)
 		return -1;
 
-	cfg->cmp_par_mean = cmp_par_mean;
-	cfg->cmp_par_variance = cmp_par_variance;
-	cfg->cmp_par_pixels_error = cmp_par_pixels_error;
-
-	cfg->spill_mean = spillover_mean;
-	cfg->spill_variance = spillover_variance;
-	cfg->spill_pixels_error = spillover_pixels_error;
+	switch (cfg->data_type) {
+	case DATA_TYPE_OFFSET:
+	case DATA_TYPE_F_CAM_OFFSET:
+		cfg->cmp_par_offset_mean = cmp_par_mean;
+		cfg->spill_offset_mean = spillover_mean;
+		cfg->cmp_par_offset_variance = cmp_par_variance;
+		cfg->spill_offset_variance = spillover_variance;
+		break;
+	case DATA_TYPE_BACKGROUND:
+	case DATA_TYPE_F_CAM_BACKGROUND:
+		cfg->cmp_par_background_mean = cmp_par_mean;
+		cfg->spill_background_mean = spillover_mean;
+		cfg->cmp_par_background_variance = cmp_par_variance;
+		cfg->spill_background_variance = spillover_variance;
+		cfg->cmp_par_background_pixels_error = cmp_par_pixels_error;
+		cfg->spill_background_pixels_error = spillover_pixels_error;
+		break;
+	case DATA_TYPE_SMEARING:
+		cfg->cmp_par_smearing_mean = cmp_par_mean;
+		cfg->spill_smearing_mean = spillover_mean;
+		cfg->cmp_par_smearing_variance = cmp_par_variance;
+		cfg->spill_smearing_variance = spillover_variance;
+		cfg->cmp_par_smearing_pixels_error = cmp_par_pixels_error;
+		cfg->spill_smearing_pixels_error = spillover_pixels_error;
+		break;
+	default:
+		debug_print("Error: The compression data type is not an auxiliary science compression data type.\n");
+		return -1;
+	}
 
 	if (cmp_cfg_aux_is_invalid(cfg))
 		return -1;
@@ -384,7 +450,7 @@ static int put_n_bits32(uint32_t value, unsigned int n_bits, int bit_offset,
 	unsigned int shift_left = 32 - n_bits;
 	int stream_len = (int)(n_bits + (unsigned int)bit_offset);
 	uint32_t *local_adr;
-	uint32_t mask;
+	uint32_t mask, tmp;
 
 	/* Leave in case of erroneous input */
 	if (bit_offset < 0)
@@ -409,10 +475,11 @@ static int put_n_bits32(uint32_t value, unsigned int n_bits, int bit_offset,
 
 	/* clear the destination with inverse mask */
 	mask = (0XFFFFFFFFU << shift_left) >> bits_left;
-	*(local_adr) &= ~mask;
+	tmp = be32_to_cpu(*local_adr) & ~mask;
 
 	/* put (the first part of) the value into the bitstream */
-	*(local_adr) |= (value << shift_left) >> bits_left;
+	tmp |= (value << shift_left) >> bits_left;
+	*local_adr = cpu_to_be32(tmp);
 
 	/* Do we need to split the value over two words (SEGMENTED case) */
 	if (bits_right < 32) {
@@ -420,10 +487,11 @@ static int put_n_bits32(uint32_t value, unsigned int n_bits, int bit_offset,
 
 		/* clear the destination */
 		mask = 0XFFFFFFFFU << bits_right;
-		*(local_adr) &= ~mask;
+		tmp = be32_to_cpu(*local_adr) & ~mask;
 
 		/* put the 2nd part of the value into the bitstream */
-		*(local_adr) |= value << bits_right;
+		tmp |= value << bits_right;
+		*local_adr = cpu_to_be32(tmp);
 	}
 	return stream_len;
 }
@@ -457,9 +525,8 @@ static uint32_t rice_encoder(uint32_t value, uint32_t m, uint32_t log2_m,
 	/*
 	 * NOTE: If log2_m = 31 -> rl = 32, (q << rl) leads to an undefined
 	 * behavior. However, in this case, a valid code with a maximum of 32
-	 * bits can only be formed if q = 0 and qc = 0. Any shift with 0 << x always
-	 * results in 0, which forms the correct codeword in this case. To prevent
-	 * undefined behavior, the right shift operand is masked (& 0x1FU)
+	 * bits can only be formed if q = 0 and qc = 0. To prevent undefined b
+	 * ehavior, the right shift operand is masked (& 0x1FU)
 	 */
 
 	return rl + q;  /* calculate the length of the code word */
@@ -708,15 +775,14 @@ static int encode_value(uint32_t data, uint32_t model, int stream_len,
  *	cmp_buffer in uint32_t words
  *
  * @param buffer_length	length of the icu_output_buf in samples
- * @param data_type	used compression data type
  *
  * @returns buffer size in bits
  *
  */
 
-static uint32_t cmp_buffer_length_to_bits(uint32_t buffer_length, enum cmp_data_type data_type)
+static uint32_t cmp_buffer_length_to_bits(uint32_t buffer_length)
 {
-	return (cmp_cal_size_of_data(buffer_length, data_type) & ~0x3U) * CHAR_BIT;
+	return (buffer_length & ~0x3U) * 8;
 }
 
 
@@ -744,7 +810,7 @@ static void configure_encoder_setup(struct encoder_setupt *setup,
 	setup->max_data_bits = max_data_bits;
 	setup->lossy_par = lossy_par;
 	setup->bitstream_adr = cfg->icu_output_buf;
-	setup->max_stream_len = cmp_buffer_length_to_bits(cfg->buffer_length, cfg->data_type);
+	setup->max_stream_len = cmp_buffer_length_to_bits(cfg->buffer_length);
 
 	if (cfg->cmp_mode != CMP_MODE_STUFF) {
 		setup->encoder_par2 = ilog_2(cmp_par);
@@ -790,9 +856,8 @@ static void configure_encoder_setup(struct encoder_setupt *setup,
  *	bigger than the max_used_bits parameter allows
  */
 
-static int compress_imagette(const struct cmp_cfg *cfg)
+static int compress_imagette(const struct cmp_cfg *cfg, int stream_len)
 {
-	int stream_len = 0;
 	size_t i;
 	struct encoder_setupt setup;
 	uint32_t max_data_bits;
@@ -846,43 +911,6 @@ static int compress_imagette(const struct cmp_cfg *cfg)
 
 
 /**
- * @brief compress the multi-entry packet header structure and sets the data,
- *	model and up_model pointers to the data after the header
- *
- * @param data			pointer to a pointer pointing to the data to be compressed
- * @param model			pointer to a pointer pointing to the model of the data
- * @param up_model		pointer to a pointer pointing to the updated model buffer
- * @param compressed_data	pointer to the compressed data buffer
- *
- * @returns the bit length of the bitstream on success; negative on error,
- *
- * @note the (void **) cast relies on all pointer types having the same internal
- *	representation which is common, but not universal; http://www.c-faq.com/ptrs/genericpp.html
- */
-
-static int compress_multi_entry_hdr(void **data, void **model, void **up_model,
-				    void *compressed_data)
-{
-	if (*up_model) {
-		if (*data)
-			memcpy(*up_model, *data, MULTI_ENTRY_HDR_SIZE);
-		*up_model = (uint8_t *)*up_model + MULTI_ENTRY_HDR_SIZE;
-	}
-
-	if (*data) {
-		if (compressed_data)
-			memcpy(compressed_data, *data, MULTI_ENTRY_HDR_SIZE);
-		*data = (uint8_t *)*data + MULTI_ENTRY_HDR_SIZE;
-	}
-
-	if (*model)
-		*model = (uint8_t *)*model + MULTI_ENTRY_HDR_SIZE;
-
-	return MULTI_ENTRY_HDR_SIZE * CHAR_BIT;
-}
-
-
-/**
  * @brief compress short normal light flux (S_FX) data
  *
  * @param cfg	pointer to the compression configuration structure
@@ -892,9 +920,8 @@ static int compress_multi_entry_hdr(void **data, void **model, void **up_model,
  *	value in the bitstream
  */
 
-static int compress_s_fx(const struct cmp_cfg *cfg)
+static int compress_s_fx(const struct cmp_cfg *cfg, int stream_len)
 {
-	int stream_len = 0;
 	size_t i;
 
 	struct s_fx *data_buf = cfg->input_buf;
@@ -904,15 +931,10 @@ static int compress_s_fx(const struct cmp_cfg *cfg)
 	struct s_fx model;
 	struct encoder_setupt setup_exp_flag, setup_fx;
 
-	if (model_mode_is_used(cfg->cmp_mode))
-		up_model_buf = cfg->icu_new_model_buf;
-
-	stream_len = compress_multi_entry_hdr((void **)&data_buf, (void **)&model_buf,
-					      (void **)&up_model_buf, cfg->icu_output_buf);
-
 	if (model_mode_is_used(cfg->cmp_mode)) {
 		model = model_buf[0];
 		next_model_p = &model_buf[1];
+		up_model_buf = cfg->icu_new_model_buf;
 	} else {
 		memset(&model, 0, sizeof(model));
 		next_model_p = data_buf;
@@ -959,9 +981,8 @@ static int compress_s_fx(const struct cmp_cfg *cfg)
  *	value in the bitstream
  */
 
-static int compress_s_fx_efx(const struct cmp_cfg *cfg)
+static int compress_s_fx_efx(const struct cmp_cfg *cfg, int stream_len)
 {
-	int stream_len = 0;
 	size_t i;
 
 	struct s_fx_efx *data_buf = cfg->input_buf;
@@ -971,15 +992,10 @@ static int compress_s_fx_efx(const struct cmp_cfg *cfg)
 	struct s_fx_efx model;
 	struct encoder_setupt setup_exp_flag, setup_fx, setup_efx;
 
-	if (model_mode_is_used(cfg->cmp_mode))
-		up_model_buf = cfg->icu_new_model_buf;
-
-	stream_len = compress_multi_entry_hdr((void **)&data_buf, (void **)&model_buf,
-					      (void **)&up_model_buf, cfg->icu_output_buf);
-
 	if (model_mode_is_used(cfg->cmp_mode)) {
 		model = model_buf[0];
 		next_model_p = &model_buf[1];
+		up_model_buf = cfg->icu_new_model_buf;
 	} else {
 		memset(&model, 0, sizeof(model));
 		next_model_p = data_buf;
@@ -1034,9 +1050,8 @@ static int compress_s_fx_efx(const struct cmp_cfg *cfg)
  *	value in the bitstream
  */
 
-static int compress_s_fx_ncob(const struct cmp_cfg *cfg)
+static int compress_s_fx_ncob(const struct cmp_cfg *cfg, int stream_len)
 {
-	int stream_len = 0;
 	size_t i;
 
 	struct s_fx_ncob *data_buf = cfg->input_buf;
@@ -1046,15 +1061,10 @@ static int compress_s_fx_ncob(const struct cmp_cfg *cfg)
 	struct s_fx_ncob model;
 	struct encoder_setupt setup_exp_flag, setup_fx, setup_ncob;
 
-	if (model_mode_is_used(cfg->cmp_mode))
-		up_model_buf = cfg->icu_new_model_buf;
-
-	stream_len = compress_multi_entry_hdr((void **)&data_buf, (void **)&model_buf,
-					      (void **)&up_model_buf, cfg->icu_output_buf);
-
 	if (model_mode_is_used(cfg->cmp_mode)) {
 		model = model_buf[0];
 		next_model_p = &model_buf[1];
+		up_model_buf = cfg->icu_new_model_buf;
 	} else {
 		memset(&model, 0, sizeof(model));
 		next_model_p = data_buf;
@@ -1115,9 +1125,8 @@ static int compress_s_fx_ncob(const struct cmp_cfg *cfg)
  *	value in the bitstream
  */
 
-static int compress_s_fx_efx_ncob_ecob(const struct cmp_cfg *cfg)
+static int compress_s_fx_efx_ncob_ecob(const struct cmp_cfg *cfg, int stream_len)
 {
-	int stream_len = 0;
 	size_t i;
 
 	struct s_fx_efx_ncob_ecob *data_buf = cfg->input_buf;
@@ -1128,15 +1137,10 @@ static int compress_s_fx_efx_ncob_ecob(const struct cmp_cfg *cfg)
 	struct encoder_setupt setup_exp_flag, setup_fx, setup_ncob, setup_efx,
 			      setup_ecob;
 
-	if (model_mode_is_used(cfg->cmp_mode))
-		up_model_buf = cfg->icu_new_model_buf;
-
-	stream_len = compress_multi_entry_hdr((void **)&data_buf, (void **)&model_buf,
-					      (void **)&up_model_buf, cfg->icu_output_buf);
-
 	if (model_mode_is_used(cfg->cmp_mode)) {
 		model = model_buf[0];
 		next_model_p = &model_buf[1];
+		up_model_buf = cfg->icu_new_model_buf;
 	} else {
 		memset(&model, 0, sizeof(model));
 		next_model_p = data_buf;
@@ -1219,9 +1223,8 @@ static int compress_s_fx_efx_ncob_ecob(const struct cmp_cfg *cfg)
  *	value in the bitstream
  */
 
-static int compress_f_fx(const struct cmp_cfg *cfg)
+static int compress_f_fx(const struct cmp_cfg *cfg, int stream_len)
 {
-	int stream_len = 0;
 	size_t i;
 
 	struct f_fx *data_buf = cfg->input_buf;
@@ -1231,15 +1234,10 @@ static int compress_f_fx(const struct cmp_cfg *cfg)
 	struct f_fx model;
 	struct encoder_setupt setup_fx;
 
-	if (model_mode_is_used(cfg->cmp_mode))
-		up_model_buf = cfg->icu_new_model_buf;
-
-	stream_len = compress_multi_entry_hdr((void **)&data_buf, (void **)&model_buf,
-					      (void **)&up_model_buf, cfg->icu_output_buf);
-
 	if (model_mode_is_used(cfg->cmp_mode)) {
 		model = model_buf[0];
 		next_model_p = &model_buf[1];
+		up_model_buf = cfg->icu_new_model_buf;
 	} else {
 		memset(&model, 0, sizeof(model));
 		next_model_p = data_buf;
@@ -1278,9 +1276,8 @@ static int compress_f_fx(const struct cmp_cfg *cfg)
  *	value in the bitstream
  */
 
-static int compress_f_fx_efx(const struct cmp_cfg *cfg)
+static int compress_f_fx_efx(const struct cmp_cfg *cfg, int stream_len)
 {
-	int stream_len = 0;
 	size_t i;
 
 	struct f_fx_efx *data_buf = cfg->input_buf;
@@ -1290,15 +1287,10 @@ static int compress_f_fx_efx(const struct cmp_cfg *cfg)
 	struct f_fx_efx model;
 	struct encoder_setupt setup_fx, setup_efx;
 
-	if (model_mode_is_used(cfg->cmp_mode))
-		up_model_buf = cfg->icu_new_model_buf;
-
-	stream_len = compress_multi_entry_hdr((void **)&data_buf, (void **)&model_buf,
-					      (void **)&up_model_buf, cfg->icu_output_buf);
-
 	if (model_mode_is_used(cfg->cmp_mode)) {
 		model = model_buf[0];
 		next_model_p = &model_buf[1];
+		up_model_buf = cfg->icu_new_model_buf;
 	} else {
 		memset(&model, 0, sizeof(model));
 		next_model_p = data_buf;
@@ -1345,9 +1337,8 @@ static int compress_f_fx_efx(const struct cmp_cfg *cfg)
  *	value in the bitstream
  */
 
-static int compress_f_fx_ncob(const struct cmp_cfg *cfg)
+static int compress_f_fx_ncob(const struct cmp_cfg *cfg, int stream_len)
 {
-	int stream_len = 0;
 	size_t i;
 
 	struct f_fx_ncob *data_buf = cfg->input_buf;
@@ -1357,15 +1348,10 @@ static int compress_f_fx_ncob(const struct cmp_cfg *cfg)
 	struct f_fx_ncob model;
 	struct encoder_setupt setup_fx, setup_ncob;
 
-	if (model_mode_is_used(cfg->cmp_mode))
-		up_model_buf = cfg->icu_new_model_buf;
-
-	stream_len = compress_multi_entry_hdr((void **)&data_buf, (void **)&model_buf,
-					      (void **)&up_model_buf, cfg->icu_output_buf);
-
 	if (model_mode_is_used(cfg->cmp_mode)) {
 		model = model_buf[0];
 		next_model_p = &model_buf[1];
+		up_model_buf = cfg->icu_new_model_buf;
 	} else {
 		memset(&model, 0, sizeof(model));
 		next_model_p = data_buf;
@@ -1418,9 +1404,8 @@ static int compress_f_fx_ncob(const struct cmp_cfg *cfg)
  *	value in the bitstream
  */
 
-static int compress_f_fx_efx_ncob_ecob(const struct cmp_cfg *cfg)
+static int compress_f_fx_efx_ncob_ecob(const struct cmp_cfg *cfg, int stream_len)
 {
-	int stream_len = 0;
 	size_t i;
 
 	struct f_fx_efx_ncob_ecob *data_buf = cfg->input_buf;
@@ -1430,15 +1415,10 @@ static int compress_f_fx_efx_ncob_ecob(const struct cmp_cfg *cfg)
 	struct f_fx_efx_ncob_ecob model;
 	struct encoder_setupt setup_fx, setup_ncob, setup_efx, setup_ecob;
 
-	if (model_mode_is_used(cfg->cmp_mode))
-		up_model_buf = cfg->icu_new_model_buf;
-
-	stream_len = compress_multi_entry_hdr((void **)&data_buf, (void **)&model_buf,
-					      (void **)&up_model_buf, cfg->icu_output_buf);
-
 	if (model_mode_is_used(cfg->cmp_mode)) {
 		model = model_buf[0];
 		next_model_p = &model_buf[1];
+		up_model_buf = cfg->icu_new_model_buf;
 	} else {
 		memset(&model, 0, sizeof(model));
 		next_model_p = data_buf;
@@ -1513,9 +1493,8 @@ static int compress_f_fx_efx_ncob_ecob(const struct cmp_cfg *cfg)
  *	value in the bitstream
  */
 
-static int compress_l_fx(const struct cmp_cfg *cfg)
+static int compress_l_fx(const struct cmp_cfg *cfg, int stream_len)
 {
-	int stream_len = 0;
 	size_t i;
 
 	struct l_fx *data_buf = cfg->input_buf;
@@ -1525,15 +1504,10 @@ static int compress_l_fx(const struct cmp_cfg *cfg)
 	struct l_fx model;
 	struct encoder_setupt setup_exp_flag, setup_fx, setup_fx_var;
 
-	if (model_mode_is_used(cfg->cmp_mode))
-		up_model_buf = cfg->icu_new_model_buf;
-
-	stream_len = compress_multi_entry_hdr((void **)&data_buf, (void **)&model_buf,
-					      (void **)&up_model_buf, cfg->icu_output_buf);
-
 	if (model_mode_is_used(cfg->cmp_mode)) {
 		model = model_buf[0];
 		next_model_p = &model_buf[1];
+		up_model_buf = cfg->icu_new_model_buf;
 	} else {
 		memset(&model, 0, sizeof(model));
 		next_model_p = data_buf;
@@ -1588,9 +1562,8 @@ static int compress_l_fx(const struct cmp_cfg *cfg)
  *	value in the bitstream
  */
 
-static int compress_l_fx_efx(const struct cmp_cfg *cfg)
+static int compress_l_fx_efx(const struct cmp_cfg *cfg, int stream_len)
 {
-	int stream_len = 0;
 	size_t i;
 
 	struct l_fx_efx *data_buf = cfg->input_buf;
@@ -1600,15 +1573,10 @@ static int compress_l_fx_efx(const struct cmp_cfg *cfg)
 	struct l_fx_efx model;
 	struct encoder_setupt setup_exp_flag, setup_fx, setup_efx, setup_fx_var;
 
-	if (model_mode_is_used(cfg->cmp_mode))
-		up_model_buf = cfg->icu_new_model_buf;
-
-	stream_len = compress_multi_entry_hdr((void **)&data_buf, (void **)&model_buf,
-					      (void **)&up_model_buf, cfg->icu_output_buf);
-
 	if (model_mode_is_used(cfg->cmp_mode)) {
 		model = model_buf[0];
 		next_model_p = &model_buf[1];
+		up_model_buf = cfg->icu_new_model_buf;
 	} else {
 		memset(&model, 0, sizeof(model));
 		next_model_p = data_buf;
@@ -1671,9 +1639,8 @@ static int compress_l_fx_efx(const struct cmp_cfg *cfg)
  *	value in the bitstream
  */
 
-static int compress_l_fx_ncob(const struct cmp_cfg *cfg)
+static int compress_l_fx_ncob(const struct cmp_cfg *cfg, int stream_len)
 {
-	int stream_len = 0;
 	size_t i;
 
 	struct l_fx_ncob *data_buf = cfg->input_buf;
@@ -1684,15 +1651,10 @@ static int compress_l_fx_ncob(const struct cmp_cfg *cfg)
 	struct encoder_setupt setup_exp_flag, setup_fx, setup_ncob,
 			      setup_fx_var, setup_cob_var;
 
-	if (model_mode_is_used(cfg->cmp_mode))
-		up_model_buf = cfg->icu_new_model_buf;
-
-	stream_len = compress_multi_entry_hdr((void **)&data_buf, (void **)&model_buf,
-					      (void **)&up_model_buf, cfg->icu_output_buf);
-
 	if (model_mode_is_used(cfg->cmp_mode)) {
 		model = model_buf[0];
 		next_model_p = &model_buf[1];
+		up_model_buf = cfg->icu_new_model_buf;
 	} else {
 		memset(&model, 0, sizeof(model));
 		next_model_p = data_buf;
@@ -1776,9 +1738,8 @@ static int compress_l_fx_ncob(const struct cmp_cfg *cfg)
  *	value in the bitstream
  */
 
-static int compress_l_fx_efx_ncob_ecob(const struct cmp_cfg *cfg)
+static int compress_l_fx_efx_ncob_ecob(const struct cmp_cfg *cfg, int stream_len)
 {
-	int stream_len = 0;
 	size_t i;
 
 	struct l_fx_efx_ncob_ecob *data_buf = cfg->input_buf;
@@ -1789,15 +1750,10 @@ static int compress_l_fx_efx_ncob_ecob(const struct cmp_cfg *cfg)
 	struct encoder_setupt setup_exp_flag, setup_fx, setup_ncob, setup_efx,
 			      setup_ecob, setup_fx_var, setup_cob_var;
 
-	if (model_mode_is_used(cfg->cmp_mode))
-		up_model_buf = cfg->icu_new_model_buf;
-
-	stream_len = compress_multi_entry_hdr((void **)&data_buf, (void **)&model_buf,
-					      (void **)&up_model_buf, cfg->icu_output_buf);
-
 	if (model_mode_is_used(cfg->cmp_mode)) {
 		model = model_buf[0];
 		next_model_p = &model_buf[1];
+		up_model_buf = cfg->icu_new_model_buf;
 	} else {
 		memset(&model, 0, sizeof(model));
 		next_model_p = data_buf;
@@ -1902,9 +1858,8 @@ static int compress_l_fx_efx_ncob_ecob(const struct cmp_cfg *cfg)
  *	value in the bitstream
  */
 
-static int compress_offset(const struct cmp_cfg *cfg)
+static int compress_offset(const struct cmp_cfg *cfg, int stream_len)
 {
-	int stream_len = 0;
 	size_t i;
 
 	struct offset *data_buf = cfg->input_buf;
@@ -1914,15 +1869,10 @@ static int compress_offset(const struct cmp_cfg *cfg)
 	struct offset model;
 	struct encoder_setupt setup_mean, setup_var;
 
-	if (model_mode_is_used(cfg->cmp_mode))
-		up_model_buf = cfg->icu_new_model_buf;
-
-	stream_len = compress_multi_entry_hdr((void **)&data_buf, (void **)&model_buf,
-					      (void **)&up_model_buf, cfg->icu_output_buf);
-
 	if (model_mode_is_used(cfg->cmp_mode)) {
 		model = model_buf[0];
 		next_model_p = &model_buf[1];
+		up_model_buf = cfg->icu_new_model_buf;
 	} else {
 		memset(&model, 0, sizeof(model));
 		next_model_p = data_buf;
@@ -1942,9 +1892,9 @@ static int compress_offset(const struct cmp_cfg *cfg)
 			variance_bits_used = cfg->max_used_bits->nc_offset_variance;
 			break;
 		}
-		configure_encoder_setup(&setup_mean, cfg->cmp_par_mean, cfg->spill_mean,
+		configure_encoder_setup(&setup_mean, cfg->cmp_par_offset_mean, cfg->spill_offset_mean,
 					cfg->round, mean_bits_used, cfg);
-		configure_encoder_setup(&setup_var, cfg->cmp_par_variance, cfg->spill_variance,
+		configure_encoder_setup(&setup_var, cfg->cmp_par_offset_variance, cfg->spill_offset_variance,
 					cfg->round, variance_bits_used, cfg);
 	}
 
@@ -1983,9 +1933,8 @@ static int compress_offset(const struct cmp_cfg *cfg)
  *	value in the bitstream
  */
 
-static int compress_background(const struct cmp_cfg *cfg)
+static int compress_background(const struct cmp_cfg *cfg, int stream_len)
 {
-	int stream_len = 0;
 	size_t i;
 
 	struct background *data_buf = cfg->input_buf;
@@ -1995,15 +1944,10 @@ static int compress_background(const struct cmp_cfg *cfg)
 	struct background model;
 	struct encoder_setupt setup_mean, setup_var, setup_pix;
 
-	if (model_mode_is_used(cfg->cmp_mode))
-		up_model_buf = cfg->icu_new_model_buf;
-
-	stream_len = compress_multi_entry_hdr((void **)&data_buf, (void **)&model_buf,
-					      (void **)&up_model_buf, cfg->icu_output_buf);
-
 	if (model_mode_is_used(cfg->cmp_mode)) {
 		model = model_buf[0];
 		next_model_p = &model_buf[1];
+		up_model_buf = cfg->icu_new_model_buf;
 	} else {
 		memset(&model, 0, sizeof(model));
 		next_model_p = data_buf;
@@ -2025,11 +1969,11 @@ static int compress_background(const struct cmp_cfg *cfg)
 			pixels_error_used_bits = cfg->max_used_bits->nc_background_outlier_pixels;
 			break;
 		}
-		configure_encoder_setup(&setup_mean, cfg->cmp_par_mean, cfg->spill_mean,
+		configure_encoder_setup(&setup_mean, cfg->cmp_par_background_mean, cfg->spill_background_mean,
 					cfg->round, mean_used_bits, cfg);
-		configure_encoder_setup(&setup_var, cfg->cmp_par_variance, cfg->spill_variance,
+		configure_encoder_setup(&setup_var, cfg->cmp_par_background_variance, cfg->spill_background_variance,
 					cfg->round, varinace_used_bits, cfg);
-		configure_encoder_setup(&setup_pix, cfg->cmp_par_pixels_error, cfg->spill_pixels_error,
+		configure_encoder_setup(&setup_pix, cfg->cmp_par_background_pixels_error, cfg->spill_background_pixels_error,
 					cfg->round, pixels_error_used_bits, cfg);
 	}
 
@@ -2075,9 +2019,8 @@ static int compress_background(const struct cmp_cfg *cfg)
  *	value in the bitstream
  */
 
-static int compress_smearing(const struct cmp_cfg *cfg)
+static int compress_smearing(const struct cmp_cfg *cfg, int stream_len)
 {
-	int stream_len = 0;
 	size_t i;
 
 	struct smearing *data_buf = cfg->input_buf;
@@ -2087,25 +2030,20 @@ static int compress_smearing(const struct cmp_cfg *cfg)
 	struct smearing model;
 	struct encoder_setupt setup_mean, setup_var_mean, setup_pix;
 
-	if (model_mode_is_used(cfg->cmp_mode))
-		up_model_buf = cfg->icu_new_model_buf;
-
-	stream_len = compress_multi_entry_hdr((void **)&data_buf, (void **)&model_buf,
-					      (void **)&up_model_buf, cfg->icu_output_buf);
-
 	if (model_mode_is_used(cfg->cmp_mode)) {
 		model = model_buf[0];
 		next_model_p = &model_buf[1];
+		up_model_buf = cfg->icu_new_model_buf;
 	} else {
 		memset(&model, 0, sizeof(model));
 		next_model_p = data_buf;
 	}
 
-	configure_encoder_setup(&setup_mean, cfg->cmp_par_mean, cfg->spill_mean,
+	configure_encoder_setup(&setup_mean, cfg->cmp_par_smearing_mean, cfg->spill_smearing_mean,
 				cfg->round, cfg->max_used_bits->smearing_mean, cfg);
-	configure_encoder_setup(&setup_var_mean, cfg->cmp_par_variance, cfg->spill_variance,
+	configure_encoder_setup(&setup_var_mean, cfg->cmp_par_smearing_variance, cfg->spill_smearing_variance,
 				cfg->round, cfg->max_used_bits->smearing_variance_mean, cfg);
-	configure_encoder_setup(&setup_pix, cfg->cmp_par_pixels_error, cfg->spill_pixels_error,
+	configure_encoder_setup(&setup_pix, cfg->cmp_par_smearing_pixels_error, cfg->spill_smearing_pixels_error,
 				cfg->round, cfg->max_used_bits->smearing_outlier_pixels, cfg);
 
 	for (i = 0;; i++) {
@@ -2166,7 +2104,7 @@ static int pad_bitstream(const struct cmp_cfg *cfg, int cmp_size)
 		return cmp_size;
 
 	/* maximum length of the bitstream/icu_output_buf in bits */
-	output_buf_len_bits = cmp_buffer_length_to_bits(cfg->buffer_length, cfg->data_type);
+	output_buf_len_bits = cmp_buffer_length_to_bits(cfg->buffer_length);
 
 	n_pad_bits = 32 - ((unsigned int)cmp_size & 0x1FU);
 	if (n_pad_bits < 32) {
@@ -2180,50 +2118,127 @@ static int pad_bitstream(const struct cmp_cfg *cfg, int cmp_size)
 }
 
 
-/**
- * @brief change the endianness of the compressed data to big-endian
- *
- * @param cfg		pointer to the compression configuration structure
- * @param cmp_size	length of the bitstream in bits
- *
- * @returns 0 on success; non-zero on failure
- */
+/* TODO: doc string */
 
-static int cmp_data_to_big_endian(const struct cmp_cfg *cfg, int cmp_size)
+static int compress_data_internal(const struct cmp_cfg *cfg, int stream_len)
 {
-#if (__BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__)
-	size_t i;
-	uint32_t *p;
-	uint32_t s = (uint32_t)cmp_size;
+	int bitsize = 0;
 
-	if (cmp_size < 0)
-		return cmp_size;
+	if (!cfg)
+		return -1;
 
-	if (!cfg->icu_output_buf)
-		return cmp_size;
+	if (stream_len < 0)
+		return stream_len;
 
-	if (cfg->cmp_mode == CMP_MODE_RAW) {
-		if (s & 0x7) /* size must be a multiple of 8 in RAW mode */
-			return -1;
-		if (cmp_input_big_to_cpu_endianness(cfg->icu_output_buf,
-						    s/CHAR_BIT, cfg->data_type))
-			cmp_size = -1;
-	} else {
-		if (rdcu_supported_data_type_is_used(cfg->data_type)) {
-			p = cfg->icu_output_buf;
-		} else {
-			p = &cfg->icu_output_buf[MULTI_ENTRY_HDR_SIZE/sizeof(uint32_t)];
-			s -= MULTI_ENTRY_HDR_SIZE * CHAR_BIT;
-		}
+	if (cfg->samples == 0) /* nothing to compress we are done*/
+		return 0;
 
-		for (i = 0; i < cmp_bit_to_4byte(s)/sizeof(uint32_t); i++)
-			cpu_to_be32s(&p[i]);
+	if (stream_len & 0x7) {
+		printf("Error: The stream_len parameter must be a multiple of 8.\n");
+		return -1;
 	}
-#else
-	/* do nothing data are already in big-endian */
-	(void)cfg;
-#endif /*__BYTE_ORDER__ */
-	return cmp_size;
+
+	if (raw_mode_is_used(cfg->cmp_mode) && cfg->icu_output_buf)
+		if (((uint32_t)stream_len >> 3) + cfg->samples * size_of_a_sample(cfg->data_type) > cfg->buffer_length)
+			return CMP_ERROR_SMALL_BUF;
+
+	if (cmp_cfg_icu_is_invalid(cfg))
+		return -1;
+
+	if (raw_mode_is_used(cfg->cmp_mode)) {
+		uint32_t raw_size = cfg->samples * (uint32_t)size_of_a_sample(cfg->data_type);
+
+		if (cfg->icu_output_buf) {
+			uint32_t todo = raw_size;
+			uint8_t *p = (uint8_t *)cfg->icu_output_buf + (stream_len >> 3);
+
+			memcpy(p, cfg->input_buf, raw_size);
+			/* TODO: fix cmp_input_big_to_cpu_endianness */
+			if (stream_len > 0) {
+				p -= COLLECTION_HDR_SIZE;
+				todo += COLLECTION_HDR_SIZE;
+			}
+			if (cmp_input_big_to_cpu_endianness(p, todo, cfg->data_type))
+				return -1;
+		}
+		bitsize += stream_len + (int)raw_size*8; /* convert to bits */
+	} else {
+		if (cfg->icu_output_buf && cfg->samples/3 > cfg->buffer_length)
+			debug_print("Warning: The size of the compressed_data buffer is 3 times smaller than the data_to_compress. This is probably unintended.\n");
+
+		switch (cfg->data_type) {
+		case DATA_TYPE_IMAGETTE:
+		case DATA_TYPE_IMAGETTE_ADAPTIVE:
+		case DATA_TYPE_SAT_IMAGETTE:
+		case DATA_TYPE_SAT_IMAGETTE_ADAPTIVE:
+		case DATA_TYPE_F_CAM_IMAGETTE:
+		case DATA_TYPE_F_CAM_IMAGETTE_ADAPTIVE:
+			bitsize = compress_imagette(cfg, stream_len);
+			break;
+
+		case DATA_TYPE_S_FX:
+			bitsize = compress_s_fx(cfg, stream_len);
+			break;
+		case DATA_TYPE_S_FX_EFX:
+			bitsize = compress_s_fx_efx(cfg, stream_len);
+			break;
+		case DATA_TYPE_S_FX_NCOB:
+			bitsize = compress_s_fx_ncob(cfg, stream_len);
+			break;
+		case DATA_TYPE_S_FX_EFX_NCOB_ECOB:
+			bitsize = compress_s_fx_efx_ncob_ecob(cfg, stream_len);
+			break;
+
+		case DATA_TYPE_F_FX:
+			bitsize = compress_f_fx(cfg, stream_len);
+			break;
+		case DATA_TYPE_F_FX_EFX:
+			bitsize = compress_f_fx_efx(cfg, stream_len);
+			break;
+		case DATA_TYPE_F_FX_NCOB:
+			bitsize = compress_f_fx_ncob(cfg, stream_len);
+			break;
+		case DATA_TYPE_F_FX_EFX_NCOB_ECOB:
+			bitsize = compress_f_fx_efx_ncob_ecob(cfg, stream_len);
+			break;
+
+		case DATA_TYPE_L_FX:
+			bitsize = compress_l_fx(cfg, stream_len);
+			break;
+		case DATA_TYPE_L_FX_EFX:
+			bitsize = compress_l_fx_efx(cfg, stream_len);
+			break;
+		case DATA_TYPE_L_FX_NCOB:
+			bitsize = compress_l_fx_ncob(cfg, stream_len);
+			break;
+		case DATA_TYPE_L_FX_EFX_NCOB_ECOB:
+			bitsize = compress_l_fx_efx_ncob_ecob(cfg, stream_len);
+			break;
+
+		case DATA_TYPE_OFFSET:
+		case DATA_TYPE_F_CAM_OFFSET:
+			bitsize = compress_offset(cfg, stream_len);
+			break;
+		case DATA_TYPE_BACKGROUND:
+		case DATA_TYPE_F_CAM_BACKGROUND:
+			bitsize = compress_background(cfg, stream_len);
+			break;
+		case DATA_TYPE_SMEARING:
+			bitsize = compress_smearing(cfg, stream_len);
+			break;
+
+		/* LCOV_EXCL_START */
+		case DATA_TYPE_UNKNOWN:
+		default:
+			debug_print("Error: Data type not supported.\n");
+			bitsize = -1;
+		}
+		/* LCOV_EXCL_STOP */
+	}
+
+	bitsize = pad_bitstream(cfg, bitsize);
+
+	return bitsize;
 }
 
 
@@ -2245,103 +2260,512 @@ static int cmp_data_to_big_endian(const struct cmp_cfg *cfg, int cmp_size)
 
 int icu_compress_data(const struct cmp_cfg *cfg)
 {
-	int bitsize = 0;
+	struct cmp_cfg cfg_cpy;
+	int dst_capacity_used = 0;
 
-	if (!cfg)
-		return -1;
+	if (cfg) {
+		if (cfg->samples == 0)
+			return 0;
+		cfg_cpy = *cfg;
+		cfg_cpy.buffer_length = cmp_cal_size_of_data(cfg->buffer_length, cfg->data_type);
+		if (!cfg_cpy.buffer_length)
+			return -1;
 
-	if (cfg->samples == 0) /* nothing to compress we are done*/
-		return 0;
-
-	if (raw_mode_is_used(cfg->cmp_mode))
-		if (cfg->samples > cfg->buffer_length)
-			return CMP_ERROR_SMALL_BUF;
-
-	if (cmp_cfg_icu_is_invalid(cfg))
-		return -1;
-
-	if (raw_mode_is_used(cfg->cmp_mode)) {
-		uint32_t raw_size = cmp_cal_size_of_data(cfg->samples, cfg->data_type);
-
-		if (cfg->icu_output_buf)
-			memcpy(cfg->icu_output_buf, cfg->input_buf, raw_size);
-		bitsize = (int)raw_size * CHAR_BIT; /* convert to bits */
-	} else {
-		if (cfg->icu_output_buf && cfg->samples/3 > cfg->buffer_length)
-			debug_print("Warning: The size of the compressed_data buffer is 3 times smaller than the data_to_compress. This is probably unintended.\n");
-
-		switch (cfg->data_type) {
-		case DATA_TYPE_IMAGETTE:
-		case DATA_TYPE_IMAGETTE_ADAPTIVE:
-		case DATA_TYPE_SAT_IMAGETTE:
-		case DATA_TYPE_SAT_IMAGETTE_ADAPTIVE:
-		case DATA_TYPE_F_CAM_IMAGETTE:
-		case DATA_TYPE_F_CAM_IMAGETTE_ADAPTIVE:
-			bitsize = compress_imagette(cfg);
-			break;
-
-		case DATA_TYPE_S_FX:
-			bitsize = compress_s_fx(cfg);
-			break;
-		case DATA_TYPE_S_FX_EFX:
-			bitsize = compress_s_fx_efx(cfg);
-			break;
-		case DATA_TYPE_S_FX_NCOB:
-			bitsize = compress_s_fx_ncob(cfg);
-			break;
-		case DATA_TYPE_S_FX_EFX_NCOB_ECOB:
-			bitsize = compress_s_fx_efx_ncob_ecob(cfg);
-			break;
-
-		case DATA_TYPE_F_FX:
-			bitsize = compress_f_fx(cfg);
-			break;
-		case DATA_TYPE_F_FX_EFX:
-			bitsize = compress_f_fx_efx(cfg);
-			break;
-		case DATA_TYPE_F_FX_NCOB:
-			bitsize = compress_f_fx_ncob(cfg);
-			break;
-		case DATA_TYPE_F_FX_EFX_NCOB_ECOB:
-			bitsize = compress_f_fx_efx_ncob_ecob(cfg);
-			break;
-
-		case DATA_TYPE_L_FX:
-			bitsize = compress_l_fx(cfg);
-			break;
-		case DATA_TYPE_L_FX_EFX:
-			bitsize = compress_l_fx_efx(cfg);
-			break;
-		case DATA_TYPE_L_FX_NCOB:
-			bitsize = compress_l_fx_ncob(cfg);
-			break;
-		case DATA_TYPE_L_FX_EFX_NCOB_ECOB:
-			bitsize = compress_l_fx_efx_ncob_ecob(cfg);
-			break;
-
-		case DATA_TYPE_OFFSET:
-		case DATA_TYPE_F_CAM_OFFSET:
-			bitsize = compress_offset(cfg);
-			break;
-		case DATA_TYPE_BACKGROUND:
-		case DATA_TYPE_F_CAM_BACKGROUND:
-			bitsize = compress_background(cfg);
-			break;
-		case DATA_TYPE_SMEARING:
-			bitsize = compress_smearing(cfg);
-			break;
-
-		/* LCOV_EXCL_START */
-		case DATA_TYPE_UNKNOWN:
-		default:
-			debug_print("Error: Data type not supported.\n");
-			bitsize = -1;
+		if (!rdcu_supported_data_type_is_used(cfg->data_type) && !cmp_data_type_is_invalid(cfg->data_type)) {
+			if (cfg->icu_new_model_buf) {
+				if (cfg->input_buf)
+					memcpy(cfg->icu_new_model_buf, cfg->input_buf, COLLECTION_HDR_SIZE);
+				cfg_cpy.icu_new_model_buf = (uint8_t *)cfg_cpy.icu_new_model_buf + COLLECTION_HDR_SIZE;
+			}
+			if (cfg->icu_output_buf && cfg->input_buf && cfg->buffer_length)
+				memcpy(cfg->icu_output_buf, cfg->input_buf, COLLECTION_HDR_SIZE);
+			if (cfg->input_buf)
+				cfg_cpy.input_buf =  (uint8_t *)cfg->input_buf + COLLECTION_HDR_SIZE;
+			if (cfg->model_buf)
+				cfg_cpy.model_buf = (uint8_t *)cfg->model_buf + COLLECTION_HDR_SIZE;
+			dst_capacity_used = COLLECTION_HDR_SIZE*8;
 		}
-		/* LCOV_EXCL_STOP */
+		return compress_data_internal(&cfg_cpy, dst_capacity_used);
+	}
+	return compress_data_internal(NULL, dst_capacity_used);
+}
+
+
+/* TODO: doc string */
+
+static uint32_t cmp_guess_good_spill(uint32_t golomb_par)
+{
+	if (!golomb_par)
+		return 0;
+	return cmp_icu_max_spill(golomb_par);
+}
+
+
+/* TODO: doc string */
+
+static int set_cmp_col_size(uint8_t *p, int cmp_col_size)
+{
+	uint16_t v = (uint16_t)cmp_col_size;
+
+	if (cmp_col_size > UINT16_MAX)
+		return -1;
+
+	v -= COLLECTION_HDR_SIZE+2;
+	if (p) {
+		memset(p, v >> 8, 1);
+		memset(p+1, v & 0xFF, 1);
 	}
 
-	bitsize = pad_bitstream(cfg, bitsize);
-	bitsize = cmp_data_to_big_endian(cfg, bitsize);
+	return 0;
+}
 
-	return bitsize;
+
+/* TODO: doc string */
+
+static int cmp_collection(uint8_t *col, uint8_t *model, uint8_t *updated_model, uint32_t *dst,
+			  uint32_t dst_capacity, struct cmp_cfg *cfg, int dst_size)
+{
+	int dst_size_begin = dst_size;
+	int dst_size_bits;
+
+	if (dst_size < 0)
+		return dst_size;
+	if (!col)
+		return -1;
+
+	if (cfg->cmp_mode != CMP_MODE_RAW) {
+		/* we put the compressed data size be */
+		dst_size += CMP_COLLECTION_FILD_SIZE;
+	}
+
+	/* we do not compress the collection header, we simply copy the header
+	 * into the compressed data
+	 */
+	if (dst) {
+		if ((uint32_t)dst_size + COLLECTION_HDR_SIZE > dst_capacity)
+			return CMP_ERROR_SMALL_BUF;
+		memcpy((uint8_t *)dst + dst_size, col, COLLECTION_HDR_SIZE);
+		if (model_mode_is_used(cfg->cmp_mode) && cfg->icu_new_model_buf)
+			memcpy(cfg->icu_new_model_buf, col, COLLECTION_HDR_SIZE);
+	}
+	dst_size += COLLECTION_HDR_SIZE;
+
+	/* prepare the different buffers */
+	cfg->icu_output_buf = dst;
+	cfg->input_buf = col + COLLECTION_HDR_SIZE;
+	if (model)
+		cfg->model_buf = model + COLLECTION_HDR_SIZE;
+	if (updated_model)
+		cfg->icu_new_model_buf = updated_model + COLLECTION_HDR_SIZE;
+
+	{
+		struct collection_hdr *col_hdr = (struct collection_hdr *)col;
+		uint8_t subservice = cmp_col_get_subservice(col_hdr);
+		uint16_t col_data_length = cmp_col_get_data_length(col_hdr);
+
+
+		cfg->data_type = convert_subservice_to_cmp_data_type(subservice);
+
+		if (!size_of_a_sample(cfg->data_type))
+			return -1;
+		if (col_data_length % size_of_a_sample(cfg->data_type))
+			return -1;
+		cfg->samples = col_data_length/size_of_a_sample(cfg->data_type);
+		if ((dst && (uint32_t)dst_size + col_data_length > dst_capacity) ||
+		    cfg->cmp_mode == CMP_MODE_RAW) {
+			cfg->buffer_length = dst_capacity;
+			dst_size_bits = compress_data_internal(cfg, dst_size<<3);
+			if (dst_size < 0)
+				return dst_size_bits;
+		} else {
+			/* we limit the size of the compressed data buffer  */
+			cfg->buffer_length = (uint32_t)dst_size + col_data_length-1;
+			dst_size_bits = compress_data_internal(cfg, dst_size<<3);
+			if (dst_size_bits == CMP_ERROR_SMALL_BUF ||
+			    (!dst && (int)cmp_bit_to_byte((unsigned int)dst_size_bits)-dst_size > col_data_length)) { /* if dst == NULL icu_compress_data_2 will not return a CMP_ERROR_SMALL_BUF */
+				enum cmp_mode cmp_mode_cpy = cfg->cmp_mode;
+
+				cfg->buffer_length = (uint32_t)dst_size + col_data_length;
+				cfg->cmp_mode = CMP_MODE_RAW;
+				dst_size_bits = compress_data_internal(cfg, dst_size<<3);
+				cfg->cmp_mode = cmp_mode_cpy;
+			}
+		}
+		if (dst_size_bits < 0)
+			return dst_size_bits;
+	}
+
+	dst_size = (int)cmp_bit_to_byte((unsigned int)dst_size_bits); /*TODO: fix casts */
+	if (dst && cfg->cmp_mode != CMP_MODE_RAW)
+		if (set_cmp_col_size((uint8_t *)dst+dst_size_begin, dst_size-dst_size_begin))
+			return -1;
+
+	return dst_size;
+}
+
+
+static int cmp_ent_build_chunk_header(struct cmp_entity *ent, uint32_t chunk_size,
+				      const struct cmp_cfg *cfg, uint64_t start_timestamp,
+				      int32_t cmp_ent_size_byte)
+{
+	if (ent) { /* setup the compressed entity header */
+		int err = 0;
+
+		if (cmp_ent_size_byte < 0)
+			cmp_ent_size_byte = 0;
+		err |= cmp_ent_set_version_id(ent, version_identifier);
+		err |= cmp_ent_set_size(ent, (uint32_t)cmp_ent_size_byte);
+		if (cmp_ent_set_original_size(ent, chunk_size)) {
+			debug_print("Error: The size of the chunk is too.\n");
+			return -1;
+		}
+		err |= cmp_ent_set_start_timestamp(ent, start_timestamp);
+		err |= cmp_ent_set_data_type(ent, DATA_TYPE_CHUNK, cfg->cmp_mode == CMP_MODE_RAW);
+		err |= cmp_ent_set_cmp_mode(ent, cfg->cmp_mode);
+		err |= cmp_ent_set_model_value(ent, cfg->model_value);
+		err |= cmp_ent_set_model_id(ent, 0);
+		err |= cmp_ent_set_model_counter(ent, 0);
+		if (cfg->max_used_bits)
+			err |= cmp_ent_set_max_used_bits_version(ent, cfg->max_used_bits->version);
+		else
+			err |= cmp_ent_set_max_used_bits_version(ent, 0);
+		err |= cmp_ent_set_lossy_cmp_par(ent, cfg->round);
+		if (cfg->cmp_mode != CMP_MODE_RAW) {
+			err |= cmp_ent_set_non_ima_spill1(ent, cfg->spill_par_1);
+			err |= cmp_ent_set_non_ima_cmp_par1(ent, cfg->cmp_par_1);
+			err |= cmp_ent_set_non_ima_spill2(ent, cfg->spill_par_2);
+			err |= cmp_ent_set_non_ima_cmp_par2(ent, cfg->cmp_par_2);
+			err |= cmp_ent_set_non_ima_spill3(ent, cfg->spill_par_3);
+			err |= cmp_ent_set_non_ima_cmp_par3(ent, cfg->cmp_par_3);
+			err |= cmp_ent_set_non_ima_spill4(ent, cfg->spill_par_4);
+			err |= cmp_ent_set_non_ima_cmp_par4(ent, cfg->cmp_par_4);
+			err |= cmp_ent_set_non_ima_spill5(ent, cfg->spill_par_5);
+			err |= cmp_ent_set_non_ima_cmp_par5(ent, cfg->cmp_par_5);
+			err |= cmp_ent_set_non_ima_spill6(ent, cfg->spill_par_6);
+			err |= cmp_ent_set_non_ima_cmp_par6(ent, cfg->cmp_par_6);
+		}
+		err |= cmp_ent_set_end_timestamp(ent, get_timestamp());
+		if (err)
+			return -1;
+	}
+	return NON_IMAGETTE_HEADER_SIZE;
+}
+
+
+/* TODO: doc string; ref document */
+
+static enum chunk_type get_chunk_type(uint16_t subservice)
+{
+	enum chunk_type chunk_type = CHUNK_TYPE_UNKNOWN;
+
+	switch (subservice) {
+	case SST_NCxx_S_SCIENCE_IMAGETTE:
+		chunk_type = CHUNK_TYPE_NCAM_IMGAETTE;
+		break;
+	case SST_NCxx_S_SCIENCE_SAT_IMAGETTE:
+		chunk_type = CHUNK_TYPE_SAT_IMGAETTE;
+		break;
+	case SST_NCxx_S_SCIENCE_OFFSET:
+	case SST_NCxx_S_SCIENCE_BACKGROUND:
+		chunk_type = CHUNK_TYPE_OFFSET_BACKGROUND;
+		break;
+	case SST_NCxx_S_SCIENCE_SMEARING:
+		chunk_type = CHUNK_TYPE_SMEARING;
+		break;
+	case SST_NCxx_S_SCIENCE_S_FX:
+	case SST_NCxx_S_SCIENCE_S_FX_EFX:
+	case SST_NCxx_S_SCIENCE_S_FX_NCOB:
+	case SST_NCxx_S_SCIENCE_S_FX_EFX_NCOB_ECOB:
+		chunk_type = CHUNK_TYPE_SHORT_CADENCE;
+		break;
+	case SST_NCxx_S_SCIENCE_L_FX:
+	case SST_NCxx_S_SCIENCE_L_FX_EFX:
+	case SST_NCxx_S_SCIENCE_L_FX_NCOB:
+	case SST_NCxx_S_SCIENCE_L_FX_EFX_NCOB_ECOB:
+		chunk_type = CHUNK_TYPE_SHORT_CADENCE;
+		break;
+	case SST_NCxx_S_SCIENCE_F_FX:
+	case SST_NCxx_S_SCIENCE_F_FX_EFX:
+	case SST_NCxx_S_SCIENCE_F_FX_NCOB:
+	case SST_NCxx_S_SCIENCE_F_FX_EFX_NCOB_ECOB:
+		debug_print("Error: No chunk is defined for fast cadence subservices\n");
+		chunk_type = CHUNK_TYPE_UNKNOWN;
+		break;
+	default:
+		debug_print("Error: Unknown subservice: %i.\n", subservice);
+		chunk_type = CHUNK_TYPE_UNKNOWN;
+		break;
+	};
+
+	return chunk_type;
+}
+
+
+static enum chunk_type cmp_col_get_chunk_type(const struct collection_hdr *col)
+{
+	return get_chunk_type(cmp_col_get_subservice(col));
+}
+
+
+static int read_in_cmp_par(const struct cmp_par *par, enum chunk_type chunk_type,
+			   struct cmp_cfg *cfg)
+{
+	memset(cfg, 0, sizeof(struct cmp_cfg));
+
+	cfg->cmp_mode = par->cmp_mode;
+	cfg->model_value = par->model_value;
+	cfg->round = par->lossy_par;
+	cfg->max_used_bits = &MAX_USED_BITS_SAFE;
+
+	switch (chunk_type) {
+	case CHUNK_TYPE_NCAM_IMGAETTE:
+		cfg->cmp_par_imagette = par->nc_imagette;
+		break;
+	case CHUNK_TYPE_SAT_IMGAETTE:
+		cfg->cmp_par_imagette = par->saturated_imagette;
+		break;
+	case CHUNK_TYPE_SHORT_CADENCE:
+		cfg->cmp_par_exp_flags = par->s_exp_flags;
+		cfg->cmp_par_fx = par->s_fx;
+		cfg->cmp_par_ncob = par->s_ncob;
+		cfg->cmp_par_efx = par->s_efx;
+		cfg->cmp_par_ecob = par->s_ecob;
+		break;
+	case CHUNK_TYPE_LONG_CADENCE:
+		cfg->cmp_par_exp_flags = par->l_exp_flags;
+		cfg->cmp_par_fx = par->l_fx;
+		cfg->cmp_par_ncob = par->l_ncob;
+		cfg->cmp_par_efx = par->l_efx;
+		cfg->cmp_par_ecob = par->l_ecob;
+		cfg->cmp_par_fx_cob_variance = par->l_fx_cob_variance;
+		break;
+	case CHUNK_TYPE_OFFSET_BACKGROUND:
+		cfg->cmp_par_offset_mean = par->nc_offset_mean;
+		cfg->cmp_par_offset_variance = par->nc_offset_variance;
+
+		cfg->cmp_par_background_mean = par->nc_background_mean;
+		cfg->cmp_par_background_variance = par->nc_background_variance;
+		cfg->cmp_par_background_pixels_error = par->nc_background_outlier_pixels;
+		break;
+
+	case CHUNK_TYPE_SMEARING:
+		cfg->cmp_par_smearing_mean = par->smearing_mean;
+		cfg->cmp_par_smearing_variance = par->smearing_variance_mean;
+		cfg->cmp_par_smearing_pixels_error = par->smearing_outlier_pixels;
+		break;
+
+	case CHUNK_TYPE_F_CHAIN:
+		cfg->cmp_par_imagette = par->fc_imagette;
+
+		cfg->cmp_par_offset_mean = par->fc_offset_mean;
+		cfg->cmp_par_offset_variance = par->fc_offset_variance;
+
+		cfg->cmp_par_background_mean = par->fc_background_mean;
+		cfg->cmp_par_background_variance = par->fc_background_variance;
+		cfg->cmp_par_background_pixels_error = par->fc_background_outlier_pixels;
+		break;
+	case CHUNK_TYPE_UNKNOWN:
+	default:
+		return -1;
+	};
+
+	cfg->spill_par_1 = cmp_guess_good_spill(cfg->cmp_par_1);
+	cfg->spill_par_2 = cmp_guess_good_spill(cfg->cmp_par_2);
+	cfg->spill_par_3 = cmp_guess_good_spill(cfg->cmp_par_3);
+	cfg->spill_par_4 = cmp_guess_good_spill(cfg->cmp_par_4);
+	cfg->spill_par_5 = cmp_guess_good_spill(cfg->cmp_par_5);
+	cfg->spill_par_6 = cmp_guess_good_spill(cfg->cmp_par_6);
+	return 0;
+}
+
+
+/**
+ * @brief initialise the compress_chunk() function
+ *
+ * If not initialised the compress_chunk() function sets the timestamps and
+ * version_id in the compression entity header to zero
+ *
+ * @param return_timestamp	pointer to a function returning a current 48-bit
+ *				timestamp
+ * @param version_id		version identifier of the applications software
+ */
+
+void compress_chunk_init(uint64_t(return_timestamp)(void), uint32_t version_id)
+{
+	if (return_timestamp)
+		get_timestamp = return_timestamp;
+
+	version_identifier = version_id;
+}
+
+
+/**
+ * @brief compress a data chunk consisting of put together data collections
+ *
+ * @param chunk			pointer to the chunk to be compressed
+ * @param chunk_size		byte size of the chunk
+ * @param chunk_model		pointer to a model of a chunk; has the same size
+ *				as the chunk (can be NULL if no model compression
+ *				mode is used)
+ * @param updated_chunk_model	pointer to store the updated model for the next
+ *				model mode compression; has the same size as the
+ *				chunk (can be the same as the model_of_data
+ *				buffer for in-place update or NULL if updated
+ *				model is not needed)
+ * @param dst			destination pointer to the compressed data
+ *				buffer; has to be 4-byte aligned (can be NULL)
+ * @param dst_capacity		capacity of the dst buffer;  it's recommended to
+ *				provide a dst_capacity >=
+ *				compress_chunk_cmp_size_bound(chunk, chunk_size)
+ *				as it eliminates one potential failure scenario:
+ *				not enough space in the dst buffer to write the
+ *				compressed data; size is round down to a multiple
+ *				of 4
+ * @returns the byte size of the compressed_data buffer on success; negative on
+ *	error, CMP_ERROR_SMALL_BUF (-2) if the compressed data buffer is too
+ *	small to hold the whole compressed data
+ */
+
+int compress_chunk(uint32_t *chunk, uint32_t chunk_size, uint32_t *chunk_model,
+		   uint32_t *updated_chunk_model, uint32_t *dst, uint32_t dst_capacity,
+		   const struct cmp_par *cmp_par)
+{
+	uint64_t start_timestamp = get_timestamp();
+	size_t read_bytes;
+	struct collection_hdr *col = (struct collection_hdr *)chunk;
+	int cmp_size_byte; /* size of the compressed data in bytes */
+	enum chunk_type chunk_type;
+	struct cmp_cfg cfg;
+	int err;
+
+	if (!chunk) {
+		debug_print("Error: Pointer to the data chunk is NULL. No data no compression.\n");
+		return -1;
+	}
+	if (chunk_size < COLLECTION_HDR_SIZE) {
+		debug_print("Error: The chunk size is smaller than the minimum size.\n");
+		return -1;
+	}
+	if (chunk_size > CMP_ENTITY_MAX_ORIGINAL_SIZE) {
+		debug_print("Error: The chunk size is bigger than the maximum allowed chunk size.\n");
+		return -1;
+	}
+
+	/* we will build the compression header after the compression of the chunk */
+	if (cmp_par->cmp_mode == CMP_MODE_RAW)
+		cmp_size_byte = GENERIC_HEADER_SIZE;
+	else
+		cmp_size_byte = NON_IMAGETTE_HEADER_SIZE;
+	if (dst) {
+		if (dst_capacity < (size_t)cmp_size_byte) {
+			debug_print("Error: The destination capacity is smaller than the minimum compression entity size.\n");
+			return CMP_ERROR_SMALL_BUF;
+		}
+		memset(dst, 0, (size_t)cmp_size_byte);
+	}
+
+	chunk_type = cmp_col_get_chunk_type(col);
+	if (read_in_cmp_par(cmp_par, chunk_type, &cfg))
+		return -1;
+
+	for (read_bytes = 0;
+	     read_bytes < chunk_size - COLLECTION_HDR_SIZE;
+	     read_bytes += cmp_col_get_size(col)) {
+		/* setup pointers for the next collection we want to compress */
+		col = (struct collection_hdr *)((uint8_t *)chunk + read_bytes); /* TODO: ARE ALL COLLECTION 4 BYTE ALLIED? */
+		if (chunk_model)
+			chunk_model = (uint8_t *)chunk_model + read_bytes; /* TODO: ARE ALL COLLECTION 4 BYTE ALLIED?*/
+		if (updated_chunk_model)
+			updated_chunk_model = (uint8_t *)updated_chunk_model + read_bytes; /* TODO: ARE ALL COLLECTION 4 BYTE ALLIED?*/
+
+		if (cmp_col_get_chunk_type(col) != chunk_type) {
+			debug_print("Error: The chunk contains collections with an incompatible mix of subservices.\n");
+			return -1;
+		}
+
+		cmp_size_byte = cmp_collection((uint8_t *)col,
+					       (uint8_t *)chunk_model,
+					       (uint8_t *)updated_chunk_model,
+					       dst, dst_capacity, &cfg, cmp_size_byte);
+	}
+
+	if (read_bytes != chunk_size) {
+		debug_print("Error: The sum of the compressed collections does not match the size of the data in the compression header.\n");
+		return -1;
+	}
+
+	err = cmp_ent_build_chunk_header((struct cmp_entity *)dst, chunk_size, &cfg,
+				      start_timestamp, cmp_size_byte);
+	if (err < 0)
+		return err;
+
+	return cmp_size_byte;
+}
+
+
+/**
+ * @brief returns the maximum compressed size in a worst case scenario
+ *
+ * In case the input data is not compressible
+ * This function is primarily useful for memory allocation purposes
+ * (destination buffer size).
+ *
+ * @note if the number of collections is known you can use the
+ *	COMPRESS_CHUNK_BOUND macro for compilation-time evaluation
+ *	(stack memory allocation for example)
+ *
+ * @param chunk		pointer to the chunk you want compress
+ * @param chunk_size	size of the chunk in bytes
+ *
+ * @returns maximum compressed size for a chunk compression; 0 on error
+ */
+
+uint32_t compress_chunk_cmp_size_bound(void *chunk, uint32_t chunk_size)
+{
+	int32_t read_bytes;
+	uint32_t num_col = 0;
+
+	if (chunk_size > CMP_ENTITY_MAX_ORIGINAL_SIZE-NON_IMAGETTE_HEADER_SIZE-CMP_COLLECTION_FILD_SIZE) {
+		debug_print("Error: The chunk size is bigger than the maximum allowed chunk size.\n");
+		return 0;
+	}
+
+	for (read_bytes = 0;
+	     read_bytes < (int32_t)chunk_size-COLLECTION_HDR_SIZE;
+	     read_bytes += cmp_col_get_size((struct collection_hdr *)((uint8_t *)chunk + read_bytes)))
+		num_col++;
+
+
+	if ((uint32_t)read_bytes != chunk_size) {
+		debug_print("Error: The sum of the compressed collections does not match the size of the data in the compression header.\n");
+		return 0;
+	}
+
+	return COMPRESS_CHUNK_BOUND(chunk_size, num_col);
+}
+
+
+/**
+ * @brief set the model id and model counter in the compression entity header
+ *
+ * @param dst		pointer to the compressed data starting with a
+ *			compression entity header
+ * @param dst_size	byte size of the dst buffer
+ * @param model_id	model identifier; for identifying entities that originate
+ *			from the same starting model
+ * @param model_counter	model_counter; counts how many times the model was
+ *			updated; for non model mode compression use 0
+ *
+ * @returns 0 on success, otherwise error
+ */
+
+int compress_chunk_set_model_id_and_counter(uint32_t *dst, int dst_size,
+					    uint16_t model_id, uint8_t model_counter)
+{
+	if (dst_size < NON_IMAGETTE_HEADER_SIZE)
+		return 1;
+
+	return cmp_ent_set_model_id((struct cmp_entity *)dst, model_id) ||
+		cmp_ent_set_model_counter((struct cmp_entity *)dst, model_counter);
+
 }
