@@ -99,6 +99,7 @@ uint32_t cmp_ent_cal_hdr_size(enum cmp_data_type data_type, int raw_mode_flag)
 		case DATA_TYPE_F_FX_EFX_NCOB_ECOB:
 		case DATA_TYPE_F_CAM_OFFSET:
 		case DATA_TYPE_F_CAM_BACKGROUND:
+		case DATA_TYPE_CHUNK:
 			size = NON_IMAGETTE_HEADER_SIZE;
 			break;
 		case DATA_TYPE_UNKNOWN:
@@ -1676,6 +1677,7 @@ void *cmp_ent_get_data_buf(struct cmp_entity *ent)
 	case DATA_TYPE_F_FX_EFX_NCOB_ECOB:
 	case DATA_TYPE_F_CAM_OFFSET:
 	case DATA_TYPE_F_CAM_BACKGROUND:
+	case DATA_TYPE_CHUNK:
 		return ent->non_ima.cmp_data;
 	/* LCOV_EXCL_START */
 	case DATA_TYPE_UNKNOWN:
@@ -1816,7 +1818,7 @@ int cmp_ent_write_cmp_pars(struct cmp_entity *ent, const struct cmp_cfg *cfg,
 	ent_cmp_data_size = cmp_ent_get_cmp_data_size(ent);
 
 	/* check if the entity can hold the compressed data */
-	if (ent_cmp_data_size < cmp_bit_to_4byte((unsigned int)cmp_size_bits)) {
+	if (ent_cmp_data_size < cmp_bit_to_byte((unsigned int)cmp_size_bits)) {
 		debug_print("Error: The entity size is to small to hold the compressed data.\n");
 		return -2;
 	}
@@ -1865,30 +1867,6 @@ int cmp_ent_write_cmp_pars(struct cmp_entity *ent, const struct cmp_cfg *cfg,
 	case DATA_TYPE_BACKGROUND:
 	case DATA_TYPE_F_CAM_BACKGROUND:
 	case DATA_TYPE_SMEARING:
-		if (cmp_ent_set_non_ima_cmp_par1(ent, cfg->cmp_par_mean))
-			return -1;
-		if (cmp_ent_set_non_ima_spill1(ent, cfg->spill_mean))
-			return -1;
-
-		if (cmp_ent_set_non_ima_cmp_par2(ent, cfg->cmp_par_variance))
-			return -1;
-		if (cmp_ent_set_non_ima_spill2(ent, cfg->spill_variance))
-			return -1;
-
-		if (cmp_ent_set_non_ima_cmp_par3(ent, cfg->cmp_par_pixels_error))
-			return -1;
-		if (cmp_ent_set_non_ima_spill3(ent, cfg->spill_pixels_error))
-			return -1;
-
-		cmp_ent_set_non_ima_cmp_par4(ent, 0);
-		cmp_ent_set_non_ima_spill4(ent, 0);
-
-		cmp_ent_set_non_ima_cmp_par5(ent, 0);
-		cmp_ent_set_non_ima_spill5(ent, 0);
-
-		cmp_ent_set_non_ima_cmp_par6(ent, 0);
-		cmp_ent_set_non_ima_spill6(ent, 0);
-		break;
 	case DATA_TYPE_S_FX:
 	case DATA_TYPE_S_FX_EFX:
 	case DATA_TYPE_S_FX_NCOB:
@@ -1901,34 +1879,34 @@ int cmp_ent_write_cmp_pars(struct cmp_entity *ent, const struct cmp_cfg *cfg,
 	case DATA_TYPE_F_FX_EFX:
 	case DATA_TYPE_F_FX_NCOB:
 	case DATA_TYPE_F_FX_EFX_NCOB_ECOB:
-		if (cmp_ent_set_non_ima_cmp_par1(ent, cfg->cmp_par_exp_flags))
+		if (cmp_ent_set_non_ima_cmp_par1(ent, cfg->cmp_par_1))
 			return -1;
-		if (cmp_ent_set_non_ima_spill1(ent, cfg->spill_exp_flags))
-			return -1;
-
-		if (cmp_ent_set_non_ima_cmp_par2(ent, cfg->cmp_par_fx))
-			return -1;
-		if (cmp_ent_set_non_ima_spill2(ent, cfg->spill_fx))
+		if (cmp_ent_set_non_ima_spill1(ent, cfg->spill_par_1))
 			return -1;
 
-		if (cmp_ent_set_non_ima_cmp_par3(ent, cfg->cmp_par_ncob))
+		if (cmp_ent_set_non_ima_cmp_par2(ent, cfg->cmp_par_2))
 			return -1;
-		if (cmp_ent_set_non_ima_spill3(ent, cfg->spill_ncob))
-			return -1;
-
-		if (cmp_ent_set_non_ima_cmp_par4(ent, cfg->cmp_par_efx))
-			return -1;
-		if (cmp_ent_set_non_ima_spill4(ent, cfg->spill_efx))
+		if (cmp_ent_set_non_ima_spill2(ent, cfg->spill_par_2))
 			return -1;
 
-		if (cmp_ent_set_non_ima_cmp_par5(ent, cfg->cmp_par_ecob))
+		if (cmp_ent_set_non_ima_cmp_par3(ent, cfg->cmp_par_3))
 			return -1;
-		if (cmp_ent_set_non_ima_spill5(ent, cfg->spill_ecob))
+		if (cmp_ent_set_non_ima_spill3(ent, cfg->spill_par_3))
 			return -1;
 
-		if (cmp_ent_set_non_ima_cmp_par6(ent, cfg->cmp_par_fx_cob_variance))
+		if (cmp_ent_set_non_ima_cmp_par4(ent, cfg->cmp_par_4))
 			return -1;
-		if (cmp_ent_set_non_ima_spill6(ent, cfg->spill_fx_cob_variance))
+		if (cmp_ent_set_non_ima_spill4(ent, cfg->spill_par_4))
+			return -1;
+
+		if (cmp_ent_set_non_ima_cmp_par5(ent, cfg->cmp_par_5))
+			return -1;
+		if (cmp_ent_set_non_ima_spill5(ent, cfg->spill_par_5))
+			return -1;
+
+		if (cmp_ent_set_non_ima_cmp_par6(ent, cfg->cmp_par_6))
+			return -1;
+		if (cmp_ent_set_non_ima_spill6(ent, cfg->spill_par_6))
 			return -1;
 
 		break;
@@ -1985,7 +1963,7 @@ int cmp_ent_write_rdcu_cmp_pars(struct cmp_entity *ent, const struct cmp_info *i
 
 	/* check if the entity can hold the compressed data */
 	ent_cmp_data_size = cmp_ent_get_cmp_data_size(ent);
-	if (ent_cmp_data_size < cmp_bit_to_4byte(info->cmp_size)) {
+	if (ent_cmp_data_size < cmp_bit_to_byte(info->cmp_size)) {
 		debug_print("Error: The entity size is to small to hold the compressed data.\n");
 		return -2;
 	}
@@ -2106,7 +2084,7 @@ uint32_t cmp_ent_build(struct cmp_entity *ent, uint32_t version_id,
 		       uint64_t start_time, uint64_t end_time, uint16_t model_id,
 		       uint8_t model_counter, const struct cmp_cfg *cfg, int cmp_size_bits)
 {
-	uint32_t cmp_size_bytes = cmp_bit_to_4byte((unsigned int)cmp_size_bits); /* TODO: do we need to round up to 4 bytes? */
+	uint32_t cmp_size_bytes = cmp_bit_to_byte((unsigned int)cmp_size_bits);
 	uint32_t hdr_size;
 
 	if (!cfg)

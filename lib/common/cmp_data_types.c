@@ -27,6 +27,476 @@
 
 
 /**
+ * @brief get the collection timestamp from the collection header
+ *
+ * @param col	pointer to a collection header
+ *
+ * @returns the collection timestamp
+ */
+
+uint64_t cmp_col_get_timestamp(const struct collection_hdr *col)
+{
+#ifdef __LITTLE_ENDIAN
+	return be64_to_cpu(col->timestamp) >> 16;
+#else
+	return col->timestamp;
+#endif /* __LITTLE_ENDIAN */
+}
+
+
+/**
+ * @brief get the configuration identifier from the collection header
+ *
+ * @param col	pointer to a collection header
+ *
+ * @returns the configuration identifier
+ */
+
+uint16_t cmp_col_get_configuration_id(const struct collection_hdr *col)
+{
+	return be16_to_cpu(col->configuration_id);
+}
+
+
+/**
+ * @brief get the collection identifier from the collection header
+ *
+ * @param col	pointer to a collection header
+ *
+ * @returns the collection identifier
+ */
+
+uint16_t cmp_col_get_col_id(const struct collection_hdr *col)
+{
+	return be16_to_cpu(col->collection_id);
+}
+
+
+/**
+ * @brief get the packet type bit in the collection identifier field of the
+ *	collection header
+ *
+ * @param col	pointer to a collection header
+ *
+ * @returns the collection packet type a collection; 1 for science packets and
+ *	0 for window packets
+ *
+ */
+
+uint8_t cmp_col_get_pkt_type(const struct collection_hdr *col)
+{
+	union collection_id cid;
+
+	cid.collection_id = be16_to_cpu(col->collection_id);
+	return cid.field.pkt_type;
+}
+
+
+/**
+ * @brief get the subservice field in the collection identifier field of the
+ *	collection header
+ *
+ * @param col	pointer to a collection header
+ *
+ * @returns the collection subservice type
+ */
+
+uint8_t cmp_col_get_subservice(const struct collection_hdr *col)
+{
+	union collection_id cid;
+
+	cid.collection_id = be16_to_cpu(col->collection_id);
+	return cid.field.subservice;
+}
+
+
+/**
+ * @brief get the CCD identifier field in the collection identifier field of
+ *	the collection header
+ *
+ * @param col	pointer to a collection header
+ *
+ * @returns the collection CCD identifier
+ */
+
+uint8_t cmp_col_get_ccd_id(const struct collection_hdr *col)
+{
+	union collection_id cid;
+
+	cid.collection_id = be16_to_cpu(col->collection_id);
+	return cid.field.ccd_id;
+}
+
+
+/**
+ * @brief get the sequence number field in the collection identifier field of
+ *	the collection header
+ *
+ * @param col	pointer to a collection header
+ *
+ * @returns the collection sequence number
+ */
+
+uint8_t cmp_col_get_sequence_num(const struct collection_hdr *col)
+{
+	union collection_id cid;
+
+	cid.collection_id = be16_to_cpu(col->collection_id);
+	return cid.field.sequence_num;
+}
+
+
+/**
+ * @brief get the collection length from the collection header
+ *
+ * @param col	pointer to a collection header
+ *
+ * @returns the collection length in bytes
+ */
+
+uint16_t cmp_col_get_data_length(const struct collection_hdr *col)
+{
+	return be16_to_cpu(col->collection_length);
+}
+
+
+/**
+ * @brief get the entire collection size (header plus data size)
+ *
+ * @param col	pointer to a collection header
+ *
+ * @returns the collection size in bytes
+ */
+
+uint32_t cmp_col_get_size(const struct collection_hdr *col)
+{
+	return COLLECTION_HDR_SIZE + cmp_col_get_data_length(col);
+}
+
+
+/**
+ * @brief set the timestamp in the collection header
+ *
+ * @param col		pointer to a collection header
+ * @param timestamp	collection timestamp (coarse and fine)
+ *
+ * @returns 0 on success, otherwise error
+ */
+
+int cmp_col_set_timestamp(struct collection_hdr *col, uint64_t timestamp)
+{
+	if (!col)
+		return -1;
+	if (timestamp >> 48)
+		return -1;
+
+#ifdef __LITTLE_ENDIAN
+	col->timestamp = cpu_to_be64(timestamp) >> 16;
+#else
+	col->timestamp = timestamp;
+#endif /* __LITTLE_ENDIAN */
+
+	return 0;
+}
+
+
+/**
+ * @brief set the configuration identifier in the collection header
+ *
+ * @param col			pointer to a collection header
+ * @param configuration_id	configuration identifier
+ *
+ * @returns 0 on success, otherwise error
+ */
+
+int cmp_col_set_configuration_id(struct collection_hdr *col, uint16_t configuration_id)
+{
+	if (!col)
+		return 1;
+
+	col->configuration_id = cpu_to_be16(configuration_id);
+	return 0;
+}
+
+
+/**
+ * @brief set the collection identifier in the collection header
+ *
+ * @param col		pointer to a collection header
+ * @param collection_id	collection identifier
+ *
+ * @returns 0 on success, otherwise error
+ */
+
+int cmp_col_set_col_id(struct collection_hdr *col, uint16_t collection_id)
+{
+	if (!col)
+		return -1;
+
+	col->collection_id = cpu_to_be16(collection_id);
+	return 0;
+}
+
+
+/**
+ * @brief set the packet type bit in the collection identifier field of the
+ *	collection header
+ *
+ * @param col		pointer to a collection header
+ * @param pkt_type	packet type bit; 1 for science packets and 0 for window packets
+ *
+ * @returns 0 on success, otherwise error
+ */
+
+int cmp_col_set_pkt_type(struct collection_hdr *col, uint8_t pkt_type)
+{
+	union collection_id cid;
+
+	if (!col)
+		return -1;
+	if (pkt_type >> 1)
+		return -1;
+
+	cid.collection_id = be16_to_cpu(col->collection_id);
+	cid.field.pkt_type = pkt_type;
+	cmp_col_set_col_id(col, cid.collection_id);
+	return 0;
+}
+
+
+/**
+ * @brief set the packet subservice field in the collection identifier field of
+ *	the collection header
+ *
+ * @param col		pointer to a collection header
+ * @param subservice	collection subservice type
+ *
+ * @returns 0 on success, otherwise error
+ */
+
+int cmp_col_set_subservice(struct collection_hdr *col, uint8_t subservice)
+{
+	union collection_id cid;
+
+	if (!col)
+		return -1;
+	if (subservice >> 6)
+		return -1;
+
+	cid.collection_id = be16_to_cpu(col->collection_id);
+	cid.field.subservice = subservice;
+	cmp_col_set_col_id(col, cid.collection_id);
+	return 0;
+}
+
+
+/**
+ * @brief set the packet CCD identifier field in the collection identifier field
+ *	of the collection header
+ *
+ * @param col		pointer to a collection header
+ * @param ccd_id	collection CCD identifier
+ *
+ * @returns 0 on success, otherwise error
+ */
+
+int cmp_col_set_ccd_id(struct collection_hdr *col, uint8_t ccd_id)
+{
+	union collection_id cid;
+
+	if (!col)
+		return -1;
+	if (ccd_id >> 2)
+		return -1;
+
+	cid.collection_id = be16_to_cpu(col->collection_id);
+	cid.field.ccd_id = ccd_id;
+	cmp_col_set_col_id(col, cid.collection_id);
+	return 0;
+}
+
+
+/**
+ * @brief set the collection sequence number bit field in the collection
+ *	identifier of the collection header
+ *
+ * @param col		pointer to a collection header
+ * @param sequence_num	collection sequence number
+ *
+ * @returns 0 on success, otherwise error
+ */
+
+int cmp_col_set_sequence_num(struct collection_hdr *col, uint8_t sequence_num)
+{
+	union collection_id cid;
+
+	if (!col)
+		return -1;
+
+	if (sequence_num >> 7)
+		return -1;
+
+	cid.collection_id = be16_to_cpu(col->collection_id);
+	cid.field.sequence_num = sequence_num;
+	return cmp_col_set_col_id(col, cid.collection_id);
+}
+
+
+/**
+ * @brief set the collection length in the collection header
+ *
+ * @param col		pointer to a collection header
+ * @param length	length of the collection in bytes TBC: without the
+ *			header size itself
+ *
+ * @returns 0 on success, otherwise error
+ */
+
+int cmp_col_set_data_length(struct collection_hdr *col, uint16_t length)
+{
+	if (!col)
+		return -1;
+
+	col->collection_length = cpu_to_be16(length);
+	return 0;
+}
+
+
+/* TODO: doc string */
+
+enum cmp_data_type convert_subservice_to_cmp_data_type(uint8_t subservice)
+{
+	switch (subservice) {
+	case SST_NCxx_S_SCIENCE_IMAGETTE:
+		return DATA_TYPE_IMAGETTE;
+	case SST_NCxx_S_SCIENCE_SAT_IMAGETTE:
+		return DATA_TYPE_SAT_IMAGETTE;
+	case SST_NCxx_S_SCIENCE_OFFSET:
+		return DATA_TYPE_OFFSET;
+	case SST_NCxx_S_SCIENCE_BACKGROUND:
+		return DATA_TYPE_BACKGROUND;
+	case SST_NCxx_S_SCIENCE_SMEARING:
+		return DATA_TYPE_SMEARING;
+	case SST_NCxx_S_SCIENCE_S_FX:
+		return DATA_TYPE_S_FX;
+	case SST_NCxx_S_SCIENCE_S_FX_EFX:
+		return DATA_TYPE_S_FX_EFX;
+	case SST_NCxx_S_SCIENCE_S_FX_NCOB:
+		return DATA_TYPE_S_FX_NCOB;
+	case SST_NCxx_S_SCIENCE_S_FX_EFX_NCOB_ECOB:
+		return DATA_TYPE_S_FX_EFX_NCOB_ECOB;
+	case SST_NCxx_S_SCIENCE_L_FX:
+		return DATA_TYPE_L_FX;
+	case SST_NCxx_S_SCIENCE_L_FX_EFX:
+		return DATA_TYPE_L_FX_EFX;
+	case SST_NCxx_S_SCIENCE_L_FX_NCOB:
+		return DATA_TYPE_L_FX_NCOB;
+	case SST_NCxx_S_SCIENCE_L_FX_EFX_NCOB_ECOB:
+		return DATA_TYPE_L_FX_EFX_NCOB_ECOB;
+	case SST_NCxx_S_SCIENCE_F_FX:
+		return DATA_TYPE_F_FX;
+	case SST_NCxx_S_SCIENCE_F_FX_EFX:
+		return DATA_TYPE_F_FX_EFX;
+	case SST_NCxx_S_SCIENCE_F_FX_NCOB:
+		return DATA_TYPE_F_FX_NCOB;
+	case SST_NCxx_S_SCIENCE_F_FX_EFX_NCOB_ECOB:
+		return DATA_TYPE_F_FX_EFX_NCOB_ECOB;
+	case SST_FCx_S_SCIENCE_IMAGETTE:
+		return DATA_TYPE_F_CAM_IMAGETTE;
+	case SST_FCx_S_SCIENCE_OFFSET_VALUES:
+		return DATA_TYPE_F_CAM_OFFSET;
+	/* TODO: SST_FCx_S_BACKGROUND_VALUES and SST_NCxx_S_SCIENCE_IMAGETTE has
+	 * the same subservice number*/
+	/* case SST_FCx_S_BACKGROUND_VALUES: */
+	/* 	return DATA_TYPE_F_CAM_BACKGROUND; */
+	/* 	break; */
+	default:
+		return DATA_TYPE_UNKNOWN;
+	};
+}
+
+
+/* TODO: doc string */
+
+uint8_t convert_data_type_to_subservice(enum cmp_data_type data_type)
+{
+	uint8_t sst = 0;
+
+	switch (data_type) {
+	case DATA_TYPE_IMAGETTE:
+	case DATA_TYPE_IMAGETTE_ADAPTIVE:
+		sst = SST_NCxx_S_SCIENCE_IMAGETTE;
+		break;
+	case DATA_TYPE_SAT_IMAGETTE:
+	case DATA_TYPE_SAT_IMAGETTE_ADAPTIVE:
+		sst = SST_NCxx_S_SCIENCE_SAT_IMAGETTE;
+		break;
+	case DATA_TYPE_OFFSET:
+		sst = SST_NCxx_S_SCIENCE_OFFSET;
+		break;
+	case DATA_TYPE_BACKGROUND:
+		sst = SST_NCxx_S_SCIENCE_BACKGROUND;
+		break;
+	case DATA_TYPE_SMEARING:
+		sst = SST_NCxx_S_SCIENCE_SMEARING;
+		break;
+	case DATA_TYPE_S_FX:
+		sst = SST_NCxx_S_SCIENCE_S_FX;
+		break;
+	case DATA_TYPE_S_FX_EFX:
+		sst = SST_NCxx_S_SCIENCE_S_FX_EFX;
+		break;
+	case DATA_TYPE_S_FX_NCOB:
+		sst = SST_NCxx_S_SCIENCE_S_FX_NCOB;
+		break;
+	case DATA_TYPE_S_FX_EFX_NCOB_ECOB:
+		sst = SST_NCxx_S_SCIENCE_S_FX_EFX_NCOB_ECOB;
+		break;
+	case DATA_TYPE_L_FX:
+		sst = SST_NCxx_S_SCIENCE_L_FX;
+		break;
+	case DATA_TYPE_L_FX_EFX:
+		sst = SST_NCxx_S_SCIENCE_L_FX_EFX;
+		break;
+	case DATA_TYPE_L_FX_NCOB:
+		sst = SST_NCxx_S_SCIENCE_L_FX_NCOB;
+		break;
+	case DATA_TYPE_L_FX_EFX_NCOB_ECOB:
+		sst = SST_NCxx_S_SCIENCE_L_FX_EFX_NCOB_ECOB;
+		break;
+	case DATA_TYPE_F_FX:
+		sst = SST_NCxx_S_SCIENCE_F_FX;
+		break;
+	case DATA_TYPE_F_FX_EFX:
+		sst = SST_NCxx_S_SCIENCE_F_FX_EFX;
+		break;
+	case DATA_TYPE_F_FX_NCOB:
+		sst = SST_NCxx_S_SCIENCE_F_FX_NCOB;
+		break;
+	case DATA_TYPE_F_FX_EFX_NCOB_ECOB:
+		sst = SST_NCxx_S_SCIENCE_F_FX_EFX_NCOB_ECOB;
+		break;
+	case DATA_TYPE_F_CAM_IMAGETTE:
+	case DATA_TYPE_F_CAM_IMAGETTE_ADAPTIVE:
+		sst = SST_FCx_S_SCIENCE_IMAGETTE;
+		break;
+	case DATA_TYPE_F_CAM_OFFSET:
+		sst = SST_FCx_S_SCIENCE_OFFSET_VALUES;
+		break;
+	case DATA_TYPE_F_CAM_BACKGROUND:
+		sst = SST_FCx_S_BACKGROUND_VALUES;
+		break;
+	default:
+	case DATA_TYPE_UNKNOWN:
+		debug_print("Error: Unknown compression data type!\n");
+		sst = (uint8_t)-1;
+	};
+
+	return sst;
+}
+
+
+/**
  * @brief calculate the size of a sample for the different compression data type
  *
  * @param data_type	compression data_type
@@ -110,7 +580,7 @@ size_t size_of_a_sample(enum cmp_data_type data_type)
  * @param samples	number of data samples
  * @param data_type	compression data_type
  *
- * @note for non-imagette data program types the multi entry header size is added
+ * @note for non-imagette data program types the collection header size is added
  *
  * @returns the size in bytes to store the data sample; zero on failure
  */
@@ -126,7 +596,7 @@ uint32_t cmp_cal_size_of_data(uint32_t samples, enum cmp_data_type data_type)
 	x = (uint64_t)s*samples;
 
 	if (!rdcu_supported_data_type_is_used(data_type))
-		x += MULTI_ENTRY_HDR_SIZE;
+		x += COLLECTION_HDR_SIZE;
 
 	if (x > UINT_MAX) /* catch overflow */
 		return 0;
@@ -153,9 +623,9 @@ int32_t cmp_input_size_to_samples(uint32_t size, enum cmp_data_type data_type)
 		return -1;
 
 	if (!rdcu_supported_data_type_is_used(data_type)) {
-		if (size < MULTI_ENTRY_HDR_SIZE)
+		if (size < COLLECTION_HDR_SIZE)
 			return -1;
-		size -= MULTI_ENTRY_HDR_SIZE;
+		size -= COLLECTION_HDR_SIZE;
 	}
 
 	if (size % samples_size)
@@ -370,7 +840,7 @@ static void be_to_cpus_f_fx_efx_ncob_ecob(struct f_fx_efx_ncob_ecob *a, int samp
 
 
 /**
- * @brief swap the endianness of uncompressed data form big endian to the cpu
+ * @brief swap the endianness of uncompressed data from big endian to the cpu
  *	endianness (or the other way around) in place
  *
  * @param data			pointer to a data sample
@@ -393,9 +863,10 @@ int cmp_input_big_to_cpu_endianness(void *data, uint32_t data_size_byte,
 		return -1;
 	}
 
-	/* we do not convert the endianness of the multi entry header */
+#if (__BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__)
+	/* we do not convert the endianness of the collection header */
 	if (!rdcu_supported_data_type_is_used(data_type))
-		data = (uint8_t *)data + MULTI_ENTRY_HDR_SIZE;
+		data = (uint8_t *)data + COLLECTION_HDR_SIZE;
 
 	switch (data_type) {
 	case DATA_TYPE_IMAGETTE:
@@ -460,6 +931,7 @@ int cmp_input_big_to_cpu_endianness(void *data, uint32_t data_size_byte,
 		return -1;
 	/* LCOV_EXCL_STOP */
 	}
+#endif /*__BYTE_ORDER__ */
 
 	return 0;
 }

@@ -28,11 +28,11 @@
 #include "../common/cmp_data_types.h"
 
 
-struct cmp_max_used_bits *cmp_max_used_bits_list_get(uint8_t version);
+const struct cmp_max_used_bits *cmp_max_used_bits_list_get(uint8_t version);
 
 int cmp_max_used_bits_list_add(struct cmp_max_used_bits const *item);
 
-int cmp_max_used_bits_list_delet(uint8_t version);
+void cmp_max_used_bits_list_delet(uint8_t version);
 
 void cmp_max_used_bits_list_empty(void);
 

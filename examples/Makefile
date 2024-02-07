@@ -20,7 +20,7 @@ LEON_OBJ := $(LEON_SRC_LOCAL:.c=.o)
 
 
 .PHONY: all
-all: example_cmp_icu demo_plato_rdcu_sparc
+all: example_cmp_icu demo_plato_rdcu_sparc example_compress_chunk
 
 
 .PHONY: $(LIB) # must be run every time
@@ -29,6 +29,8 @@ $(LIB) :
 
 
 example_cmp_icu: example_cmp_icu.o $(LIB)
+
+example_compress_chunk: example_compress_chunk.o $(LIB)
 
 
 ifndef CC_SPARK_AVAILABLE
@@ -50,6 +52,6 @@ endif
 
 .PHONY: clean
 clean:
-	@$(RM) *.o example_cmp_icu demo_plato_rdcu
+	@$(RM) *.o example_cmp_icu demo_plato_rdcu example_compress_chunk
 	$(MAKE) -C $(LIBDIR) clean
 	@echo Cleaning completed
