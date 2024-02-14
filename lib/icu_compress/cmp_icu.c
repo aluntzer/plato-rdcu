@@ -466,10 +466,8 @@ static int put_n_bits32(uint32_t value, unsigned int n_bits, int bit_offset,
 		return stream_len;
 
 	/* Check if bitstream buffer is large enough */
-	if ((unsigned int)stream_len > max_stream_len) {
-		debug_print("Error: The buffer for the compressed data is too small to hold the compressed data. Try a larger buffer_length parameter.\n");
+	if ((unsigned int)stream_len > max_stream_len)
 		return CMP_ERROR_SMALL_BUF;
-	}
 
 	local_adr = bitstream_adr + (bit_offset >> 5);
 
