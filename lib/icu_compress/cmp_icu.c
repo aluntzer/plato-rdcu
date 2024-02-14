@@ -2482,7 +2482,7 @@ static enum chunk_type get_chunk_type(uint16_t subservice)
 	case SST_NCxx_S_SCIENCE_L_FX_EFX:
 	case SST_NCxx_S_SCIENCE_L_FX_NCOB:
 	case SST_NCxx_S_SCIENCE_L_FX_EFX_NCOB_ECOB:
-		chunk_type = CHUNK_TYPE_SHORT_CADENCE;
+		chunk_type = CHUNK_TYPE_LONG_CADENCE;
 		break;
 	case SST_NCxx_S_SCIENCE_F_FX:
 	case SST_NCxx_S_SCIENCE_F_FX_EFX:
