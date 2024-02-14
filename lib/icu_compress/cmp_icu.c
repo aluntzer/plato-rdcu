@@ -2147,16 +2147,10 @@ static int compress_data_internal(const struct cmp_cfg *cfg, int stream_len)
 		uint32_t raw_size = cfg->samples * (uint32_t)size_of_a_sample(cfg->data_type);
 
 		if (cfg->icu_output_buf) {
-			uint32_t todo = raw_size;
 			uint8_t *p = (uint8_t *)cfg->icu_output_buf + (stream_len >> 3);
 
 			memcpy(p, cfg->input_buf, raw_size);
-			/* TODO: fix cmp_input_big_to_cpu_endianness */
-			if (stream_len > 0) {
-				p -= COLLECTION_HDR_SIZE;
-				todo += COLLECTION_HDR_SIZE;
-			}
-			if (cmp_input_big_to_cpu_endianness(p, todo, cfg->data_type))
+			if (cpu_to_be_data_type(p, raw_size, cfg->data_type))
 				return -1;
 		}
 		bitsize += stream_len + (int)raw_size*8; /* convert to bits */
@@ -2669,21 +2663,21 @@ int compress_chunk(uint32_t *chunk, uint32_t chunk_size, uint32_t *chunk_model,
 	for (read_bytes = 0;
 	     read_bytes < chunk_size - COLLECTION_HDR_SIZE;
 	     read_bytes += cmp_col_get_size(col)) {
+		uint8_t *col_model = NULL;
+		uint8_t *col_up_model = NULL;
 		/* setup pointers for the next collection we want to compress */
 		col = (struct collection_hdr *)((uint8_t *)chunk + read_bytes); /* TODO: ARE ALL COLLECTION 4 BYTE ALLIED? */
 		if (chunk_model)
-			chunk_model = (uint8_t *)chunk_model + read_bytes; /* TODO: ARE ALL COLLECTION 4 BYTE ALLIED?*/
+			col_model = ((uint8_t *)chunk_model + read_bytes); /* TODO: ARE ALL COLLECTION 4 BYTE ALLIED?*/
 		if (updated_chunk_model)
-			updated_chunk_model = (uint8_t *)updated_chunk_model + read_bytes; /* TODO: ARE ALL COLLECTION 4 BYTE ALLIED?*/
+			col_up_model = ((uint8_t *)updated_chunk_model + read_bytes); /* TODO: ARE ALL COLLECTION 4 BYTE ALLIED?*/
 
 		if (cmp_col_get_chunk_type(col) != chunk_type) {
 			debug_print("Error: The chunk contains collections with an incompatible mix of subservices.\n");
 			return -1;
 		}
 
-		cmp_size_byte = cmp_collection((uint8_t *)col,
-					       (uint8_t *)chunk_model,
-					       (uint8_t *)updated_chunk_model,
+		cmp_size_byte = cmp_collection((uint8_t *)col, col_model, col_up_model,
 					       dst, dst_capacity, &cfg, cmp_size_byte);
 	}
 

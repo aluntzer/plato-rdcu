@@ -641,18 +641,18 @@ static uint32_t be24_to_cpu(uint32_t a)
 }
 
 
-static void be_to_cpus_16(uint16_t *a, int samples)
+static void be_to_cpus_16(uint16_t *a, uint32_t samples)
 {
-	int i;
+	uint32_t i;
 
 	for (i = 0; i < samples; ++i)
 		be16_to_cpus(&a[i]);
 }
 
 
-static void be_to_cpus_offset(struct offset *a, int samples)
+static void be_to_cpus_offset(struct offset *a, uint32_t samples)
 {
-	int i;
+	uint32_t i;
 
 	for (i = 0; i < samples; ++i) {
 		a[i].mean = be32_to_cpu(a[i].mean);
@@ -661,9 +661,9 @@ static void be_to_cpus_offset(struct offset *a, int samples)
 }
 
 
-static void be_to_cpus_background(struct background *a, int samples)
+static void be_to_cpus_background(struct background *a, uint32_t samples)
 {
-	int i;
+	uint32_t i;
 
 	for (i = 0; i < samples; ++i) {
 		a[i].mean = be32_to_cpu(a[i].mean);
@@ -673,9 +673,9 @@ static void be_to_cpus_background(struct background *a, int samples)
 }
 
 
-static void be_to_cpus_smearing(struct smearing *a, int samples)
+static void be_to_cpus_smearing(struct smearing *a, uint32_t samples)
 {
-	int i;
+	uint32_t i;
 
 	for (i = 0; i < samples; ++i) {
 		a[i].mean = be32_to_cpu(a[i].mean);
@@ -685,18 +685,18 @@ static void be_to_cpus_smearing(struct smearing *a, int samples)
 }
 
 
-static void be_to_cpus_s_fx(struct s_fx *a, int samples)
+static void be_to_cpus_s_fx(struct s_fx *a, uint32_t samples)
 {
-	int i;
+	uint32_t i;
 
 	for (i = 0; i < samples; ++i)
 		a[i].fx = be32_to_cpu(a[i].fx);
 }
 
 
-static void be_to_cpus_s_fx_efx(struct s_fx_efx *a, int samples)
+static void be_to_cpus_s_fx_efx(struct s_fx_efx *a, uint32_t samples)
 {
-	int i;
+	uint32_t i;
 
 	for (i = 0; i < samples; ++i) {
 		a[i].fx = be32_to_cpu(a[i].fx);
@@ -705,9 +705,9 @@ static void be_to_cpus_s_fx_efx(struct s_fx_efx *a, int samples)
 }
 
 
-static void be_to_cpus_s_fx_ncob(struct s_fx_ncob *a, int samples)
+static void be_to_cpus_s_fx_ncob(struct s_fx_ncob *a, uint32_t samples)
 {
-	int i;
+	uint32_t i;
 
 	for (i = 0; i < samples; ++i) {
 		a[i].fx = be32_to_cpu(a[i].fx);
@@ -717,9 +717,9 @@ static void be_to_cpus_s_fx_ncob(struct s_fx_ncob *a, int samples)
 }
 
 
-static void be_to_cpus_s_fx_efx_ncob_ecob(struct s_fx_efx_ncob_ecob *a, int samples)
+static void be_to_cpus_s_fx_efx_ncob_ecob(struct s_fx_efx_ncob_ecob *a, uint32_t samples)
 {
-	int i;
+	uint32_t i;
 
 	for (i = 0; i < samples; ++i) {
 		a[i].fx = be32_to_cpu(a[i].fx);
@@ -732,9 +732,9 @@ static void be_to_cpus_s_fx_efx_ncob_ecob(struct s_fx_efx_ncob_ecob *a, int samp
 }
 
 
-static void be_to_cpus_l_fx(struct l_fx *a, int samples)
+static void be_to_cpus_l_fx(struct l_fx *a, uint32_t samples)
 {
-	int i;
+	uint32_t i;
 
 	for (i = 0; i < samples; ++i) {
 		a[i].exp_flags = be24_to_cpu(a[i].exp_flags);
@@ -744,9 +744,9 @@ static void be_to_cpus_l_fx(struct l_fx *a, int samples)
 }
 
 
-static void be_to_cpus_l_fx_efx(struct l_fx_efx *a, int samples)
+static void be_to_cpus_l_fx_efx(struct l_fx_efx *a, uint32_t samples)
 {
-	int i;
+	uint32_t i;
 
 	for (i = 0; i < samples; ++i) {
 		a[i].exp_flags = be24_to_cpu(a[i].exp_flags);
@@ -757,9 +757,9 @@ static void be_to_cpus_l_fx_efx(struct l_fx_efx *a, int samples)
 }
 
 
-static void be_to_cpus_l_fx_ncob(struct l_fx_ncob *a, int samples)
+static void be_to_cpus_l_fx_ncob(struct l_fx_ncob *a, uint32_t samples)
 {
-	int i;
+	uint32_t i;
 
 	for (i = 0; i < samples; ++i) {
 		a[i].exp_flags = be24_to_cpu(a[i].exp_flags);
@@ -773,9 +773,9 @@ static void be_to_cpus_l_fx_ncob(struct l_fx_ncob *a, int samples)
 }
 
 
-static void be_to_cpus_l_fx_efx_ncob_ecob(struct l_fx_efx_ncob_ecob *a, int samples)
+static void be_to_cpus_l_fx_efx_ncob_ecob(struct l_fx_efx_ncob_ecob *a, uint32_t samples)
 {
-	int i;
+	uint32_t i;
 
 	for (i = 0; i < samples; ++i) {
 		a[i].exp_flags = be24_to_cpu(a[i].exp_flags);
@@ -792,18 +792,18 @@ static void be_to_cpus_l_fx_efx_ncob_ecob(struct l_fx_efx_ncob_ecob *a, int samp
 }
 
 
-static void be_to_cpus_f_fx(struct f_fx *a, int samples)
+static void be_to_cpus_f_fx(struct f_fx *a, uint32_t samples)
 {
-	int i;
+	uint32_t i;
 
 	for (i = 0; i < samples; ++i)
 		a[i].fx = be32_to_cpu(a[i].fx);
 }
 
 
-static void be_to_cpus_f_fx_efx(struct f_fx_efx *a, int samples)
+static void be_to_cpus_f_fx_efx(struct f_fx_efx *a, uint32_t samples)
 {
-	int i;
+	uint32_t i;
 
 	for (i = 0; i < samples; ++i) {
 		a[i].fx = be32_to_cpu(a[i].fx);
@@ -812,9 +812,9 @@ static void be_to_cpus_f_fx_efx(struct f_fx_efx *a, int samples)
 }
 
 
-static void be_to_cpus_f_fx_ncob(struct f_fx_ncob *a, int samples)
+static void be_to_cpus_f_fx_ncob(struct f_fx_ncob *a, uint32_t samples)
 {
-	int i;
+	uint32_t i;
 
 	for (i = 0; i < samples; ++i) {
 		a[i].fx = be32_to_cpu(a[i].fx);
@@ -824,9 +824,9 @@ static void be_to_cpus_f_fx_ncob(struct f_fx_ncob *a, int samples)
 }
 
 
-static void be_to_cpus_f_fx_efx_ncob_ecob(struct f_fx_efx_ncob_ecob *a, int samples)
+static void be_to_cpus_f_fx_efx_ncob_ecob(struct f_fx_efx_ncob_ecob *a, uint32_t samples)
 {
-	int i;
+	uint32_t i;
 
 	for (i = 0; i < samples; ++i) {
 		a[i].fx = be32_to_cpu(a[i].fx);
@@ -839,35 +839,26 @@ static void be_to_cpus_f_fx_efx_ncob_ecob(struct f_fx_efx_ncob_ecob *a, int samp
 }
 
 
-/**
- * @brief swap the endianness of uncompressed data from big endian to the cpu
- *	endianness (or the other way around) in place
- *
- * @param data			pointer to a data sample
- * @param data_size_byte	size of the data in bytes
- * @param data_type		compression data type
- *
- * @returns 0 on success; non-zero on failure
- */
+/* TODO: doc string */
 
-int cmp_input_big_to_cpu_endianness(void *data, uint32_t data_size_byte,
-				    enum cmp_data_type data_type)
+int be_to_cpu_data_type(void *data, uint32_t data_size_byte, enum cmp_data_type data_type)
 {
-	int32_t samples = cmp_input_size_to_samples(data_size_byte, data_type);
+	uint32_t sample_size = (uint32_t)size_of_a_sample(data_type);
+	uint32_t samples;
 
 	if (!data) /* nothing to do */
 		return 0;
 
-	if (samples < 0) {
+	if (!sample_size)
+		return -1;
+
+	if (data_size_byte % sample_size) {
 		debug_print("Error: Can not convert data size in samples.\n");
 		return -1;
 	}
+	samples = data_size_byte / sample_size;
 
 #if (__BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__)
-	/* we do not convert the endianness of the collection header */
-	if (!rdcu_supported_data_type_is_used(data_type))
-		data = (uint8_t *)data + COLLECTION_HDR_SIZE;
-
 	switch (data_type) {
 	case DATA_TYPE_IMAGETTE:
 	case DATA_TYPE_IMAGETTE_ADAPTIVE:
@@ -924,14 +915,72 @@ int cmp_input_big_to_cpu_endianness(void *data, uint32_t data_size_byte,
 	case DATA_TYPE_F_FX_EFX_NCOB_ECOB:
 		be_to_cpus_f_fx_efx_ncob_ecob(data, samples);
 		break;
-	/* LCOV_EXCL_START */
 	case DATA_TYPE_UNKNOWN:
 	default:
 		debug_print("Error: Can not swap endianness for this compression data type.\n");
 		return -1;
-	/* LCOV_EXCL_STOP */
 	}
 #endif /*__BYTE_ORDER__ */
 
 	return 0;
+}
+
+
+/* we do not convert the endianness of the collection header */
+/* TODO: doc string */
+
+int be_to_cpu_chunk(uint8_t *chunk, size_t chunk_size)
+{
+	uint8_t *col_p = chunk;
+
+	if (!chunk)
+		return 0;
+
+	if (chunk_size < COLLECTION_HDR_SIZE)
+		return -1;
+
+	while (col_p < chunk + chunk_size - COLLECTION_HDR_SIZE) {
+		struct collection_hdr *col_hdr = (struct collection_hdr *)col_p;
+		enum cmp_data_type data_type = convert_subservice_to_cmp_data_type(cmp_col_get_subservice(col_hdr));
+		uint32_t data_size = cmp_col_get_data_length(col_hdr);
+
+		col_p += cmp_col_get_size(col_hdr);
+		if (col_p > chunk + chunk_size)  /* over read chunk? */
+			break;
+
+		if (be_to_cpu_data_type(col_hdr->entry, data_size, data_type))
+			return -1;
+	}
+
+	if (col_p != chunk + chunk_size) {
+		debug_print("Error: The chunk size does not match the sum of the collection sizes.\n");
+		return -1;
+	}
+
+	return 0;
+}
+
+
+/**
+ * @brief swap the endianness of uncompressed data from big endian to the cpu
+ *	endianness (or the other way around) in place
+ *
+ * @param data			pointer to a data sample
+ * @param data_size_byte	size of the data in bytes
+ * @param data_type		compression data type
+ *
+ * @returns 0 on success; non-zero on failure
+ */
+
+int cmp_input_big_to_cpu_endianness(void *data, uint32_t data_size_byte,
+				    enum cmp_data_type data_type)
+{
+	if (data && !rdcu_supported_data_type_is_used(data_type)) {
+		/* skip collection header for non RDCU data types */
+		data = (uint8_t *)data + COLLECTION_HDR_SIZE;
+		if (data_size_byte < COLLECTION_HDR_SIZE)
+			return -1;
+		data_size_byte -= COLLECTION_HDR_SIZE;
+	}
+	return be_to_cpu_data_type(data, data_size_byte, data_type);
 }

@@ -329,6 +329,14 @@ size_t size_of_a_sample(enum cmp_data_type data_type);
 uint32_t cmp_cal_size_of_data(uint32_t samples, enum cmp_data_type data_type);
 int32_t cmp_input_size_to_samples(uint32_t size, enum cmp_data_type data_type);
 
+
+/* endianness functions */
+int be_to_cpu_data_type(void *data, uint32_t data_size_byte, enum cmp_data_type data_type);
+#define cpu_to_be_data_type(data, data_size_byte, data_type) be_to_cpu_data_type(data, data_size_byte, data_type)
+
+int be_to_cpu_chunk(uint8_t *chunk, size_t chunk_size);
+#define cpu_to_be_chunk(chunk, chunk_size) be_to_cpu_chunk(chunk, chunk_size)
+
 int cmp_input_big_to_cpu_endianness(void *data, uint32_t data_size_byte,
 				    enum cmp_data_type data_type);
 
