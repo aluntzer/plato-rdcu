@@ -702,6 +702,7 @@ int cmp_cfg_imagette_is_invalid(const struct cmp_cfg *cfg, enum check_opt opt)
 {
 	int cfg_invalid = 0;
 	enum cmp_mode cmp_mode;
+	enum cmp_data_type data_type;
 
 	if (!cfg)
 		return 1;
@@ -717,8 +718,14 @@ int cmp_cfg_imagette_is_invalid(const struct cmp_cfg *cfg, enum check_opt opt)
 	else
 		cmp_mode = cfg->cmp_mode;
 
+	if (opt == ICU_CHECK)
+		data_type = DATA_TYPE_CHUNK;
+	else
+		data_type = cfg->data_type;
+
+
 	cfg_invalid += cmp_pars_are_invalid(cfg->golomb_par, cfg->spill, cmp_mode,
-					    cfg->data_type, "imagette");
+					    data_type, "imagette");
 
 	/* for the RDCU the adaptive parameters have to be always valid */
 	if (opt == RDCU_CHECK || cmp_ap_imagette_data_type_is_used(cfg->data_type)) {

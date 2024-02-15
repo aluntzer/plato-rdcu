@@ -466,10 +466,8 @@ static int put_n_bits32(uint32_t value, unsigned int n_bits, int bit_offset,
 		return stream_len;
 
 	/* Check if bitstream buffer is large enough */
-	if ((unsigned int)stream_len > max_stream_len) {
-		debug_print("Error: The buffer for the compressed data is too small to hold the compressed data. Try a larger buffer_length parameter.\n");
+	if ((unsigned int)stream_len > max_stream_len)
 		return CMP_ERROR_SMALL_BUF;
-	}
 
 	local_adr = bitstream_adr + (bit_offset >> 5);
 
@@ -2149,16 +2147,10 @@ static int compress_data_internal(const struct cmp_cfg *cfg, int stream_len)
 		uint32_t raw_size = cfg->samples * (uint32_t)size_of_a_sample(cfg->data_type);
 
 		if (cfg->icu_output_buf) {
-			uint32_t todo = raw_size;
 			uint8_t *p = (uint8_t *)cfg->icu_output_buf + (stream_len >> 3);
 
 			memcpy(p, cfg->input_buf, raw_size);
-			/* TODO: fix cmp_input_big_to_cpu_endianness */
-			if (stream_len > 0) {
-				p -= COLLECTION_HDR_SIZE;
-				todo += COLLECTION_HDR_SIZE;
-			}
-			if (cmp_input_big_to_cpu_endianness(p, todo, cfg->data_type))
+			if (cpu_to_be_data_type(p, raw_size, cfg->data_type))
 				return -1;
 		}
 		bitsize += stream_len + (int)raw_size*8; /* convert to bits */
@@ -2322,10 +2314,11 @@ static int set_cmp_col_size(uint8_t *p, int cmp_col_size)
 
 /* TODO: doc string */
 
-static int cmp_collection(uint8_t *col, uint8_t *model, uint8_t *updated_model, uint32_t *dst,
-			  uint32_t dst_capacity, struct cmp_cfg *cfg, int dst_size)
+static int32_t cmp_collection(uint8_t *col, uint8_t *model, uint8_t *updated_model,
+			      uint32_t *dst, uint32_t dst_capacity,
+			      struct cmp_cfg *cfg, int32_t dst_size)
 {
-	int dst_size_begin = dst_size;
+	int32_t dst_size_begin = dst_size;
 	int dst_size_bits;
 
 	if (dst_size < 0)
@@ -2395,7 +2388,7 @@ static int cmp_collection(uint8_t *col, uint8_t *model, uint8_t *updated_model, 
 			return dst_size_bits;
 	}
 
-	dst_size = (int)cmp_bit_to_byte((unsigned int)dst_size_bits); /*TODO: fix casts */
+	dst_size = (int32_t)cmp_bit_to_byte((unsigned int)dst_size_bits); /*TODO: fix casts */
 	if (dst && cfg->cmp_mode != CMP_MODE_RAW)
 		if (set_cmp_col_size((uint8_t *)dst+dst_size_begin, dst_size-dst_size_begin))
 			return -1;
@@ -2482,7 +2475,7 @@ static enum chunk_type get_chunk_type(uint16_t subservice)
 	case SST_NCxx_S_SCIENCE_L_FX_EFX:
 	case SST_NCxx_S_SCIENCE_L_FX_NCOB:
 	case SST_NCxx_S_SCIENCE_L_FX_EFX_NCOB_ECOB:
-		chunk_type = CHUNK_TYPE_SHORT_CADENCE;
+		chunk_type = CHUNK_TYPE_LONG_CADENCE;
 		break;
 	case SST_NCxx_S_SCIENCE_F_FX:
 	case SST_NCxx_S_SCIENCE_F_FX_EFX:
@@ -2626,14 +2619,15 @@ void compress_chunk_init(uint64_t(return_timestamp)(void), uint32_t version_id)
  *	small to hold the whole compressed data
  */
 
-int compress_chunk(uint32_t *chunk, uint32_t chunk_size, uint32_t *chunk_model,
-		   uint32_t *updated_chunk_model, uint32_t *dst, uint32_t dst_capacity,
-		   const struct cmp_par *cmp_par)
+int32_t compress_chunk(void *chunk, uint32_t chunk_size,
+		       void *chunk_model, void *updated_chunk_model,
+		       uint32_t *dst, uint32_t dst_capacity,
+		       const struct cmp_par *cmp_par)
 {
 	uint64_t start_timestamp = get_timestamp();
 	size_t read_bytes;
 	struct collection_hdr *col = (struct collection_hdr *)chunk;
-	int cmp_size_byte; /* size of the compressed data in bytes */
+	int32_t cmp_size_byte; /* size of the compressed data in bytes */
 	enum chunk_type chunk_type;
 	struct cmp_cfg cfg;
 	int err;
@@ -2657,11 +2651,11 @@ int compress_chunk(uint32_t *chunk, uint32_t chunk_size, uint32_t *chunk_model,
 	else
 		cmp_size_byte = NON_IMAGETTE_HEADER_SIZE;
 	if (dst) {
-		if (dst_capacity < (size_t)cmp_size_byte) {
+		if (dst_capacity < (uint32_t)cmp_size_byte) {
 			debug_print("Error: The destination capacity is smaller than the minimum compression entity size.\n");
 			return CMP_ERROR_SMALL_BUF;
 		}
-		memset(dst, 0, (size_t)cmp_size_byte);
+		memset(dst, 0, (uint32_t)cmp_size_byte);
 	}
 
 	chunk_type = cmp_col_get_chunk_type(col);
@@ -2671,21 +2665,21 @@ int compress_chunk(uint32_t *chunk, uint32_t chunk_size, uint32_t *chunk_model,
 	for (read_bytes = 0;
 	     read_bytes < chunk_size - COLLECTION_HDR_SIZE;
 	     read_bytes += cmp_col_get_size(col)) {
+		uint8_t *col_model = NULL;
+		uint8_t *col_up_model = NULL;
 		/* setup pointers for the next collection we want to compress */
-		col = (struct collection_hdr *)((uint8_t *)chunk + read_bytes); /* TODO: ARE ALL COLLECTION 4 BYTE ALLIED? */
+		col = (struct collection_hdr *)((uint8_t *)chunk + read_bytes);
 		if (chunk_model)
-			chunk_model = (uint8_t *)chunk_model + read_bytes; /* TODO: ARE ALL COLLECTION 4 BYTE ALLIED?*/
+			col_model = ((uint8_t *)chunk_model + read_bytes);
 		if (updated_chunk_model)
-			updated_chunk_model = (uint8_t *)updated_chunk_model + read_bytes; /* TODO: ARE ALL COLLECTION 4 BYTE ALLIED?*/
+			col_up_model = ((uint8_t *)updated_chunk_model + read_bytes);
 
 		if (cmp_col_get_chunk_type(col) != chunk_type) {
 			debug_print("Error: The chunk contains collections with an incompatible mix of subservices.\n");
 			return -1;
 		}
 
-		cmp_size_byte = cmp_collection((uint8_t *)col,
-					       (uint8_t *)chunk_model,
-					       (uint8_t *)updated_chunk_model,
+		cmp_size_byte = cmp_collection((uint8_t *)col, col_model, col_up_model,
 					       dst, dst_capacity, &cfg, cmp_size_byte);
 	}
 
