@@ -60,7 +60,7 @@ static int demo_comperss_chunk_1d(void)
 	struct offset offset_data[2] = {{1, 2}, {3, 4}};
 	enum { CHUNK_SIZE = 2*COLLECTION_HDR_SIZE + sizeof(background_data)
 			    + sizeof(offset_data) };
-	uint32_t chunk[ROUND_UP_TO_4(CHUNK_SIZE)/4] = {0}; /* Do not put large amount of data on the stack! */
+	uint8_t chunk[CHUNK_SIZE] = {0}; /* Do not put large amount of data on the stack! */
 
 	uint32_t *compressed_data;
 	int cmp_size_bytes;
@@ -74,7 +74,7 @@ static int demo_comperss_chunk_1d(void)
 			return -1;
 		memcpy(col->entry, background_data, sizeof(background_data));
 
-		col = (struct collection_hdr *)((uint8_t *)chunk + cmp_col_get_size(col));
+		col = (struct collection_hdr *)(chunk + cmp_col_get_size(col));
 		if (cmp_col_set_subservice(col, SST_NCxx_S_SCIENCE_OFFSET))
 			return -1;
 		if (cmp_col_set_data_length(col, sizeof(offset_data)))
@@ -166,16 +166,16 @@ static int demo_comperss_chunk_model(void)
 	struct offset offset_data[2] = {{1, 32}, {23, 42}};
 	enum { CHUNK_SIZE = 2*COLLECTION_HDR_SIZE + sizeof(background_data)
 			    + sizeof(offset_data) };
-	uint32_t chunk[ROUND_UP_TO_4(CHUNK_SIZE)/4] = {0}; /* Do not put large amount of data on the stack! */
-	uint32_t model_chunk[ROUND_UP_TO_4(CHUNK_SIZE)/4] = {0}; /* Do not put large amount of data on the stack! */
-	uint32_t updated_chunk_model[ROUND_UP_TO_4(CHUNK_SIZE)/4] = {0}; /* Do not put large amount of data on the stack! */
+	uint8_t chunk[CHUNK_SIZE] = {0}; /* Do not put large amount of data on the stack! */
+	uint8_t model_chunk[(CHUNK_SIZE)] = {0}; /* Do not put large amount of data on the stack! */
+	uint8_t updated_chunk_model[CHUNK_SIZE] = {0}; /* Do not put large amount of data on the stack! */
 
 	/*
 	 * Here we use the COMPRESS_CHUNK_BOUND macro to determine the worst
 	 * case compression size; to do this we need to know the chunk_size and
 	 * the number of collections in the chunk (2 in this demo)
 	 */
-	uint32_t compressed_data[COMPRESS_CHUNK_BOUND(CHUNK_SIZE, 2)]; /* Do not put large amount of data on the stack! */
+	uint32_t compressed_data[COMPRESS_CHUNK_BOUND(CHUNK_SIZE, 2)/4]; /* Do not put large amount of data on the stack! */
 	int cmp_size_bytes;
 
 	{	/* build a chunk of a background and an offset collection */
@@ -187,7 +187,7 @@ static int demo_comperss_chunk_model(void)
 			return -1;
 		memcpy(col->entry, background_data, sizeof(background_data));
 
-		col = (struct collection_hdr *)((uint8_t *)chunk + cmp_col_get_size(col));
+		col = (struct collection_hdr *)(chunk + cmp_col_get_size(col));
 		if (cmp_col_set_subservice(col, SST_NCxx_S_SCIENCE_OFFSET))
 			return -1;
 		if (cmp_col_set_data_length(col, sizeof(offset_data)))
@@ -203,7 +203,7 @@ static int demo_comperss_chunk_model(void)
 			return -1;
 		memcpy(col->entry, background_model, sizeof(background_model));
 
-		col = (struct collection_hdr *)((uint8_t *)model_chunk + cmp_col_get_size(col));
+		col = (struct collection_hdr *)(model_chunk + cmp_col_get_size(col));
 		if (cmp_col_set_subservice(col, SST_NCxx_S_SCIENCE_OFFSET))
 			return -1;
 		if (cmp_col_set_data_length(col, sizeof(offset_model)))

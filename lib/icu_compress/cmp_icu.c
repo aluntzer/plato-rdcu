@@ -2314,10 +2314,11 @@ static int set_cmp_col_size(uint8_t *p, int cmp_col_size)
 
 /* TODO: doc string */
 
-static int cmp_collection(uint8_t *col, uint8_t *model, uint8_t *updated_model, uint32_t *dst,
-			  uint32_t dst_capacity, struct cmp_cfg *cfg, int dst_size)
+static int32_t cmp_collection(uint8_t *col, uint8_t *model, uint8_t *updated_model,
+			      uint32_t *dst, uint32_t dst_capacity,
+			      struct cmp_cfg *cfg, int32_t dst_size)
 {
-	int dst_size_begin = dst_size;
+	int32_t dst_size_begin = dst_size;
 	int dst_size_bits;
 
 	if (dst_size < 0)
@@ -2387,7 +2388,7 @@ static int cmp_collection(uint8_t *col, uint8_t *model, uint8_t *updated_model, 
 			return dst_size_bits;
 	}
 
-	dst_size = (int)cmp_bit_to_byte((unsigned int)dst_size_bits); /*TODO: fix casts */
+	dst_size = (int32_t)cmp_bit_to_byte((unsigned int)dst_size_bits); /*TODO: fix casts */
 	if (dst && cfg->cmp_mode != CMP_MODE_RAW)
 		if (set_cmp_col_size((uint8_t *)dst+dst_size_begin, dst_size-dst_size_begin))
 			return -1;
@@ -2618,14 +2619,15 @@ void compress_chunk_init(uint64_t(return_timestamp)(void), uint32_t version_id)
  *	small to hold the whole compressed data
  */
 
-int compress_chunk(uint32_t *chunk, uint32_t chunk_size, uint32_t *chunk_model,
-		   uint32_t *updated_chunk_model, uint32_t *dst, uint32_t dst_capacity,
-		   const struct cmp_par *cmp_par)
+int32_t compress_chunk(void *chunk, uint32_t chunk_size,
+		       void *chunk_model, void *updated_chunk_model,
+		       uint32_t *dst, uint32_t dst_capacity,
+		       const struct cmp_par *cmp_par)
 {
 	uint64_t start_timestamp = get_timestamp();
 	size_t read_bytes;
 	struct collection_hdr *col = (struct collection_hdr *)chunk;
-	int cmp_size_byte; /* size of the compressed data in bytes */
+	int32_t cmp_size_byte; /* size of the compressed data in bytes */
 	enum chunk_type chunk_type;
 	struct cmp_cfg cfg;
 	int err;
@@ -2649,11 +2651,11 @@ int compress_chunk(uint32_t *chunk, uint32_t chunk_size, uint32_t *chunk_model,
 	else
 		cmp_size_byte = NON_IMAGETTE_HEADER_SIZE;
 	if (dst) {
-		if (dst_capacity < (size_t)cmp_size_byte) {
+		if (dst_capacity < (uint32_t)cmp_size_byte) {
 			debug_print("Error: The destination capacity is smaller than the minimum compression entity size.\n");
 			return CMP_ERROR_SMALL_BUF;
 		}
-		memset(dst, 0, (size_t)cmp_size_byte);
+		memset(dst, 0, (uint32_t)cmp_size_byte);
 	}
 
 	chunk_type = cmp_col_get_chunk_type(col);
@@ -2666,11 +2668,11 @@ int compress_chunk(uint32_t *chunk, uint32_t chunk_size, uint32_t *chunk_model,
 		uint8_t *col_model = NULL;
 		uint8_t *col_up_model = NULL;
 		/* setup pointers for the next collection we want to compress */
-		col = (struct collection_hdr *)((uint8_t *)chunk + read_bytes); /* TODO: ARE ALL COLLECTION 4 BYTE ALLIED? */
+		col = (struct collection_hdr *)((uint8_t *)chunk + read_bytes);
 		if (chunk_model)
-			col_model = ((uint8_t *)chunk_model + read_bytes); /* TODO: ARE ALL COLLECTION 4 BYTE ALLIED?*/
+			col_model = ((uint8_t *)chunk_model + read_bytes);
 		if (updated_chunk_model)
-			col_up_model = ((uint8_t *)updated_chunk_model + read_bytes); /* TODO: ARE ALL COLLECTION 4 BYTE ALLIED?*/
+			col_up_model = ((uint8_t *)updated_chunk_model + read_bytes);
 
 		if (cmp_col_get_chunk_type(col) != chunk_type) {
 			debug_print("Error: The chunk contains collections with an incompatible mix of subservices.\n");
