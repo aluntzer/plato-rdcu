@@ -20,6 +20,7 @@
 #ifndef CMP_CHUNK_H
 #define CMP_CHUNK_H
 
+#include "common/cmp_support.h"
 #include "common/cmp_entity.h"
 
 
@@ -46,6 +47,47 @@
 	(uint32_t)ROUND_UP_TO_4(NON_IMAGETTE_HEADER_SIZE+(chunk_size)+(num_col)*CMP_COLLECTION_FILD_SIZE) > (uint32_t)CMP_ENTITY_MAX_SIZE ? 0 \
 	: ROUND_UP_TO_4(NON_IMAGETTE_HEADER_SIZE+(chunk_size)+(num_col)*CMP_COLLECTION_FILD_SIZE) \
 )
+
+
+struct cmp_par {
+	enum cmp_mode cmp_mode;		/**< compression mode parameter */
+	uint32_t model_value;		/**< model weighting parameter */
+	uint32_t lossy_par;		/**< lossy compression parameter */
+
+	uint32_t nc_imagette;		/**< compression parameter for imagette data compression */
+
+	uint32_t s_exp_flags;		/**< compression parameter for exposure flags compression */
+	uint32_t s_fx;			/**< compression parameter for normal flux compression */
+	uint32_t s_ncob;		/**< compression parameter for normal center of brightness compression */
+	uint32_t s_efx;			/**< compression parameter for extended flux compression */
+	uint32_t s_ecob;		/**< compression parameter for executed center of brightness compression */
+
+	uint32_t l_exp_flags;		/**< compression parameter for exposure flags compression */
+	uint32_t l_fx;			/**< compression parameter for normal flux compression */
+	uint32_t l_ncob;		/**< compression parameter for normal center of brightness compression */
+	uint32_t l_efx;			/**< compression parameter for extended flux compression */
+	uint32_t l_ecob;		/**< compression parameter for executed center of brightness compression */
+	uint32_t l_fx_cob_variance;	/**< compression parameter for flux/COB variance compression */
+
+	uint32_t saturated_imagette;	/**< compression parameter for saturated  imagette data compression */
+
+	uint32_t nc_offset_mean;
+	uint32_t nc_offset_variance;
+	uint32_t nc_background_mean;
+	uint32_t nc_background_variance;
+	uint32_t nc_background_outlier_pixels;
+
+	uint32_t smearing_mean;
+	uint32_t smearing_variance_mean;
+	uint32_t smearing_outlier_pixels;
+
+	uint32_t fc_imagette;
+	uint32_t fc_offset_mean;
+	uint32_t fc_offset_variance;
+	uint32_t fc_background_mean;
+	uint32_t fc_background_variance;
+	uint32_t fc_background_outlier_pixels;
+};
 
 
 /**
