@@ -867,7 +867,7 @@ static int compress_imagette(const struct cmp_cfg *cfg, int stream_len)
 	uint16_t *up_model_buf = NULL;
 
 	if (model_mode_is_used(cfg->cmp_mode)) {
-		model = model_buf[0];
+		model = get_unaligned(&model_buf[0]);
 		next_model_p = &model_buf[1];
 		up_model_buf = cfg->icu_new_model_buf;
 	}
@@ -892,17 +892,18 @@ static int compress_imagette(const struct cmp_cfg *cfg, int stream_len)
 				max_data_bits, cfg);
 
 	for (i = 0;; i++) {
-		stream_len = encode_value(data_buf[i], model, stream_len, &setup);
+		stream_len = encode_value(get_unaligned(&data_buf[i]),
+					  model, stream_len, &setup);
 		if (stream_len <= 0)
 			break;
 
 		if (up_model_buf)
-			up_model_buf[i] = cmp_up_model(data_buf[i], model, cfg->model_value,
-						       setup.lossy_par);
+			up_model_buf[i] = cmp_up_model(get_unaligned(&data_buf[i]),
+						       model, cfg->model_value, setup.lossy_par);
 		if (i >= cfg->samples-1)
 			break;
 
-		model = next_model_p[i];
+		model = get_unaligned(&next_model_p[i]);
 	}
 	return stream_len;
 }
@@ -2355,7 +2356,6 @@ static int32_t cmp_collection(uint8_t *col, uint8_t *model, uint8_t *updated_mod
 		struct collection_hdr *col_hdr = (struct collection_hdr *)col;
 		uint8_t subservice = cmp_col_get_subservice(col_hdr);
 		uint16_t col_data_length = cmp_col_get_data_length(col_hdr);
-
 
 		cfg->data_type = convert_subservice_to_cmp_data_type(subservice);
 

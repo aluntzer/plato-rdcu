@@ -645,8 +645,12 @@ static void be_to_cpus_16(uint16_t *a, uint32_t samples)
 {
 	uint32_t i;
 
-	for (i = 0; i < samples; ++i)
-		be16_to_cpus(&a[i]);
+	for (i = 0; i < samples; ++i) {
+		uint16_t tmp;
+
+		tmp = be16_to_cpu(get_unaligned(&a[i]));
+		put_unaligned(tmp, &a[i]);
+	}
 }
 
 
