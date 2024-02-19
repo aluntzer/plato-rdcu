@@ -867,7 +867,7 @@ static int compress_imagette(const struct cmp_cfg *cfg, int stream_len)
 	uint16_t *up_model_buf = NULL;
 
 	if (model_mode_is_used(cfg->cmp_mode)) {
-		model = model_buf[0];
+		model = get_unaligned(&model_buf[0]);
 		next_model_p = &model_buf[1];
 		up_model_buf = cfg->icu_new_model_buf;
 	}
@@ -892,17 +892,20 @@ static int compress_imagette(const struct cmp_cfg *cfg, int stream_len)
 				max_data_bits, cfg);
 
 	for (i = 0;; i++) {
-		stream_len = encode_value(data_buf[i], model, stream_len, &setup);
+		stream_len = encode_value(get_unaligned(&data_buf[i]),
+					  model, stream_len, &setup);
 		if (stream_len <= 0)
 			break;
 
-		if (up_model_buf)
-			up_model_buf[i] = cmp_up_model(data_buf[i], model, cfg->model_value,
+		if (up_model_buf) {
+			uint16_t data = get_unaligned(&data_buf[i]);
+			up_model_buf[i] = cmp_up_model(data, model, cfg->model_value,
 						       setup.lossy_par);
+		}
 		if (i >= cfg->samples-1)
 			break;
 
-		model = next_model_p[i];
+		model = get_unaligned(&next_model_p[i]);
 	}
 	return stream_len;
 }
@@ -2132,7 +2135,7 @@ static int compress_data_internal(const struct cmp_cfg *cfg, int stream_len)
 		return 0;
 
 	if (stream_len & 0x7) {
-		printf("Error: The stream_len parameter must be a multiple of 8.\n");
+		debug_print("Error: The stream_len parameter must be a multiple of 8.\n");
 		return -1;
 	}
 
@@ -2355,7 +2358,6 @@ static int32_t cmp_collection(uint8_t *col, uint8_t *model, uint8_t *updated_mod
 		struct collection_hdr *col_hdr = (struct collection_hdr *)col;
 		uint8_t subservice = cmp_col_get_subservice(col_hdr);
 		uint16_t col_data_length = cmp_col_get_data_length(col_hdr);
-
 
 		cfg->data_type = convert_subservice_to_cmp_data_type(subservice);
 
@@ -2678,6 +2680,8 @@ int32_t compress_chunk(void *chunk, uint32_t chunk_size,
 			debug_print("Error: The chunk contains collections with an incompatible mix of subservices.\n");
 			return -1;
 		}
+		if (read_bytes + cmp_col_get_size(col) > chunk_size)
+			break;
 
 		cmp_size_byte = cmp_collection((uint8_t *)col, col_model, col_up_model,
 					       dst, dst_capacity, &cfg, cmp_size_byte);
@@ -2714,7 +2718,7 @@ int32_t compress_chunk(void *chunk, uint32_t chunk_size,
  * @returns maximum compressed size for a chunk compression; 0 on error
  */
 
-uint32_t compress_chunk_cmp_size_bound(void *chunk, uint32_t chunk_size)
+uint32_t compress_chunk_cmp_size_bound(const void *chunk, size_t chunk_size)
 {
 	int32_t read_bytes;
 	uint32_t num_col = 0;
@@ -2726,7 +2730,7 @@ uint32_t compress_chunk_cmp_size_bound(void *chunk, uint32_t chunk_size)
 
 	for (read_bytes = 0;
 	     read_bytes < (int32_t)chunk_size-COLLECTION_HDR_SIZE;
-	     read_bytes += cmp_col_get_size((struct collection_hdr *)((uint8_t *)chunk + read_bytes)))
+	     read_bytes += cmp_col_get_size((const struct collection_hdr *)((const uint8_t *)chunk + read_bytes)))
 		num_col++;
 
 
@@ -2735,7 +2739,7 @@ uint32_t compress_chunk_cmp_size_bound(void *chunk, uint32_t chunk_size)
 		return 0;
 	}
 
-	return COMPRESS_CHUNK_BOUND(chunk_size, num_col);
+	return COMPRESS_CHUNK_BOUND((uint32_t)chunk_size, num_col);
 }
 
 

@@ -47,11 +47,71 @@
 
 #define ARRAY_SIZE(x) (sizeof(x)/sizeof(x[0]))
 
-/* optimisation barrier */
-#define barrier() __asm__ __volatile__("": : :"memory")
+#define bitsizeof(x)  (CHAR_BIT * sizeof(x))
 
-#define cpu_relax() barrier()
+#define maximum_signed_value_of_type(a) \
+    (INTMAX_MAX >> (bitsizeof(intmax_t) - bitsizeof(a)))
+
+#define maximum_unsigned_value_of_type(a) \
+    (UINTMAX_MAX >> (bitsizeof(uintmax_t) - bitsizeof(a)))
+
+/*
+ * Signed integer overflow is undefined in C, so here's a helper macro
+ * to detect if the sum of two integers will overflow.
+ *
+ * Requires: a >= 0, typeof(a) equals typeof(b)
+ */
+#define signed_add_overflows(a, b) \
+    ((b) > maximum_signed_value_of_type(a) - (a))
+
+#define unsigned_add_overflows(a, b) \
+    ((b) > maximum_unsigned_value_of_type(a) - (a))
+
+
+#define __get_unaligned_t(type, ptr) ({								\
+	const struct { type x; } __attribute__((packed)) *__pptr = (__typeof__(__pptr))(ptr);	\
+	__pptr->x;										\
+})
+
+#define __put_unaligned_t(type, val, ptr) do {							\
+	struct { type x; } __attribute__((packed)) *__pptr = (__typeof__(__pptr))(ptr);		\
+	__pptr->x = (val);									\
+} while (0)
+
+
+/**
+ * @brief read from an unaligned address
+ *
+ * @param ptr	pointer to the address to read from (can be unaligned)
+ *
+ * @return the value read from the (unaligned) address in system endianness
+ * @note the size of the value is determined by the pointer type
+ */
+
+#define get_unaligned(ptr)	__get_unaligned_t(__typeof__(*(ptr)), (ptr))
+
+
+/**
+ * @brief write to an unaligned address
+ *
+ * @param val	the value to write
+ * @param ptr	pointer to the address to write to (can be unaligned)
+ *
+ * @note the size of the value is determined by the pointer type
+ */
+
+#define put_unaligned(val, ptr) __put_unaligned_t(__typeof__(*(ptr)), (val), (ptr))
+
+
+/**
+ * @brief mark a variable as unused to suppress compiler warnings.
+ *
+ * This macro is used to indicate that a variable is intentionally left unused
+ * in the code. It helps suppress compiler warnings about unused variables.
+ *
+ * @param x The variable to mark as unused.
+ */
 
 #define UNUSED(x) (void)(x)
 
-#endif
+#endif /* COMPILER_H */

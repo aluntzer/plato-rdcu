@@ -20,6 +20,7 @@
 #ifndef CMP_CHUNK_H
 #define CMP_CHUNK_H
 
+#include "common/cmp_support.h"
 #include "common/cmp_entity.h"
 
 
@@ -48,6 +49,47 @@
 )
 
 
+struct cmp_par {
+	enum cmp_mode cmp_mode;		/**< compression mode parameter */
+	uint32_t model_value;		/**< model weighting parameter */
+	uint32_t lossy_par;		/**< lossy compression parameter */
+
+	uint32_t nc_imagette;		/**< compression parameter for imagette data compression */
+
+	uint32_t s_exp_flags;		/**< compression parameter for exposure flags compression */
+	uint32_t s_fx;			/**< compression parameter for normal flux compression */
+	uint32_t s_ncob;		/**< compression parameter for normal center of brightness compression */
+	uint32_t s_efx;			/**< compression parameter for extended flux compression */
+	uint32_t s_ecob;		/**< compression parameter for executed center of brightness compression */
+
+	uint32_t l_exp_flags;		/**< compression parameter for exposure flags compression */
+	uint32_t l_fx;			/**< compression parameter for normal flux compression */
+	uint32_t l_ncob;		/**< compression parameter for normal center of brightness compression */
+	uint32_t l_efx;			/**< compression parameter for extended flux compression */
+	uint32_t l_ecob;		/**< compression parameter for executed center of brightness compression */
+	uint32_t l_fx_cob_variance;	/**< compression parameter for flux/COB variance compression */
+
+	uint32_t saturated_imagette;	/**< compression parameter for saturated  imagette data compression */
+
+	uint32_t nc_offset_mean;
+	uint32_t nc_offset_variance;
+	uint32_t nc_background_mean;
+	uint32_t nc_background_variance;
+	uint32_t nc_background_outlier_pixels;
+
+	uint32_t smearing_mean;
+	uint32_t smearing_variance_mean;
+	uint32_t smearing_outlier_pixels;
+
+	uint32_t fc_imagette;
+	uint32_t fc_offset_mean;
+	uint32_t fc_offset_variance;
+	uint32_t fc_background_mean;
+	uint32_t fc_background_variance;
+	uint32_t fc_background_outlier_pixels;
+};
+
+
 /**
  * @brief returns the maximum compressed size in a worst case scenario
  *
@@ -65,7 +107,7 @@
  * @returns maximum compressed size for a chunk compression; 0 on error
  */
 
-uint32_t compress_chunk_cmp_size_bound(void *chunk, uint32_t chunk_size);
+uint32_t compress_chunk_cmp_size_bound(const void *chunk, size_t chunk_size);
 
 
 /**
@@ -113,6 +155,7 @@ int32_t compress_chunk(void *chunk, uint32_t chunk_size,
 		       void *chunk_model, void *updated_chunk_model,
 		       uint32_t *dst, uint32_t dst_capacity,
 		       const struct cmp_par *cmp_par);
+
 
 /**
  * @brief set the model id and model counter in the compression entity header
