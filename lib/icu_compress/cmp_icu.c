@@ -2678,6 +2678,8 @@ int32_t compress_chunk(void *chunk, uint32_t chunk_size,
 			debug_print("Error: The chunk contains collections with an incompatible mix of subservices.\n");
 			return -1;
 		}
+		if (read_bytes + cmp_col_get_size(col) > chunk_size)
+			break;
 
 		cmp_size_byte = cmp_collection((uint8_t *)col, col_model, col_up_model,
 					       dst, dst_capacity, &cfg, cmp_size_byte);
