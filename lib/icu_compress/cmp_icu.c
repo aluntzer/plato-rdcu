@@ -2714,7 +2714,7 @@ int32_t compress_chunk(void *chunk, uint32_t chunk_size,
  * @returns maximum compressed size for a chunk compression; 0 on error
  */
 
-uint32_t compress_chunk_cmp_size_bound(void *chunk, uint32_t chunk_size)
+uint32_t compress_chunk_cmp_size_bound(const void *chunk, size_t chunk_size)
 {
 	int32_t read_bytes;
 	uint32_t num_col = 0;
@@ -2726,7 +2726,7 @@ uint32_t compress_chunk_cmp_size_bound(void *chunk, uint32_t chunk_size)
 
 	for (read_bytes = 0;
 	     read_bytes < (int32_t)chunk_size-COLLECTION_HDR_SIZE;
-	     read_bytes += cmp_col_get_size((struct collection_hdr *)((uint8_t *)chunk + read_bytes)))
+	     read_bytes += cmp_col_get_size((const struct collection_hdr *)((const uint8_t *)chunk + read_bytes)))
 		num_col++;
 
 
@@ -2735,7 +2735,7 @@ uint32_t compress_chunk_cmp_size_bound(void *chunk, uint32_t chunk_size)
 		return 0;
 	}
 
-	return COMPRESS_CHUNK_BOUND(chunk_size, num_col);
+	return COMPRESS_CHUNK_BOUND((uint32_t)chunk_size, num_col);
 }
 
 

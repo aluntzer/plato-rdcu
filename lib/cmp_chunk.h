@@ -107,7 +107,7 @@ struct cmp_par {
  * @returns maximum compressed size for a chunk compression; 0 on error
  */
 
-uint32_t compress_chunk_cmp_size_bound(void *chunk, uint32_t chunk_size);
+uint32_t compress_chunk_cmp_size_bound(const void *chunk, size_t chunk_size);
 
 
 /**
@@ -155,6 +155,7 @@ int32_t compress_chunk(void *chunk, uint32_t chunk_size,
 		       void *chunk_model, void *updated_chunk_model,
 		       uint32_t *dst, uint32_t dst_capacity,
 		       const struct cmp_par *cmp_par);
+
 
 /**
  * @brief set the model id and model counter in the compression entity header
