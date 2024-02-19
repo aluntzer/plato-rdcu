@@ -897,9 +897,11 @@ static int compress_imagette(const struct cmp_cfg *cfg, int stream_len)
 		if (stream_len <= 0)
 			break;
 
-		if (up_model_buf)
-			up_model_buf[i] = cmp_up_model(get_unaligned(&data_buf[i]),
-						       model, cfg->model_value, setup.lossy_par);
+		if (up_model_buf) {
+			uint16_t data = get_unaligned(&data_buf[i]);
+			up_model_buf[i] = cmp_up_model(data, model, cfg->model_value,
+						       setup.lossy_par);
+		}
 		if (i >= cfg->samples-1)
 			break;
 
