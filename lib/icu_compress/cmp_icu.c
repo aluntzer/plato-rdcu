@@ -2132,7 +2132,7 @@ static int compress_data_internal(const struct cmp_cfg *cfg, int stream_len)
 		return stream_len;
 
 	if (cfg->samples == 0) /* nothing to compress we are done*/
-		return 0;
+		return stream_len;
 
 	if (stream_len & 0x7) {
 		debug_print("Error: The stream_len parameter must be a multiple of 8.\n");

@@ -943,7 +943,7 @@ int be_to_cpu_chunk(uint8_t *chunk, size_t chunk_size)
 	if (chunk_size < COLLECTION_HDR_SIZE)
 		return -1;
 
-	while (col_p < chunk + chunk_size - COLLECTION_HDR_SIZE) {
+	while (col_p <= chunk + chunk_size - COLLECTION_HDR_SIZE) {
 		struct collection_hdr *col_hdr = (struct collection_hdr *)col_p;
 		enum cmp_data_type data_type = convert_subservice_to_cmp_data_type(cmp_col_get_subservice(col_hdr));
 		uint32_t data_size = cmp_col_get_data_length(col_hdr);
