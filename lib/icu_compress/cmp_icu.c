@@ -2341,10 +2341,11 @@ static int32_t cmp_collection(uint8_t *col, uint8_t *model, uint8_t *updated_mod
 		if ((uint32_t)dst_size + COLLECTION_HDR_SIZE > dst_capacity)
 			return CMP_ERROR_SMALL_BUF;
 		memcpy((uint8_t *)dst + dst_size, col, COLLECTION_HDR_SIZE);
-		if (model_mode_is_used(cfg->cmp_mode) && cfg->icu_new_model_buf)
-			memcpy(cfg->icu_new_model_buf, col, COLLECTION_HDR_SIZE);
 	}
 	dst_size += COLLECTION_HDR_SIZE;
+
+	if (model_mode_is_used(cfg->cmp_mode) && updated_model)
+		memcpy(updated_model, col, COLLECTION_HDR_SIZE);
 
 	/* prepare the different buffers */
 	cfg->icu_output_buf = dst;
@@ -2384,6 +2385,8 @@ static int32_t cmp_collection(uint8_t *col, uint8_t *model, uint8_t *updated_mod
 				cfg->cmp_mode = CMP_MODE_RAW;
 				dst_size_bits = compress_data_internal(cfg, dst_size<<3);
 				cfg->cmp_mode = cmp_mode_cpy;
+				if (model_mode_is_used(cfg->cmp_mode) && cfg->icu_new_model_buf)
+					memcpy(cfg->icu_new_model_buf, cfg->input_buf, col_data_length);
 			}
 		}
 		if (dst_size_bits < 0)
