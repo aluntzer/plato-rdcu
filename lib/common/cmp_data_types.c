@@ -405,11 +405,8 @@ enum cmp_data_type convert_subservice_to_cmp_data_type(uint8_t subservice)
 		return DATA_TYPE_F_CAM_IMAGETTE;
 	case SST_FCx_S_SCIENCE_OFFSET_VALUES:
 		return DATA_TYPE_F_CAM_OFFSET;
-	/* TODO: SST_FCx_S_BACKGROUND_VALUES and SST_NCxx_S_SCIENCE_IMAGETTE has
-	 * the same subservice number*/
-	/* case SST_FCx_S_BACKGROUND_VALUES: */
-	/* 	return DATA_TYPE_F_CAM_BACKGROUND; */
-	/* 	break; */
+	case SST_FCx_S_BACKGROUND_VALUES:
+		return DATA_TYPE_F_CAM_BACKGROUND;
 	default:
 		return DATA_TYPE_UNKNOWN;
 	};

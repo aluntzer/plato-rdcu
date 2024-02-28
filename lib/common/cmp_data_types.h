@@ -63,7 +63,7 @@
 /* subservice types for service 228 */
 #define SST_FCx_S_SCIENCE_IMAGETTE	1 /* Imagettes from F-camera. */
 #define SST_FCx_S_SCIENCE_OFFSET_VALUES	2 /* Offset values Mean of the pixels of offset windows */
-#define SST_FCx_S_BACKGROUND_VALUES	3 /* Background values. Mean of the pixels of background windows */
+#define SST_FCx_S_BACKGROUND_VALUES	25 /* TBC: Background values. Mean of the pixels of background windows */
 
 /* size of a collection (multi entry) header */
 #define COLLECTION_HDR_SIZE 12
