@@ -68,7 +68,7 @@
     ((b) > maximum_unsigned_value_of_type(a) - (a))
 
 
-#define __get_unaligned_t(type, ptr) ({								\
+#define __get_unaligned_t(type, ptr) __extension__ ({								\
 	const struct { type x; } __attribute__((packed)) *__pptr = (__typeof__(__pptr))(ptr);	\
 	__pptr->x;										\
 })
@@ -88,7 +88,7 @@
  * @note the size of the value is determined by the pointer type
  */
 
-#define get_unaligned(ptr)	__get_unaligned_t(__typeof__(*(ptr)), (ptr))
+#define get_unaligned(ptr) __get_unaligned_t(__typeof__(*(ptr)), (ptr))
 
 
 /**

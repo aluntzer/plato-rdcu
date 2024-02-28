@@ -2305,7 +2305,7 @@ static int set_cmp_col_size(uint8_t *p, int cmp_col_size)
 	if (cmp_col_size > UINT16_MAX)
 		return -1;
 
-	v -= COLLECTION_HDR_SIZE+2;
+	v -= COLLECTION_HDR_SIZE+CMP_COLLECTION_FILD_SIZE;
 	if (p) {
 		memset(p, v >> 8, 1);
 		memset(p+1, v & 0xFF, 1);
@@ -2700,8 +2700,8 @@ int32_t compress_chunk(void *chunk, uint32_t chunk_size,
 		return -1;
 	}
 
-	err = cmp_ent_build_chunk_header((struct cmp_entity *)dst, chunk_size, &cfg,
-				      start_timestamp, cmp_size_byte);
+	err = cmp_ent_build_chunk_header((struct cmp_entity *)dst, chunk_size,
+					 &cfg, start_timestamp, cmp_size_byte);
 	if (err < 0)
 		return err;
 
