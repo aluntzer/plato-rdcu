@@ -2132,7 +2132,7 @@ static int compress_data_internal(const struct cmp_cfg *cfg, int stream_len)
 		return stream_len;
 
 	if (cfg->samples == 0) /* nothing to compress we are done*/
-		return 0;
+		return stream_len;
 
 	if (stream_len & 0x7) {
 		debug_print("Error: The stream_len parameter must be a multiple of 8.\n");
@@ -2305,7 +2305,7 @@ static int set_cmp_col_size(uint8_t *p, int cmp_col_size)
 	if (cmp_col_size > UINT16_MAX)
 		return -1;
 
-	v -= COLLECTION_HDR_SIZE+2;
+	v -= COLLECTION_HDR_SIZE+CMP_COLLECTION_FILD_SIZE;
 	if (p) {
 		memset(p, v >> 8, 1);
 		memset(p+1, v & 0xFF, 1);
@@ -2341,10 +2341,11 @@ static int32_t cmp_collection(uint8_t *col, uint8_t *model, uint8_t *updated_mod
 		if ((uint32_t)dst_size + COLLECTION_HDR_SIZE > dst_capacity)
 			return CMP_ERROR_SMALL_BUF;
 		memcpy((uint8_t *)dst + dst_size, col, COLLECTION_HDR_SIZE);
-		if (model_mode_is_used(cfg->cmp_mode) && cfg->icu_new_model_buf)
-			memcpy(cfg->icu_new_model_buf, col, COLLECTION_HDR_SIZE);
 	}
 	dst_size += COLLECTION_HDR_SIZE;
+
+	if (model_mode_is_used(cfg->cmp_mode) && updated_model)
+		memcpy(updated_model, col, COLLECTION_HDR_SIZE);
 
 	/* prepare the different buffers */
 	cfg->icu_output_buf = dst;
@@ -2384,6 +2385,8 @@ static int32_t cmp_collection(uint8_t *col, uint8_t *model, uint8_t *updated_mod
 				cfg->cmp_mode = CMP_MODE_RAW;
 				dst_size_bits = compress_data_internal(cfg, dst_size<<3);
 				cfg->cmp_mode = cmp_mode_cpy;
+				if (model_mode_is_used(cfg->cmp_mode) && cfg->icu_new_model_buf)
+					memcpy(cfg->icu_new_model_buf, cfg->input_buf, col_data_length);
 			}
 		}
 		if (dst_size_bits < 0)
@@ -2478,6 +2481,11 @@ static enum chunk_type get_chunk_type(uint16_t subservice)
 	case SST_NCxx_S_SCIENCE_L_FX_NCOB:
 	case SST_NCxx_S_SCIENCE_L_FX_EFX_NCOB_ECOB:
 		chunk_type = CHUNK_TYPE_LONG_CADENCE;
+		break;
+	case SST_FCx_S_SCIENCE_IMAGETTE:
+	case SST_FCx_S_SCIENCE_OFFSET_VALUES:
+	case SST_FCx_S_BACKGROUND_VALUES:
+		chunk_type = CHUNK_TYPE_F_CHAIN;
 		break;
 	case SST_NCxx_S_SCIENCE_F_FX:
 	case SST_NCxx_S_SCIENCE_F_FX_EFX:
@@ -2692,8 +2700,8 @@ int32_t compress_chunk(void *chunk, uint32_t chunk_size,
 		return -1;
 	}
 
-	err = cmp_ent_build_chunk_header((struct cmp_entity *)dst, chunk_size, &cfg,
-				      start_timestamp, cmp_size_byte);
+	err = cmp_ent_build_chunk_header((struct cmp_entity *)dst, chunk_size,
+					 &cfg, start_timestamp, cmp_size_byte);
 	if (err < 0)
 		return err;
 
