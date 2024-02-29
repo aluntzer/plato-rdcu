@@ -20,7 +20,6 @@
 
 #include <stdint.h>
 #include <string.h>
-#include <stdio.h>
 
 #ifndef ICU_ASW
 #  if defined __has_include
@@ -1644,7 +1643,7 @@ void *cmp_ent_get_data_buf(struct cmp_entity *ent)
 
 	data_type = cmp_ent_get_data_type(ent);
 	if (data_type == DATA_TYPE_UNKNOWN) {
-		debug_print("Error: Compression data type not supported.\n");
+		debug_print("Error: Compression data type not supported.");
 		return NULL;
 	}
 
@@ -1712,13 +1711,13 @@ int32_t cmp_ent_get_cmp_data(struct cmp_entity *ent, uint32_t *data_buf,
 
 	cmp_ent_data_adr = cmp_ent_get_data_buf(ent);
 	if (!cmp_ent_data_adr) {
-		debug_print("Error: Compression data type is not supported.\n");
+		debug_print("Error: Compression data type is not supported.");
 		return -1;
 	}
 
 	cmp_size_byte = cmp_ent_get_cmp_data_size(ent);
 	if (cmp_size_byte & 0x3) {
-		debug_print("Error: The compressed data are not correct formatted. Expected multiple of 4 hex words.\n");
+		debug_print("Error: The compressed data are not correct formatted. Expected multiple of 4 hex words.");
 		return -1;
 	}
 
@@ -1727,7 +1726,7 @@ int32_t cmp_ent_get_cmp_data(struct cmp_entity *ent, uint32_t *data_buf,
 		uint32_t cmp_data_len_32;
 
 		if (cmp_size_byte > data_buf_size) {
-			debug_print("Error: data_buf size to small to hold the data.\n");
+			debug_print("Error: data_buf size to small to hold the data.");
 			return -1;
 		}
 
@@ -1806,12 +1805,12 @@ int cmp_ent_write_cmp_pars(struct cmp_entity *ent, const struct cmp_cfg *cfg,
 		return -1;
 
 	if (cfg->data_type != cmp_ent_get_data_type(ent)) {
-		debug_print("Error: The entity data product type dos not match the configuration data product type.\n");
+		debug_print("Error: The entity data product type dos not match the configuration data product type.");
 		return -1;
 	}
 
 	if (cmp_ent_get_data_type_raw_bit(ent) != (cfg->cmp_mode == CMP_MODE_RAW)) {
-		debug_print("Error: The entity's raw data bit does not match up with the compression mode.\n");
+		debug_print("Error: The entity's raw data bit does not match up with the compression mode.");
 		return -1;
 	}
 
@@ -1819,7 +1818,7 @@ int cmp_ent_write_cmp_pars(struct cmp_entity *ent, const struct cmp_cfg *cfg,
 
 	/* check if the entity can hold the compressed data */
 	if (ent_cmp_data_size < cmp_bit_to_byte((unsigned int)cmp_size_bits)) {
-		debug_print("Error: The entity size is to small to hold the compressed data.\n");
+		debug_print("Error: The entity size is to small to hold the compressed data.");
 		return -2;
 	}
 
@@ -1946,25 +1945,25 @@ int cmp_ent_write_rdcu_cmp_pars(struct cmp_entity *ent, const struct cmp_info *i
 		return -1;
 
 	if (info->cmp_err) {
-		debug_print("Error: The decompression information contains an compression error.\n");
+		debug_print("Error: The decompression information contains an compression error.");
 		return -1;
 	}
 
 	data_type = cmp_ent_get_data_type(ent);
 	if (!rdcu_supported_data_type_is_used(data_type)) {
-		debug_print("Error: The compression data type is not one of the types supported by the RDCU.\n");
+		debug_print("Error: The compression data type is not one of the types supported by the RDCU.");
 		return -1;
 	}
 
 	if (cmp_ent_get_data_type_raw_bit(ent) != raw_mode_is_used(info->cmp_mode_used)) {
-		debug_print("Error: The entity's raw data bit does not match up with the compression mode.\n");
+		debug_print("Error: The entity's raw data bit does not match up with the compression mode.");
 		return -1;
 	}
 
 	/* check if the entity can hold the compressed data */
 	ent_cmp_data_size = cmp_ent_get_cmp_data_size(ent);
 	if (ent_cmp_data_size < cmp_bit_to_byte(info->cmp_size)) {
-		debug_print("Error: The entity size is to small to hold the compressed data.\n");
+		debug_print("Error: The entity size is to small to hold the compressed data.");
 		return -2;
 	}
 
@@ -1994,7 +1993,7 @@ int cmp_ent_write_rdcu_cmp_pars(struct cmp_entity *ent, const struct cmp_info *i
 	 */
 	if (cmp_ap_imagette_data_type_is_used(data_type)) {
 		if (!cfg) {
-			debug_print("Error: Need the compression configuration to get the adaptive parameters.\n");
+			debug_print("Error: Need the compression configuration to get the adaptive parameters.");
 			return -1;
 		}
 		if (cmp_ent_set_ima_ap1_spill(ent, cfg->ap1_spill))
@@ -2184,7 +2183,7 @@ uint64_t cmp_ent_create_timestamp(const struct timespec *ts)
 
 	if (ts) {
 		if (my_timercmp(ts, &epoch, <)) {
-			debug_print("Error: Time is before PLATO epoch.\n");
+			debug_print("Error: Time is before PLATO epoch.");
 			return 0;
 		}
 		now = *ts;
@@ -2215,12 +2214,8 @@ void cmp_ent_print_header(const struct cmp_entity *ent)
 	uint32_t hdr_size = cmp_ent_get_hdr_size(ent);
 	size_t i;
 
-	for (i = 0; i < hdr_size; ++i) {
-		debug_print("%02X ", p[i]);
-		if (i && !((i+1) % 32))
-			debug_print("\n");
-	}
-	debug_print("\n");
+	for (i = 0; i < hdr_size; ++i)
+		debug_print("%02X", p[i]);
 }
 
 
@@ -2239,12 +2234,8 @@ void cmp_ent_print_data(struct cmp_entity *ent)
 	if (!p)
 		return;
 
-	for (i = 0; i < data_size; ++i) {
-		debug_print("%02X ", p[i]);
-		if (i && !((i+1) % 32))
-			debug_print("\n");
-	}
-	debug_print("\n");
+	for (i = 0; i < data_size; ++i)
+		debug_print("%02X", p[i]);
 }
 
 
@@ -2256,9 +2247,9 @@ void cmp_ent_print_data(struct cmp_entity *ent)
 
 void cmp_ent_print(struct cmp_entity *ent)
 {
-	debug_print("compression entity header:\n");
+	debug_print("compression entity header:");
 	cmp_ent_print_header(ent);
-	debug_print("compressed data in the compressed entity:\n");
+	debug_print("compressed data in the compressed entity:");
 	cmp_ent_print_data(ent);
 }
 
@@ -2283,27 +2274,27 @@ static void cmp_ent_parse_generic_header(const struct cmp_entity *ent)
 		uint16_t major = (version_id & 0x7FFF0000U) >> 16U;
 		uint16_t minor = version_id & 0xFFFFU;
 
-		debug_print("Compressed with cmp_tool version: %u.%02u\n", major, minor);
+		debug_print("Compressed with cmp_tool version: %u.%02u", major, minor);
 	} else
-		debug_print("ICU ASW Version ID: %" PRIu32 "\n", version_id);
+		debug_print("ICU ASW Version ID: %08" PRIx32, version_id);
 
 	cmp_ent_size = cmp_ent_get_size(ent);
-	debug_print("Compression Entity Size: %" PRIu32 " byte\n", cmp_ent_size);
+	debug_print("Compression Entity Size: %" PRIu32 " byte", cmp_ent_size);
 
 	original_size = cmp_ent_get_original_size(ent);
-	debug_print("Original Data Size: %" PRIu32 " byte\n", original_size);
+	debug_print("Original Data Size: %" PRIu32 " byte", original_size);
 
 	start_coarse_time = cmp_ent_get_coarse_start_time(ent);
-	debug_print("Compression Coarse Start Time: %" PRIu32 "\n", start_coarse_time);
+	debug_print("Compression Coarse Start Time: %" PRIu32, start_coarse_time);
 
 	start_fine_time = cmp_ent_get_fine_start_time(ent);
-	debug_print("Compression Fine Start Time: %d\n", start_fine_time);
+	debug_print("Compression Fine Start Time: %d", start_fine_time);
 
 	end_coarse_time = cmp_ent_get_coarse_end_time(ent);
-	debug_print("Compression Coarse End Time: %" PRIu32 "\n", end_coarse_time);
+	debug_print("Compression Coarse End Time: %" PRIu32, end_coarse_time);
 
 	end_fine_time = cmp_ent_get_fine_end_time(ent);
-	debug_print("Compression Fine End Time: %d\n", end_fine_time);
+	debug_print("Compression Fine End Time: %d", end_fine_time);
 
 #ifdef HAS_TIME_H
 	{
@@ -2313,32 +2304,32 @@ static void cmp_ent_parse_generic_header(const struct cmp_entity *ent)
 		debug_print("Data were compressed on (local time): %s", ctime(&time));
 	}
 #endif
-	debug_print("The compression took %f second\n", end_coarse_time - start_coarse_time
+	debug_print("The compression took %f second", end_coarse_time - start_coarse_time
 		+ ((end_fine_time - start_fine_time)/256./256.));
 
 	data_type = cmp_ent_get_data_type(ent);
-	debug_print("Data Product Type: %d\n", data_type);
+	debug_print("Data Product Type: %d", data_type);
 
 	raw_bit = cmp_ent_get_data_type_raw_bit(ent);
-	debug_print("RAW bit in the Data Product Type is%s set\n", raw_bit ? "" : " not");
+	debug_print("RAW bit in the Data Product Type is%s set", raw_bit ? "" : " not");
 
 	cmp_mode_used = cmp_ent_get_cmp_mode(ent);
-	debug_print("Used Compression Mode: %" PRIu32 "\n", cmp_mode_used);
+	debug_print("Used Compression Mode: %" PRIu32, cmp_mode_used);
 
 	model_value_used = cmp_ent_get_model_value(ent);
-	debug_print("Used Model Updating Weighing Value: %" PRIu32 "\n", model_value_used);
+	debug_print("Used Model Updating Weighing Value: %" PRIu32, model_value_used);
 
 	model_id = cmp_ent_get_model_id(ent);
-	debug_print("Model ID: %" PRIu32 "\n", model_id);
+	debug_print("Model ID: %" PRIu32, model_id);
 
 	model_counter = cmp_ent_get_model_counter(ent);
-	debug_print("Model Counter: %" PRIu32 "\n", model_counter);
+	debug_print("Model Counter: %" PRIu32, model_counter);
 
 	max_used_bits_version = cmp_ent_get_max_used_bits_version(ent);
-	debug_print("Maximum Used Bits Registry Version: %" PRIu32 "\n", max_used_bits_version);
+	debug_print("Maximum Used Bits Registry Version: %" PRIu32, max_used_bits_version);
 
 	lossy_cmp_par_used = cmp_ent_get_lossy_cmp_par(ent);
-	debug_print("Used Lossy Compression Parameters: %" PRIu32 "\n", lossy_cmp_par_used);
+	debug_print("Used Lossy Compression Parameters: %" PRIu32, lossy_cmp_par_used);
 }
 
 
@@ -2353,10 +2344,10 @@ static void cmp_ent_parese_imagette_header(const struct cmp_entity *ent)
 	uint32_t spill_used, golomb_par_used;
 
 	spill_used = cmp_ent_get_ima_spill(ent);
-	debug_print("Used Spillover Threshold Parameter: %" PRIu32 "\n", spill_used);
+	debug_print("Used Spillover Threshold Parameter: %" PRIu32, spill_used);
 
 	golomb_par_used = cmp_ent_get_ima_golomb_par(ent);
-	debug_print("Used Golomb Parameter: %" PRIu32 "\n", golomb_par_used);
+	debug_print("Used Golomb Parameter: %" PRIu32, golomb_par_used);
 }
 
 
@@ -2372,22 +2363,66 @@ static void cmp_ent_parese_adaptive_imagette_header(const struct cmp_entity *ent
 		 ap1_golomb_par_used, ap2_spill_used, ap2_golomb_par_used;
 
 	spill_used = cmp_ent_get_ima_spill(ent);
-	debug_print("Used Spillover Threshold Parameter: %" PRIu32 "\n", spill_used);
+	debug_print("Used Spillover Threshold Parameter: %" PRIu32, spill_used);
 
 	golomb_par_used = cmp_ent_get_ima_golomb_par(ent);
-	debug_print("Used Golomb Parameter: %" PRIu32 "\n", golomb_par_used);
+	debug_print("Used Golomb Parameter: %" PRIu32, golomb_par_used);
 
 	ap1_spill_used = cmp_ent_get_ima_ap1_spill(ent);
-	debug_print("Used Adaptive 1 Spillover Threshold Parameter: %" PRIu32 "\n", ap1_spill_used);
+	debug_print("Used Adaptive 1 Spillover Threshold Parameter: %" PRIu32, ap1_spill_used);
 
 	ap1_golomb_par_used = cmp_ent_get_ima_ap1_golomb_par(ent);
-	debug_print("Used Adaptive 1 Golomb Parameter: %" PRIu32 "\n", ap1_golomb_par_used);
+	debug_print("Used Adaptive 1 Golomb Parameter: %" PRIu32, ap1_golomb_par_used);
 
 	ap2_spill_used = cmp_ent_get_ima_ap2_spill(ent);
-	debug_print("Used Adaptive 2 Spillover Threshold Parameter: %" PRIu32 "\n", ap2_spill_used);
+	debug_print("Used Adaptive 2 Spillover Threshold Parameter: %" PRIu32, ap2_spill_used);
 
 	ap2_golomb_par_used = cmp_ent_get_ima_ap2_golomb_par(ent);
-	debug_print("Used Adaptive 2 Golomb Parameter: %" PRIu32 "\n", ap2_golomb_par_used);
+	debug_print("Used Adaptive 2 Golomb Parameter: %" PRIu32, ap2_golomb_par_used);
+}
+
+
+/**
+ * @brief parse the non imagette specific compressed entity header
+ *
+ * @param ent	pointer to a compression entity
+ */
+
+static void cmp_ent_parese_non_imagette_header(const struct cmp_entity *ent)
+{
+	uint32_t spill_1_used, cmp_par_1_used, spill_2_used, cmp_par_2_used,
+		 spill_3_used, cmp_par_3_used, spill_4_used, cmp_par_4_used,
+		 spill_5_used, cmp_par_5_used;
+
+	spill_1_used = cmp_ent_get_non_ima_spill1(ent);
+	debug_print("Used Spillover Threshold Parameter 1: %" PRIu32, spill_1_used);
+
+	cmp_par_1_used = cmp_ent_get_non_ima_cmp_par1(ent);
+	debug_print("Used Compression Parameter 1: %" PRIu32, cmp_par_1_used);
+
+	spill_2_used = cmp_ent_get_non_ima_spill2(ent);
+	debug_print("Used Spillover Threshold Parameter 2: %" PRIu32, spill_2_used);
+
+	cmp_par_2_used = cmp_ent_get_non_ima_cmp_par2(ent);
+	debug_print("Used Compression Parameter 2: %" PRIu32, cmp_par_2_used);
+
+	spill_3_used = cmp_ent_get_non_ima_spill3(ent);
+	debug_print("Used Spillover Threshold Parameter 3: %" PRIu32, spill_3_used);
+
+	cmp_par_3_used = cmp_ent_get_non_ima_cmp_par3(ent);
+	debug_print("Used Compression Parameter 3: %" PRIu32, cmp_par_3_used);
+
+	spill_4_used = cmp_ent_get_non_ima_spill4(ent);
+	debug_print("Used Spillover Threshold Parameter 4: %" PRIu32, spill_4_used);
+
+	cmp_par_4_used = cmp_ent_get_non_ima_cmp_par4(ent);
+	debug_print("Used Compression Parameter 4: %" PRIu32, cmp_par_4_used);
+
+	spill_5_used = cmp_ent_get_non_ima_spill5(ent);
+	debug_print("Used Spillover Threshold Parameter 5: %" PRIu32, spill_5_used);
+
+	cmp_par_5_used = cmp_ent_get_non_ima_cmp_par5(ent);
+	debug_print("Used Compression Parameter 5: %" PRIu32, cmp_par_5_used);
 }
 
 
@@ -2402,7 +2437,7 @@ static void cmp_ent_parese_specific_header(const struct cmp_entity *ent)
 	enum cmp_data_type data_type = cmp_ent_get_data_type(ent);
 
 	if (cmp_ent_get_data_type_raw_bit(ent)) {
-		debug_print("Uncompressed data bit is set. No specific header is used.\n");
+		debug_print("Uncompressed data bit is set. No specific header is used.");
 		return;
 	}
 
@@ -2417,8 +2452,28 @@ static void cmp_ent_parese_specific_header(const struct cmp_entity *ent)
 	case DATA_TYPE_F_CAM_IMAGETTE_ADAPTIVE:
 		cmp_ent_parese_adaptive_imagette_header(ent);
 		break;
+	case DATA_TYPE_OFFSET:
+	case DATA_TYPE_BACKGROUND:
+	case DATA_TYPE_SMEARING:
+	case DATA_TYPE_S_FX:
+	case DATA_TYPE_S_FX_EFX:
+	case DATA_TYPE_S_FX_NCOB:
+	case DATA_TYPE_S_FX_EFX_NCOB_ECOB:
+	case DATA_TYPE_L_FX:
+	case DATA_TYPE_L_FX_EFX:
+	case DATA_TYPE_L_FX_NCOB:
+	case DATA_TYPE_L_FX_EFX_NCOB_ECOB:
+	case DATA_TYPE_F_FX:
+	case DATA_TYPE_F_FX_EFX:
+	case DATA_TYPE_F_FX_NCOB:
+	case DATA_TYPE_F_FX_EFX_NCOB_ECOB:
+	case DATA_TYPE_F_CAM_OFFSET:
+	case DATA_TYPE_F_CAM_BACKGROUND:
+	case DATA_TYPE_CHUNK:
+		cmp_ent_parese_non_imagette_header(ent);
+		break;
 	default:
-		debug_print("For this data product type no parse functions is implemented!\n");
+		debug_print("For this data product type no parse functions is implemented!");
 		break;
 	}
 }

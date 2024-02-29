@@ -62,11 +62,11 @@
  */
 
 
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
 #include "../common/byteorder.h"
+#include "../common/cmp_debug.h"
 #include "rmap.h"
 #include "rdcu_rmap.h"
 
@@ -245,7 +245,7 @@ static int rdcu_process_rx(void)
 		/* we received something, allocate enough space for the packet */
 		spw_pckt = (uint8_t *) malloc(n);
 		if (!spw_pckt) {
-			printf("malloc() for packet failed!\n");
+			debug_print("malloc() for packet failed!");
 			return -1;
 		}
 
@@ -253,7 +253,7 @@ static int rdcu_process_rx(void)
 		n = rmap_rx(spw_pckt);
 
 		if (!n) {
-			printf("Unknown error in rmap_rx()\n");
+			debug_print("Unknown error in rmap_rx()");
 			free(spw_pckt);
 			return -1;
 		}
@@ -268,20 +268,20 @@ static int rdcu_process_rx(void)
 		free(spw_pckt);
 
 		if (!rp) {
-			printf("Error converting to RMAP packet\n");
+			debug_print("Error converting to RMAP packet");
 			continue;
 		}
 
 		local_addr = trans_log_get_addr(rp->tr_id);
 
 		if (!local_addr) {
-			printf("Warning: response packet received not in transaction log\n");
+			debug_print("Warning: response packet received not in transaction log");
 			rmap_erase_packet(rp);
 			continue;
 		}
 
 		if (rp->data_len & 0x3) {
-			printf("Error: response packet data size is not a multiple of 4, transaction dropped\n");
+			debug_print("Error: response packet data size is not a multiple of 4, transaction dropped");
 			trans_log_release_slot(rp->tr_id);
 			rmap_erase_packet(rp);
 			return -1;
@@ -295,7 +295,7 @@ static int rdcu_process_rx(void)
 			{
 				uint32_t i, tmp;
 
-				for (i = 0; i < rp->data_len; i+=sizeof(tmp)) {
+				for (i = 0; i < rp->data_len; i += sizeof(tmp)) {
 					memcpy(&tmp, &rp->data[i], sizeof(tmp));
 					be32_to_cpus(&tmp);
 					memcpy(&rp->data[i], &tmp, sizeof(tmp));
@@ -305,7 +305,7 @@ static int rdcu_process_rx(void)
 
 			crc8 = rmap_crc8(rp->data, rp->data_len);
 			if (crc8 != rp->data_crc) {
-				printf("Error: data CRC8 mismatch, data invalid or packet truncated. Transaction dropped\n");
+				debug_print("Error: data CRC8 mismatch, data invalid or packet truncated. Transaction dropped");
 
 				trans_log_release_slot(rp->tr_id);
 				rmap_erase_packet(rp);
@@ -345,10 +345,10 @@ int rdcu_submit_tx(const uint8_t *cmd,  uint32_t cmd_size,
 		return -1;
 
 	if (RDCU_CONFIG_DEBUG)
-		printf("Transmitting RMAP command\n");
+		debug_print("Transmitting RMAP command");
 
 	if (rmap_tx(cmd, cmd_size, dpath_len, data, data_size)) {
-		printf("rmap_tx() returned error!\n");
+		debug_print("rmap_tx() returned error!");
 		return -1;
 	}
 
@@ -382,7 +382,7 @@ int rdcu_gen_cmd(uint16_t trans_id, uint8_t *cmd,
 
 	pkt = rmap_create_packet();
 	if (!pkt) {
-		printf("Error creating packet\n");
+		debug_print("Error creating packet");
 		return 0;
 	}
 
@@ -451,20 +451,20 @@ int rdcu_sync(int (*fn)(uint16_t trans_id, uint8_t *cmd),
 	/* determine size of command */
 	n = fn((uint16_t)slot, NULL);
 	if (n <= 0) {
-		printf("Error creating command packet\n");
+		debug_print("Error creating command packet");
 		return -1;
 	}
 
 	rmap_cmd = (uint8_t *)malloc((size_t)n);
 	if (!rmap_cmd) {
-		printf("Error allocating rmap cmd");
+		debug_print("Error allocating rmap cmd");
 		return -1;
 	}
 
 	/* now fill actual command */
 	n = fn((uint16_t)slot, rmap_cmd);
 	if (n <= 0) {
-		printf("Error creating command packet\n");
+		debug_print("Error creating command packet");
 		free(rmap_cmd);
 		return -1;
 	}
@@ -523,7 +523,7 @@ int rdcu_sync_data(int (*fn)(uint16_t trans_id, uint8_t *cmd,
 	slot = trans_log_grab_slot(data);
 	if (slot < 0 || slot > UINT16_MAX) {
 		if (RDCU_CONFIG_DEBUG)
-			printf("Error: all slots busy!\n");
+			debug_print("Error: all slots busy!");
 		return 1;
 	}
 
@@ -531,21 +531,21 @@ int rdcu_sync_data(int (*fn)(uint16_t trans_id, uint8_t *cmd,
 	/* determine size of command */
 	n = fn((uint16_t)slot, NULL, addr, data_len);
 	if (n <= 0) {
-		printf("Error creating command packet\n");
+		debug_print("Error creating command packet");
 		return -1;
 	}
 
 
 	rmap_cmd = (uint8_t *)malloc((size_t)n);
 	if (!rmap_cmd) {
-		printf("Error allocating rmap cmd");
+		debug_print("Error allocating rmap cmd");
 		return -1;
 	}
 
 	/* now fill actual command */
 	n = fn((uint16_t)slot, rmap_cmd, addr, data_len);
 	if (n <= 0) {
-		printf("Error creating command packet\n");
+		debug_print("Error creating command packet");
 		free(rmap_cmd);
 		return -1;
 	}

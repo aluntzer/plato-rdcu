@@ -22,12 +22,14 @@
 #if !defined(ICU_ASW) && (defined(DEBUG) || DEBUGLEVEL > 0)
 	#include <stdio.h>
 	__extension__
-	#define debug_print(...) \
-		do { fprintf(stderr, __VA_ARGS__); } while (0)
+	#define debug_print(...)			\
+		do {					\
+			fprintf(stderr, __VA_ARGS__);	\
+			fprintf(stderr, "\n");		\
+		} while (0)
 #else
 	#define debug_print(...) \
 		do {} while (0)
 #endif
-
 
 #endif /* CMP_DEBUG_H */

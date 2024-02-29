@@ -485,7 +485,7 @@ uint8_t convert_data_type_to_subservice(enum cmp_data_type data_type)
 		break;
 	default:
 	case DATA_TYPE_UNKNOWN:
-		debug_print("Error: Unknown compression data type!\n");
+		debug_print("Error: Unknown compression data type!");
 		sst = (uint8_t)-1;
 	};
 
@@ -564,7 +564,7 @@ size_t size_of_a_sample(enum cmp_data_type data_type)
 		break;
 	case DATA_TYPE_UNKNOWN:
 	default:
-		debug_print("Error: Compression data type is not supported.\n");
+		debug_print("Error: Compression data type is not supported.");
 		break;
 	}
 	return sample_size;
@@ -854,7 +854,7 @@ int be_to_cpu_data_type(void *data, uint32_t data_size_byte, enum cmp_data_type 
 		return -1;
 
 	if (data_size_byte % sample_size) {
-		debug_print("Error: Can not convert data size in samples.\n");
+		debug_print("Error: Can not convert data size in samples.");
 		return -1;
 	}
 	samples = data_size_byte / sample_size;
@@ -918,7 +918,7 @@ int be_to_cpu_data_type(void *data, uint32_t data_size_byte, enum cmp_data_type 
 		break;
 	case DATA_TYPE_UNKNOWN:
 	default:
-		debug_print("Error: Can not swap endianness for this compression data type.\n");
+		debug_print("Error: Can not swap endianness for this compression data type.");
 		return -1;
 	}
 #endif /*__BYTE_ORDER__ */
@@ -954,7 +954,7 @@ int be_to_cpu_chunk(uint8_t *chunk, size_t chunk_size)
 	}
 
 	if (col_p != chunk + chunk_size) {
-		debug_print("Error: The chunk size does not match the sum of the collection sizes.\n");
+		debug_print("Error: The chunk size does not match the sum of the collection sizes.");
 		return -1;
 	}
 

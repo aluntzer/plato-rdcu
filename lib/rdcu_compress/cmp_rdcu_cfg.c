@@ -121,28 +121,28 @@ static int rdcu_cfg_buffers_is_invalid(const struct cmp_cfg *cfg)
 
 	if (cfg->cmp_mode == CMP_MODE_RAW) {
 		if (cfg->buffer_length < cfg->samples) {
-			debug_print("rdcu_buffer_length is smaller than the samples parameter. There is not enough space to copy the data in RAW mode.\n");
+			debug_print("rdcu_buffer_length is smaller than the samples parameter. There is not enough space to copy the data in RAW mode.");
 			cfg_invalid++;
 		}
 	}
 
 	if (cfg->rdcu_data_adr & 0x3) {
-		debug_print("Error: The RDCU data to compress start address is not 4-Byte aligned.\n");
+		debug_print("Error: The RDCU data to compress start address is not 4-Byte aligned.");
 		cfg_invalid++;
 	}
 
 	if (cfg->rdcu_buffer_adr & 0x3) {
-		debug_print("Error: The RDCU compressed data start address is not 4-Byte aligned.\n");
+		debug_print("Error: The RDCU compressed data start address is not 4-Byte aligned.");
 		cfg_invalid++;
 	}
 
 	if (outside_sram_range(cfg->rdcu_data_adr, cfg->samples * IMA_SAM2BYT)) {
-		debug_print("Error: The RDCU data to compress buffer is outside the RDCU SRAM address space.\n");
+		debug_print("Error: The RDCU data to compress buffer is outside the RDCU SRAM address space.");
 		cfg_invalid++;
 	}
 
 	if (outside_sram_range(cfg->rdcu_buffer_adr, cfg->buffer_length * IMA_SAM2BYT)) {
-		debug_print("Error: The RDCU compressed data buffer is outside the RDCU SRAM address space.\n");
+		debug_print("Error: The RDCU compressed data buffer is outside the RDCU SRAM address space.");
 		cfg_invalid++;
 	}
 
@@ -150,23 +150,23 @@ static int rdcu_cfg_buffers_is_invalid(const struct cmp_cfg *cfg)
 			    cfg->rdcu_data_adr + cfg->samples * IMA_SAM2BYT,
 			    cfg->rdcu_buffer_adr,
 			    cfg->rdcu_buffer_adr + cfg->buffer_length * IMA_SAM2BYT)) {
-		debug_print("Error: The RDCU data to compress buffer and the RDCU compressed data buffer are overlapping.\n");
+		debug_print("Error: The RDCU data to compress buffer and the RDCU compressed data buffer are overlapping.");
 		cfg_invalid++;
 	}
 
 	if (model_mode_is_used(cfg->cmp_mode)) {
 		if (cfg->model_buf && cfg->model_buf == cfg->input_buf) {
-			debug_print("Error: The model buffer (model_buf) and the data to be compressed (input_buf) are equal.\n");
+			debug_print("Error: The model buffer (model_buf) and the data to be compressed (input_buf) are equal.");
 			cfg_invalid++;
 		}
 
 		if (cfg->rdcu_model_adr & 0x3) {
-			debug_print("Error: The RDCU model start address is not 4-Byte aligned.\n");
+			debug_print("Error: The RDCU model start address is not 4-Byte aligned.");
 			cfg_invalid++;
 		}
 
 		if (outside_sram_range(cfg->rdcu_model_adr, cfg->samples * IMA_SAM2BYT)) {
-			debug_print("Error: The RDCU model buffer is outside the RDCU SRAM address space.\n");
+			debug_print("Error: The RDCU model buffer is outside the RDCU SRAM address space.");
 			cfg_invalid++;
 		}
 
@@ -175,7 +175,7 @@ static int rdcu_cfg_buffers_is_invalid(const struct cmp_cfg *cfg)
 			    cfg->rdcu_model_adr + cfg->samples * IMA_SAM2BYT,
 			    cfg->rdcu_data_adr,
 			    cfg->rdcu_data_adr + cfg->samples * IMA_SAM2BYT)) {
-			debug_print("Error: The model buffer and the data to compress buffer are overlapping.\n");
+			debug_print("Error: The model buffer and the data to compress buffer are overlapping.");
 			cfg_invalid++;
 		}
 
@@ -185,19 +185,19 @@ static int rdcu_cfg_buffers_is_invalid(const struct cmp_cfg *cfg)
 			cfg->rdcu_buffer_adr,
 			cfg->rdcu_buffer_adr + cfg->buffer_length * IMA_SAM2BYT)
 		    ) {
-			debug_print("Error: The model buffer and the compressed data buffer are overlapping.\n");
+			debug_print("Error: The model buffer and the compressed data buffer are overlapping.");
 			cfg_invalid++;
 		}
 
 		if (cfg->rdcu_model_adr != cfg->rdcu_new_model_adr) {
 			if (cfg->rdcu_new_model_adr & 0x3) {
-				debug_print("Error: The RDCU updated model start address (rdcu_new_model_adr) is not 4-Byte aligned.\n");
+				debug_print("Error: The RDCU updated model start address (rdcu_new_model_adr) is not 4-Byte aligned.");
 				cfg_invalid++;
 			}
 
 			if (outside_sram_range(cfg->rdcu_new_model_adr,
 					   cfg->samples * IMA_SAM2BYT)) {
-				debug_print("Error: The RDCU updated model buffer is outside the RDCU SRAM address space.\n");
+				debug_print("Error: The RDCU updated model buffer is outside the RDCU SRAM address space.");
 				cfg_invalid++;
 			}
 
@@ -207,7 +207,7 @@ static int rdcu_cfg_buffers_is_invalid(const struct cmp_cfg *cfg)
 				cfg->rdcu_data_adr,
 				cfg->rdcu_data_adr + cfg->samples * IMA_SAM2BYT)
 			    ) {
-				debug_print("Error: The updated model buffer and the data to compress buffer are overlapping.\n");
+				debug_print("Error: The updated model buffer and the data to compress buffer are overlapping.");
 				cfg_invalid++;
 			}
 
@@ -217,7 +217,7 @@ static int rdcu_cfg_buffers_is_invalid(const struct cmp_cfg *cfg)
 				cfg->rdcu_buffer_adr,
 				cfg->rdcu_buffer_adr + cfg->buffer_length * IMA_SAM2BYT)
 			    ) {
-				debug_print("Error: The updated model buffer and the compressed data buffer are overlapping.\n");
+				debug_print("Error: The updated model buffer and the compressed data buffer are overlapping.");
 				cfg_invalid++;
 			}
 			if (buffers_overlap(
@@ -226,7 +226,7 @@ static int rdcu_cfg_buffers_is_invalid(const struct cmp_cfg *cfg)
 				cfg->rdcu_model_adr,
 				cfg->rdcu_model_adr + cfg->samples * IMA_SAM2BYT)
 			    ) {
-				debug_print("Error: The updated model buffer and the model buffer are overlapping.\n");
+				debug_print("Error: The updated model buffer and the model buffer are overlapping.");
 				cfg_invalid++;
 			}
 		}
@@ -270,7 +270,7 @@ int rdcu_cfg_buffers(struct cmp_cfg *cfg, uint16_t *data_to_compress,
 		     uint32_t rdcu_buffer_lenght)
 {
 	if (!cfg) {
-		debug_print("Error: pointer to the compression configuration structure is NULL.\n");
+		debug_print("Error: pointer to the compression configuration structure is NULL.");
 		return -1;
 	}
 
@@ -308,7 +308,7 @@ int rdcu_cfg_imagette(struct cmp_cfg *cfg,
 		      uint32_t ap2_golomb_par, uint32_t ap2_spillover_par)
 {
 	if (!cfg) {
-		debug_print("Error: pointer to the compression configuration structure is NULL.\n");
+		debug_print("Error: pointer to the compression configuration structure is NULL.");
 		return -1;
 	}
 
@@ -334,7 +334,7 @@ int rdcu_cfg_imagette_default(struct cmp_cfg *cfg)
 {
 
 	if (!cfg) {
-		debug_print("Error: pointer to the compression configuration structure is NULL.\n");
+		debug_print("Error: pointer to the compression configuration structure is NULL.");
 		return -1;
 	}
 
@@ -371,29 +371,29 @@ int rdcu_cmp_cfg_is_invalid(const struct cmp_cfg *cfg)
 	int cfg_invalid = 0;
 
 	if (!cfg) {
-		debug_print("Error: pointer to the compression configuration structure is NULL.\n");
+		debug_print("Error: pointer to the compression configuration structure is NULL.");
 		return -1;
 	}
 
 	if (!cfg->input_buf)
-		debug_print("Warning: The data to compress buffer is set to NULL. No data will be transferred to the rdcu_data_adr in the RDCU SRAM.\n");
+		debug_print("Warning: The data to compress buffer is set to NULL. No data will be transferred to the rdcu_data_adr in the RDCU SRAM.");
 
 	if (model_mode_is_used(cfg->cmp_mode)) {
 		if (!cfg->model_buf)
-			debug_print("Warning: The model buffer is set to NULL. No model data will be transferred to the rdcu_model_adr in the RDCU SRAM.\n");
+			debug_print("Warning: The model buffer is set to NULL. No model data will be transferred to the rdcu_model_adr in the RDCU SRAM.");
 	}
 
 	if (cfg->samples == 0)
-		debug_print("Warning: The samples parameter is set to 0. No data will be compressed.\n");
+		debug_print("Warning: The samples parameter is set to 0. No data will be compressed.");
 
 	if (cfg->icu_new_model_buf)
-		debug_print("Warning: ICU updated model buffer is set. This buffer is not used for an RDCU compression.\n");
+		debug_print("Warning: ICU updated model buffer is set. This buffer is not used for an RDCU compression.");
 
 	if (cfg->icu_output_buf)
-		debug_print("Warning: ICU compressed data buffer is set. This buffer is not used for an RDCU compression.\n");
+		debug_print("Warning: ICU compressed data buffer is set. This buffer is not used for an RDCU compression.");
 
 	if (cfg->buffer_length == 0) {
-		debug_print("Error: The buffer_length is set to 0. There is no place to store the compressed data.\n");
+		debug_print("Error: The buffer_length is set to 0. There is no place to store the compressed data.");
 		cfg_invalid++;
 	}
 

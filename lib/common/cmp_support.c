@@ -437,25 +437,25 @@ int cmp_cfg_gen_par_is_invalid(const struct cmp_cfg *cfg, enum check_opt opt)
 	}
 
 	if (invalid_data_type) {
-		debug_print("Error: selected compression data type is not supported%s.\n", str);
+		debug_print("Error: selected compression data type is not supported%s.", str);
 		cfg_invalid++;
 	}
 
 	if (unsupported_cmp_mode) {
-		debug_print("Error: selected cmp_mode: %i is not supported%s.\n", cfg->cmp_mode, str);
+		debug_print("Error: selected cmp_mode: %i is not supported%s.", cfg->cmp_mode, str);
 		cfg_invalid++;
 	}
 
 	if (check_model_value) {
 		if (cfg->model_value > MAX_MODEL_VALUE) {
-			debug_print("Error: selected model_value: %" PRIu32 " is invalid. The largest supported value is: %u.\n",
+			debug_print("Error: selected model_value: %" PRIu32 " is invalid. The largest supported value is: %u.",
 				    cfg->model_value, MAX_MODEL_VALUE);
 			cfg_invalid++;
 		}
 	}
 
 	if (cfg->round > max_round_value) {
-		debug_print("Error: selected lossy parameter: %" PRIu32 " is not supported%s. The largest supported value is: %" PRIu32 ".\n",
+		debug_print("Error: selected lossy parameter: %" PRIu32 " is not supported%s. The largest supported value is: %" PRIu32 ".",
 			    cfg->round, str, max_round_value);
 		cfg_invalid++;
 	}
@@ -483,54 +483,54 @@ int cmp_cfg_icu_buffers_is_invalid(const struct cmp_cfg *cfg)
 		return 1;
 
 	if (cfg->input_buf == NULL) {
-		debug_print("Error: The data_to_compress buffer for the data to be compressed is NULL.\n");
+		debug_print("Error: The data_to_compress buffer for the data to be compressed is NULL.");
 		cfg_invalid++;
 	}
 
 	if (cfg->samples == 0)
-		debug_print("Warning: The samples parameter is 0. No data are compressed. This behavior may not be intended.\n");
+		debug_print("Warning: The samples parameter is 0. No data are compressed. This behavior may not be intended.");
 
 	if (cfg->icu_output_buf) {
 		if (cfg->buffer_length == 0 && cfg->samples != 0) {
-			debug_print("Error: The buffer_length is set to 0. There is no space to store the compressed data.\n");
+			debug_print("Error: The buffer_length is set to 0. There is no space to store the compressed data.");
 			cfg_invalid++;
 		}
 
 		if (raw_mode_is_used(cfg->cmp_mode) && cfg->buffer_length < cfg->samples) {
-			debug_print("Error: The compressed_data_len_samples is to small to hold the data form the data_to_compress.\n");
+			debug_print("Error: The compressed_data_len_samples is to small to hold the data form the data_to_compress.");
 			cfg_invalid++;
 		}
 
 		if (cfg->icu_output_buf == cfg->input_buf) {
-			debug_print("Error: The compressed_data buffer is the same as the data_to_compress buffer.\n");
+			debug_print("Error: The compressed_data buffer is the same as the data_to_compress buffer.");
 			cfg_invalid++;
 		}
 	}
 
 	if (model_mode_is_used(cfg->cmp_mode)) {
 		if (cfg->model_buf == NULL) {
-			debug_print("Error: The model_of_data buffer for the model data is NULL.\n");
+			debug_print("Error: The model_of_data buffer for the model data is NULL.");
 			cfg_invalid++;
 		}
 
 		if (cfg->model_buf == cfg->input_buf) {
-			debug_print("Error: The model_of_data buffer is the same as the data_to_compress buffer.\n");
+			debug_print("Error: The model_of_data buffer is the same as the data_to_compress buffer.");
 			cfg_invalid++;
 		}
 
 		if (cfg->model_buf == cfg->icu_output_buf) {
-			debug_print("Error: The model_of_data buffer is the same as the compressed_data buffer.\n");
+			debug_print("Error: The model_of_data buffer is the same as the compressed_data buffer.");
 			cfg_invalid++;
 		}
 
 		if (cfg->icu_new_model_buf) {
 			if (cfg->icu_new_model_buf == cfg->input_buf) {
-				debug_print("Error: The updated_model buffer is the same as the data_to_compress buffer.\n");
+				debug_print("Error: The updated_model buffer is the same as the data_to_compress buffer.");
 				cfg_invalid++;
 			}
 
 			if (cfg->icu_new_model_buf == cfg->icu_output_buf) {
-				debug_print("Error: The compressed_data buffer is the same as the compressed_data buffer.\n");
+				debug_print("Error: The compressed_data buffer is the same as the compressed_data buffer.");
 				cfg_invalid++;
 			}
 		}
@@ -554,7 +554,7 @@ int cmp_cfg_icu_max_used_bits_out_of_limit(const struct cmp_max_used_bits *max_u
 #define CHECK_MAX_USED_BITS_LIMIT(entry) \
 	do { \
 		if (max_used_bits->entry > MAX_USED_BITS_SAFE.entry) { \
-			debug_print("Error: The " #entry " entry in the max_used_bits structure is too large (actual: %x, max: %x).\n",  max_used_bits->entry, MAX_USED_BITS_SAFE.entry); \
+			debug_print("Error: The " #entry " entry in the max_used_bits structure is too large (actual: %x, max: %x).",  max_used_bits->entry, MAX_USED_BITS_SAFE.entry); \
 			error++; \
 		} \
 	} while (0)
@@ -562,7 +562,7 @@ int cmp_cfg_icu_max_used_bits_out_of_limit(const struct cmp_max_used_bits *max_u
 	int error = 0;
 
 	if (!max_used_bits) {
-		debug_print("Error: The pointer to the max_used_bits structure is NULL.\n");
+		debug_print("Error: The pointer to the max_used_bits structure is NULL.");
 		return 1;
 	}
 
@@ -651,17 +651,17 @@ static int cmp_pars_are_invalid(uint32_t cmp_par, uint32_t spill, enum cmp_mode 
 	case CMP_MODE_MODEL_ZERO:
 	case CMP_MODE_MODEL_MULTI:
 		if (cmp_par < min_golomb_par || cmp_par > max_golomb_par) {
-			debug_print("Error: The selected %s compression parameter: %" PRIu32 " is not supported in the selected compression mode. The compression parameter has to be between [%" PRIu32 ", %" PRIu32 "] in this mode.\n",
+			debug_print("Error: The selected %s compression parameter: %" PRIu32 " is not supported in the selected compression mode. The compression parameter has to be between [%" PRIu32 ", %" PRIu32 "] in this mode.",
 				    par_name, cmp_par, min_golomb_par, max_golomb_par);
 			cfg_invalid++;
 		}
 		if (spill < min_spill) {
-			debug_print("Error: The selected %s spillover threshold value: %" PRIu32 " is too small. The smallest possible spillover value is: %" PRIu32 ".\n",
+			debug_print("Error: The selected %s spillover threshold value: %" PRIu32 " is too small. The smallest possible spillover value is: %" PRIu32 ".",
 				    par_name, spill, min_spill);
 			cfg_invalid++;
 		}
 		if (spill > max_spill) {
-			debug_print("Error: The selected %s spillover threshold value: %" PRIu32 " is too large for the selected %s compression parameter: %" PRIu32 ". The largest possible spillover value in the selected compression mode is: %" PRIu32 ".\n",
+			debug_print("Error: The selected %s spillover threshold value: %" PRIu32 " is too large for the selected %s compression parameter: %" PRIu32 ". The largest possible spillover value in the selected compression mode is: %" PRIu32 ".",
 				    par_name, spill, par_name, cmp_par, max_spill);
 			cfg_invalid++;
 		}
@@ -669,13 +669,13 @@ static int cmp_pars_are_invalid(uint32_t cmp_par, uint32_t spill, enum cmp_mode 
 		break;
 	case CMP_MODE_STUFF:
 		if (cmp_par > MAX_STUFF_CMP_PAR) {
-			debug_print("Error: The selected %s stuff mode compression parameter: %" PRIu32 " is too large. The largest possible value in the selected compression mode is: %u.\n",
+			debug_print("Error: The selected %s stuff mode compression parameter: %" PRIu32 " is too large. The largest possible value in the selected compression mode is: %u.",
 				    par_name, cmp_par, MAX_STUFF_CMP_PAR);
 			cfg_invalid++;
 		}
 		break;
 	default:
-		debug_print("Error: The compression mode is not supported.\n");
+		debug_print("Error: The compression mode is not supported.");
 		cfg_invalid++;
 		break;
 	}
@@ -708,7 +708,7 @@ int cmp_cfg_imagette_is_invalid(const struct cmp_cfg *cfg, enum check_opt opt)
 		return 1;
 
 	if (!cmp_imagette_data_type_is_used(cfg->data_type)) {
-		debug_print("Error: The compression data type is not an imagette compression data type.\n");
+		debug_print("Error: The compression data type is not an imagette compression data type.");
 		cfg_invalid++;
 	}
 
@@ -843,7 +843,7 @@ int cmp_cfg_fx_cob_is_invalid(const struct cmp_cfg *cfg)
 		return 1;
 
 	if (!cmp_fx_cob_data_type_is_used(cfg->data_type)) {
-		debug_print("Error: The compression data type is not a flux/center of brightness compression data type.\n");
+		debug_print("Error: The compression data type is not a flux/center of brightness compression data type.");
 		cfg_invalid++;
 	}
 
@@ -914,7 +914,7 @@ int cmp_cfg_aux_is_invalid(const struct cmp_cfg *cfg)
 				cfg->cmp_mode, cfg->data_type, "smearing outlier pixls num");
 		break;
 	default:
-		debug_print("Error: The compression data type is not an auxiliary science compression data type.\n");
+		debug_print("Error: The compression data type is not an auxiliary science compression data type.");
 		cfg_invalid++;
 	}
 	return cfg_invalid;
@@ -966,20 +966,20 @@ int cmp_cfg_icu_is_invalid(const struct cmp_cfg *cfg)
 void print_cmp_info(const struct cmp_info *info)
 {
 	if (!info) {
-		debug_print("Pointer to the compressor information is NULL.\n");
+		debug_print("Pointer to the compressor information is NULL.");
 		return;
 	}
 
-	debug_print("cmp_mode_used: %" PRIu32 "\n", info->cmp_mode_used);
-	debug_print("spill_used: %" PRIu32 "\n", info->spill_used);
-	debug_print("golomb_par_used: %" PRIu32 "\n", info->golomb_par_used);
-	debug_print("samples_used: %" PRIu32 "\n", info->samples_used);
-	debug_print("cmp_size: %" PRIu32 "\n", info->cmp_size);
-	debug_print("ap1_cmp_size: %" PRIu32 "\n", info->ap1_cmp_size);
-	debug_print("ap2_cmp_size: %" PRIu32 "\n", info->ap2_cmp_size);
-	debug_print("rdcu_new_model_adr_used: 0x%06"PRIX32"\n", info->rdcu_new_model_adr_used);
-	debug_print("rdcu_cmp_adr_used: 0x%06"PRIX32"\n", info->rdcu_cmp_adr_used);
-	debug_print("model_value_used: %u\n", info->model_value_used);
-	debug_print("round_used: %u\n", info->round_used);
-	debug_print("cmp_err: %#X\n", info->cmp_err);
+	debug_print("cmp_mode_used: %" PRIu32 "", info->cmp_mode_used);
+	debug_print("spill_used: %" PRIu32 "", info->spill_used);
+	debug_print("golomb_par_used: %" PRIu32 "", info->golomb_par_used);
+	debug_print("samples_used: %" PRIu32 "", info->samples_used);
+	debug_print("cmp_size: %" PRIu32 "", info->cmp_size);
+	debug_print("ap1_cmp_size: %" PRIu32 "", info->ap1_cmp_size);
+	debug_print("ap2_cmp_size: %" PRIu32 "", info->ap2_cmp_size);
+	debug_print("rdcu_new_model_adr_used: 0x%06"PRIX32"", info->rdcu_new_model_adr_used);
+	debug_print("rdcu_cmp_adr_used: 0x%06"PRIX32"", info->rdcu_cmp_adr_used);
+	debug_print("model_value_used: %u", info->model_value_used);
+	debug_print("round_used: %u", info->round_used);
+	debug_print("cmp_err: %#X", info->cmp_err);
 }

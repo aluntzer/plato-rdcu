@@ -186,7 +186,7 @@ uint32_t cmp_cfg_icu_buffers(struct cmp_cfg *cfg, void *data_to_compress,
 	uint32_t cmp_data_size, hdr_size;
 
 	if (!cfg) {
-		debug_print("Error: pointer to the compression configuration structure is NULL.\n");
+		debug_print("Error: pointer to the compression configuration structure is NULL.");
 		return 0;
 	}
 
@@ -205,7 +205,7 @@ uint32_t cmp_cfg_icu_buffers(struct cmp_cfg *cfg, void *data_to_compress,
 	hdr_size = cmp_ent_cal_hdr_size(cfg->data_type, cfg->cmp_mode == CMP_MODE_RAW);
 
 	if ((cmp_data_size + hdr_size) > CMP_ENTITY_MAX_SIZE || cmp_data_size > CMP_ENTITY_MAX_SIZE) {
-		debug_print("Error: The buffer for the compressed data is too large to fit in a compression entity.\n");
+		debug_print("Error: The buffer for the compressed data is too large to fit in a compression entity.");
 		return 0;
 	}
 
@@ -375,7 +375,7 @@ int cmp_cfg_aux(struct cmp_cfg *cfg,
 		cfg->spill_smearing_pixels_error = spillover_pixels_error;
 		break;
 	default:
-		debug_print("Error: The compression data type is not an auxiliary science compression data type.\n");
+		debug_print("Error: The compression data type is not an auxiliary science compression data type.");
 		return -1;
 	}
 
@@ -759,7 +759,7 @@ static int encode_value(uint32_t data, uint32_t model, int stream_len,
 	model = round_fwd(model, setup->lossy_par);
 
 	if (data & mask || model & mask) {
-		debug_print("Error: The data or the model of the data are bigger than expected.\n");
+		debug_print("Error: The data or the model of the data are bigger than expected.");
 		return CMP_ERROR_HIGH_VALUE;
 	}
 
@@ -2135,7 +2135,7 @@ static int compress_data_internal(const struct cmp_cfg *cfg, int stream_len)
 		return stream_len;
 
 	if (stream_len & 0x7) {
-		debug_print("Error: The stream_len parameter must be a multiple of 8.\n");
+		debug_print("Error: The stream_len parameter must be a multiple of 8.");
 		return -1;
 	}
 
@@ -2159,7 +2159,7 @@ static int compress_data_internal(const struct cmp_cfg *cfg, int stream_len)
 		bitsize += stream_len + (int)raw_size*8; /* convert to bits */
 	} else {
 		if (cfg->icu_output_buf && cfg->samples/3 > cfg->buffer_length)
-			debug_print("Warning: The size of the compressed_data buffer is 3 times smaller than the data_to_compress. This is probably unintended.\n");
+			debug_print("Warning: The size of the compressed_data buffer is 3 times smaller than the data_to_compress. This is probably unintended.");
 
 		switch (cfg->data_type) {
 		case DATA_TYPE_IMAGETTE:
@@ -2225,7 +2225,7 @@ static int compress_data_internal(const struct cmp_cfg *cfg, int stream_len)
 		/* LCOV_EXCL_START */
 		case DATA_TYPE_UNKNOWN:
 		default:
-			debug_print("Error: Data type not supported.\n");
+			debug_print("Error: Data type not supported.");
 			bitsize = -1;
 		}
 		/* LCOV_EXCL_STOP */
@@ -2414,7 +2414,7 @@ static int cmp_ent_build_chunk_header(struct cmp_entity *ent, uint32_t chunk_siz
 		err |= cmp_ent_set_version_id(ent, version_identifier);
 		err |= cmp_ent_set_size(ent, (uint32_t)cmp_ent_size_byte);
 		if (cmp_ent_set_original_size(ent, chunk_size)) {
-			debug_print("Error: The size of the chunk is too.\n");
+			debug_print("Error: The size of the chunk is too.");
 			return -1;
 		}
 		err |= cmp_ent_set_start_timestamp(ent, start_timestamp);
@@ -2491,11 +2491,11 @@ static enum chunk_type get_chunk_type(uint16_t subservice)
 	case SST_NCxx_S_SCIENCE_F_FX_EFX:
 	case SST_NCxx_S_SCIENCE_F_FX_NCOB:
 	case SST_NCxx_S_SCIENCE_F_FX_EFX_NCOB_ECOB:
-		debug_print("Error: No chunk is defined for fast cadence subservices\n");
+		debug_print("Error: No chunk is defined for fast cadence subservices");
 		chunk_type = CHUNK_TYPE_UNKNOWN;
 		break;
 	default:
-		debug_print("Error: Unknown subservice: %i.\n", subservice);
+		debug_print("Error: Unknown subservice: %i.", subservice);
 		chunk_type = CHUNK_TYPE_UNKNOWN;
 		break;
 	};
@@ -2643,15 +2643,15 @@ int32_t compress_chunk(void *chunk, uint32_t chunk_size,
 	int err;
 
 	if (!chunk) {
-		debug_print("Error: Pointer to the data chunk is NULL. No data no compression.\n");
+		debug_print("Error: Pointer to the data chunk is NULL. No data no compression.");
 		return -1;
 	}
 	if (chunk_size < COLLECTION_HDR_SIZE) {
-		debug_print("Error: The chunk size is smaller than the minimum size.\n");
+		debug_print("Error: The chunk size is smaller than the minimum size.");
 		return -1;
 	}
 	if (chunk_size > CMP_ENTITY_MAX_ORIGINAL_SIZE) {
-		debug_print("Error: The chunk size is bigger than the maximum allowed chunk size.\n");
+		debug_print("Error: The chunk size is bigger than the maximum allowed chunk size.");
 		return -1;
 	}
 
@@ -2662,7 +2662,7 @@ int32_t compress_chunk(void *chunk, uint32_t chunk_size,
 		cmp_size_byte = NON_IMAGETTE_HEADER_SIZE;
 	if (dst) {
 		if (dst_capacity < (uint32_t)cmp_size_byte) {
-			debug_print("Error: The destination capacity is smaller than the minimum compression entity size.\n");
+			debug_print("Error: The destination capacity is smaller than the minimum compression entity size.");
 			return CMP_ERROR_SMALL_BUF;
 		}
 		memset(dst, 0, (uint32_t)cmp_size_byte);
@@ -2685,7 +2685,7 @@ int32_t compress_chunk(void *chunk, uint32_t chunk_size,
 			col_up_model = ((uint8_t *)updated_chunk_model + read_bytes);
 
 		if (cmp_col_get_chunk_type(col) != chunk_type) {
-			debug_print("Error: The chunk contains collections with an incompatible mix of subservices.\n");
+			debug_print("Error: The chunk contains collections with an incompatible mix of subservices.");
 			return -1;
 		}
 		if (read_bytes + cmp_col_get_size(col) > chunk_size)
@@ -2696,7 +2696,7 @@ int32_t compress_chunk(void *chunk, uint32_t chunk_size,
 	}
 
 	if (read_bytes != chunk_size) {
-		debug_print("Error: The sum of the compressed collections does not match the size of the data in the compression header.\n");
+		debug_print("Error: The sum of the compressed collections does not match the size of the data in the compression header.");
 		return -1;
 	}
 
@@ -2732,7 +2732,7 @@ uint32_t compress_chunk_cmp_size_bound(const void *chunk, size_t chunk_size)
 	uint32_t num_col = 0;
 
 	if (chunk_size > CMP_ENTITY_MAX_ORIGINAL_SIZE-NON_IMAGETTE_HEADER_SIZE-CMP_COLLECTION_FILD_SIZE) {
-		debug_print("Error: The chunk size is bigger than the maximum allowed chunk size.\n");
+		debug_print("Error: The chunk size is bigger than the maximum allowed chunk size.");
 		return 0;
 	}
 
@@ -2743,7 +2743,7 @@ uint32_t compress_chunk_cmp_size_bound(const void *chunk, size_t chunk_size)
 
 
 	if ((uint32_t)read_bytes != chunk_size) {
-		debug_print("Error: The sum of the compressed collections does not match the size of the data in the compression header.\n");
+		debug_print("Error: The sum of the compressed collections does not match the size of the data in the compression header.");
 		return 0;
 	}
 
