@@ -100,10 +100,10 @@ struct encoder_setupt {
 
 enum chunk_type {
 	CHUNK_TYPE_UNKNOWN,
-	CHUNK_TYPE_NCAM_IMGAETTE,
+	CHUNK_TYPE_NCAM_IMAGETTE,
 	CHUNK_TYPE_SHORT_CADENCE,
 	CHUNK_TYPE_LONG_CADENCE,
-	CHUNK_TYPE_SAT_IMGAETTE,
+	CHUNK_TYPE_SAT_IMAGETTE,
 	CHUNK_TYPE_OFFSET_BACKGROUND, /* N-CAM */
 	CHUNK_TYPE_SMEARING,
 	CHUNK_TYPE_F_CHAIN,
@@ -2455,10 +2455,10 @@ static enum chunk_type get_chunk_type(uint16_t subservice)
 
 	switch (subservice) {
 	case SST_NCxx_S_SCIENCE_IMAGETTE:
-		chunk_type = CHUNK_TYPE_NCAM_IMGAETTE;
+		chunk_type = CHUNK_TYPE_NCAM_IMAGETTE;
 		break;
 	case SST_NCxx_S_SCIENCE_SAT_IMAGETTE:
-		chunk_type = CHUNK_TYPE_SAT_IMGAETTE;
+		chunk_type = CHUNK_TYPE_SAT_IMAGETTE;
 		break;
 	case SST_NCxx_S_SCIENCE_OFFSET:
 	case SST_NCxx_S_SCIENCE_BACKGROUND:
@@ -2513,10 +2513,10 @@ static int read_in_cmp_par(const struct cmp_par *par, enum chunk_type chunk_type
 	cfg->max_used_bits = &MAX_USED_BITS_SAFE;
 
 	switch (chunk_type) {
-	case CHUNK_TYPE_NCAM_IMGAETTE:
+	case CHUNK_TYPE_NCAM_IMAGETTE:
 		cfg->cmp_par_imagette = par->nc_imagette;
 		break;
-	case CHUNK_TYPE_SAT_IMGAETTE:
+	case CHUNK_TYPE_SAT_IMAGETTE:
 		cfg->cmp_par_imagette = par->saturated_imagette;
 		break;
 	case CHUNK_TYPE_SHORT_CADENCE:
