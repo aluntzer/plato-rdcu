@@ -19,6 +19,13 @@
 #ifndef CMP_DEBUG_H
 #define CMP_DEBUG_H
 
+
+/* DEBUGLEVEL should be externally defined, usually via the compiler command
+ * line.  Its value must be a numeric value. */
+#ifndef DEBUGLEVEL
+#  define DEBUGLEVEL 0
+#endif
+
 #if !defined(ICU_ASW) && (defined(DEBUG) || DEBUGLEVEL > 0)
 	#include <stdio.h>
 	__extension__

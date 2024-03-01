@@ -2210,7 +2210,7 @@ uint64_t cmp_ent_create_timestamp(const struct timespec *ts)
 
 void cmp_ent_print_header(const struct cmp_entity *ent)
 {
-	const uint8_t *p = (const uint8_t *)ent;
+	MAYBE_UNUSED const uint8_t *p = (const uint8_t *)ent;
 	uint32_t hdr_size = cmp_ent_get_hdr_size(ent);
 	size_t i;
 
@@ -2262,17 +2262,17 @@ void cmp_ent_print(struct cmp_entity *ent)
 
 static void cmp_ent_parse_generic_header(const struct cmp_entity *ent)
 {
-	uint32_t version_id, cmp_ent_size, original_size, cmp_mode_used,
+	MAYBE_UNUSED uint32_t version_id, cmp_ent_size, original_size, cmp_mode_used,
 		 model_value_used, model_id, model_counter, max_used_bits_version,
 		 lossy_cmp_par_used, start_coarse_time, end_coarse_time;
-	uint16_t start_fine_time, end_fine_time;
-	enum cmp_data_type data_type;
-	int raw_bit;
+	MAYBE_UNUSED uint16_t start_fine_time, end_fine_time;
+	MAYBE_UNUSED enum cmp_data_type data_type;
+	MAYBE_UNUSED int raw_bit;
 
 	version_id = cmp_ent_get_version_id(ent);
 	if (version_id & CMP_TOOL_VERSION_ID_BIT) {
-		uint16_t major = (version_id & 0x7FFF0000U) >> 16U;
-		uint16_t minor = version_id & 0xFFFFU;
+		MAYBE_UNUSED uint16_t major = (version_id & 0x7FFF0000U) >> 16U;
+		MAYBE_UNUSED uint16_t minor = version_id & 0xFFFFU;
 
 		debug_print("Compressed with cmp_tool version: %u.%02u", major, minor);
 	} else
@@ -2299,7 +2299,7 @@ static void cmp_ent_parse_generic_header(const struct cmp_entity *ent)
 #ifdef HAS_TIME_H
 	{
 		struct tm epoch_date = PLATO_EPOCH_DATE;
-		time_t time = my_timegm(&epoch_date) + start_coarse_time;
+		MAYBE_UNUSED time_t time = my_timegm(&epoch_date) + start_coarse_time;
 
 		debug_print("Data were compressed on (local time): %s", ctime(&time));
 	}
@@ -2341,7 +2341,7 @@ static void cmp_ent_parse_generic_header(const struct cmp_entity *ent)
 
 static void cmp_ent_parese_imagette_header(const struct cmp_entity *ent)
 {
-	uint32_t spill_used, golomb_par_used;
+	MAYBE_UNUSED uint32_t spill_used, golomb_par_used;
 
 	spill_used = cmp_ent_get_ima_spill(ent);
 	debug_print("Used Spillover Threshold Parameter: %" PRIu32, spill_used);
@@ -2359,7 +2359,7 @@ static void cmp_ent_parese_imagette_header(const struct cmp_entity *ent)
 
 static void cmp_ent_parese_adaptive_imagette_header(const struct cmp_entity *ent)
 {
-	uint32_t spill_used, golomb_par_used, ap1_spill_used,
+	MAYBE_UNUSED uint32_t spill_used, golomb_par_used, ap1_spill_used,
 		 ap1_golomb_par_used, ap2_spill_used, ap2_golomb_par_used;
 
 	spill_used = cmp_ent_get_ima_spill(ent);
@@ -2390,7 +2390,7 @@ static void cmp_ent_parese_adaptive_imagette_header(const struct cmp_entity *ent
 
 static void cmp_ent_parese_non_imagette_header(const struct cmp_entity *ent)
 {
-	uint32_t spill_1_used, cmp_par_1_used, spill_2_used, cmp_par_2_used,
+	MAYBE_UNUSED uint32_t spill_1_used, cmp_par_1_used, spill_2_used, cmp_par_2_used,
 		 spill_3_used, cmp_par_3_used, spill_4_used, cmp_par_4_used,
 		 spill_5_used, cmp_par_5_used;
 

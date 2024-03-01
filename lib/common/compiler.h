@@ -108,10 +108,22 @@
  *
  * This macro is used to indicate that a variable is intentionally left unused
  * in the code. It helps suppress compiler warnings about unused variables.
+ * It also protecting against actual use of the "unused" variable.
  *
- * @param x The variable to mark as unused.
  */
 
-#define UNUSED(x) (void)(x)
+#define UNUSED __attribute__((unused)) \
+	__attribute__((deprecated ("parameter declared as UNUSED")))
+
+
+/**
+ * @brief mark a variable as potentially unused to suppress compiler warnings.
+ *
+ * This macro is used to indicate that a variable may be intentionally left unused
+ * in the code. It helps suppress compiler warnings about unused variables.
+ * It does *not* protect against the actual use of the "unused" variables.
+ */
+
+#define MAYBE_UNUSED __attribute__((__unused__))
 
 #endif /* COMPILER_H */
