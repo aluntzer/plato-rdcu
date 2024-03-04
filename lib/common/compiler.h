@@ -21,6 +21,22 @@
 #define COMPILER_H
 
 
+/* Derived from Linux "Features Test Macro" header Convenience macros to test
+ * the versions of gcc (or a compatible compiler).
+ * Use them like this:
+ *  #if GNUC_PREREQ (2,8)
+ *   ... code requiring gcc 2.8 or later ...
+ *  #endif
+*/
+
+#if defined(__GNUC__) && defined(__GNUC_MINOR__)
+# define GNUC_PREREQ(maj, min) \
+	((__GNUC__ << 16) + __GNUC_MINOR__ >= ((maj) << 16) + (min))
+#else
+ #define GNUC_PREREQ(maj, min) 0
+#endif
+
+
 /**
  * Compile time check usable outside of function scope.
  * Stolen from Linux (hpi_internal.h)
@@ -108,12 +124,19 @@
  *
  * This macro is used to indicate that a variable is intentionally left unused
  * in the code. It helps suppress compiler warnings about unused variables.
- * It also protecting against actual use of the "unused" variable.
- *
+ * It also tries to prevent the actual use of the "unused" variables.
  */
 
+#if GNUC_PREREQ(4, 5)
 #define UNUSED __attribute__((unused)) \
 	__attribute__((deprecated ("parameter declared as UNUSED")))
+#elif defined(__GNUC__)
+#define UNUSED __attribute__((unused)) \
+	__attribute__((deprecated))
+#else
+#define UNUSED
+#endif
+
 
 
 /**
