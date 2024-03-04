@@ -73,21 +73,18 @@ struct decoder_setup {
  * @brief decode the next unary code word in the bitstream
  *
  * @param dec		a pointer to a bit_decoder context
- * @param unused_1	this parameter is not used
- * @param unused_2	this parameter is not used
+ * @param m		this parameter is not used
+ * @param log2_m	this parameter is not used
  * @note: Can be used to decode a code word with compression parameter m = 1 (log2_m = 0)
  *
  * @returns the decoded value
  */
 
-static __inline uint32_t unary_decoder(struct bit_decoder *dec, uint32_t unused_1,
-				       uint32_t unused_2)
+static __inline uint32_t unary_decoder(struct bit_decoder *dec, uint32_t m UNUSED,
+				       uint32_t log2_m UNUSED)
 {
 	uint32_t const decoded_cw = bit_peek_leading_ones(dec); /* decode unary coding */
 	uint32_t const cw_len = decoded_cw + 1; /* Number of 1's + following 0 */
-
-	UNUSED(unused_1); /* we don't need this parameter */
-	UNUSED(unused_2); /* and this parameter */
 
 	bit_consume_bits(dec, cw_len);
 

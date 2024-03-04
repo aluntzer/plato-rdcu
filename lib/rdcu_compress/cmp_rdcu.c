@@ -28,7 +28,6 @@
 
 
 #include <stdint.h>
-#include <stdio.h>
 
 #include "../common/cmp_debug.h"
 #include "../common/cmp_support.h"
@@ -235,11 +234,11 @@ static int rdcu_transfer_sram(const struct cmp_cfg *cfg)
 		uint32_t size = (cfg->samples * 2 + 3) & ~3U;
 		/* now set the data in the local mirror... */
 		if (rdcu_write_sram_16(cfg->input_buf, cfg->rdcu_data_adr, cfg->samples * 2) < 0) {
-			debug_print("Error: The data to be compressed cannot be transferred to the SRAM of the RDCU.\n");
+			debug_print("Error: The data to be compressed cannot be transferred to the SRAM of the RDCU.");
 			return -1;
 		}
 		if (rdcu_sync_mirror_to_sram(cfg->rdcu_data_adr, size, rdcu_get_data_mtu())) {
-			debug_print("Error: The data to be compressed cannot be transferred to the SRAM of the RDCU.\n");
+			debug_print("Error: The data to be compressed cannot be transferred to the SRAM of the RDCU.");
 			return -1;
 		}
 	}
@@ -251,11 +250,11 @@ static int rdcu_transfer_sram(const struct cmp_cfg *cfg)
 			uint32_t size = (cfg->samples * 2 + 3) & ~3U;
 			/* set the model in the local mirror... */
 			if (rdcu_write_sram_16(cfg->model_buf, cfg->rdcu_model_adr, cfg->samples * 2) < 0) {
-				debug_print("Error: The model buffer cannot be transferred to the SRAM of the RDCU.\n");
+				debug_print("Error: The model buffer cannot be transferred to the SRAM of the RDCU.");
 				return -1;
 			}
 			if (rdcu_sync_mirror_to_sram(cfg->rdcu_model_adr, size, rdcu_get_data_mtu())) {
-				debug_print("Error: The model buffer cannot be transferred to the SRAM of the RDCU.\n");
+				debug_print("Error: The model buffer cannot be transferred to the SRAM of the RDCU.");
 				return -1;
 			}
 		}
@@ -513,24 +512,24 @@ int rdcu_inject_edac_error(const struct cmp_cfg *cfg, uint32_t addr)
 		rdcu_edac_set_ctrl_reg_write_op();
 		rdcu_edac_set_bypass();
 		if (rdcu_sync_sram_edac_ctrl()) {
-			debug_print("Error: rdcu_sync_sram_edac_ctrl\n");
+			debug_print("Error: rdcu_sync_sram_edac_ctrl");
 			return -1;
 		}
 		rdcu_syncing();
 		/* verify bypass aktiv */
 		rdcu_edac_set_ctrl_reg_read_op();
 		if (rdcu_sync_sram_edac_ctrl()) {
-			debug_print("Error: rdcu_sync_sram_edac_ctrl\n");
+			debug_print("Error: rdcu_sync_sram_edac_ctrl");
 			return -1;
 		}
 		rdcu_syncing();
 		if (rdcu_sync_sram_edac_status()) {
-			printf("Error: rdcu_sync_sram_edac_status\n");
+			debug_print("Error: rdcu_sync_sram_edac_status");
 			return -1;
 		}
 		rdcu_syncing();
 		if (rdcu_edac_get_sub_chip_die_addr() != sub_chip_die_addr) {
-			printf("Error: sub_chip_die_addr unexpected !\n");
+			debug_print("Error: sub_chip_die_addr unexpected!");
 			return -1;
 		}
 #if 1
@@ -558,7 +557,7 @@ int rdcu_inject_edac_error(const struct cmp_cfg *cfg, uint32_t addr)
 	if (rdcu_write_sram(buf, addr, sizeof(buf)) < 0)
 		return -1;
 	if (rdcu_sync_mirror_to_sram(addr, sizeof(buf), rdcu_get_data_mtu())) {
-		debug_print("Error: The data to be compressed cannot be transferred to the SRAM of the RDCU.\n");
+		debug_print("Error: The data to be compressed cannot be transferred to the SRAM of the RDCU.");
 		return -1;
 	}
 	rdcu_syncing();
@@ -571,28 +570,28 @@ int rdcu_inject_edac_error(const struct cmp_cfg *cfg, uint32_t addr)
 		rdcu_edac_set_ctrl_reg_write_op();
 		rdcu_edac_clear_bypass();
 		if (rdcu_sync_sram_edac_ctrl()) {
-			debug_print("Error: rdcu_sync_sram_edac_ctrl\n");
+			debug_print("Error: rdcu_sync_sram_edac_ctrl");
 			return -1;
 		}
 		rdcu_syncing();
 		/* verify bypass disable */
 		rdcu_edac_set_ctrl_reg_read_op();
 		if (rdcu_sync_sram_edac_ctrl()) {
-			debug_print("Error: rdcu_sync_sram_edac_ctrl\n");
+			debug_print("Error: rdcu_sync_sram_edac_ctrl");
 			return -1;
 		}
 		rdcu_syncing();
 		if (rdcu_sync_sram_edac_status()) {
-			printf("Error: rdcu_sync_sram_edac_status\n");
+			debug_print("Error: rdcu_sync_sram_edac_status");
 			return -1;
 		}
 		rdcu_syncing();
 		if (rdcu_edac_get_sub_chip_die_addr() != sub_chip_die_addr) {
-			printf("Error: sub_chip_die_addr unexpected !\n");
+			debug_print("Error: sub_chip_die_addr unexpected!");
 			return -1;
 		}
 		if (1 == rdcu_edac_get_bypass_status()) {
-			printf("Error: bypass status unexpected !\n");
+			debug_print("Error: bypass status unexpected!");
 			return -1;
 		}
 	}
