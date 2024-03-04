@@ -2737,7 +2737,7 @@ uint32_t compress_chunk_cmp_size_bound(const void *chunk, size_t chunk_size)
 	}
 
 	for (read_bytes = 0;
-	     read_bytes < (int32_t)chunk_size-COLLECTION_HDR_SIZE;
+	     read_bytes <= (int32_t)chunk_size-COLLECTION_HDR_SIZE;
 	     read_bytes += cmp_col_get_size((const struct collection_hdr *)((const uint8_t *)chunk + read_bytes)))
 		num_col++;
 

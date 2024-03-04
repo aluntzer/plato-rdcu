@@ -24,7 +24,14 @@
 #include "common/cmp_entity.h"
 
 
-#define ROUND_UP_TO_4(x) ((((x)+3)*4)/4)
+#define ROUND_UP_TO_4(x) ((((x)+3)/4)*4)
+
+#define COMPRESS_CHUNK_BOUND_UNSAFE(chunk_size, num_col) (	\
+	ROUND_UP_TO_4(NON_IMAGETTE_HEADER_SIZE +		\
+		      (num_col) * CMP_COLLECTION_FILD_SIZE +	\
+		      (chunk_size)				\
+		      )						\
+)
 
 
 /**
@@ -43,9 +50,13 @@
  * @returns maximum compressed size for chunk compression; 0 on error
  */
 
-#define COMPRESS_CHUNK_BOUND(chunk_size, num_col) ( \
-	(uint32_t)ROUND_UP_TO_4(NON_IMAGETTE_HEADER_SIZE+(chunk_size)+(num_col)*CMP_COLLECTION_FILD_SIZE) > (uint32_t)CMP_ENTITY_MAX_SIZE ? 0 \
-	: ROUND_UP_TO_4(NON_IMAGETTE_HEADER_SIZE+(chunk_size)+(num_col)*CMP_COLLECTION_FILD_SIZE) \
+#define COMPRESS_CHUNK_BOUND(chunk_size, num_col) (					\
+	(num_col) > 0 &&								\
+	(num_col) <= CMP_ENTITY_MAX_SIZE/COLLECTION_HDR_SIZE &&				\
+	(chunk_size) >= COLLECTION_HDR_SIZE * (num_col) &&				\
+	(chunk_size) <= CMP_ENTITY_MAX_SIZE &&						\
+	COMPRESS_CHUNK_BOUND_UNSAFE(chunk_size, num_col) <= CMP_ENTITY_MAX_SIZE ?	\
+	COMPRESS_CHUNK_BOUND_UNSAFE(chunk_size, num_col) : 0				\
 )
 
 
