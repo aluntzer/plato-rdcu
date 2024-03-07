@@ -324,6 +324,7 @@ int cmp_col_set_sequence_num(struct collection_hdr *col, uint8_t sequence_num);
 int cmp_col_set_data_length(struct collection_hdr *col, uint16_t length);
 
 enum cmp_data_type convert_subservice_to_cmp_data_type(uint8_t subservice);
+uint8_t convert_cmp_data_type_to_subservice(enum cmp_data_type data_type);
 
 size_t size_of_a_sample(enum cmp_data_type data_type);
 uint32_t cmp_cal_size_of_data(uint32_t samples, enum cmp_data_type data_type);

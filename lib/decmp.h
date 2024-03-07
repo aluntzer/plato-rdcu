@@ -19,8 +19,8 @@
 #ifndef DECMP_H
 #define DECMP_H
 
-#include <cmp_entity.h>
-#include <cmp_support.h>
+#include "common/cmp_entity.h"
+#include "common/cmp_support.h"
 
 int decompress_cmp_entiy(struct cmp_entity *ent, void *model_of_data,
 			 void *up_model_buf, void *decompressed_data);

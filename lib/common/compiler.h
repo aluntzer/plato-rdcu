@@ -147,6 +147,10 @@
  * It does *not* protect against the actual use of the "unused" variables.
  */
 
-#define MAYBE_UNUSED __attribute__((__unused__))
+#if (DEBUGLEVEL == 0)
+#define MAYBE_UNUSED __attribute__((unused))
+#else
+#define MAYBE_UNUSED
+#endif
 
 #endif /* COMPILER_H */

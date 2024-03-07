@@ -56,7 +56,7 @@ static uint64_t default_get_timestamp(void)
 
 /**
  * @brief function pointer to a function returning a current PLATO timestamp
- * initialised with the compress_chunk_init() function
+ *	initialised with the compress_chunk_init() function
  */
 
 static uint64_t (*get_timestamp)(void) = default_get_timestamp;
@@ -64,7 +64,7 @@ static uint64_t (*get_timestamp)(void) = default_get_timestamp;
 
 /**
  * @brief holding the version_identifier for the compression header
- * initialised with the compress_chunk_init() function
+ *	initialised with the compress_chunk_init() function
  */
 
 static uint32_t version_identifier;
@@ -96,7 +96,10 @@ struct encoder_setupt {
 };
 
 
-/* TODO: doc string */
+/**
+ * @brief types of chunks containing different types of collections
+ *	according to DetailedBudgetWorking_2023-10-11
+ */
 
 enum chunk_type {
 	CHUNK_TYPE_UNKNOWN,
@@ -523,8 +526,8 @@ static uint32_t rice_encoder(uint32_t value, uint32_t m, uint32_t log2_m,
 	/*
 	 * NOTE: If log2_m = 31 -> rl = 32, (q << rl) leads to an undefined
 	 * behavior. However, in this case, a valid code with a maximum of 32
-	 * bits can only be formed if q = 0 and qc = 0. To prevent undefined b
-	 * ehavior, the right shift operand is masked (& 0x1FU)
+	 * bits can only be formed if q = 0 and qc = 0. To prevent undefined
+	 * behavior, the right shift operand is masked (& 0x1FU)
 	 */
 
 	return rl + q;  /* calculate the length of the code word */
@@ -772,10 +775,9 @@ static int encode_value(uint32_t data, uint32_t model, int stream_len,
  * @note we round down to the next 4-byte allied address because we access the
  *	cmp_buffer in uint32_t words
  *
- * @param buffer_length	length of the icu_output_buf in samples
+ * @param buffer_length	length of the icu_output_buf in bytes
  *
  * @returns buffer size in bits
- *
  */
 
 static uint32_t cmp_buffer_length_to_bits(uint32_t buffer_length)
@@ -2119,7 +2121,21 @@ static int pad_bitstream(const struct cmp_cfg *cfg, int cmp_size)
 }
 
 
-/* TODO: doc string */
+/**
+ * @brief internal data compression function
+ * This function can compress all types of collection data (one at a time).
+ * This function does not take the header of a collection into account.
+ *
+ * @param cfg	pointer to a compression configuration
+ *
+ * @note the validity of the cfg structure is checked before the compression is
+ *	 started
+ *
+ * @returns the bit length of the bitstream on success; negative on error,
+ *	CMP_ERROR_SMALL_BUF (-2) if the compressed data buffer is too small to
+ *	hold the whole compressed data, CMP_ERROR_HIGH_VALUE (-3) if a data or
+ *	model value is bigger than the max_used_bits parameter
+ */
 
 static int compress_data_internal(const struct cmp_cfg *cfg, int stream_len)
 {
@@ -2131,7 +2147,7 @@ static int compress_data_internal(const struct cmp_cfg *cfg, int stream_len)
 	if (stream_len < 0)
 		return stream_len;
 
-	if (cfg->samples == 0) /* nothing to compress we are done*/
+	if (cfg->samples == 0) /* nothing to compress we are done */
 		return stream_len;
 
 	if (stream_len & 0x7) {
@@ -2286,7 +2302,14 @@ int icu_compress_data(const struct cmp_cfg *cfg)
 }
 
 
-/* TODO: doc string */
+/**
+ * @brief estimate a "good" spillover threshold parameter
+ *
+ * @param golomb_par	Golomb parameter
+ *
+ * @returns a spill over threshold parameter
+ * TODO: tune this calculation for multi escape symbol mechanism
+ */
 
 static uint32_t cmp_guess_good_spill(uint32_t golomb_par)
 {
@@ -2296,26 +2319,52 @@ static uint32_t cmp_guess_good_spill(uint32_t golomb_par)
 }
 
 
-/* TODO: doc string */
+/**
+ * @brief set the compressed collection size field
+ *
+ * @param cmp_col_size_field	pointer to the compressed collection size field
+ * @param cmp_col_size		size of the compressed collection (not including
+ *				the compressed collection header size and the
+ *				size of the compressed collection size field
+ *				itself)
+ *
+ * @returns 0 on success; -1 on failure
+ */
 
-static int set_cmp_col_size(uint8_t *p, int cmp_col_size)
+static int set_cmp_col_size(uint8_t *cmp_col_size_field, int32_t cmp_col_size)
 {
-	uint16_t v = (uint16_t)cmp_col_size;
+	uint16_t const v = cpu_to_be16((uint16_t)cmp_col_size);
 
 	if (cmp_col_size > UINT16_MAX)
 		return -1;
 
-	v -= COLLECTION_HDR_SIZE+CMP_COLLECTION_FILD_SIZE;
-	if (p) {
-		memset(p, v >> 8, 1);
-		memset(p+1, v & 0xFF, 1);
-	}
+	if (cmp_col_size_field)
+		memcpy(cmp_col_size_field, &v, CMP_COLLECTION_FILD_SIZE);
 
 	return 0;
 }
 
 
-/* TODO: doc string */
+/**
+ * @brief compresses a collection (with a collection header followed by data)
+ *
+ * @param col		pointer to a collection header
+ * @param model		pointer to the model to be used for compression, or NULL
+ *			if not applicable
+ * @param updated_model	pointer to the buffer where the updated model will be
+ *			stored, or NULL if not applicable
+ * @param dst		pointer to the buffer where the compressed data will be
+ *			stored, or NULL to only get the compressed data size
+ * @param dst_capacity	the size of the dst buffer in bytes
+ * @param cfg		pointer to a compression configuration
+ * @param dst_size	the already used size of the dst buffer in bytes
+ *
+ * @returns the size of the compressed data in bytes (new dst_size) on
+ *	success; negative on error, CMP_ERROR_SMALL_BUF (-2) if the compressed
+ *	data buffer is too small to hold the whole compressed data; the
+ *	compressed and updated model are only valid on positive return
+ *	values
+ */
 
 static int32_t cmp_collection(uint8_t *col, uint8_t *model, uint8_t *updated_model,
 			      uint32_t *dst, uint32_t dst_capacity,
@@ -2394,13 +2443,34 @@ static int32_t cmp_collection(uint8_t *col, uint8_t *model, uint8_t *updated_mod
 	}
 
 	dst_size = (int32_t)cmp_bit_to_byte((unsigned int)dst_size_bits); /*TODO: fix casts */
-	if (dst && cfg->cmp_mode != CMP_MODE_RAW)
-		if (set_cmp_col_size((uint8_t *)dst+dst_size_begin, dst_size-dst_size_begin))
+	if (dst && cfg->cmp_mode != CMP_MODE_RAW) {
+		int32_t cmp_col_size = dst_size - dst_size_begin -
+			COLLECTION_HDR_SIZE - CMP_COLLECTION_FILD_SIZE;
+
+		if (set_cmp_col_size((uint8_t *)dst+dst_size_begin, cmp_col_size))
 			return -1;
+	}
 
 	return dst_size;
 }
 
+
+/**
+ * @brief builds a compressed entity header for a compressed chunk
+ *
+ * @param ent			start address of the compression entity header
+ *				(can be NULL if you only want the entity header
+ *				size)
+ * @param chunk_size		the original size of the chunk in bytes
+ * @param cfg			pointer to the compression configuration used to
+ *				compress the chunk
+ * @param start_timestamp	the start timestamp of the chunk compression
+ * @param cmp_ent_size_byte	the size of the compression entity (entity
+ *				header plus compressed data)
+ *
+ * @return the size of the compressed entity header in bytes, or -1 if an error
+ *	occurred
+ */
 
 static int cmp_ent_build_chunk_header(struct cmp_entity *ent, uint32_t chunk_size,
 				      const struct cmp_cfg *cfg, uint64_t start_timestamp,
@@ -2446,13 +2516,25 @@ static int cmp_ent_build_chunk_header(struct cmp_entity *ent, uint32_t chunk_siz
 		if (err)
 			return -1;
 	}
-	return NON_IMAGETTE_HEADER_SIZE;
+
+	if (cfg->cmp_mode == CMP_MODE_RAW)
+		return GENERIC_HEADER_SIZE;
+	else
+		return NON_IMAGETTE_HEADER_SIZE;
 }
 
 
-/* TODO: doc string; ref document */
+/**
+ * @brief map a sub-service to a chunk service according to
+ *	DetailedBudgetWorking_2023-10-11
+ *
+ * @param subservice	subservice of a science data product
+ *
+ * @returns the chunk type of the subservice on success, CHUNK_TYPE_UNKNOWN on
+ *	failure
+ */
 
-static enum chunk_type get_chunk_type(uint16_t subservice)
+static enum chunk_type get_chunk_type(uint8_t subservice)
 {
 	enum chunk_type chunk_type = CHUNK_TYPE_UNKNOWN;
 
@@ -2504,14 +2586,33 @@ static enum chunk_type get_chunk_type(uint16_t subservice)
 }
 
 
+/**
+ * @brief get the chunk_type of a collection
+ *
+ * @param col	pointer to a collection header
+ *
+ * @returns chunk type of the collection
+ */
+
 static enum chunk_type cmp_col_get_chunk_type(const struct collection_hdr *col)
 {
 	return get_chunk_type(cmp_col_get_subservice(col));
 }
 
 
-static int read_in_cmp_par(const struct cmp_par *par, enum chunk_type chunk_type,
-			   struct cmp_cfg *cfg)
+/**
+ * @brief Set the compression configuration from the compression parameters
+ *	based on the chunk type
+ *
+ * @param[in] par		pointer to a compression parameters struct
+ * @param[in] chunk_type	the type of the chunk to be compressed
+ * @param[out] cfg		pointer to a compression configuration
+ *
+ * @returns 0 success; -1 on failure
+ */
+
+static int init_cmp_cfg_from_cmp_par(const struct cmp_par *par, enum chunk_type chunk_type,
+				     struct cmp_cfg *cfg)
 {
 	memset(cfg, 0, sizeof(struct cmp_cfg));
 
@@ -2616,17 +2717,19 @@ void compress_chunk_init(uint64_t(return_timestamp)(void), uint32_t version_id)
  *				buffer for in-place update or NULL if updated
  *				model is not needed)
  * @param dst			destination pointer to the compressed data
- *				buffer; has to be 4-byte aligned (can be NULL)
+ *				buffer; has to be 4-byte aligned; can be NULL to
+ *				only get the compressed data size
  * @param dst_capacity		capacity of the dst buffer;  it's recommended to
  *				provide a dst_capacity >=
  *				compress_chunk_cmp_size_bound(chunk, chunk_size)
  *				as it eliminates one potential failure scenario:
  *				not enough space in the dst buffer to write the
- *				compressed data; size is round down to a multiple
- *				of 4
+ *				compressed data; size is internally round down
+ *				to a multiple of 4
  * @returns the byte size of the compressed_data buffer on success; negative on
  *	error, CMP_ERROR_SMALL_BUF (-2) if the compressed data buffer is too
- *	small to hold the whole compressed data
+ *	small to hold the whole compressed data; the compressed and updated
+ *	model are only valid on non negative return values
  */
 
 int32_t compress_chunk(void *chunk, uint32_t chunk_size,
@@ -2655,11 +2758,12 @@ int32_t compress_chunk(void *chunk, uint32_t chunk_size,
 		return -1;
 	}
 
+	chunk_type = cmp_col_get_chunk_type(col);
+	if (init_cmp_cfg_from_cmp_par(cmp_par, chunk_type, &cfg))
+		return -1;
+
 	/* we will build the compression header after the compression of the chunk */
-	if (cmp_par->cmp_mode == CMP_MODE_RAW)
-		cmp_size_byte = GENERIC_HEADER_SIZE;
-	else
-		cmp_size_byte = NON_IMAGETTE_HEADER_SIZE;
+	cmp_size_byte = cmp_ent_build_chunk_header(NULL, chunk_size, &cfg, start_timestamp, 0);
 	if (dst) {
 		if (dst_capacity < (uint32_t)cmp_size_byte) {
 			debug_print("Error: The destination capacity is smaller than the minimum compression entity size.");
@@ -2667,10 +2771,6 @@ int32_t compress_chunk(void *chunk, uint32_t chunk_size,
 		}
 		memset(dst, 0, (uint32_t)cmp_size_byte);
 	}
-
-	chunk_type = cmp_col_get_chunk_type(col);
-	if (read_in_cmp_par(cmp_par, chunk_type, &cfg))
-		return -1;
 
 	for (read_bytes = 0;
 	     read_bytes < chunk_size - COLLECTION_HDR_SIZE;
@@ -2747,7 +2847,7 @@ uint32_t compress_chunk_cmp_size_bound(const void *chunk, size_t chunk_size)
 		return 0;
 	}
 
-	return COMPRESS_CHUNK_BOUND((uint32_t)chunk_size, num_col);
+	return (uint32_t)COMPRESS_CHUNK_BOUND(chunk_size, num_col);
 }
 
 
@@ -2765,13 +2865,11 @@ uint32_t compress_chunk_cmp_size_bound(const void *chunk, size_t chunk_size)
  * @returns 0 on success, otherwise error
  */
 
-int compress_chunk_set_model_id_and_counter(uint32_t *dst, int dst_size,
+int compress_chunk_set_model_id_and_counter(void *dst, int dst_size,
 					    uint16_t model_id, uint8_t model_counter)
 {
-	if (dst_size < NON_IMAGETTE_HEADER_SIZE)
+	if (dst_size < GENERIC_HEADER_SIZE)
 		return 1;
 
-	return cmp_ent_set_model_id((struct cmp_entity *)dst, model_id) ||
-		cmp_ent_set_model_counter((struct cmp_entity *)dst, model_counter);
-
+	return cmp_ent_set_model_id(dst, model_id) || cmp_ent_set_model_counter(dst, model_counter);
 }

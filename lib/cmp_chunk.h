@@ -149,17 +149,19 @@ void compress_chunk_init(uint64_t(return_timestamp)(void), uint32_t version_id);
  *				buffer for in-place update or NULL if updated
  *				model is not needed)
  * @param dst			destination pointer to the compressed data
- *				buffer; has to be 4-byte aligned (can be NULL)
+ *				buffer; has to be 4-byte aligned; can be NULL to
+ *				only get the compressed data size
  * @param dst_capacity		capacity of the dst buffer;  it's recommended to
  *				provide a dst_capacity >=
  *				compress_chunk_cmp_size_bound(chunk, chunk_size)
  *				as it eliminates one potential failure scenario:
  *				not enough space in the dst buffer to write the
- *				compressed data; size is round down to a multiple
- *				of 4
+ *				compressed data; size is internally round down
+ *				to a multiple of 4
  * @returns the byte size of the compressed_data buffer on success; negative on
  *	error, CMP_ERROR_SMALL_BUF (-2) if the compressed data buffer is too
- *	small to hold the whole compressed data
+ *	small to hold the whole compressed data; the compressed and updated
+ *	model are only valid on positive return values
  */
 
 int32_t compress_chunk(void *chunk, uint32_t chunk_size,
@@ -182,7 +184,7 @@ int32_t compress_chunk(void *chunk, uint32_t chunk_size,
  * @returns 0 on success, otherwise error
  */
 
-int compress_chunk_set_model_id_and_counter(uint32_t *dst, int dst_size,
+int compress_chunk_set_model_id_and_counter(void *dst, int dst_size,
 					    uint16_t model_id, uint8_t model_counter);
 
 #endif /* CMP_CHUNK_H */

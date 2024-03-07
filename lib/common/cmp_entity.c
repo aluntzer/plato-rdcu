@@ -1637,28 +1637,24 @@ uint16_t cmp_ent_get_non_ima_cmp_par6(const struct cmp_entity *ent)
 void *cmp_ent_get_data_buf(struct cmp_entity *ent)
 {
 	enum cmp_data_type data_type;
+	void *data_ptr;
 
 	if (!ent)
 		return NULL;
 
 	data_type = cmp_ent_get_data_type(ent);
-	if (data_type == DATA_TYPE_UNKNOWN) {
-		debug_print("Error: Compression data type not supported.");
-		return NULL;
-	}
-
-	if (cmp_ent_get_data_type_raw_bit(ent))
-		return (uint8_t *)ent + GENERIC_HEADER_SIZE;
 
 	switch (data_type) {
 	case DATA_TYPE_IMAGETTE:
 	case DATA_TYPE_SAT_IMAGETTE:
 	case DATA_TYPE_F_CAM_IMAGETTE:
-		return ent->ima.ima_cmp_dat;
+		data_ptr = ent->ima.ima_cmp_dat;
+		break;
 	case DATA_TYPE_IMAGETTE_ADAPTIVE:
 	case DATA_TYPE_SAT_IMAGETTE_ADAPTIVE:
 	case DATA_TYPE_F_CAM_IMAGETTE_ADAPTIVE:
-		return ent->ima.ap_ima_cmp_data;
+		data_ptr = ent->ima.ap_ima_cmp_data;
+		break;
 	case DATA_TYPE_OFFSET:
 	case DATA_TYPE_BACKGROUND:
 	case DATA_TYPE_SMEARING:
@@ -1677,13 +1673,19 @@ void *cmp_ent_get_data_buf(struct cmp_entity *ent)
 	case DATA_TYPE_F_CAM_OFFSET:
 	case DATA_TYPE_F_CAM_BACKGROUND:
 	case DATA_TYPE_CHUNK:
-		return ent->non_ima.cmp_data;
-	/* LCOV_EXCL_START */
+		data_ptr = ent->non_ima.cmp_data;
+		break;
 	case DATA_TYPE_UNKNOWN:
 	default:
+		debug_print("Error: Compression data type not supported.");
 		return NULL;
-	/* LCOV_EXCL_STOP */
 	}
+
+	/* the uncompressed data do not have a specific entity header */
+	if (cmp_ent_get_data_type_raw_bit(ent))
+		return (uint8_t *)ent + GENERIC_HEADER_SIZE;
+
+	return data_ptr;
 }
 
 
@@ -2387,7 +2389,7 @@ static void cmp_ent_parese_adaptive_imagette_header(const struct cmp_entity *ent
 
 
 /**
- * @brief parse the non imagette specific compressed entity header
+ * @brief parse the non-imagette specific compressed entity header
  *
  * @param ent	pointer to a compression entity
  */

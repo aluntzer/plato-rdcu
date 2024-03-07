@@ -132,7 +132,6 @@ int rdcu_supported_cmp_mode_is_used(enum cmp_mode cmp_mode)
 	default:
 		return 0;
 	}
-
 }
 
 

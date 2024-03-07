@@ -368,7 +368,14 @@ int cmp_col_set_data_length(struct collection_hdr *col, uint16_t length)
 }
 
 
-/* TODO: doc string */
+/**
+ * @brief converts a subservice to its associated compression data type
+ *
+ * @param subservice	collection subservice type
+ *
+ * @returns the converted compression data type; DATA_TYPE_UNKNOWN if the
+ *	subservice is unknown
+ */
 
 enum cmp_data_type convert_subservice_to_cmp_data_type(uint8_t subservice)
 {
@@ -419,9 +426,15 @@ enum cmp_data_type convert_subservice_to_cmp_data_type(uint8_t subservice)
 }
 
 
-/* TODO: doc string */
+/**
+ * @brief converts a compression data type to its associated subservice.
+ *
+ * @param data_type	compression data type
+ *
+ * @returns the converted subservice; -1 if the data type is unknown.
+ */
 
-uint8_t convert_data_type_to_subservice(enum cmp_data_type data_type)
+uint8_t convert_cmp_data_type_to_subservice(enum cmp_data_type data_type)
 {
 	uint8_t sst = 0;
 
@@ -846,7 +859,20 @@ static void be_to_cpus_f_fx_efx_ncob_ecob(struct f_fx_efx_ncob_ecob *a, uint32_t
 }
 
 
-/* TODO: doc string */
+/**
+ * @brief swaps the endianness of (collection) data from big endian to the CPU
+ *	endianness (or vice versa) in place.
+ * @note if you want to swap the data of a whole collection, including a
+ *	collection header or a chunk of collections use the be_to_cpu_chunk() or
+ *	cpu_to_be_chunk() functions
+ *
+ * @param data			a pointer to the data to swap (not including a
+ *				collection header); can be NULL
+ * @param data_size_byte	size of the data in bytes
+ * @param data_type		compression data type
+ *
+ * @returns 0 on success; -1 on failure
+ */
 
 int be_to_cpu_data_type(void *data, uint32_t data_size_byte, enum cmp_data_type data_type)
 {
@@ -924,24 +950,34 @@ int be_to_cpu_data_type(void *data, uint32_t data_size_byte, enum cmp_data_type 
 	case DATA_TYPE_F_FX_EFX_NCOB_ECOB:
 		be_to_cpus_f_fx_efx_ncob_ecob(data, samples);
 		break;
+	/* LCOV_EXCL_START */
 	case DATA_TYPE_UNKNOWN:
 	default:
 		debug_print("Error: Can not swap endianness for this compression data type.");
 		return -1;
+	/* LCOV_EXCL_STOP */
 	}
 
 	return 0;
 }
 
 
-/* we do not convert the endianness of the collection header */
-/* TODO: doc string */
+/**
+ * @brief swaps the endianness of chunk data from big endian to the CPU
+ *	endianness (or vice versa) in place
+ * @note the endianness of the collection header is not changed!
+ *
+ * @param chunk		pointer to a chunk of collections (can be NULL)
+ * @param chunk_size	size in bytes of the chunk
+ *
+ * @returns 0 on success; -1 on failure
+ */
 
 int be_to_cpu_chunk(uint8_t *chunk, size_t chunk_size)
 {
 	uint8_t *col_p = chunk;
 
-	if (!chunk)
+	if (!chunk) /* nothing to do */
 		return 0;
 
 	if (chunk_size < COLLECTION_HDR_SIZE)
