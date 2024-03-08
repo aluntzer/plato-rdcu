@@ -2773,7 +2773,7 @@ int32_t compress_chunk(void *chunk, uint32_t chunk_size,
 	}
 
 	for (read_bytes = 0;
-	     read_bytes < chunk_size - COLLECTION_HDR_SIZE;
+	     read_bytes <= chunk_size - COLLECTION_HDR_SIZE;
 	     read_bytes += cmp_col_get_size(col)) {
 		uint8_t *col_model = NULL;
 		uint8_t *col_up_model = NULL;
