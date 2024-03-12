@@ -1974,8 +1974,9 @@ static int cmp_ent_read_header(struct cmp_entity *ent, struct cmp_cfg *cfg)
 		return -1;
 
 	cfg->data_type = cmp_ent_get_data_type(ent);
-	if (cmp_data_type_is_invalid(cfg->data_type)) {
-		debug_print("Error: Compression data type not supported.\n");
+	/* the compression entity data type field only supports imagette or chunk data types */
+	if (cfg->data_type != DATA_TYPE_CHUNK && !rdcu_supported_data_type_is_used(cfg->data_type)) {
+		debug_print("Error: Compression entity data type not supported.");
 		return -1;
 	}
 

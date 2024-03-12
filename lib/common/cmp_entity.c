@@ -1861,23 +1861,7 @@ int cmp_ent_write_cmp_pars(struct cmp_entity *ent, const struct cmp_cfg *cfg,
 		if (cmp_ent_set_ima_golomb_par(ent, cfg->golomb_par))
 			return -1;
 		break;
-	case DATA_TYPE_OFFSET:
-	case DATA_TYPE_F_CAM_OFFSET:
-	case DATA_TYPE_BACKGROUND:
-	case DATA_TYPE_F_CAM_BACKGROUND:
-	case DATA_TYPE_SMEARING:
-	case DATA_TYPE_S_FX:
-	case DATA_TYPE_S_FX_EFX:
-	case DATA_TYPE_S_FX_NCOB:
-	case DATA_TYPE_S_FX_EFX_NCOB_ECOB:
-	case DATA_TYPE_L_FX:
-	case DATA_TYPE_L_FX_EFX:
-	case DATA_TYPE_L_FX_NCOB:
-	case DATA_TYPE_L_FX_EFX_NCOB_ECOB:
-	case DATA_TYPE_F_FX:
-	case DATA_TYPE_F_FX_EFX:
-	case DATA_TYPE_F_FX_NCOB:
-	case DATA_TYPE_F_FX_EFX_NCOB_ECOB:
+	case DATA_TYPE_CHUNK:
 		if (cmp_ent_set_non_ima_cmp_par1(ent, cfg->cmp_par_1))
 			return -1;
 		if (cmp_ent_set_non_ima_spill1(ent, cfg->spill_par_1))
@@ -1909,6 +1893,24 @@ int cmp_ent_write_cmp_pars(struct cmp_entity *ent, const struct cmp_cfg *cfg,
 			return -1;
 
 		break;
+	/* the compression entity data type field only supports imagette or chunk data types*/
+	case DATA_TYPE_OFFSET:
+	case DATA_TYPE_F_CAM_OFFSET:
+	case DATA_TYPE_BACKGROUND:
+	case DATA_TYPE_F_CAM_BACKGROUND:
+	case DATA_TYPE_SMEARING:
+	case DATA_TYPE_S_FX:
+	case DATA_TYPE_S_FX_EFX:
+	case DATA_TYPE_S_FX_NCOB:
+	case DATA_TYPE_S_FX_EFX_NCOB_ECOB:
+	case DATA_TYPE_L_FX:
+	case DATA_TYPE_L_FX_EFX:
+	case DATA_TYPE_L_FX_NCOB:
+	case DATA_TYPE_L_FX_EFX_NCOB_ECOB:
+	case DATA_TYPE_F_FX:
+	case DATA_TYPE_F_FX_EFX:
+	case DATA_TYPE_F_FX_NCOB:
+	case DATA_TYPE_F_FX_EFX_NCOB_ECOB:
 	case DATA_TYPE_UNKNOWN:
 	default:
 		return -1;
