@@ -859,7 +859,7 @@ int be_to_cpu_data_type(void *data, uint32_t data_size_byte, enum cmp_data_type 
 	}
 	samples = data_size_byte / sample_size;
 
-#if (__BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__)
+#ifdef __LITTLE_ENDIAN
 	switch (data_type) {
 	case DATA_TYPE_IMAGETTE:
 	case DATA_TYPE_IMAGETTE_ADAPTIVE:
@@ -921,7 +921,7 @@ int be_to_cpu_data_type(void *data, uint32_t data_size_byte, enum cmp_data_type 
 		debug_print("Error: Can not swap endianness for this compression data type.");
 		return -1;
 	}
-#endif /*__BYTE_ORDER__ */
+#endif /* __LITTLE_ENDIAN */
 
 	return 0;
 }
