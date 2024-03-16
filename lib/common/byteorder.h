@@ -56,7 +56,7 @@
 #ifndef __BIG_ENDIAN
 #  if defined(__BYTE_ORDER__) && defined(__ORDER_BIG_ENDIAN__) && (__BYTE_ORDER__ == __ORDER_BIG_ENDIAN__)
 #    define __BIG_ENDIAN 4321
-#  elif defined(__clang__) && __BIG_ENDIAN__
+#  elif defined(__clang__) && defined(__BIG_ENDIAN__)
 #    define __BIG_ENDIAN 4321
 #  elif defined(__sparc__)
 #    define __BIG_ENDIAN 4321
@@ -66,7 +66,7 @@
 #ifndef __LITTLE_ENDIAN
 #  if defined(__BYTE_ORDER__) && defined(__ORDER_LITTLE_ENDIAN__) && (__BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__)
 #    define __LITTLE_ENDIAN 1234
-#  elif defined(__clang__) && __LITTLE_ENDIAN__
+#  elif defined(__clang__) & defined(__LITTLE_ENDIAN__)
 #    define __LITTLE_ENDIAN 1234
 #  elif defined(_MSC_VER) && (_M_AMD64 || _M_IX86)
 #    define __LITTLE_ENDIAN 1234

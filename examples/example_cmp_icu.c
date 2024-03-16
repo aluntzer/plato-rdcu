@@ -39,7 +39,7 @@
 #define MODEL_COUNTER 1
 
 
-int demo_icu_compression(void) {
+static int demo_icu_compression(void) {
 	struct cmp_cfg example_cfg;
 	struct cmp_entity *cmp_entity = NULL;
 	uint32_t i, cmp_buf_size, entity_buf_size, entity_size;

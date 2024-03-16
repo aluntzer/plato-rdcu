@@ -2172,10 +2172,12 @@ static time_t my_timegm(struct tm *tm)
 uint64_t cmp_ent_create_timestamp(const struct timespec *ts)
 {
 	struct tm epoch_date = PLATO_EPOCH_DATE;
-	struct timespec epoch = { my_timegm(&epoch_date), 0 };
+	struct timespec epoch = {0, 0 };
 	struct timespec now = { 0, 0 };
 	double seconds;
 	uint64_t coarse, fine;
+
+	epoch.tv_sec = my_timegm(&epoch_date);
 
 	/* LCOV_EXCL_START */
 	/* if time cannot be represented as a time_t object epoch.tv_sec = -1 */

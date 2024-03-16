@@ -1,0 +1,1 @@
+lcov_excl_br_line = LCOV_EXCL_BR_LINE|cpu_to_be16|cpu_to_be32|cpu_to_be64|be16_to_cpu|be32_to_cpu|be64_to_cpu

@@ -26,6 +26,12 @@
 #include "cmp_data_types.h"
 
 
+#ifdef __BIG_ENDIAN
+#  define CMP_IS_BIG_ENDIAN 1
+#else
+#  define CMP_IS_BIG_ENDIAN 0
+#endif
+
 /**
  * @brief get the collection timestamp from the collection header
  *
@@ -859,7 +865,9 @@ int be_to_cpu_data_type(void *data, uint32_t data_size_byte, enum cmp_data_type 
 	}
 	samples = data_size_byte / sample_size;
 
-#ifdef __LITTLE_ENDIAN
+	if (CMP_IS_BIG_ENDIAN)
+		return 0;
+
 	switch (data_type) {
 	case DATA_TYPE_IMAGETTE:
 	case DATA_TYPE_IMAGETTE_ADAPTIVE:
@@ -921,7 +929,6 @@ int be_to_cpu_data_type(void *data, uint32_t data_size_byte, enum cmp_data_type 
 		debug_print("Error: Can not swap endianness for this compression data type.");
 		return -1;
 	}
-#endif /* __LITTLE_ENDIAN */
 
 	return 0;
 }

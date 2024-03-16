@@ -33,6 +33,7 @@
 
 #include "read_bitstream.h"
 #include "cmp_max_used_bits_list.h"
+#include "../decmp.h"
 #include "../common/cmp_debug.h"
 #include "../common/cmp_support.h"
 #include "../common/cmp_entity.h"

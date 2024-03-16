@@ -4,6 +4,7 @@
 #include <string.h>
 
 #include "pcg_basic.h"
+#include "test_common.h"
 
 #include <unity.h>
 
