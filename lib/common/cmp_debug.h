@@ -23,19 +23,23 @@
 /* DEBUGLEVEL should be externally defined, usually via the compiler command
  * line.  Its value must be a numeric value. */
 #ifndef DEBUGLEVEL
-#  define DEBUGLEVEL 0
+#  ifdef DEBUG
+#    define DEBUGLEVEL 1
+#  else
+#    define DEBUGLEVEL 0
+#  endif
 #endif
 
 
 #define PRINT_BUFFER_SIZE 256
 
 __extension__
-#if (defined(DEBUG) || DEBUGLEVEL > 0)
+#if (DEBUGLEVEL > 0)
 #  define debug_print(...) cmp_debug_print_impl(__VA_ARGS__)
+void cmp_debug_print_impl(const char *fmt, ...);
 #else
 #  define debug_print(...) do {} while (0)
 #endif
 
-void cmp_debug_print_impl(const char *fmt, ...);
 
 #endif /* CMP_DEBUG_H */

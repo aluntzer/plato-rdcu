@@ -27,6 +27,8 @@
  *        reentrant!
  */
 
+#if (DEBUGLEVEL > 0)
+
 #include <stdbool.h>
 #include <stdint.h>
 #include <stddef.h>
@@ -883,3 +885,4 @@ int my_vsnprintf(char* buffer, size_t count, const char* format, va_list va)
 	return _vsnprintf(_out_buffer, buffer, count, format, va);
 }
 
+#endif /* (DEBUGLEVEL > 0) */

@@ -16,6 +16,7 @@
  * @brief compression/decompression debugging printing functions
  */
 
+#if (DEBUGLEVEL > 0)
 
 #ifndef ICU_ASW
 #  include <stdio.h>
@@ -85,3 +86,5 @@ void cmp_debug_print_impl(const char *fmt, ...)
 
 	cmp_debug_puts(print_buffer);
 }
+
+#endif /* (DEBUGLEVEL > 0) */

@@ -20,6 +20,8 @@
 #ifndef VSNPRINTF_H
 #define VSNPRINTF_H
 
+#if (DEBUGLEVEL > 0)
 int my_vsnprintf(char* buffer, size_t count, const char* format, va_list va);
+#endif
 
 #endif /* VSNPRINTF_H */
