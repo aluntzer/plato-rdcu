@@ -57,18 +57,22 @@ static int interrupt_signal_enabled = RDCU_INTR_SIG_DEFAULT;
 
 static void rdcu_syncing(void)
 {
+#if 1
+
 	int cnt = 0;
-	printf("syncing...");
+
+	debug_print("syncing...");
 	while (rdcu_rmap_sync_status()) {
-		printf("pending: %d\n", rdcu_rmap_sync_status());
+		debug_print("pending: %d", rdcu_rmap_sync_status());
 
 		if (cnt++ > 10) {
-			printf("aborting; de");
+			debug_print("aborting; de-");
 			break;
 		}
 
 	}
-	printf("synced\n");
+	debug_print("synced");
+#endif
 }
 
 
@@ -509,7 +513,7 @@ int rdcu_inject_edac_error(const struct cmp_cfg *cfg, uint32_t addr)
 		return -1;
 
 	/* disable edac */
-	for (sub_chip_die_addr = 1; sub_chip_die_addr <= 4; sub_chip_die_addr ++) {
+	for (sub_chip_die_addr = 1; sub_chip_die_addr <= 4; sub_chip_die_addr++) {
 		rdcu_edac_set_sub_chip_die_addr(sub_chip_die_addr);
 		rdcu_edac_set_ctrl_reg_write_op();
 		rdcu_edac_set_bypass();
@@ -538,8 +542,8 @@ int rdcu_inject_edac_error(const struct cmp_cfg *cfg, uint32_t addr)
 		/* It looks like there is a bug when displaying the bypass status of the 2. and 4. SRAM chip. */
 		if (2 != sub_chip_die_addr && 4 != sub_chip_die_addr)
 #endif
-			if (0 == rdcu_edac_get_bypass_status()) {
-				printf("Error: bypass status unexpected !\n");
+			if (rdcu_edac_get_bypass_status() == 0) {
+				debug_print("Error: bypass status unexpected!");
 				return -1;
 			}
 	}
@@ -566,7 +570,7 @@ int rdcu_inject_edac_error(const struct cmp_cfg *cfg, uint32_t addr)
 
 
 	/* enable edac again */
-	for (sub_chip_die_addr = 1; sub_chip_die_addr <= 4; sub_chip_die_addr ++) {
+	for (sub_chip_die_addr = 1; sub_chip_die_addr <= 4; sub_chip_die_addr++) {
 		if (rdcu_edac_set_sub_chip_die_addr(sub_chip_die_addr))
 			return -1;
 		rdcu_edac_set_ctrl_reg_write_op();
