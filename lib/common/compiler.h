@@ -38,13 +38,6 @@
 
 
 /**
- * Compile time check usable outside of function scope.
- * Stolen from Linux (hpi_internal.h)
- */
-#define compile_time_assert(cond, msg) typedef char ASSERT_##msg[(cond) ? 1 : -1]
-
-
-/**
  * same with the stuff below
  */
 
@@ -84,7 +77,7 @@
     ((b) > maximum_unsigned_value_of_type(a) - (a))
 
 
-#define __get_unaligned_t(type, ptr) __extension__ ({								\
+#define __get_unaligned_t(type, ptr) __extension__ ({						\
 	const struct { type x; } __attribute__((packed)) *__pptr = (__typeof__(__pptr))(ptr);	\
 	__pptr->x;										\
 })
@@ -127,7 +120,7 @@
  * It also tries to prevent the actual use of the "unused" variables.
  */
 
-#if GNUC_PREREQ(4, 5)
+#if GNUC_PREREQ(4, 5) || defined(__clang__)
 #define UNUSED __attribute__((unused)) \
 	__attribute__((deprecated ("parameter declared as UNUSED")))
 #elif defined(__GNUC__)
@@ -136,7 +129,6 @@
 #else
 #define UNUSED
 #endif
-
 
 
 /**
@@ -152,5 +144,13 @@
 #else
 #define MAYBE_UNUSED
 #endif
+
+
+/**
+ * Compile time check usable outside of function scope.
+ * Stolen from Linux (hpi_internal.h)
+ */
+#define compile_time_assert(cond, msg) UNUSED typedef char ASSERT_##msg[(cond) ? 1 : -1]
+
 
 #endif /* COMPILER_H */

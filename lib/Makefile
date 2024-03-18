@@ -20,6 +20,10 @@ lib-release:
 $(V)$(VERBOSE).SILENT:
 
 COMMON_FILES := $(sort $(wildcard common/*.c))
+ifneq (,$(findstring $(DEBUGLEVEL), 0))
+	DEBUG_FILES := common/vsnprintf.c common/cmp_debug.c
+	COMMON_FILES := $(filter-out $(DEBUG_FILES), $(COMMON_FILES))
+endif
 ICU_COMPRESS_FILES := $(sort $(wildcard icu_compress/*.c))
 RDCU_COMPRESS_FILES := $(sort $(wildcard rdcu_compress/*.c))
 DECOMPRESS_FILES := $(sort $(wildcard decompress/*.c))

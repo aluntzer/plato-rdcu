@@ -13,7 +13,7 @@
  * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
  * more details.
  *
- * @brief compression/decompression debugging defines
+ * @brief compression/decompression debugging printing functions
  */
 
 #ifndef CMP_DEBUG_H
@@ -23,20 +23,23 @@
 /* DEBUGLEVEL should be externally defined, usually via the compiler command
  * line.  Its value must be a numeric value. */
 #ifndef DEBUGLEVEL
-#  define DEBUGLEVEL 0
+#  ifdef DEBUG
+#    define DEBUGLEVEL 1
+#  else
+#    define DEBUGLEVEL 0
+#  endif
 #endif
 
-#if !defined(ICU_ASW) && (defined(DEBUG) || DEBUGLEVEL > 0)
-	#include <stdio.h>
-	__extension__
-	#define debug_print(...)			\
-		do {					\
-			fprintf(stderr, __VA_ARGS__);	\
-			fprintf(stderr, "\n");		\
-		} while (0)
+
+#define PRINT_BUFFER_SIZE 256
+
+__extension__
+#if (DEBUGLEVEL > 0)
+#  define debug_print(...) cmp_debug_print_impl(__VA_ARGS__)
+void cmp_debug_print_impl(const char *fmt, ...);
 #else
-	#define debug_print(...) \
-		do {} while (0)
+#  define debug_print(...) do {} while (0)
 #endif
+
 
 #endif /* CMP_DEBUG_H */
