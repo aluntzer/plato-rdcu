@@ -571,7 +571,7 @@ struct rmap_pkt *rmap_pkt_from_buffer(uint8_t *buf, uint32_t len)
 		size_t pkt_size = RMAP_DATA_START + n + pkt->data_len + 1; /* +1 for data CRC */
 
 		if (len < pkt_size) {
-			debug_print("buffer len is smaller than the contained RMAP packet; buf len: %" PRIu32 " bytes vs RMAP: %zu bytes needed",
+			debug_print("buffer len is smaller than the contained RMAP packet; buf len: %" PRIu32 " bytes vs RMAP: %lu bytes needed",
 				len, pkt_size);
 			goto error;
 		}

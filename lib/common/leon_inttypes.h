@@ -49,6 +49,8 @@
 #  define PRIX32 "lX"
 #endif /*PRIX32*/
 
+#if 0
+/* sparc-elf-gcc (BCC 4.4.2 release 1.0.50) does not support printf for long long types */
 #ifndef PRId64
 #  define PRId64 "lld"
 #endif /*PRId64*/
@@ -72,6 +74,7 @@
 #ifndef PRIX64
 #  define PRIX64 "llX"
 #endif /*PRIX64*/
+#endif
 
 #endif /* __sparc__ */
 

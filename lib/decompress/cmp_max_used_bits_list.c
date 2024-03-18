@@ -24,6 +24,7 @@
 
 #include "../common/list.h"
 #include "../common/cmp_max_used_bits.h"
+#include "cmp_max_used_bits_list.h"
 
 
 struct list_item {

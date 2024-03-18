@@ -23,6 +23,7 @@
 #include <stddef.h>
 
 #include "../common/compiler.h"
+#include "../common/byteorder.h"
 
 /**
  * valid RMAP command codes, see Table 5-1 of ECSS‐E‐ST‐50‐52C
@@ -142,12 +143,12 @@
 
 __extension__
 struct rmap_instruction {
-#if (__BYTE_ORDER__ == __ORDER_BIG_ENDIAN__)
+#ifdef __BIG_ENDIAN
 	uint8_t	reserved:1;
 	uint8_t	cmd_resp:1;
 	uint8_t cmd:4;
 	uint8_t	reply_addr_len:2;
-#elif (__BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__)
+#elif defined (__LITTLE_ENDIAN)
 	uint8_t	reply_addr_len:2;
 	uint8_t cmd:4;
 	uint8_t	cmd_resp:1;

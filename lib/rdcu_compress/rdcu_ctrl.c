@@ -1653,9 +1653,9 @@ int rdcu_write_sram_16(const uint16_t *buf, uint32_t addr, uint32_t size)
 	if (addr + size > RDCU_SRAM_START + RDCU_SRAM_SIZE)
 		return -1;
 
-#if !(__BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__)
+#ifdef __BIG_ENDIAN
 	return rdcu_write_sram(buf, addr, size);
-#else
+#elif defined(__LITTLE_ENDIAN)
 	{
 		uint32_t i;
 
@@ -1666,7 +1666,9 @@ int rdcu_write_sram_16(const uint16_t *buf, uint32_t addr, uint32_t size)
 		}
 	}
 	return (int)size; /* lol */
-#endif /* __BYTE_ORDER__ */
+#else
+#error "Unknown byte order!"
+#endif
 }
 
 
@@ -1699,9 +1701,9 @@ int rdcu_write_sram_32(const uint32_t *buf, uint32_t addr, uint32_t size)
 	if (addr + size > RDCU_SRAM_START + RDCU_SRAM_SIZE)
 		return -1;
 
-#if !(__BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__)
+#ifdef __BIG_ENDIAN
 	return rdcu_write_sram(buf, addr, size);
-#else
+#elif defined(__LITTLE_ENDIAN)
 	{
 		uint32_t i;
 
@@ -1712,7 +1714,9 @@ int rdcu_write_sram_32(const uint32_t *buf, uint32_t addr, uint32_t size)
 		}
 	}
 	return (int)size; /* lol */
-#endif /* __BYTE_ORDER__ */
+#else
+#error "Unknown byte order!"
+#endif
 }
 
 

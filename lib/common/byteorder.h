@@ -53,16 +53,30 @@
 #undef __LITTLE_ENDIAN
 #endif
 
-#if defined(__sparc__)
 #ifndef __BIG_ENDIAN
-#define __BIG_ENDIAN 4321
-#endif
+#  if defined(__BYTE_ORDER__) && defined(__ORDER_BIG_ENDIAN__) && (__BYTE_ORDER__ == __ORDER_BIG_ENDIAN__)
+#    define __BIG_ENDIAN 4321
+#  elif defined(__clang__) && defined(__BIG_ENDIAN__)
+#    define __BIG_ENDIAN 4321
+#  elif defined(__sparc__)
+#    define __BIG_ENDIAN 4321
+#  endif
 #endif
 
-#if defined(__i386__) || defined(__x86_64__)
 #ifndef __LITTLE_ENDIAN
-#define __LITTLE_ENDIAN 1234
+#  if defined(__BYTE_ORDER__) && defined(__ORDER_LITTLE_ENDIAN__) && (__BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__)
+#    define __LITTLE_ENDIAN 1234
+#  elif defined(__clang__) & defined(__LITTLE_ENDIAN__)
+#    define __LITTLE_ENDIAN 1234
+#  elif defined(_MSC_VER) && (_M_AMD64 || _M_IX86)
+#    define __LITTLE_ENDIAN 1234
+#  elif defined(__i386__) || defined(__x86_64__)
+#    define __LITTLE_ENDIAN 1234
+#  endif
 #endif
+
+#if defined(__BIG_ENDIAN) == defined(__LITTLE_ENDIAN)
+#error "Unknown byte order!"
 #endif
 
 

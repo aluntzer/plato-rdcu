@@ -1,7 +1,7 @@
 /**
- * @file   decmp.h
+ * @file   cmp_rdcu_testing.h
  * @author Dominik Loidolt (dominik.loidolt@univie.ac.at)
- * @date   2020
+ * @date   2024
  *
  * @copyright GPLv2
  * This program is free software; you can redistribute it and/or modify it
@@ -13,20 +13,18 @@
  * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
  * more details.
  *
- * @brief software decompression library
+ * @brief function to test RDCU compression
+ * @warning not indented for production use; only for testing
  */
 
-#ifndef DECMP_H
-#define DECMP_H
+#ifndef CMP_RDCU_TESTING_H
+#define CMP_RDCU_TESTING_H
 
-#include "common/cmp_entity.h"
-#include "common/cmp_support.h"
+#include "../common/cmp_support.h"
 
-int decompress_cmp_entiy(struct cmp_entity *ent, void *model_of_data,
-			 void *up_model_buf, void *decompressed_data);
+int rdcu_start_compression(void);
+int rdcu_inject_edac_error(const struct cmp_cfg *cfg, uint32_t addr);
+int rdcu_compress_data_parallel(const struct cmp_cfg *cfg,
+				const struct cmp_info *last_info);
 
-int decompress_rdcu_data(uint32_t *compressed_data, const struct cmp_info *info,
-			 uint16_t *model_of_data, uint16_t *up_model_buf,
-			 uint16_t *decompressed_data);
-
-#endif /* DECMP_H */
+#endif /* CMP_RDCU_TESTING_H */

@@ -106,8 +106,15 @@ static const uint32_t BIT_MASK[] = {
 
 static __inline uint64_t bit_read_unaligned_64be(const void *ptr)
 {
+#ifdef __sparc__
+	uint64_t v;
+	memcpy(&v, ptr, sizeof(v));
+	return cpu_to_be64(v);
+
+#else
 	typedef __attribute__((aligned(1))) uint64_t unalign64;
 	return cpu_to_be64(*(const unalign64*)ptr);
+#endif
 }
 
 
@@ -184,7 +191,6 @@ static __inline size_t bit_init_decoder(struct bit_decoder *dec, const void *buf
  *
  * @returns extracted value
  */
-
 static __inline uint64_t bit_peek_bits(const struct bit_decoder *dec, unsigned int nb_bits)
 {
 	/* mask for the shift value register to prevent undefined behaviour */

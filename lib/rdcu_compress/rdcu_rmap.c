@@ -291,7 +291,7 @@ static int rdcu_process_rx(void)
 			uint8_t crc8;
 
 			/* convert endianness in-place if needed */
-#if (__BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__)
+#ifdef __LITTLE_ENDIAN
 			{
 				uint32_t i, tmp;
 
@@ -301,7 +301,7 @@ static int rdcu_process_rx(void)
 					memcpy(&rp->data[i], &tmp, sizeof(tmp));
 				}
 			}
-#endif /* __BYTE_ORDER__ */
+#endif /* __LITTLE_ENDIAN */
 
 			crc8 = rmap_crc8(rp->data, rp->data_len);
 			if (crc8 != rp->data_crc) {
@@ -470,7 +470,7 @@ int rdcu_sync(int (*fn)(uint16_t trans_id, uint8_t *cmd),
 	}
 
 	/* convert endianness if needed */
-#if (__BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__)
+#ifdef __LITTLE_ENDIAN
 	if (data_len) {
 		uint32_t i;
 		uint32_t *tmp_buf = alloca(data_len);
@@ -481,7 +481,7 @@ int rdcu_sync(int (*fn)(uint16_t trans_id, uint8_t *cmd),
 
 		addr = tmp_buf;
 	}
-#endif /* __BYTE_ORDER__ */
+#endif /* __LITTLE_ENDIAN */
 
 	n = rdcu_submit_tx(rmap_cmd, (uint32_t)n, addr, data_len);
 	free(rmap_cmd);
