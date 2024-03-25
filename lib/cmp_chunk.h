@@ -22,6 +22,7 @@
 
 #include "common/cmp_support.h"
 #include "common/cmp_entity.h"
+#include "common/cmp_error_list.h"
 
 
 #define ROUND_UP_TO_4(x) ((((x)+3)/4)*4)
@@ -112,10 +113,11 @@ struct cmp_par {
  *	COMPRESS_CHUNK_BOUND macro for compilation-time evaluation
  *	(stack memory allocation for example)
  *
- * @param chunk		pointer to the chunk you want compress
+ * @param chunk		pointer to the chunk you want to compress
  * @param chunk_size	size of the chunk in bytes
  *
- * @returns maximum compressed size for a chunk compression; 0 on error
+ * @returns maximum compressed size for a chunk compression on success or an
+ *	error code if it fails (which can be tested with cmp_is_error())
  */
 
 uint32_t compress_chunk_cmp_size_bound(const void *chunk, size_t chunk_size);
@@ -129,7 +131,7 @@ uint32_t compress_chunk_cmp_size_bound(const void *chunk, size_t chunk_size);
  *
  * @param return_timestamp	pointer to a function returning a current 48-bit
  *				timestamp
- * @param version_id		version identifier of the applications software
+ * @param version_id		application software version identifier
  */
 
 void compress_chunk_init(uint64_t(return_timestamp)(void), uint32_t version_id);
@@ -156,35 +158,79 @@ void compress_chunk_init(uint64_t(return_timestamp)(void), uint32_t version_id);
  *				compress_chunk_cmp_size_bound(chunk, chunk_size)
  *				as it eliminates one potential failure scenario:
  *				not enough space in the dst buffer to write the
- *				compressed data; size is internally round down
+ *				compressed data; size is internally rounded down
  *				to a multiple of 4
- * @returns the byte size of the compressed_data buffer on success; negative on
- *	error, CMP_ERROR_SMALL_BUF (-2) if the compressed data buffer is too
- *	small to hold the whole compressed data; the compressed and updated
- *	model are only valid on positive return values
+ * @returns the byte size of the compressed data or an error code if it
+ *	fails (which can be tested with cmp_is_error())
  */
 
-int32_t compress_chunk(void *chunk, uint32_t chunk_size,
-		       void *chunk_model, void *updated_chunk_model,
-		       uint32_t *dst, uint32_t dst_capacity,
-		       const struct cmp_par *cmp_par);
+uint32_t compress_chunk(void *chunk, uint32_t chunk_size,
+			void *chunk_model, void *updated_chunk_model,
+			uint32_t *dst, uint32_t dst_capacity,
+			const struct cmp_par *cmp_par);
 
 
 /**
  * @brief set the model id and model counter in the compression entity header
  *
- * @param dst		pointer to the compressed data starting with a
- *			compression entity header
+ * @param dst		pointer to the compressed data (starting with a
+ *			compression entity header)
  * @param dst_size	byte size of the dst buffer
  * @param model_id	model identifier; for identifying entities that originate
  *			from the same starting model
  * @param model_counter	model_counter; counts how many times the model was
  *			updated; for non model mode compression use 0
  *
- * @returns 0 on success, otherwise error
+ * @returns the byte size of the dst buffer (= dst_size) on success or an error
+ *	code if it fails (which can be tested with cmp_is_error())
  */
 
-int compress_chunk_set_model_id_and_counter(void *dst, int dst_size,
-					    uint16_t model_id, uint8_t model_counter);
+uint32_t compress_chunk_set_model_id_and_counter(void *dst, uint32_t dst_size,
+						 uint16_t model_id, uint8_t model_counter);
+
+
+/**
+ * @brief tells if a result is an error code
+ *
+ * @param code	return value to check
+ *
+ * @returns non-zero if the code is an error
+ */
+
+unsigned int cmp_is_error(uint32_t code);
+
+
+/**
+ * @brief provides a readable string from a compression return value (useful for debugging)
+ *
+ * @param code	compression return value to describe
+ *
+ * @returns a pointer to a string literal that describes the error code.
+ */
+
+const char* cmp_get_error_name(uint32_t code);
+
+
+/**
+ * @brief convert a function result into a cmp_error enum
+ *
+ * @param code	compression return value to get the error code
+ *
+ * @returns error code
+ */
+
+enum cmp_error cmp_get_error_code(uint32_t code);
+
+
+/**
+ * @brief get a string describing an error code
+ *
+ * @param code	the error code to describe, obtain with cmp_get_error_code()
+ *
+ * @returns a pointer to a string literal that describes the error code.
+ */
+
+const char* cmp_get_error_string(enum cmp_error code);
+
 
 #endif /* CMP_CHUNK_H */

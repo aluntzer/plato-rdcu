@@ -63,7 +63,7 @@ static int demo_comperss_chunk_1d(void)
 	uint8_t chunk[CHUNK_SIZE] = {0}; /* Do not put large amount of data on the stack! */
 
 	uint32_t *compressed_data;
-	int cmp_size_bytes;
+	uint32_t cmp_size_bytes;
 
 	{	/* build a chunk of a background and an offset collection */
 		struct collection_hdr *col = (struct collection_hdr *)chunk;
@@ -99,11 +99,17 @@ static int demo_comperss_chunk_1d(void)
 		cmp_par.nc_background_mean = 3;
 		cmp_par.nc_background_variance = 4;
 		cmp_par.nc_background_outlier_pixels = 5;
+		/* Only the compression parameters needed to compress offset and
+		 * background collections are set.
+		 */
 
 		/* prepare the buffer for the compressed data */
 		cmp_size_bound = compress_chunk_cmp_size_bound(chunk, CHUNK_SIZE);
-		if (!cmp_size_bound) {
+		if (cmp_is_error(cmp_size_bound)) {
 			printf("Error occurred during compress_chunk_cmp_size_bound()\n");
+			printf("Failed with error code %d: %s\n",
+				cmp_get_error_code(cmp_size_bound),
+				cmp_get_error_name(cmp_size_bound));
 			/* error handling */
 			return -1;
 		}
@@ -117,17 +123,23 @@ static int demo_comperss_chunk_1d(void)
 		cmp_size_bytes = compress_chunk(chunk, CHUNK_SIZE, NULL, NULL,
 						compressed_data, cmp_size_bound,
 						&cmp_par);
-		if (cmp_size_bytes < 0) {
+		/* this is another way to check if a function failed */
+		if (cmp_get_error_code(cmp_size_bytes) != CMP_ERROR_NO_ERROR) {
 			printf("Error occurred during compress_chunk()\n");
-			if (cmp_size_bytes == CMP_ERROR_SMALL_BUF)
-				printf("The compressed data buffer is too small to hold all compressed data!\n");
+			printf("Failed with error code %d: %s\n",
+				cmp_get_error_code(cmp_size_bytes),
+				cmp_get_error_name(cmp_size_bytes));
 			free(compressed_data);
 			/* error handling */
 			return -1;
 		}
-		if (compress_chunk_set_model_id_and_counter(compressed_data, cmp_size_bytes,
-							    MODEL_ID, 0)) {
+		cmp_size_bytes = compress_chunk_set_model_id_and_counter(compressed_data,
+							cmp_size_bytes, MODEL_ID, 0);
+		if (cmp_is_error(cmp_size_bytes)) {
 			printf("Error occurred during compress_chunk_set_model_id_and_counter()\n");
+			printf("we get error code %d: %s\n",
+				cmp_get_error_code(cmp_size_bytes),
+				cmp_get_error_name(cmp_size_bytes));
 			free(compressed_data);
 			/* error handling */
 			return -1;
@@ -135,7 +147,7 @@ static int demo_comperss_chunk_1d(void)
 	}
 
 	{	/* have a look at the compressed data */
-		int i;
+		uint32_t i;
 
 		printf("Here's the compressed data including the compression entity header (size %d):\n", cmp_size_bytes);
 		for (i = 0; i < cmp_size_bytes; i++) {
@@ -176,7 +188,7 @@ static int demo_comperss_chunk_model(void)
 	 * the number of collections in the chunk (2 in this demo)
 	 */
 	uint32_t compressed_data[COMPRESS_CHUNK_BOUND(CHUNK_SIZE, 2)/4]; /* Do not put large amount of data on the stack! */
-	int cmp_size_bytes;
+	uint32_t cmp_size_bytes;
 
 	{	/* build a chunk of a background and an offset collection */
 		struct collection_hdr *col = (struct collection_hdr *)chunk;
@@ -228,27 +240,35 @@ static int demo_comperss_chunk_model(void)
 		cmp_par.nc_background_mean = 3;
 		cmp_par.nc_background_variance = 4;
 		cmp_par.nc_background_outlier_pixels = 5;
+		/* Only the compression parameters needed to compress offset and
+		 * background collections are set.
+		 */
 
 		cmp_size_bytes = compress_chunk(chunk, CHUNK_SIZE, model_chunk,
 						updated_chunk_model, compressed_data,
 						sizeof(compressed_data), &cmp_par);
-		if (cmp_size_bytes < 0) {
+		if (cmp_is_error(cmp_size_bytes)) {
 			printf("Error occurred during compress_chunk()\n");
-			if (cmp_size_bytes == CMP_ERROR_SMALL_BUF)
-				printf("The compressed data buffer is too small to hold all compressed data!\n");
+			printf("Failed with error code %d: %s\n",
+				cmp_get_error_code(cmp_size_bytes),
+				cmp_get_error_name(cmp_size_bytes));
 			/* error handling */
 			return -1;
 		}
-		if (compress_chunk_set_model_id_and_counter(compressed_data, cmp_size_bytes,
-							    MODEL_ID, MODEL_COUNTER)) {
+		cmp_size_bytes = compress_chunk_set_model_id_and_counter(compressed_data,
+						cmp_size_bytes, MODEL_ID, MODEL_COUNTER);
+		if (cmp_is_error(cmp_size_bytes)) {
 			printf("Error occurred during compress_chunk_set_model_id_and_counter()\n");
+			printf("Failed with error code %d: %s\n",
+				cmp_get_error_code(cmp_size_bytes),
+				cmp_get_error_name(cmp_size_bytes));
 			/* error handling */
 			return -1;
 		}
 	}
 
 	{	/* have a look at the compressed data */
-		int i;
+		uint32_t i;
 
 		printf("Here's the compressed data including the compression entity header (size %d):\n", cmp_size_bytes);
 		for (i = 0; i < cmp_size_bytes; i++) {
