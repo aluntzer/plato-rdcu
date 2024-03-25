@@ -84,7 +84,7 @@
 
 
 /* fast calculation  for data size smaller that uint32_t  */
-static inline uint16_t cmp_up_model16(uint32_t data, uint32_t model,
+static __inline uint16_t cmp_up_model16(uint32_t data, uint32_t model,
 				      unsigned int model_value, unsigned int round)
 {
 	/* round and round back input because for decompression the accurate
@@ -100,7 +100,7 @@ static inline uint16_t cmp_up_model16(uint32_t data, uint32_t model,
 
 
 /* slow calculation for uint32_t data size */
-static inline uint32_t cmp_up_model32(uint32_t data, uint32_t model,
+static __inline uint32_t cmp_up_model32(uint32_t data, uint32_t model,
 				      unsigned int model_value, unsigned int round)
 {
 	/* round and round back input because for decompression the accurate
