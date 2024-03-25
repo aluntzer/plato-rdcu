@@ -74,10 +74,10 @@ typedef uint32_t (*generate_cw_f_pt)(uint32_t value, uint32_t encoder_par1,
  * @brief structure to hold a setup to encode a value
  */
 
-struct encoder_setupt {
+struct encoder_setup {
 	generate_cw_f_pt generate_cw_f; /**< function pointer to a code word encoder */
 	uint32_t (*encode_method_f)(uint32_t data, uint32_t model, uint32_t stream_len,
-			       const struct encoder_setupt *setup); /**< pointer to the encoding function */
+			       const struct encoder_setup *setup); /**< pointer to the encoding function */
 	uint32_t *bitstream_adr; /**< start address of the compressed data bitstream */
 	uint32_t max_stream_len; /**< maximum length of the bitstream/icu_output_buf in bits */
 	uint32_t encoder_par1;   /**< encoding parameter 1 */
@@ -556,7 +556,7 @@ static uint32_t golomb_encoder(uint32_t value, uint32_t m, uint32_t log2_m,
  */
 
 static uint32_t encode_normal(uint32_t value, uint32_t stream_len,
-			 const struct encoder_setupt *setup)
+			 const struct encoder_setup *setup)
 {
 	uint32_t code_word, cw_len;
 
@@ -586,7 +586,7 @@ static uint32_t encode_normal(uint32_t value, uint32_t stream_len,
  */
 
 static uint32_t encode_value_zero(uint32_t data, uint32_t model, uint32_t stream_len,
-				  const struct encoder_setupt *setup)
+				  const struct encoder_setup *setup)
 {
 	data -= model; /* possible underflow is intended */
 
@@ -634,7 +634,7 @@ static uint32_t encode_value_zero(uint32_t data, uint32_t model, uint32_t stream
  */
 
 static uint32_t encode_value_multi(uint32_t data, uint32_t model, uint32_t stream_len,
-				   const struct encoder_setupt *setup)
+				   const struct encoder_setup *setup)
 {
 	uint32_t unencoded_data;
 	unsigned int unencoded_data_len;
@@ -698,7 +698,7 @@ static uint32_t encode_value_multi(uint32_t data, uint32_t model, uint32_t strea
  */
 
 static uint32_t encode_value_none(uint32_t value, uint32_t unused, uint32_t stream_len,
-			     const struct encoder_setupt *setup)
+			     const struct encoder_setup *setup)
 {
 	(void)(unused);
 
@@ -723,7 +723,7 @@ static uint32_t encode_value_none(uint32_t value, uint32_t unused, uint32_t stre
  */
 
 static uint32_t encode_value(uint32_t data, uint32_t model, uint32_t stream_len,
-			const struct encoder_setupt *setup)
+			const struct encoder_setup *setup)
 {
 	uint32_t mask = ~(0xFFFFFFFFU >> (32-setup->max_data_bits));
 
@@ -766,12 +766,12 @@ static uint32_t cmp_buffer_length_to_bits(uint32_t buffer_length)
  * @warning input parameters are not checked for validity
  */
 
-static void configure_encoder_setup(struct encoder_setupt *setup,
+static void configure_encoder_setup(struct encoder_setup *setup,
 				    uint32_t cmp_par, uint32_t spillover,
 				    uint32_t lossy_par, uint32_t max_data_bits,
 				    const struct cmp_cfg *cfg)
 {
-	memset(setup, 0, sizeof(struct encoder_setupt));
+	memset(setup, 0, sizeof(struct encoder_setup));
 
 	setup->encoder_par1 = cmp_par;
 	setup->max_data_bits = max_data_bits;
@@ -826,7 +826,7 @@ static void configure_encoder_setup(struct encoder_setupt *setup,
 static uint32_t compress_imagette(const struct cmp_cfg *cfg, uint32_t stream_len)
 {
 	size_t i;
-	struct encoder_setupt setup;
+	struct encoder_setup setup;
 	uint32_t max_data_bits;
 
 	uint16_t *data_buf = cfg->input_buf;
@@ -899,7 +899,7 @@ static uint32_t compress_s_fx(const struct cmp_cfg *cfg, uint32_t stream_len)
 	struct s_fx *up_model_buf = NULL;
 	struct s_fx *next_model_p;
 	struct s_fx model;
-	struct encoder_setupt setup_exp_flag, setup_fx;
+	struct encoder_setup setup_exp_flag, setup_fx;
 
 	if (model_mode_is_used(cfg->cmp_mode)) {
 		model = model_buf[0];
@@ -960,7 +960,7 @@ static uint32_t compress_s_fx_efx(const struct cmp_cfg *cfg, uint32_t stream_len
 	struct s_fx_efx *up_model_buf = NULL;
 	struct s_fx_efx *next_model_p;
 	struct s_fx_efx model;
-	struct encoder_setupt setup_exp_flag, setup_fx, setup_efx;
+	struct encoder_setup setup_exp_flag, setup_fx, setup_efx;
 
 	if (model_mode_is_used(cfg->cmp_mode)) {
 		model = model_buf[0];
@@ -1029,7 +1029,7 @@ static uint32_t compress_s_fx_ncob(const struct cmp_cfg *cfg, uint32_t stream_le
 	struct s_fx_ncob *up_model_buf = NULL;
 	struct s_fx_ncob *next_model_p;
 	struct s_fx_ncob model;
-	struct encoder_setupt setup_exp_flag, setup_fx, setup_ncob;
+	struct encoder_setup setup_exp_flag, setup_fx, setup_ncob;
 
 	if (model_mode_is_used(cfg->cmp_mode)) {
 		model = model_buf[0];
@@ -1104,7 +1104,7 @@ static uint32_t compress_s_fx_efx_ncob_ecob(const struct cmp_cfg *cfg, uint32_t 
 	struct s_fx_efx_ncob_ecob *up_model_buf = NULL;
 	struct s_fx_efx_ncob_ecob *next_model_p;
 	struct s_fx_efx_ncob_ecob model;
-	struct encoder_setupt setup_exp_flag, setup_fx, setup_ncob, setup_efx,
+	struct encoder_setup setup_exp_flag, setup_fx, setup_ncob, setup_efx,
 			      setup_ecob;
 
 	if (model_mode_is_used(cfg->cmp_mode)) {
@@ -1202,7 +1202,7 @@ static uint32_t compress_f_fx(const struct cmp_cfg *cfg, uint32_t stream_len)
 	struct f_fx *up_model_buf = NULL;
 	struct f_fx *next_model_p;
 	struct f_fx model;
-	struct encoder_setupt setup_fx;
+	struct encoder_setup setup_fx;
 
 	if (model_mode_is_used(cfg->cmp_mode)) {
 		model = model_buf[0];
@@ -1255,7 +1255,7 @@ static uint32_t compress_f_fx_efx(const struct cmp_cfg *cfg, uint32_t stream_len
 	struct f_fx_efx *up_model_buf = NULL;
 	struct f_fx_efx *next_model_p;
 	struct f_fx_efx model;
-	struct encoder_setupt setup_fx, setup_efx;
+	struct encoder_setup setup_fx, setup_efx;
 
 	if (model_mode_is_used(cfg->cmp_mode)) {
 		model = model_buf[0];
@@ -1316,7 +1316,7 @@ static uint32_t compress_f_fx_ncob(const struct cmp_cfg *cfg, uint32_t stream_le
 	struct f_fx_ncob *up_model_buf = NULL;
 	struct f_fx_ncob *next_model_p;
 	struct f_fx_ncob model;
-	struct encoder_setupt setup_fx, setup_ncob;
+	struct encoder_setup setup_fx, setup_ncob;
 
 	if (model_mode_is_used(cfg->cmp_mode)) {
 		model = model_buf[0];
@@ -1383,7 +1383,7 @@ static uint32_t compress_f_fx_efx_ncob_ecob(const struct cmp_cfg *cfg, uint32_t 
 	struct f_fx_efx_ncob_ecob *up_model_buf = NULL;
 	struct f_fx_efx_ncob_ecob *next_model_p;
 	struct f_fx_efx_ncob_ecob model;
-	struct encoder_setupt setup_fx, setup_ncob, setup_efx, setup_ecob;
+	struct encoder_setup setup_fx, setup_ncob, setup_efx, setup_ecob;
 
 	if (model_mode_is_used(cfg->cmp_mode)) {
 		model = model_buf[0];
@@ -1472,7 +1472,7 @@ static uint32_t compress_l_fx(const struct cmp_cfg *cfg, uint32_t stream_len)
 	struct l_fx *up_model_buf = NULL;
 	struct l_fx *next_model_p;
 	struct l_fx model;
-	struct encoder_setupt setup_exp_flag, setup_fx, setup_fx_var;
+	struct encoder_setup setup_exp_flag, setup_fx, setup_fx_var;
 
 	if (model_mode_is_used(cfg->cmp_mode)) {
 		model = model_buf[0];
@@ -1541,7 +1541,7 @@ static uint32_t compress_l_fx_efx(const struct cmp_cfg *cfg, uint32_t stream_len
 	struct l_fx_efx *up_model_buf = NULL;
 	struct l_fx_efx *next_model_p;
 	struct l_fx_efx model;
-	struct encoder_setupt setup_exp_flag, setup_fx, setup_efx, setup_fx_var;
+	struct encoder_setup setup_exp_flag, setup_fx, setup_efx, setup_fx_var;
 
 	if (model_mode_is_used(cfg->cmp_mode)) {
 		model = model_buf[0];
@@ -1618,7 +1618,7 @@ static uint32_t compress_l_fx_ncob(const struct cmp_cfg *cfg, uint32_t stream_le
 	struct l_fx_ncob *up_model_buf = NULL;
 	struct l_fx_ncob *next_model_p;
 	struct l_fx_ncob model;
-	struct encoder_setupt setup_exp_flag, setup_fx, setup_ncob,
+	struct encoder_setup setup_exp_flag, setup_fx, setup_ncob,
 			      setup_fx_var, setup_cob_var;
 
 	if (model_mode_is_used(cfg->cmp_mode)) {
@@ -1717,7 +1717,7 @@ static uint32_t compress_l_fx_efx_ncob_ecob(const struct cmp_cfg *cfg, uint32_t 
 	struct l_fx_efx_ncob_ecob *up_model_buf = NULL;
 	struct l_fx_efx_ncob_ecob *next_model_p;
 	struct l_fx_efx_ncob_ecob model;
-	struct encoder_setupt setup_exp_flag, setup_fx, setup_ncob, setup_efx,
+	struct encoder_setup setup_exp_flag, setup_fx, setup_ncob, setup_efx,
 			      setup_ecob, setup_fx_var, setup_cob_var;
 
 	if (model_mode_is_used(cfg->cmp_mode)) {
@@ -1837,7 +1837,7 @@ static uint32_t compress_offset(const struct cmp_cfg *cfg, uint32_t stream_len)
 	struct offset *up_model_buf = NULL;
 	struct offset *next_model_p;
 	struct offset model;
-	struct encoder_setupt setup_mean, setup_var;
+	struct encoder_setup setup_mean, setup_var;
 
 	if (model_mode_is_used(cfg->cmp_mode)) {
 		model = model_buf[0];
@@ -1912,7 +1912,7 @@ static uint32_t compress_background(const struct cmp_cfg *cfg, uint32_t stream_l
 	struct background *up_model_buf = NULL;
 	struct background *next_model_p;
 	struct background model;
-	struct encoder_setupt setup_mean, setup_var, setup_pix;
+	struct encoder_setup setup_mean, setup_var, setup_pix;
 
 	if (model_mode_is_used(cfg->cmp_mode)) {
 		model = model_buf[0];
@@ -1998,7 +1998,7 @@ static uint32_t compress_smearing(const struct cmp_cfg *cfg, uint32_t stream_len
 	struct smearing *up_model_buf = NULL;
 	struct smearing *next_model_p;
 	struct smearing model;
-	struct encoder_setupt setup_mean, setup_var_mean, setup_pix;
+	struct encoder_setup setup_mean, setup_var_mean, setup_pix;
 
 	if (model_mode_is_used(cfg->cmp_mode)) {
 		model = model_buf[0];
