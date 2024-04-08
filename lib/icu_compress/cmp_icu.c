@@ -2230,7 +2230,9 @@ static uint32_t compress_data_internal(const struct cmp_cfg *cfg, uint32_t strea
 		/* LCOV_EXCL_STOP */
 	}
 
-	FORWARD_IF_ERROR(bitsize, "");
+	if (cmp_is_error(bitsize))
+		return bitsize;
+
 	bitsize = pad_bitstream(cfg, bitsize);
 
 	return bitsize;
