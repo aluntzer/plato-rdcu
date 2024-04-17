@@ -53,7 +53,6 @@
 #define MIN_NON_IMA_SPILL	2U
 /* for maximum spill value look at cmp_icu_max_spill function */
 #define MAX_ICU_ROUND		3U
-#define MAX_STUFF_CMP_PAR	32U
 
 
 /* default imagette RDCU compression parameters for model compression */
@@ -145,8 +144,7 @@ enum cmp_mode {
 	CMP_MODE_MODEL_ZERO,
 	CMP_MODE_DIFF_ZERO,
 	CMP_MODE_MODEL_MULTI,
-	CMP_MODE_DIFF_MULTI,
-	CMP_MODE_STUFF
+	CMP_MODE_DIFF_MULTI
 };
 
 

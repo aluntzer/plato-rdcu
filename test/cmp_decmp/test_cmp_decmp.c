@@ -586,25 +586,6 @@ void generate_random_cmp_cfg(struct cmp_cfg *cfg)
 		cfg->spill_par_5 = cmp_rand_between(MIN_NON_IMA_SPILL, cmp_icu_max_spill(cfg->cmp_par_ecob));
 		cfg->spill_par_6 = cmp_rand_between(MIN_NON_IMA_SPILL, cmp_icu_max_spill(cfg->cmp_par_fx_cob_variance));
 	}
-
-#if 0
-	if (cfg->cmp_mode == CMP_MODE_STUFF) {
-		/* cfg->golomb_par = cmp_rand_between(16, MAX_STUFF_CMP_PAR); */
-		cfg->golomb_par = 16;
-		cfg->ap1_golomb_par = cmp_rand_between(0, MAX_STUFF_CMP_PAR);
-		cfg->ap2_golomb_par = cmp_rand_between(0, MAX_STUFF_CMP_PAR);
-		cfg->cmp_par_exp_flags = cmp_rand_between(0, MAX_STUFF_CMP_PAR);
-		cfg->cmp_par_fx = cmp_rand_between(0, MAX_STUFF_CMP_PAR);
-		cfg->cmp_par_ncob = cmp_rand_between(0, MAX_STUFF_CMP_PAR);
-		cfg->cmp_par_efx = cmp_rand_between(0, MAX_STUFF_CMP_PAR);
-		cfg->cmp_par_ecob = cmp_rand_between(0, MAX_STUFF_CMP_PAR);
-		cfg->cmp_par_fx_cob_variance = cmp_rand_between(0, MAX_STUFF_CMP_PAR);
-		cfg->cmp_par_mean = cmp_rand_between(0, MAX_STUFF_CMP_PAR);
-		cfg->cmp_par_variance = cmp_rand_between(0, MAX_STUFF_CMP_PAR);
-		cfg->cmp_par_pixels_error = cmp_rand_between(0, MAX_STUFF_CMP_PAR);
-		return;
-	}
-#endif
 }
 
 

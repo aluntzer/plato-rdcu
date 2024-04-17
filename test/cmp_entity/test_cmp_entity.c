@@ -488,7 +488,7 @@ void test_ent_cmp_mode(void)
 	enum cmp_mode cmp_mode, cmp_mode_read;
 	uint8_t *entity_p = (uint8_t *)&ent;
 
-	cmp_mode = 0x12;
+	cmp_mode = (enum cmp_mode)0x12;
 	error = cmp_ent_set_cmp_mode(&ent, cmp_mode);
 	TEST_ASSERT_FALSE(error);
 
@@ -499,7 +499,7 @@ void test_ent_cmp_mode(void)
 	TEST_ASSERT_EQUAL_HEX(0x12, entity_p[24]);
 
 	/* error cases */
-	cmp_mode = 0x100;
+	cmp_mode = (enum cmp_mode)0x100;
 	error = cmp_ent_set_cmp_mode(&ent, cmp_mode);
 	TEST_ASSERT_TRUE(error);
 	error = cmp_ent_set_cmp_mode(NULL, cmp_mode);

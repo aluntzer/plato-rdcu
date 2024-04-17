@@ -128,7 +128,6 @@ int rdcu_supported_cmp_mode_is_used(enum cmp_mode cmp_mode)
 	case CMP_MODE_MODEL_MULTI:
 	case CMP_MODE_DIFF_MULTI:
 		return 1;
-	case CMP_MODE_STUFF:
 	default:
 		return 0;
 	}
@@ -169,16 +168,7 @@ int rdcu_supported_data_type_is_used(enum cmp_data_type data_type)
 
 int cmp_mode_is_supported(enum cmp_mode cmp_mode)
 {
-	switch (cmp_mode) {
-	case CMP_MODE_RAW:
-	case CMP_MODE_MODEL_ZERO:
-	case CMP_MODE_DIFF_ZERO:
-	case CMP_MODE_MODEL_MULTI:
-	case CMP_MODE_DIFF_MULTI:
-	case CMP_MODE_STUFF:
-		return 1;
-	}
-	return 0;
+	return rdcu_supported_cmp_mode_is_used(cmp_mode);
 }
 
 
@@ -665,13 +655,6 @@ static int cmp_pars_are_invalid(uint32_t cmp_par, uint32_t spill, enum cmp_mode 
 			cfg_invalid++;
 		}
 
-		break;
-	case CMP_MODE_STUFF:
-		if (cmp_par > MAX_STUFF_CMP_PAR) {
-			debug_print("Error: The selected %s stuff mode compression parameter: %" PRIu32 " is too large. The largest possible value in the selected compression mode is: %u.",
-				    par_name, cmp_par, MAX_STUFF_CMP_PAR);
-			cfg_invalid++;
-		}
 		break;
 	default:
 		debug_print("Error: The compression mode is not supported.");

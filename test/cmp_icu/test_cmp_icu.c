@@ -36,6 +36,9 @@
 #include "../../lib/icu_compress/cmp_icu.c" /* this is a hack to test static functions */
 
 
+#define MAX_CMP_MODE CMP_MODE_DIFF_MULTI
+
+
 /**
  * @brief  Seeds the pseudo-random number generator used by rand()
  */
@@ -105,7 +108,7 @@ void test_cmp_cfg_icu_create(void)
 	memset(&cfg, 0, sizeof(cfg));
 
 	/* wrong compression mode tests */
-	cmp_mode = CMP_MODE_STUFF + 1;
+	cmp_mode = (enum cmp_mode)(MAX_CMP_MODE + 1);
 	cfg = cmp_cfg_icu_create(data_type, cmp_mode, model_value, lossy_par);
 	TEST_ASSERT_EQUAL_INT(DATA_TYPE_UNKNOWN, cfg.data_type);
 	memset(&cfg, 0, sizeof(cfg));
@@ -116,10 +119,10 @@ void test_cmp_cfg_icu_create(void)
 	memset(&cfg, 0, sizeof(cfg));
 
 	/* this should work */
-	cmp_mode = CMP_MODE_STUFF;
+	cmp_mode = MAX_CMP_MODE;
 	cfg = cmp_cfg_icu_create(data_type, cmp_mode, model_value, lossy_par);
 	TEST_ASSERT_EQUAL_INT(DATA_TYPE_IMAGETTE, cfg.data_type);
-	TEST_ASSERT_EQUAL_INT(CMP_MODE_STUFF, cfg.cmp_mode);
+	TEST_ASSERT_EQUAL_INT(MAX_CMP_MODE, cfg.cmp_mode);
 	TEST_ASSERT_EQUAL_INT(0, cfg.model_value);
 	TEST_ASSERT_EQUAL_INT(0, cfg.round);
 	TEST_ASSERT_EQUAL(&MAX_USED_BITS_SAFE, cfg.max_used_bits);
@@ -145,11 +148,11 @@ void test_cmp_cfg_icu_create(void)
 	TEST_ASSERT_EQUAL(&MAX_USED_BITS_SAFE, cfg.max_used_bits);
 
 	/* no checks for model mode -> no model cmp_mode */
-	cmp_mode = CMP_MODE_STUFF;
+	cmp_mode = CMP_MODE_RAW;
 	model_value = MAX_MODEL_VALUE + 1;
 	cfg = cmp_cfg_icu_create(data_type, cmp_mode, model_value, lossy_par);
 	TEST_ASSERT_EQUAL_INT(DATA_TYPE_IMAGETTE, cfg.data_type);
-	TEST_ASSERT_EQUAL_INT(CMP_MODE_STUFF, cfg.cmp_mode);
+	TEST_ASSERT_EQUAL_INT(CMP_MODE_RAW, cfg.cmp_mode);
 	TEST_ASSERT_EQUAL_INT(MAX_MODEL_VALUE + 1, cfg.model_value);
 	TEST_ASSERT_EQUAL_INT(0, cfg.round);
 	TEST_ASSERT_EQUAL(&MAX_USED_BITS_SAFE, cfg.max_used_bits);
@@ -168,14 +171,14 @@ void test_cmp_cfg_icu_create(void)
 	lossy_par = MAX_ICU_ROUND;
 	cfg = cmp_cfg_icu_create(data_type, cmp_mode, model_value, lossy_par);
 	TEST_ASSERT_EQUAL_INT(DATA_TYPE_IMAGETTE, cfg.data_type);
-	TEST_ASSERT_EQUAL_INT(CMP_MODE_STUFF, cfg.cmp_mode);
+	TEST_ASSERT_EQUAL_INT(CMP_MODE_RAW, cfg.cmp_mode);
 	TEST_ASSERT_EQUAL_INT(16, cfg.model_value);
 	TEST_ASSERT_EQUAL_INT(3, cfg.round);
 	TEST_ASSERT_EQUAL(&MAX_USED_BITS_SAFE, cfg.max_used_bits);
 
 	/* random test */
 	data_type = cmp_rand_between(DATA_TYPE_IMAGETTE, biggest_data_type);
-	cmp_mode = cmp_rand_between(CMP_MODE_RAW, CMP_MODE_STUFF);
+	cmp_mode = cmp_rand_between(CMP_MODE_RAW, MAX_CMP_MODE);
 	model_value = cmp_rand_between(0, MAX_MODEL_VALUE);
 	lossy_par = cmp_rand_between(CMP_LOSSLESS, MAX_ICU_ROUND);
 	cfg = cmp_cfg_icu_create(data_type, cmp_mode, model_value, lossy_par);
@@ -570,37 +573,8 @@ void test_cmp_cfg_icu_imagette(void)
 	error = cmp_cfg_icu_imagette(&cfg, cmp_par, spillover_par);
 	TEST_ASSERT_FALSE(error);
 
-	/* CMP_MODE_STUFF tests */
-	spillover_par = ~0U; /* is ignored */
-
-	/* highest values STUFF MODE */
-	cfg = cmp_cfg_icu_create(DATA_TYPE_IMAGETTE, CMP_MODE_STUFF, ~0U, CMP_LOSSLESS);
-	cmp_par = MAX_STUFF_CMP_PAR;
-	error = cmp_cfg_icu_imagette(&cfg, cmp_par, spillover_par);
-	TEST_ASSERT_FALSE(error);
-	TEST_ASSERT_EQUAL_INT(cfg.golomb_par, 32);
-
-	/* lowest values STUFF MODE */
-	cfg = cmp_cfg_icu_create(DATA_TYPE_IMAGETTE, CMP_MODE_STUFF, ~0U, CMP_LOSSLESS);
-	cmp_par = 0;
-	error = cmp_cfg_icu_imagette(&cfg, cmp_par, spillover_par);
-	TEST_ASSERT_FALSE(error);
-	TEST_ASSERT_EQUAL_INT(cfg.golomb_par, 0);
-
-	/* cmp_par to big */
-	cfg = cmp_cfg_icu_create(DATA_TYPE_SAT_IMAGETTE, CMP_MODE_STUFF, ~0U, CMP_LOSSLESS);
-	cmp_par = MAX_STUFF_CMP_PAR+1;
-	error = cmp_cfg_icu_imagette(&cfg, cmp_par, spillover_par);
-	TEST_ASSERT_TRUE(error);
-
 	/* cfg = NULL test*/
 	error = cmp_cfg_icu_imagette(NULL, cmp_par, spillover_par);
-	TEST_ASSERT_TRUE(error);
-
-	/* invalid compression mode  test*/
-	cfg = cmp_cfg_icu_create(DATA_TYPE_SAT_IMAGETTE, CMP_MODE_STUFF+1, ~0U, CMP_LOSSLESS);
-	cmp_par = MAX_STUFF_CMP_PAR+1;
-	error = cmp_cfg_icu_imagette(&cfg, cmp_par, spillover_par);
 	TEST_ASSERT_TRUE(error);
 }
 
@@ -2417,51 +2391,8 @@ void test_compress_imagette_model(void)
 	/* error case: model mode without model data */
 	cfg.model_buf = NULL; /* this is the error */
 	cmp_size = icu_compress_data(&cfg);
-	TEST_ASSERT_EQUAL(-1, cmp_size);
-}
-
-
-/**
- * @test compress_imagette
- */
-
-void test_compress_imagette_stuff(void)
-{
-	uint16_t data[] = {0x0, 0x1, 0x23, 0x42, 0x8000, 0x7FFF, 0xFFFF};
-	uint32_t output_buf[4] = {0};
-	struct cmp_cfg cfg = {0};
-
-	int cmp_size, error;
-	uint8_t output_buf_exp[] = {
-		0x00, 0x00, 0x00, 0x01,
-		0x00, 0x23, 0x00, 0x42,
-		0x80, 0x00, 0x7F, 0xFF,
-		0xFF, 0xFF, 0x00, 0x00};
-	uint32_t *output_buf_exp_32;
-
-	uint32_t samples = 7;
-	uint32_t buffer_length = 8;
-	uint32_t cmp_par = 16; /* how many used bits has the maximum data value */
-	uint32_t output_buf_size;
-
-
-	cfg = cmp_cfg_icu_create(DATA_TYPE_IMAGETTE, CMP_MODE_STUFF,
-				 CMP_PAR_UNUSED, CMP_LOSSLESS);
-	TEST_ASSERT(cfg.data_type != DATA_TYPE_UNKNOWN);
-	output_buf_size = cmp_cfg_icu_buffers(&cfg, data, samples, NULL, NULL,
-					      output_buf, buffer_length);
-	TEST_ASSERT_EQUAL_INT(buffer_length*sizeof(uint16_t), output_buf_size);
-	error = cmp_cfg_icu_imagette(&cfg, cmp_par, CMP_PAR_UNUSED);
-	TEST_ASSERT_FALSE(error);
-
-	cmp_size = icu_compress_data(&cfg);
-
-	output_buf_exp_32 = (uint32_t *)output_buf_exp;
-	TEST_ASSERT_EQUAL_INT(7*16, cmp_size);
-	TEST_ASSERT_EQUAL_HEX16(output_buf_exp_32[0], output_buf[0]);
-	TEST_ASSERT_EQUAL_HEX16(output_buf_exp_32[1], output_buf[1]);
-	TEST_ASSERT_EQUAL_HEX16(output_buf_exp_32[2], output_buf[2]);
-	TEST_ASSERT_EQUAL_HEX16(output_buf_exp_32[3], output_buf[3]);
+	TEST_ASSERT_TRUE(cmp_is_error(cmp_size));
+	TEST_ASSERT_EQUAL(CMP_ERROR_PAR_BUFFERS, cmp_get_error_code(cmp_size));
 }
 
 
@@ -2664,7 +2595,7 @@ void test_compress_imagette_error_cases(void)
 	/* test unknown cmp_mode */
 	cfg.max_used_bits = &MAX_USED_BITS_SAFE;
 	cfg.data_type = DATA_TYPE_F_CAM_IMAGETTE;
-	cfg.cmp_mode = CMP_MODE_STUFF+1;
+	cfg.cmp_mode = (enum cmp_mode)(MAX_CMP_MODE+1);
 	cfg.input_buf = data;
 	cfg.samples = 2;
 	cfg.golomb_par = 1;
@@ -2826,62 +2757,6 @@ void test_compress_s_fx_raw(void)
 		TEST_ASSERT_EQUAL_HEX(data[i].fx, cpu_to_be32(p[i].fx));
 	}
 
-	free(cfg.input_buf);
-	free(cfg.icu_output_buf);
-}
-
-
-void test_compress_s_fx_staff(void)
-{
-	struct s_fx data[5];
-	struct cmp_cfg cfg = {0};
-	int cmp_size, cmp_size_exp;
-	struct collection_hdr *hdr;
-	uint32_t *cmp_data;
-
-	/* setup configuration */
-	cfg.data_type = DATA_TYPE_S_FX;
-	cfg.cmp_mode = CMP_MODE_STUFF;
-	cfg.samples = 5;
-	cfg.input_buf = malloc(cmp_cal_size_of_data(cfg.samples, cfg.data_type));
-	TEST_ASSERT_NOT_NULL(cfg.input_buf);
-	cfg.buffer_length = 5;
-	cfg.icu_output_buf = malloc(cmp_cal_size_of_data(cfg.buffer_length, cfg.data_type));
-	TEST_ASSERT_NOT_NULL(cfg.icu_output_buf);
-	cfg.cmp_par_exp_flags = 2;
-	cfg.cmp_par_fx = 21;
-	cfg.max_used_bits = &MAX_USED_BITS_V1;
-
-	/* generate input data */
-	hdr = cfg.input_buf;
-	/* use dummy data for the header */
-	memset(hdr, 0x42, sizeof(struct collection_hdr));
-	data[0].exp_flags = 0x0;
-	data[0].fx = 0x0;
-	data[1].exp_flags = 0x1;
-	data[1].fx = 0x1;
-	data[2].exp_flags = 0x2;
-	data[2].fx = 0x23;
-	data[3].exp_flags = 0x3;
-	data[3].fx = 0x42;
-	data[4].exp_flags = 0x0;
-	data[4].fx = 0x001FFFFF;
-	memcpy(hdr->entry, data, sizeof(data));
-
-	cmp_size = icu_compress_data(&cfg);
-
-	cmp_size_exp = 5 * (2 + 21) + COLLECTION_HDR_SIZE * CHAR_BIT;
-	TEST_ASSERT_EQUAL_INT(cmp_size_exp, cmp_size);
-	TEST_ASSERT_FALSE(memcmp(cfg.input_buf, cfg.icu_output_buf, COLLECTION_HDR_SIZE));
-	hdr = (void *)cfg.icu_output_buf;
-	cmp_data = calloc(4, sizeof(*cmp_data));
-	memcpy(cmp_data, hdr->entry, 4 * sizeof(*cmp_data));
-	TEST_ASSERT_EQUAL_HEX(0x00000080, be32_to_cpu(cmp_data[0]));
-	TEST_ASSERT_EQUAL_HEX(0x00060001, be32_to_cpu(cmp_data[1]));
-	TEST_ASSERT_EQUAL_HEX(0x1E000423, be32_to_cpu(cmp_data[2]));
-	TEST_ASSERT_EQUAL_HEX(0xFFFFE000, be32_to_cpu(cmp_data[3]));
-
-	free(cmp_data);
 	free(cfg.input_buf);
 	free(cfg.icu_output_buf);
 }
@@ -4737,7 +4612,7 @@ void test_zero_escape_mech_is_used(void)
 {
 	enum cmp_mode cmp_mode;
 
-	for (cmp_mode = 0; cmp_mode <= CMP_MODE_STUFF; cmp_mode++) {
+	for (cmp_mode = 0; cmp_mode <= MAX_CMP_MODE; cmp_mode++) {
 		int res = zero_escape_mech_is_used(cmp_mode);
 
 		if (cmp_mode == CMP_MODE_DIFF_ZERO ||

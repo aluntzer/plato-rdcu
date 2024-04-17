@@ -61,16 +61,16 @@ void test_rdcu_cfg_create(void)
 
 
 	/* wrong compression mode tests */
-	cmp_mode = CMP_MODE_STUFF; /* not a RDCU compression mode */
+	cmp_mode = (enum cmp_mode)(CMP_MODE_DIFF_MULTI+1); /* not a RDCU compression mode */
 	cfg = rdcu_cfg_create(data_type, cmp_mode, model_value, lossy_par);
 	TEST_ASSERT_EQUAL(DATA_TYPE_UNKNOWN, cfg.data_type);
 
-	cmp_mode = -1U;
+	cmp_mode = (enum cmp_mode)-1U;
 	cfg = rdcu_cfg_create(data_type, cmp_mode, model_value, lossy_par);
 	TEST_ASSERT_EQUAL(DATA_TYPE_UNKNOWN, cfg.data_type);
 
 	/* this should work */
-	cmp_mode = 4;
+	cmp_mode = (enum cmp_mode)4;
 	cfg = rdcu_cfg_create(data_type, cmp_mode, model_value, lossy_par);
 	TEST_ASSERT_EQUAL(data_type, cfg.data_type);
 	TEST_ASSERT_EQUAL(cmp_mode, cfg.cmp_mode);

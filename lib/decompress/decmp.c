@@ -275,24 +275,6 @@ static int decode_multi(const struct decoder_setup *setup, uint32_t *decoded_val
 
 
 /**
- * @brief get the value unencoded with setup->cmp_par_1 bits without any
- *	additional changes from the bitstream
- *
- * @param setup		pointer to the decoder setup
- * @param decoded_value	points to the location where the decoded value is stored
- *
- * @returns 0 on success; otherwise error
- */
-
-static int decode_none(const struct decoder_setup *setup, uint32_t *decoded_value)
-{
-	*decoded_value = bit_read_bits32(setup->dec, setup->encoder_par1);
-
-	return bit_refill(setup->dec) == BIT_OVERFLOW;
-}
-
-
-/**
  * @brief remap an unsigned value back to a signed value
  * @note this is the reverse function of map_to_pos()
  *
@@ -330,10 +312,6 @@ static int decode_value(const struct decoder_setup *setup, uint32_t *decoded_val
 {
 	/* decode the next value from the bitstream */
 	int err = setup->decode_method_f(setup, decoded_value);
-
-	if (setup->decode_method_f == decode_none)
-		/* we are done here in stuff mode */
-		return err;
 
 	/* map the unsigned decode value back to a signed value */
 	*decoded_value = re_map_to_pos(*decoded_value);
@@ -377,8 +355,6 @@ static void configure_decoder_setup(struct decoder_setup *setup, struct bit_deco
 		setup->decode_method_f = &decode_multi;
 	else if (zero_escape_mech_is_used(cmp_mode))
 		setup->decode_method_f = &decode_zero;
-	else if (cmp_mode == CMP_MODE_STUFF)
-		setup->decode_method_f = &decode_none;
 	else {
 		debug_print("Error: Compression mode not supported.");
 		assert(0);

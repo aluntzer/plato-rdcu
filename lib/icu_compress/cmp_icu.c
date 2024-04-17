@@ -682,32 +682,6 @@ static uint32_t encode_value_multi(uint32_t data, uint32_t model, uint32_t strea
 
 
 /**
- * @brief put the value unencoded with setup->cmp_par_1 bits without any changes
- *	in the bitstream
- *
- * @param value		value to put unchanged in the bitstream
- *	(setup->cmp_par_1 how many bits of the value are used)
- * @param unused	this parameter is ignored
- * @param stream_len	length of the bitstream in bits
- * @param setup		pointer to the encoder setup
- *
- * @returns the bit length of the bitstream with the added unencoded value on
- *	success; negative on error, CMP_ERROR_SMALL_BUF if the bitstream buffer
- *	is too small to put the value in the bitstream
- *
- */
-
-static uint32_t encode_value_none(uint32_t value, uint32_t unused, uint32_t stream_len,
-			     const struct encoder_setup *setup)
-{
-	(void)(unused);
-
-	return put_n_bits32(value, setup->encoder_par1, stream_len,
-			    setup->bitstream_adr, setup->max_stream_len);
-}
-
-
-/**
  * @brief encodes the data with the model and the given setup and put it into
  *	the bitstream
  *
@@ -778,17 +752,14 @@ static void configure_encoder_setup(struct encoder_setup *setup,
 	setup->lossy_par = lossy_par;
 	setup->bitstream_adr = cfg->icu_output_buf;
 	setup->max_stream_len = cmp_buffer_length_to_bits(cfg->buffer_length);
+	setup->encoder_par2 = ilog_2(cmp_par);
+	setup->spillover_par = spillover;
 
-	if (cfg->cmp_mode != CMP_MODE_STUFF) {
-		setup->encoder_par2 = ilog_2(cmp_par);
-		setup->spillover_par = spillover;
-
-		/* for encoder_par1 which are a power of two we can use the faster rice_encoder */
-		if (is_a_pow_of_2(setup->encoder_par1))
-			setup->generate_cw_f = &rice_encoder;
-		else
-			setup->generate_cw_f = &golomb_encoder;
-	}
+	/* for encoder_par1 which are a power of two we can use the faster rice_encoder */
+	if (is_a_pow_of_2(setup->encoder_par1))
+		setup->generate_cw_f = &rice_encoder;
+	else
+		setup->generate_cw_f = &golomb_encoder;
 
 	switch (cfg->cmp_mode) {
 	case CMP_MODE_MODEL_ZERO:
@@ -798,10 +769,6 @@ static void configure_encoder_setup(struct encoder_setup *setup,
 	case CMP_MODE_MODEL_MULTI:
 	case CMP_MODE_DIFF_MULTI:
 		setup->encode_method_f = &encode_value_multi;
-		break;
-	case CMP_MODE_STUFF:
-		setup->encode_method_f = &encode_value_none;
-		setup->max_data_bits = cmp_par;
 		break;
 	/* LCOV_EXCL_START */
 	case CMP_MODE_RAW:
