@@ -41,6 +41,7 @@ void cmp_debug_print_impl(const char *fmt, ...);
 #  define debug_print(...) do {} while (0)
 #endif
 
+__extension__
 #define debug_print_level(level, ...)			\
 	do {						\
 		if (level <= DEBUGLEVEL)		\
