@@ -1006,7 +1006,7 @@ void test_random_collection_round_trip(void)
 			/* No chunk is defined for fast cadence subservices */
 			if (data_type == DATA_TYPE_F_FX || data_type == DATA_TYPE_F_FX_EFX ||
 			    data_type == DATA_TYPE_F_FX_NCOB || data_type == DATA_TYPE_F_FX_EFX_NCOB_ECOB)
-				TEST_ASSERT_EQUAL_INT(CMP_ERROR_SUBSERVICE_UNSUPPORTED, cmp_get_error_code(cmp_size));
+				TEST_ASSERT_EQUAL_INT(CMP_ERROR_COL_SUBSERVICE_UNSUPPORTED, cmp_get_error_code(cmp_size));
 			else
 				TEST_ASSERT_FALSE(cmp_is_error(cmp_size));
 		}
