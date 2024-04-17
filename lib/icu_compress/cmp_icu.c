@@ -2265,7 +2265,7 @@ int icu_compress_data(const struct cmp_cfg *cfg)
 			return 0;
 		cfg_cpy = *cfg;
 		cfg_cpy.buffer_length = cmp_cal_size_of_data(cfg->buffer_length, cfg->data_type);
-		if (!cfg_cpy.buffer_length)
+		if (cfg_cpy.icu_output_buf && !cfg_cpy.buffer_length)
 			return -1;
 
 		if (!rdcu_supported_data_type_is_used(cfg->data_type) && !cmp_data_type_is_invalid(cfg->data_type)) {
