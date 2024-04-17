@@ -611,8 +611,9 @@ static uint32_t encode_value_zero(uint32_t data, uint32_t model, uint32_t stream
 		return stream_len;
 
 	/* put the data unencoded in the bitstream */
-	return put_n_bits32(data, setup->max_data_bits, stream_len,
+	stream_len = put_n_bits32(data, setup->max_data_bits, stream_len,
 				  setup->bitstream_adr, setup->max_stream_len);
+	return stream_len;
 }
 
 
@@ -676,7 +677,6 @@ static uint32_t encode_value_multi(uint32_t data, uint32_t model, uint32_t strea
 	/* put the unencoded data in the bitstream */
 	stream_len = put_n_bits32(unencoded_data, unencoded_data_len, stream_len,
 				  setup->bitstream_adr, setup->max_stream_len);
-
 	return stream_len;
 }
 
