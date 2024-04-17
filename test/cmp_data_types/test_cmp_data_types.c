@@ -145,7 +145,24 @@ void test_cmp_col_get_and_set(void)
 		TEST_ASSERT_EQUAL_HEX8(i, u8_p[i]);
 	}
 	free(col);
+}
 
+
+/**
+ * @test convert_subservice_to_cmp_data_type
+ * @test convert_cmp_data_type_to_subservice
+ */
+void test_convert_subservice_functions(void)
+{
+	enum cmp_data_type data_type;
+
+	for (data_type = 0; data_type <= DATA_TYPE_CHUNK; data_type++) {
+		uint8_t sst = convert_cmp_data_type_to_subservice(data_type);
+		enum cmp_data_type data_type_convert = convert_subservice_to_cmp_data_type(sst);
+		uint8_t sst_convert = convert_cmp_data_type_to_subservice(data_type_convert);
+
+		TEST_ASSERT_EQUAL(sst_convert, sst);
+	}
 }
 
 
@@ -267,22 +284,32 @@ void test_cmp_input_size_to_samples(void)
 	size = COLLECTION_HDR_SIZE + 4*sizeof(struct s_fx_ncob) - 1;
 	samples_get = cmp_input_size_to_samples(size, data_type);
 	TEST_ASSERT_EQUAL(-1, samples_get);
+
+	data_type = DATA_TYPE_UNKNOWN;
+	size = 32;
+	samples_get = cmp_input_size_to_samples(size, data_type);
+	TEST_ASSERT_EQUAL(-1, samples_get);
 }
 
 
-static void check_endianness(void* data, size_t size, enum cmp_data_type data_type)
+static void check_endianness(void *data, uint16_t size, enum cmp_data_type data_type)
 {
 	int error;
 	uint8_t *p_8 = data;
-	size_t i;
+	int i;
+	uint8_t hdr_cpy[COLLECTION_HDR_SIZE];
 
 	TEST_ASSERT_TRUE(size > COLLECTION_HDR_SIZE);
 
-	error = cmp_input_big_to_cpu_endianness(data, (uint32_t)size, data_type);
+	cmp_col_set_subservice(data, convert_cmp_data_type_to_subservice(data_type));
+	cmp_col_set_data_length(data, size-COLLECTION_HDR_SIZE);
+
+	memcpy(hdr_cpy, data, sizeof(hdr_cpy));
+
+	error = be_to_cpu_chunk(data, size);
 	TEST_ASSERT_FALSE(error);
 
-	for (i = 0; i < COLLECTION_HDR_SIZE; i++)
-		TEST_ASSERT_EQUAL(0, p_8[i]);
+	TEST_ASSERT_EQUAL_HEX8_ARRAY(hdr_cpy, data, COLLECTION_HDR_SIZE);
 
 	for (i = 0; i < size-COLLECTION_HDR_SIZE; i++)
 		TEST_ASSERT_EQUAL((uint8_t)i, p_8[COLLECTION_HDR_SIZE+i]);
@@ -296,9 +323,9 @@ static void check_endianness(void* data, size_t size, enum cmp_data_type data_ty
 void test_cmp_input_big_to_cpu_endianness(void)
 {
 	enum cmp_data_type data_type;
+	int error;
 
 	{
-		int error;
 		uint16_t data[2] = {0x0001, 0x0203};
 		uint8_t data_cmp[4] = {0x00, 0x01, 0x02, 0x03};
 
@@ -308,6 +335,41 @@ void test_cmp_input_big_to_cpu_endianness(void)
 		TEST_ASSERT_FALSE(error);
 		TEST_ASSERT_EQUAL_MEMORY(data, data_cmp, sizeof(data_cmp));
 	}
+	{
+		struct {
+			uint8_t hdr[COLLECTION_HDR_SIZE];
+			struct offset entry[2];
+		} __attribute__((packed)) data = {0};
+		size_t i;
+		uint8_t *p_8 = (uint8_t *)&data;
+
+		data_type = DATA_TYPE_OFFSET;
+
+		data.entry[0].mean     = 0x00010203;
+		data.entry[0].variance = 0x04050607;
+		data.entry[1].mean     = 0x08090A0B;
+		data.entry[1].variance = 0x0C0D0E0F;
+
+		error = cmp_input_big_to_cpu_endianness(&data, sizeof(data), data_type);
+		TEST_ASSERT_FALSE(error);
+
+		for (i = 0; i < COLLECTION_HDR_SIZE; i++)
+			TEST_ASSERT_EQUAL(0, p_8[i]);
+		for (i = 0; i < sizeof(data)-COLLECTION_HDR_SIZE; i++)
+			TEST_ASSERT_EQUAL((uint8_t)i, p_8[COLLECTION_HDR_SIZE+i]);
+	}
+}
+
+
+/**
+ * @test be_to_cpu_chunk
+ * @test cpu_to_be_chunk
+ */
+
+void test_be_to_cpu_chunk(void)
+{
+	enum cmp_data_type data_type;
+
 	{
 		struct {
 			uint8_t hdr[COLLECTION_HDR_SIZE];
@@ -613,6 +675,61 @@ void test_cmp_input_big_to_cpu_endianness(void)
 
 		check_endianness(&data, sizeof(data), data_type);
 	}
+}
+
+
+/**
+ * @test be_to_cpu_chunk
+ */
+
+void test_be_to_cpu_chunk_error_cases(void)
+{
+	int error;
+	uint8_t *chunk;
+	size_t chunk_size;
+	uint8_t chunk_hdr_cpy[COLLECTION_HDR_SIZE];
+
+	/* data = NULL test */
+	chunk = NULL;
+	chunk_size = 43;
+	error = be_to_cpu_chunk(chunk, chunk_size);
+	TEST_ASSERT_FALSE(error);
+
+	chunk = calloc(1, COLLECTION_HDR_SIZE + 3*sizeof(struct background));
+	cmp_col_set_subservice((void *)chunk, SST_NCxx_S_SCIENCE_BACKGROUND);
+	cmp_col_set_data_length((void *)chunk, 0);
+	memcpy(chunk_hdr_cpy, chunk, sizeof(chunk_hdr_cpy));
+
+	/* size to small */
+	chunk_size = COLLECTION_HDR_SIZE - 1;
+	error = be_to_cpu_chunk(chunk, chunk_size);
+	TEST_ASSERT_TRUE(error);
+
+	/* chunk without data */
+	chunk_size = COLLECTION_HDR_SIZE;
+	error = be_to_cpu_chunk(chunk, chunk_size);
+	TEST_ASSERT_FALSE(error);
+	TEST_ASSERT_EQUAL_HEX8_ARRAY(chunk_hdr_cpy, chunk, COLLECTION_HDR_SIZE);
+
+	/* wrong chunk size */
+	cmp_col_set_data_length((void *)chunk, 3*sizeof(struct background));
+	chunk_size = COLLECTION_HDR_SIZE + 2*sizeof(struct background);
+	error = be_to_cpu_chunk(chunk, chunk_size);
+	TEST_ASSERT_TRUE(error);
+
+	/* unknown subservice */
+	cmp_col_set_subservice((void *)chunk, 43);
+	chunk_size = COLLECTION_HDR_SIZE + 3*sizeof(struct background);
+	error = be_to_cpu_chunk(chunk, chunk_size);
+	TEST_ASSERT_TRUE(error);
+
+	/* unknown subservice zero data length */
+	cmp_col_set_data_length((void *)chunk, 0);
+	chunk_size = COLLECTION_HDR_SIZE;
+	error = be_to_cpu_chunk(chunk, chunk_size);
+	TEST_ASSERT_TRUE(error);
+
+	free(chunk);
 }
 
 
