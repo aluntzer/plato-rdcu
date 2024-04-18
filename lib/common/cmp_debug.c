@@ -87,4 +87,7 @@ void cmp_debug_print_impl(const char *fmt, ...)
 	cmp_debug_puts(print_buffer);
 }
 
+#else
+/* prevent warning: ISO C requires a translation unit to contain at least one declaration [-Wempty-translation-unit] */
+extern int make_iso_compilers_happy;
 #endif /* (DEBUGLEVEL > 0) */

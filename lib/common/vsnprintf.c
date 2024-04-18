@@ -884,4 +884,8 @@ int my_vsnprintf(char* buffer, size_t count, const char* format, va_list va)
 	return _vsnprintf(_out_buffer, buffer, count, format, va);
 }
 
+#else
+/* prevent warning: ISO C requires a translation unit to contain at least one declaration [-Wempty-translation-unit] */
+extern int make_iso_compilers_happy;
+
 #endif /* (DEBUGLEVEL > 0) */
