@@ -2031,7 +2031,7 @@ static uint32_t cmp_cfg_icu_is_invalid_error_code(const struct cmp_cfg *cfg)
 	RETURN_ERROR_IF(cmp_cfg_icu_buffers_is_invalid(cfg), PAR_BUFFERS, "");
 
 	if (cfg->cmp_mode != CMP_MODE_RAW)
-		RETURN_ERROR_IF(cmp_cfg_icu_max_used_bits_out_of_limit(cfg->max_used_bits), GENERIC, "");
+		RETURN_ERROR_IF(cmp_cfg_icu_max_used_bits_out_of_limit(cfg->max_used_bits), PAR_MAX_USED_BITS, "");
 
 	if (cmp_imagette_data_type_is_used(cfg->data_type)) {
 		RETURN_ERROR_IF(cmp_cfg_imagette_is_invalid(cfg, ICU_CHECK), PAR_SPECIFIC, "");
@@ -2777,7 +2777,7 @@ uint32_t compress_chunk_cmp_size_bound(const void *chunk, size_t chunk_size)
 
 	/* count the number of collections in the chunk */
 	for (read_bytes = 0;
-	     read_bytes <= (int32_t)chunk_size-COLLECTION_HDR_SIZE;
+	     read_bytes <= (int32_t)(chunk_size-COLLECTION_HDR_SIZE);
 	     read_bytes += cmp_col_get_size((const struct collection_hdr *)((const uint8_t *)chunk + read_bytes)))
 		num_col++;
 
