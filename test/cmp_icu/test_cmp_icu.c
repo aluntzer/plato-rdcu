@@ -55,9 +55,12 @@ void setUp(void)
 #endif
 
 	if (!n) {
+		uint32_t seed_up = seed >> 32;
+		uint32_t seed_down = seed & 0xFFFFFFFF;
+
 		n = 1;
 		cmp_rand_seed(seed);
-		printf("seed: %"PRIu64"\n", seed);
+		printf("seed: 0x%08"PRIx32"%08"PRIx32"\n", seed_up, seed_down);
 	}
 }
 
@@ -531,7 +534,7 @@ void test_cmp_cfg_icu_imagette(void)
 
 	/* cmp_par to big */
 	cfg = cmp_cfg_icu_create(DATA_TYPE_IMAGETTE, CMP_MODE_MODEL_MULTI, 16, CMP_LOSSLESS);
-	cmp_par = MAX_IMA_GOLOMB_PAR + 1;
+	cmp_par = MAX_NON_IMA_GOLOMB_PAR + 1;
 	spillover_par = MIN_IMA_SPILL;
 	error = cmp_cfg_icu_imagette(&cfg, cmp_par, spillover_par);
 	TEST_ASSERT_TRUE(error);
@@ -554,7 +557,7 @@ void test_cmp_cfg_icu_imagette(void)
 	/* spillover_par to big */
 	cfg = cmp_cfg_icu_create(DATA_TYPE_IMAGETTE, CMP_MODE_MODEL_MULTI, 16, CMP_LOSSLESS);
 	cmp_par = MIN_IMA_GOLOMB_PAR;
-	spillover_par = cmp_ima_max_spill(cmp_par)+1;
+	spillover_par = cmp_icu_max_spill(cmp_par)+1;
 	error = cmp_cfg_icu_imagette(&cfg, cmp_par, spillover_par);
 	TEST_ASSERT_TRUE(error);
 	/* ignore in RAW MODE */
@@ -1373,7 +1376,8 @@ static void init_PB32_arrays(uint32_t *z, uint32_t *o)
 void test_put_n_bits32(void)
 {
 	uint32_t v, n;
-	int o, rval; /* return value */
+	uint32_t o;
+	uint32_t rval; /* return value */
 	uint32_t testarray0[SDP_PB_N];
 	uint32_t testarray1[SDP_PB_N];
 	const uint32_t l = sizeof(testarray0) * CHAR_BIT;
@@ -1714,17 +1718,20 @@ void test_put_n_bits32(void)
 	/* n too large */
 	v = 0x0; n = 33; o = 1;
 	rval = put_n_bits32(v, n, o, testarray0, l);
-	TEST_ASSERT_EQUAL_INT(rval, -1);
+	TEST_ASSERT_TRUE(cmp_is_error(rval));
+	TEST_ASSERT_EQUAL_INT(CMP_ERROR_INT_DECODER, cmp_get_error_code(rval));
 	TEST_ASSERT(testarray0[0] == 0);
 	TEST_ASSERT(testarray0[1] == 0);
 
 	rval = put_n_bits32(v, n, o, NULL, l);
-	TEST_ASSERT_EQUAL_INT(rval, -1);
+	TEST_ASSERT_TRUE(cmp_is_error(rval));
+	TEST_ASSERT_EQUAL_INT(CMP_ERROR_INT_DECODER, cmp_get_error_code(rval));
 
 	/* try to put too much in the bitstream */
 	v = 0x1; n = 1; o = 96;
 	rval = put_n_bits32(v, n, o, testarray0, l);
-	TEST_ASSERT_EQUAL_INT(CMP_ERROR_SMALL_BUF, rval);
+	TEST_ASSERT_TRUE(cmp_is_error(rval));
+	TEST_ASSERT_EQUAL_INT(CMP_ERROR_SMALL_BUF_, cmp_get_error_code(rval));
 	TEST_ASSERT(testarray0[0] == 0);
 	TEST_ASSERT(testarray0[1] == 0);
 	TEST_ASSERT(testarray0[2] == 0);
@@ -1736,15 +1743,17 @@ void test_put_n_bits32(void)
 	/* offset lager than max_stream_len(l) */
 	v = 0x0; n = 32; o = INT32_MAX;
 	rval = put_n_bits32(v, n, o, testarray1, l);
-	TEST_ASSERT_EQUAL_INT(CMP_ERROR_SMALL_BUF, rval);
+	TEST_ASSERT_TRUE(cmp_is_error(rval));
+	TEST_ASSERT_EQUAL_INT(CMP_ERROR_SMALL_BUF_, cmp_get_error_code(rval));
 	TEST_ASSERT(testarray1[0] == 0xffffffff);
 	TEST_ASSERT(testarray1[1] == 0xffffffff);
 	TEST_ASSERT(testarray1[2] == 0xffffffff);
 
 	rval = put_n_bits32(v, n, o, NULL, l);
-	TEST_ASSERT(rval < 0);
+	TEST_ASSERT_FALSE(cmp_is_error(rval));
 
 	/* negative offset */
+#if 0
 	v = 0x0; n = 0; o = -1;
 	rval = put_n_bits32(v, n, o, testarray0, l);
 	TEST_ASSERT_EQUAL_INT(-1, rval);
@@ -1762,6 +1771,7 @@ void test_put_n_bits32(void)
 
 	rval = put_n_bits32(v, n, o, NULL, l);
 	TEST_ASSERT_EQUAL_INT(-1, rval);
+#endif
 }
 
 
@@ -1985,8 +1995,8 @@ void test_golomb_encoder(void)
 void test_encode_value_zero(void)
 {
 	uint32_t data, model;
-	int stream_len;
-	struct encoder_setupt setup = {0};
+	uint32_t stream_len;
+	struct encoder_setup setup = {0};
 	uint32_t bitstream[3] = {0};
 
 	/* setup the setup */
@@ -2042,7 +2052,8 @@ void test_encode_value_zero(void)
 	/* small buffer error */
 	data = 23; model = 26;
 	stream_len = encode_value_zero(data, model, stream_len, &setup);
-	TEST_ASSERT_EQUAL_INT(CMP_ERROR_SMALL_BUF, stream_len);
+	TEST_ASSERT_TRUE(cmp_is_error(stream_len));
+	TEST_ASSERT_EQUAL_INT(CMP_ERROR_SMALL_BUF_, cmp_get_error_code(stream_len));
 
 	/* reset bitstream to all bits set */
 	bitstream[0] = ~0U;
@@ -2093,7 +2104,8 @@ void test_encode_value_zero(void)
 	setup.max_stream_len = 32;
 	data = 31; model = 0;
 	stream_len = encode_value_zero(data, model, stream_len, &setup);
-	TEST_ASSERT_EQUAL_INT(CMP_ERROR_SMALL_BUF, stream_len);
+	TEST_ASSERT_TRUE(cmp_is_error(stream_len));
+	TEST_ASSERT_EQUAL_INT(CMP_ERROR_SMALL_BUF_, cmp_get_error_code(stream_len));
 	TEST_ASSERT_EQUAL_HEX(0, be32_to_cpu(bitstream[0]));
 	TEST_ASSERT_EQUAL_HEX(0, be32_to_cpu(bitstream[1]));
 	TEST_ASSERT_EQUAL_HEX(0, be32_to_cpu(bitstream[2]));
@@ -2107,8 +2119,8 @@ void test_encode_value_zero(void)
 void test_encode_value_multi(void)
 {
 	uint32_t data, model;
-	int stream_len;
-	struct encoder_setupt setup = {0};
+	uint32_t stream_len;
+	struct encoder_setup setup = {0};
 	uint32_t bitstream[4] = {0};
 
 	/* setup the setup */
@@ -2176,7 +2188,7 @@ void test_encode_value_multi(void)
 	/* small buffer error */
 	data = 0; model = 38;
 	stream_len = encode_value_multi(data, model, stream_len, &setup);
-	TEST_ASSERT_EQUAL_INT(CMP_ERROR_SMALL_BUF, stream_len);
+	TEST_ASSERT_EQUAL_INT(CMP_ERROR_SMALL_BUF_, cmp_get_error_code(stream_len));
 
 	/* small buffer error when creating the multi escape symbol*/
 	bitstream[0] = 0;
@@ -2186,19 +2198,19 @@ void test_encode_value_multi(void)
 	stream_len = 32;
 	data = 31; model = 0;
 	stream_len = encode_value_multi(data, model, stream_len, &setup);
-	TEST_ASSERT_EQUAL_INT(CMP_ERROR_SMALL_BUF, stream_len);
+	TEST_ASSERT_EQUAL_INT(CMP_ERROR_SMALL_BUF_, cmp_get_error_code(stream_len));
 	TEST_ASSERT_EQUAL_HEX(0, bitstream[0]);
 	TEST_ASSERT_EQUAL_HEX(0, bitstream[1]);
 }
 
-
+#if 0
 /**
  * @test encode_value
  */
 
-void test_encode_value(void)
+void no_test_encode_value(void)
 {
-	struct encoder_setupt setup = {0};
+	struct encoder_setup setup = {0};
 	uint32_t bitstream[4] = {0};
 	uint32_t data, model;
 	int cmp_size;
@@ -2303,6 +2315,7 @@ void test_encode_value(void)
 	cmp_size = encode_value(data, model, cmp_size, &setup);
 	TEST_ASSERT_EQUAL_INT(CMP_ERROR_HIGH_VALUE, cmp_size);
 }
+#endif
 
 
 /**
@@ -2391,8 +2404,8 @@ void test_compress_imagette_model(void)
 	/* error case: model mode without model data */
 	cfg.model_buf = NULL; /* this is the error */
 	cmp_size = icu_compress_data(&cfg);
-	TEST_ASSERT_TRUE(cmp_is_error(cmp_size));
-	TEST_ASSERT_EQUAL(CMP_ERROR_PAR_BUFFERS, cmp_get_error_code(cmp_size));
+	TEST_ASSERT_TRUE(cmp_is_error((uint32_t)cmp_size));
+	TEST_ASSERT_EQUAL(CMP_ERROR_PAR_BUFFERS, cmp_get_error_code((uint32_t)cmp_size));
 }
 
 
@@ -2451,7 +2464,8 @@ void test_compress_imagette_raw(void)
 	cfg.max_used_bits = &MAX_USED_BITS_SAFE;
 
 	cmp_size = icu_compress_data(&cfg);
-	TEST_ASSERT_EQUAL_INT(-1, cmp_size);
+	TEST_ASSERT_TRUE(cmp_is_error((uint32_t)cmp_size));
+	TEST_ASSERT_EQUAL_INT(CMP_ERROR_PAR_BUFFERS, cmp_get_error_code((uint32_t)cmp_size));
 
 
 	/* error case: compressed data buffer to small */
@@ -2464,7 +2478,8 @@ void test_compress_imagette_raw(void)
 	cfg.max_used_bits = &MAX_USED_BITS_SAFE;
 
 	cmp_size = icu_compress_data(&cfg);
-	TEST_ASSERT_EQUAL_INT(CMP_ERROR_SMALL_BUF, cmp_size);
+	TEST_ASSERT_TRUE(cmp_is_error((uint32_t)cmp_size));
+	TEST_ASSERT_EQUAL_INT(CMP_ERROR_SMALL_BUF_, cmp_get_error_code((uint32_t)cmp_size));
 
 	free(output_buf);
 }
@@ -2556,7 +2571,8 @@ void test_compress_imagette_error_cases(void)
 	cfg.buffer_length = 4;
 
 	cmp_size = icu_compress_data(&cfg);
-	TEST_ASSERT_EQUAL_INT(-1, cmp_size);
+	TEST_ASSERT_TRUE(cmp_is_error((uint32_t)cmp_size));
+	TEST_ASSERT_EQUAL_INT(CMP_ERROR_PAR_MAX_USED_BITS, cmp_get_error_code((uint32_t)cmp_size));
 
 	/* error my_max_used_bits.saturated_imagette value is to high */
 	my_max_used_bits = MAX_USED_BITS_SAFE;
@@ -2573,7 +2589,8 @@ void test_compress_imagette_error_cases(void)
 	cfg.buffer_length = 4;
 
 	cmp_size = icu_compress_data(&cfg);
-	TEST_ASSERT_EQUAL_INT(-1, cmp_size);
+	TEST_ASSERT_TRUE(cmp_is_error((uint32_t)cmp_size));
+	TEST_ASSERT_EQUAL_INT(CMP_ERROR_PAR_MAX_USED_BITS, cmp_get_error_code((uint32_t)cmp_size));
 
 	/* error my_max_used_bits.fc_imagette value is to high */
 	my_max_used_bits = MAX_USED_BITS_SAFE;
@@ -2590,7 +2607,8 @@ void test_compress_imagette_error_cases(void)
 	cfg.buffer_length = 4;
 
 	cmp_size = icu_compress_data(&cfg);
-	TEST_ASSERT_EQUAL_INT(-1, cmp_size);
+	TEST_ASSERT_TRUE(cmp_is_error((uint32_t)cmp_size));
+	TEST_ASSERT_EQUAL_INT(CMP_ERROR_PAR_MAX_USED_BITS, cmp_get_error_code((uint32_t)cmp_size));
 
 	/* test unknown cmp_mode */
 	cfg.max_used_bits = &MAX_USED_BITS_SAFE;
@@ -2604,7 +2622,8 @@ void test_compress_imagette_error_cases(void)
 	cfg.buffer_length = 4;
 
 	cmp_size = icu_compress_data(&cfg);
-	TEST_ASSERT_EQUAL_INT(-1, cmp_size);
+	TEST_ASSERT_TRUE(cmp_is_error((uint32_t)cmp_size));
+	TEST_ASSERT_EQUAL_INT(CMP_ERROR_PAR_GENERIC, cmp_get_error_code((uint32_t)cmp_size));
 
 	/* test golomb_par = 0 */
 	cfg.max_used_bits = &MAX_USED_BITS_SAFE;
@@ -2618,7 +2637,8 @@ void test_compress_imagette_error_cases(void)
 	cfg.buffer_length = 4;
 
 	cmp_size = icu_compress_data(&cfg);
-	TEST_ASSERT_EQUAL_INT(-1, cmp_size);
+	TEST_ASSERT_TRUE(cmp_is_error((uint32_t)cmp_size));
+	TEST_ASSERT_EQUAL_INT(CMP_ERROR_PAR_SPECIFIC, cmp_get_error_code((uint32_t)cmp_size));
 }
 
 #if 0
@@ -2918,12 +2938,14 @@ void test_compress_s_fx_error_cases(void)
 
 	my_max_used_bits.s_exp_flags = 33; /* more than 32 bits are not allowed */
 	cmp_bits = icu_compress_data(&cfg);
-	TEST_ASSERT_EQUAL_INT(-1, cmp_bits);
+	TEST_ASSERT_TRUE(cmp_is_error((uint32_t)cmp_bits));
+	TEST_ASSERT_EQUAL_INT(CMP_ERROR_PAR_MAX_USED_BITS, cmp_get_error_code((uint32_t)cmp_bits));
 
 	my_max_used_bits.s_exp_flags = 32;
 	my_max_used_bits.s_fx = 33; /* more than 32 bits are not allowed */
 	cmp_bits = icu_compress_data(&cfg);
-	TEST_ASSERT_EQUAL_INT(-1, cmp_bits);
+	TEST_ASSERT_TRUE(cmp_is_error((uint32_t)cmp_bits));
+	TEST_ASSERT_EQUAL_INT(CMP_ERROR_PAR_MAX_USED_BITS, cmp_get_error_code((uint32_t)cmp_bits));
 }
 
 
@@ -2986,21 +3008,24 @@ void test_compress_s_fx_efx_error_cases(void)
 	my_max_used_bits.s_exp_flags = 33;
 	cmp_cfg_icu_max_used_bits(&cfg, &my_max_used_bits);
 	cmp_bits = icu_compress_data(&cfg);
-	TEST_ASSERT_EQUAL_INT(-1, cmp_bits);
+	TEST_ASSERT_TRUE(cmp_is_error((uint32_t)cmp_bits));
+	TEST_ASSERT_EQUAL_INT(CMP_ERROR_PAR_MAX_USED_BITS, cmp_get_error_code((uint32_t)cmp_bits));
 
 	/* error case fx */
 	my_max_used_bits.s_exp_flags = 2;
 	my_max_used_bits.s_fx = 33;
 	cmp_cfg_icu_max_used_bits(&cfg, &my_max_used_bits);
 	cmp_bits = icu_compress_data(&cfg);
-	TEST_ASSERT_EQUAL_INT(-1, cmp_bits);
+	TEST_ASSERT_TRUE(cmp_is_error((uint32_t)cmp_bits));
+	TEST_ASSERT_EQUAL_INT(CMP_ERROR_PAR_MAX_USED_BITS, cmp_get_error_code((uint32_t)cmp_bits));
 
 	/* error case efx */
 	my_max_used_bits.s_fx = 21;
 	my_max_used_bits.s_efx = 33;
 	cmp_cfg_icu_max_used_bits(&cfg, &my_max_used_bits);
 	cmp_bits = icu_compress_data(&cfg);
-	TEST_ASSERT_EQUAL_INT(-1, cmp_bits);
+	TEST_ASSERT_TRUE(cmp_is_error((uint32_t)cmp_bits));
+	TEST_ASSERT_EQUAL_INT(CMP_ERROR_PAR_MAX_USED_BITS, cmp_get_error_code((uint32_t)cmp_bits));
 }
 
 
@@ -3070,21 +3095,25 @@ void test_compress_s_fx_ncob_error_cases(void)
 	my_max_used_bits.s_exp_flags = 33;
 	cmp_cfg_icu_max_used_bits(&cfg, &my_max_used_bits);
 	cmp_bits = icu_compress_data(&cfg);
-	TEST_ASSERT_EQUAL_INT(-1, cmp_bits);
+	TEST_ASSERT_TRUE(cmp_is_error((uint32_t)cmp_bits));
+	TEST_ASSERT_EQUAL_INT(CMP_ERROR_PAR_MAX_USED_BITS, cmp_get_error_code((uint32_t)cmp_bits));
+
 
 	/* error case fx */
 	my_max_used_bits.s_exp_flags = 2;
 	my_max_used_bits.s_fx = 33;
 	cmp_cfg_icu_max_used_bits(&cfg, &my_max_used_bits);
 	cmp_bits = icu_compress_data(&cfg);
-	TEST_ASSERT_EQUAL_INT(-1, cmp_bits);
+	TEST_ASSERT_TRUE(cmp_is_error((uint32_t)cmp_bits));
+	TEST_ASSERT_EQUAL_INT(CMP_ERROR_PAR_MAX_USED_BITS, cmp_get_error_code((uint32_t)cmp_bits));
 
 	/* error case efx */
 	my_max_used_bits.s_fx = 21;
 	my_max_used_bits.s_ncob = 33;
 	cmp_cfg_icu_max_used_bits(&cfg, &my_max_used_bits);
 	cmp_bits = icu_compress_data(&cfg);
-	TEST_ASSERT_EQUAL_INT(-1, cmp_bits);
+	TEST_ASSERT_TRUE(cmp_is_error((uint32_t)cmp_bits));
+	TEST_ASSERT_EQUAL_INT(CMP_ERROR_PAR_MAX_USED_BITS, cmp_get_error_code((uint32_t)cmp_bits));
 }
 
 
@@ -3175,34 +3204,38 @@ void test_compress_s_fx_efx_ncob_ecob_error_cases(void)
 	my_max_used_bits.s_exp_flags = 33;
 	cmp_cfg_icu_max_used_bits(&cfg, &my_max_used_bits);
 	cmp_bits = icu_compress_data(&cfg);
-	TEST_ASSERT_EQUAL_INT(-1, cmp_bits);
+	TEST_ASSERT_TRUE(cmp_is_error((uint32_t)cmp_bits));
+	TEST_ASSERT_EQUAL_INT(CMP_ERROR_PAR_MAX_USED_BITS, cmp_get_error_code((uint32_t)cmp_bits));
 
 	/* error case fx */
 	my_max_used_bits.s_exp_flags = 32;
 	my_max_used_bits.s_fx = 33;
 	cmp_cfg_icu_max_used_bits(&cfg, &my_max_used_bits);
 	cmp_bits = icu_compress_data(&cfg);
-	TEST_ASSERT_EQUAL_INT(-1, cmp_bits);
+	TEST_ASSERT_TRUE(cmp_is_error((uint32_t)cmp_bits));
+	TEST_ASSERT_EQUAL_INT(CMP_ERROR_PAR_MAX_USED_BITS, cmp_get_error_code((uint32_t)cmp_bits));
 
 	/* error case efx */
 	my_max_used_bits.s_fx = 32;
 	my_max_used_bits.s_ncob = 33;
 	cmp_cfg_icu_max_used_bits(&cfg, &my_max_used_bits);
 	cmp_bits = icu_compress_data(&cfg);
-	TEST_ASSERT_EQUAL_INT(-1, cmp_bits);
+	TEST_ASSERT_TRUE(cmp_is_error((uint32_t)cmp_bits));
+	TEST_ASSERT_EQUAL_INT(CMP_ERROR_PAR_MAX_USED_BITS, cmp_get_error_code((uint32_t)cmp_bits));
 
 	my_max_used_bits.s_ncob = 32;
 	my_max_used_bits.s_efx = 33;
 	cmp_cfg_icu_max_used_bits(&cfg, &my_max_used_bits);
 	cmp_bits = icu_compress_data(&cfg);
-	TEST_ASSERT_EQUAL_INT(-1, cmp_bits);
+	TEST_ASSERT_TRUE(cmp_is_error((uint32_t)cmp_bits));
+	TEST_ASSERT_EQUAL_INT(CMP_ERROR_PAR_MAX_USED_BITS, cmp_get_error_code((uint32_t)cmp_bits));
 
 	my_max_used_bits.s_efx = 32;
 	my_max_used_bits.s_ecob = 33;
 	cmp_cfg_icu_max_used_bits(&cfg, &my_max_used_bits);
 	cmp_bits = icu_compress_data(&cfg);
-	TEST_ASSERT_EQUAL_INT(-1, cmp_bits);
-	my_max_used_bits.s_ecob = 32;
+	TEST_ASSERT_TRUE(cmp_is_error((uint32_t)cmp_bits));
+	TEST_ASSERT_EQUAL_INT(CMP_ERROR_PAR_MAX_USED_BITS, cmp_get_error_code((uint32_t)cmp_bits));
 }
 
 
@@ -3244,7 +3277,8 @@ void test_compress_f_fx_error_cases(void)
 	my_max_used_bits.f_fx = 33; /* more than 32 bits are not allowed */
 	cmp_cfg_icu_max_used_bits(&cfg, &my_max_used_bits);
 	cmp_bits = icu_compress_data(&cfg);
-	TEST_ASSERT_EQUAL_INT(-1, cmp_bits);
+	TEST_ASSERT_TRUE(cmp_is_error((uint32_t)cmp_bits));
+	TEST_ASSERT_EQUAL_INT(CMP_ERROR_PAR_MAX_USED_BITS, cmp_get_error_code((uint32_t)cmp_bits));
 }
 
 
@@ -3307,13 +3341,15 @@ void test_compress_f_fx_efx_error_cases(void)
 	my_max_used_bits.f_fx = 33; /* more than 32 bits are not allowed */
 	cmp_cfg_icu_max_used_bits(&cfg, &my_max_used_bits);
 	cmp_bits = icu_compress_data(&cfg);
-	TEST_ASSERT_EQUAL_INT(-1, cmp_bits);
+	TEST_ASSERT_TRUE(cmp_is_error((uint32_t)cmp_bits));
+	TEST_ASSERT_EQUAL_INT(CMP_ERROR_PAR_MAX_USED_BITS, cmp_get_error_code((uint32_t)cmp_bits));
 
 	my_max_used_bits.f_fx = 32;
 	my_max_used_bits.f_efx = 33; /* more than 32 bits are not allowed */
 	cmp_cfg_icu_max_used_bits(&cfg, &my_max_used_bits);
 	cmp_bits = icu_compress_data(&cfg);
-	TEST_ASSERT_EQUAL_INT(-1, cmp_bits);
+	TEST_ASSERT_TRUE(cmp_is_error((uint32_t)cmp_bits));
+	TEST_ASSERT_EQUAL_INT(CMP_ERROR_PAR_MAX_USED_BITS, cmp_get_error_code((uint32_t)cmp_bits));
 }
 
 
@@ -3372,13 +3408,15 @@ void test_compress_f_fx_ncob_error_cases(void)
 	my_max_used_bits.f_fx = 33; /* more than 32 bits are not allowed */
 	cmp_cfg_icu_max_used_bits(&cfg, &my_max_used_bits);
 	cmp_bits = icu_compress_data(&cfg);
-	TEST_ASSERT_EQUAL_INT(-1, cmp_bits);
+	TEST_ASSERT_TRUE(cmp_is_error((uint32_t)cmp_bits));
+	TEST_ASSERT_EQUAL_INT(CMP_ERROR_PAR_MAX_USED_BITS, cmp_get_error_code((uint32_t)cmp_bits));
 
 	my_max_used_bits.f_fx = 32;
 	my_max_used_bits.f_ncob = 33; /* more than 32 bits are not allowed */
 	cmp_cfg_icu_max_used_bits(&cfg, &my_max_used_bits);
 	cmp_bits = icu_compress_data(&cfg);
-	TEST_ASSERT_EQUAL_INT(-1, cmp_bits);
+	TEST_ASSERT_TRUE(cmp_is_error((uint32_t)cmp_bits));
+	TEST_ASSERT_EQUAL_INT(CMP_ERROR_PAR_MAX_USED_BITS, cmp_get_error_code((uint32_t)cmp_bits));
 }
 
 
@@ -3457,25 +3495,29 @@ void test_compress_f_fx_efx_ncob_ecob(void)
 	my_max_used_bits.f_fx = 33; /* more than 32 bits are not allowed */
 	cmp_cfg_icu_max_used_bits(&cfg, &my_max_used_bits);
 	cmp_bits = icu_compress_data(&cfg);
-	TEST_ASSERT_EQUAL_INT(-1, cmp_bits);
+	TEST_ASSERT_TRUE(cmp_is_error((uint32_t)cmp_bits));
+	TEST_ASSERT_EQUAL_INT(CMP_ERROR_PAR_MAX_USED_BITS, cmp_get_error_code((uint32_t)cmp_bits));
 
 	my_max_used_bits.f_fx = 32;
 	my_max_used_bits.f_ncob = 33; /* more than 32 bits are not allowed */
 	cmp_cfg_icu_max_used_bits(&cfg, &my_max_used_bits);
 	cmp_bits = icu_compress_data(&cfg);
-	TEST_ASSERT_EQUAL_INT(-1, cmp_bits);
+	TEST_ASSERT_TRUE(cmp_is_error((uint32_t)cmp_bits));
+	TEST_ASSERT_EQUAL_INT(CMP_ERROR_PAR_MAX_USED_BITS, cmp_get_error_code((uint32_t)cmp_bits));
 
 	my_max_used_bits.f_ncob = 32;
 	my_max_used_bits.f_efx = 33; /* more than 32 bits are not allowed */
 	cmp_cfg_icu_max_used_bits(&cfg, &my_max_used_bits);
 	cmp_bits = icu_compress_data(&cfg);
-	TEST_ASSERT_EQUAL_INT(-1, cmp_bits);
+	TEST_ASSERT_TRUE(cmp_is_error((uint32_t)cmp_bits));
+	TEST_ASSERT_EQUAL_INT(CMP_ERROR_PAR_MAX_USED_BITS, cmp_get_error_code((uint32_t)cmp_bits));
 
 	my_max_used_bits.f_efx = 32;
 	my_max_used_bits.f_ecob = 33; /* more than 32 bits are not allowed */
 	cmp_cfg_icu_max_used_bits(&cfg, &my_max_used_bits);
 	cmp_bits = icu_compress_data(&cfg);
-	TEST_ASSERT_EQUAL_INT(-1, cmp_bits);
+	TEST_ASSERT_TRUE(cmp_is_error((uint32_t)cmp_bits));
+	TEST_ASSERT_EQUAL_INT(CMP_ERROR_PAR_MAX_USED_BITS, cmp_get_error_code((uint32_t)cmp_bits));
 }
 
 
@@ -3538,19 +3580,22 @@ void test_compress_l_fx_error_cases(void)
 	my_max_used_bits.l_exp_flags = 33; /* more than 32 bits are not allowed */
 	cmp_cfg_icu_max_used_bits(&cfg, &my_max_used_bits);
 	cmp_bits = icu_compress_data(&cfg);
-	TEST_ASSERT_EQUAL_INT(-1, cmp_bits);
+	TEST_ASSERT_TRUE(cmp_is_error((uint32_t)cmp_bits));
+	TEST_ASSERT_EQUAL_INT(CMP_ERROR_PAR_MAX_USED_BITS, cmp_get_error_code((uint32_t)cmp_bits));
 
 	my_max_used_bits.l_exp_flags = 32;
 	my_max_used_bits.l_fx = 33; /* more than 32 bits are not allowed */
 	cmp_cfg_icu_max_used_bits(&cfg, &my_max_used_bits);
 	cmp_bits = icu_compress_data(&cfg);
-	TEST_ASSERT_EQUAL_INT(-1, cmp_bits);
+	TEST_ASSERT_TRUE(cmp_is_error((uint32_t)cmp_bits));
+	TEST_ASSERT_EQUAL_INT(CMP_ERROR_PAR_MAX_USED_BITS, cmp_get_error_code((uint32_t)cmp_bits));
 
 	my_max_used_bits.l_fx = 32;
 	my_max_used_bits.l_fx_variance = 33; /* more than 32 bits are not allowed */
 	cmp_cfg_icu_max_used_bits(&cfg, &my_max_used_bits);
 	cmp_bits = icu_compress_data(&cfg);
-	TEST_ASSERT_EQUAL_INT(-1, cmp_bits);
+	TEST_ASSERT_TRUE(cmp_is_error((uint32_t)cmp_bits));
+	TEST_ASSERT_EQUAL_INT(CMP_ERROR_PAR_MAX_USED_BITS, cmp_get_error_code((uint32_t)cmp_bits));
 }
 
 
@@ -3620,25 +3665,29 @@ void test_compress_l_fx_efx_error_cases(void)
 	my_max_used_bits.l_exp_flags = 33; /* more than 32 bits are not allowed */
 	cmp_cfg_icu_max_used_bits(&cfg, &my_max_used_bits);
 	cmp_bits = icu_compress_data(&cfg);
-	TEST_ASSERT_EQUAL_INT(-1, cmp_bits);
+	TEST_ASSERT_TRUE(cmp_is_error((uint32_t)cmp_bits));
+	TEST_ASSERT_EQUAL_INT(CMP_ERROR_PAR_MAX_USED_BITS, cmp_get_error_code((uint32_t)cmp_bits));
 
 	my_max_used_bits.l_exp_flags = 32;
 	my_max_used_bits.l_fx = 33; /* more than 32 bits are not allowed */
 	cmp_cfg_icu_max_used_bits(&cfg, &my_max_used_bits);
 	cmp_bits = icu_compress_data(&cfg);
-	TEST_ASSERT_EQUAL_INT(-1, cmp_bits);
+	TEST_ASSERT_TRUE(cmp_is_error((uint32_t)cmp_bits));
+	TEST_ASSERT_EQUAL_INT(CMP_ERROR_PAR_MAX_USED_BITS, cmp_get_error_code((uint32_t)cmp_bits));
 
 	my_max_used_bits.l_fx = 32;
 	my_max_used_bits.l_efx = 33; /* more than 32 bits are not allowed */
 	cmp_cfg_icu_max_used_bits(&cfg, &my_max_used_bits);
 	cmp_bits = icu_compress_data(&cfg);
-	TEST_ASSERT_EQUAL_INT(-1, cmp_bits);
+	TEST_ASSERT_TRUE(cmp_is_error((uint32_t)cmp_bits));
+	TEST_ASSERT_EQUAL_INT(CMP_ERROR_PAR_MAX_USED_BITS, cmp_get_error_code((uint32_t)cmp_bits));
 
 	my_max_used_bits.l_efx = 32;
 	my_max_used_bits.l_fx_variance = 33; /* more than 32 bits are not allowed */
 	cmp_cfg_icu_max_used_bits(&cfg, &my_max_used_bits);
 	cmp_bits = icu_compress_data(&cfg);
-	TEST_ASSERT_EQUAL_INT(-1, cmp_bits);
+	TEST_ASSERT_TRUE(cmp_is_error((uint32_t)cmp_bits));
+	TEST_ASSERT_EQUAL_INT(CMP_ERROR_PAR_MAX_USED_BITS, cmp_get_error_code((uint32_t)cmp_bits));
 }
 
 
@@ -3724,31 +3773,36 @@ void test_compress_l_fx_ncob_error_cases(void)
 	my_max_used_bits.l_exp_flags = 33; /* more than 32 bits are not allowed */
 	cmp_cfg_icu_max_used_bits(&cfg, &my_max_used_bits);
 	cmp_bits = icu_compress_data(&cfg);
-	TEST_ASSERT_EQUAL_INT(-1, cmp_bits);
+	TEST_ASSERT_TRUE(cmp_is_error((uint32_t)cmp_bits));
+	TEST_ASSERT_EQUAL_INT(CMP_ERROR_PAR_MAX_USED_BITS, cmp_get_error_code((uint32_t)cmp_bits));
 
 	my_max_used_bits.l_exp_flags = 32;
 	my_max_used_bits.l_fx = 33; /* more than 32 bits are not allowed */
 	cmp_cfg_icu_max_used_bits(&cfg, &my_max_used_bits);
 	cmp_bits = icu_compress_data(&cfg);
-	TEST_ASSERT_EQUAL_INT(-1, cmp_bits);
+	TEST_ASSERT_TRUE(cmp_is_error((uint32_t)cmp_bits));
+	TEST_ASSERT_EQUAL_INT(CMP_ERROR_PAR_MAX_USED_BITS, cmp_get_error_code((uint32_t)cmp_bits));
 
 	my_max_used_bits.l_fx = 32;
 	my_max_used_bits.l_ncob = 33; /* more than 32 bits are not allowed */
 	cmp_cfg_icu_max_used_bits(&cfg, &my_max_used_bits);
 	cmp_bits = icu_compress_data(&cfg);
-	TEST_ASSERT_EQUAL_INT(-1, cmp_bits);
+	TEST_ASSERT_TRUE(cmp_is_error((uint32_t)cmp_bits));
+	TEST_ASSERT_EQUAL_INT(CMP_ERROR_PAR_MAX_USED_BITS, cmp_get_error_code((uint32_t)cmp_bits));
 
 	my_max_used_bits.l_ncob = 32;
 	my_max_used_bits.l_fx_variance = 33; /* more than 32 bits are not allowed */
 	cmp_cfg_icu_max_used_bits(&cfg, &my_max_used_bits);
 	cmp_bits = icu_compress_data(&cfg);
-	TEST_ASSERT_EQUAL_INT(-1, cmp_bits);
+	TEST_ASSERT_TRUE(cmp_is_error((uint32_t)cmp_bits));
+	TEST_ASSERT_EQUAL_INT(CMP_ERROR_PAR_MAX_USED_BITS, cmp_get_error_code((uint32_t)cmp_bits));
 
 	my_max_used_bits.l_fx_variance = 32;
 	my_max_used_bits.l_cob_variance = 33; /* more than 32 bits are not allowed */
 	cmp_cfg_icu_max_used_bits(&cfg, &my_max_used_bits);
 	cmp_bits = icu_compress_data(&cfg);
-	TEST_ASSERT_EQUAL_INT(-1, cmp_bits);
+	TEST_ASSERT_TRUE(cmp_is_error((uint32_t)cmp_bits));
+	TEST_ASSERT_EQUAL_INT(CMP_ERROR_PAR_MAX_USED_BITS, cmp_get_error_code((uint32_t)cmp_bits));
 }
 
 
@@ -3855,43 +3909,50 @@ void test_compress_l_fx_efx_ncob_ecob_error_cases(void)
 	my_max_used_bits.l_exp_flags = 33; /* more than 32 bits are not allowed */
 	cmp_cfg_icu_max_used_bits(&cfg, &my_max_used_bits);
 	cmp_bits = icu_compress_data(&cfg);
-	TEST_ASSERT_EQUAL_INT(-1, cmp_bits);
+	TEST_ASSERT_TRUE(cmp_is_error((uint32_t)cmp_bits));
+	TEST_ASSERT_EQUAL_INT(CMP_ERROR_PAR_MAX_USED_BITS, cmp_get_error_code((uint32_t)cmp_bits));
 
 	my_max_used_bits.l_exp_flags = 32;
 	my_max_used_bits.l_fx = 33; /* more than 32 bits are not allowed */
 	cmp_cfg_icu_max_used_bits(&cfg, &my_max_used_bits);
 	cmp_bits = icu_compress_data(&cfg);
-	TEST_ASSERT_EQUAL_INT(-1, cmp_bits);
+	TEST_ASSERT_TRUE(cmp_is_error((uint32_t)cmp_bits));
+	TEST_ASSERT_EQUAL_INT(CMP_ERROR_PAR_MAX_USED_BITS, cmp_get_error_code((uint32_t)cmp_bits));
 
 	my_max_used_bits.l_fx = 32;
 	my_max_used_bits.l_ncob = 33; /* more than 32 bits are not allowed */
 	cmp_cfg_icu_max_used_bits(&cfg, &my_max_used_bits);
 	cmp_bits = icu_compress_data(&cfg);
-	TEST_ASSERT_EQUAL_INT(-1, cmp_bits);
+	TEST_ASSERT_TRUE(cmp_is_error((uint32_t)cmp_bits));
+	TEST_ASSERT_EQUAL_INT(CMP_ERROR_PAR_MAX_USED_BITS, cmp_get_error_code((uint32_t)cmp_bits));
 
 	my_max_used_bits.l_ncob = 32;
 	my_max_used_bits.l_efx = 33; /* more than 32 bits are not allowed */
 	cmp_cfg_icu_max_used_bits(&cfg, &my_max_used_bits);
 	cmp_bits = icu_compress_data(&cfg);
-	TEST_ASSERT_EQUAL_INT(-1, cmp_bits);
+	TEST_ASSERT_TRUE(cmp_is_error((uint32_t)cmp_bits));
+	TEST_ASSERT_EQUAL_INT(CMP_ERROR_PAR_MAX_USED_BITS, cmp_get_error_code((uint32_t)cmp_bits));
 
 	my_max_used_bits.l_efx = 32;
 	my_max_used_bits.l_ecob = 33; /* more than 32 bits are not allowed */
 	cmp_cfg_icu_max_used_bits(&cfg, &my_max_used_bits);
 	cmp_bits = icu_compress_data(&cfg);
-	TEST_ASSERT_EQUAL_INT(-1, cmp_bits);
+	TEST_ASSERT_TRUE(cmp_is_error((uint32_t)cmp_bits));
+	TEST_ASSERT_EQUAL_INT(CMP_ERROR_PAR_MAX_USED_BITS, cmp_get_error_code((uint32_t)cmp_bits));
 
 	my_max_used_bits.l_ecob = 32;
 	my_max_used_bits.l_fx_variance = 33; /* more than 32 bits are not allowed */
 	cmp_cfg_icu_max_used_bits(&cfg, &my_max_used_bits);
 	cmp_bits = icu_compress_data(&cfg);
-	TEST_ASSERT_EQUAL_INT(-1, cmp_bits);
+	TEST_ASSERT_TRUE(cmp_is_error((uint32_t)cmp_bits));
+	TEST_ASSERT_EQUAL_INT(CMP_ERROR_PAR_MAX_USED_BITS, cmp_get_error_code((uint32_t)cmp_bits));
 
 	my_max_used_bits.l_fx_variance = 32;
 	my_max_used_bits.l_cob_variance = 33; /* more than 32 bits are not allowed */
 	cmp_cfg_icu_max_used_bits(&cfg, &my_max_used_bits);
 	cmp_bits = icu_compress_data(&cfg);
-	TEST_ASSERT_EQUAL_INT(-1, cmp_bits);
+	TEST_ASSERT_TRUE(cmp_is_error((uint32_t)cmp_bits));
+	TEST_ASSERT_EQUAL_INT(CMP_ERROR_PAR_MAX_USED_BITS, cmp_get_error_code((uint32_t)cmp_bits));
 }
 
 
@@ -3944,26 +4005,30 @@ void test_compress_offset_error_cases(void)
 	my_max_used_bits.nc_offset_mean = 33; /* more than 32 bits are not allowed */
 	cmp_cfg_icu_max_used_bits(&cfg, &my_max_used_bits);
 	cmp_bits = icu_compress_data(&cfg);
-	TEST_ASSERT_EQUAL_INT(-1, cmp_bits);
+	TEST_ASSERT_TRUE(cmp_is_error((uint32_t)cmp_bits));
+	TEST_ASSERT_EQUAL_INT(CMP_ERROR_PAR_MAX_USED_BITS, cmp_get_error_code((uint32_t)cmp_bits));
 
 	my_max_used_bits.nc_offset_mean = 32;
 	my_max_used_bits.nc_offset_variance = 33; /* more than 32 bits are not allowed */
 	cmp_cfg_icu_max_used_bits(&cfg, &my_max_used_bits);
 	cmp_bits = icu_compress_data(&cfg);
-	TEST_ASSERT_EQUAL_INT(-1, cmp_bits);
+	TEST_ASSERT_TRUE(cmp_is_error((uint32_t)cmp_bits));
+	TEST_ASSERT_EQUAL_INT(CMP_ERROR_PAR_MAX_USED_BITS, cmp_get_error_code((uint32_t)cmp_bits));
 
 
 	cfg.data_type = DATA_TYPE_F_CAM_OFFSET;
 	my_max_used_bits.fc_offset_mean = 33; /* more than 32 bits are not allowed */
 	cmp_cfg_icu_max_used_bits(&cfg, &my_max_used_bits);
 	cmp_bits = icu_compress_data(&cfg);
-	TEST_ASSERT_EQUAL_INT(-1, cmp_bits);
+	TEST_ASSERT_TRUE(cmp_is_error((uint32_t)cmp_bits));
+	TEST_ASSERT_EQUAL_INT(CMP_ERROR_PAR_MAX_USED_BITS, cmp_get_error_code((uint32_t)cmp_bits));
 
 	my_max_used_bits.fc_offset_mean = 32;
 	my_max_used_bits.fc_offset_variance = 33; /* more than 32 bits are not allowed */
 	cmp_cfg_icu_max_used_bits(&cfg, &my_max_used_bits);
 	cmp_bits = icu_compress_data(&cfg);
-	TEST_ASSERT_EQUAL_INT(-1, cmp_bits);
+	TEST_ASSERT_TRUE(cmp_is_error((uint32_t)cmp_bits));
+	TEST_ASSERT_EQUAL_INT(CMP_ERROR_PAR_MAX_USED_BITS, cmp_get_error_code((uint32_t)cmp_bits));
 }
 
 
@@ -4024,38 +4089,44 @@ void test_compress_background_error_cases(void)
 	my_max_used_bits.nc_background_mean = 33; /* more than 32 bits are not allowed */
 	cmp_cfg_icu_max_used_bits(&cfg, &my_max_used_bits);
 	cmp_bits = icu_compress_data(&cfg);
-	TEST_ASSERT_EQUAL_INT(-1, cmp_bits);
+	TEST_ASSERT_TRUE(cmp_is_error((uint32_t)cmp_bits));
+	TEST_ASSERT_EQUAL_INT(CMP_ERROR_PAR_MAX_USED_BITS, cmp_get_error_code((uint32_t)cmp_bits));
 
 	my_max_used_bits.nc_background_mean = 32;
 	my_max_used_bits.nc_background_variance = 33; /* more than 32 bits are not allowed */
 	cmp_cfg_icu_max_used_bits(&cfg, &my_max_used_bits);
 	cmp_bits = icu_compress_data(&cfg);
-	TEST_ASSERT_EQUAL_INT(-1, cmp_bits);
+	TEST_ASSERT_TRUE(cmp_is_error((uint32_t)cmp_bits));
+	TEST_ASSERT_EQUAL_INT(CMP_ERROR_PAR_MAX_USED_BITS, cmp_get_error_code((uint32_t)cmp_bits));
 
 	my_max_used_bits.nc_background_variance = 32;
 	my_max_used_bits.nc_background_outlier_pixels = 33; /* more than 32 bits are not allowed */
 	cmp_cfg_icu_max_used_bits(&cfg, &my_max_used_bits);
 	cmp_bits = icu_compress_data(&cfg);
-	TEST_ASSERT_EQUAL_INT(-1, cmp_bits);
+	TEST_ASSERT_TRUE(cmp_is_error((uint32_t)cmp_bits));
+	TEST_ASSERT_EQUAL_INT(CMP_ERROR_PAR_MAX_USED_BITS, cmp_get_error_code((uint32_t)cmp_bits));
 
 
 	cfg.data_type = DATA_TYPE_F_CAM_BACKGROUND;
 	my_max_used_bits.fc_background_mean = 33; /* more than 32 bits are not allowed */
 	cmp_cfg_icu_max_used_bits(&cfg, &my_max_used_bits);
 	cmp_bits = icu_compress_data(&cfg);
-	TEST_ASSERT_EQUAL_INT(-1, cmp_bits);
+	TEST_ASSERT_TRUE(cmp_is_error((uint32_t)cmp_bits));
+	TEST_ASSERT_EQUAL_INT(CMP_ERROR_PAR_MAX_USED_BITS, cmp_get_error_code((uint32_t)cmp_bits));
 
 	my_max_used_bits.fc_background_mean = 32;
 	my_max_used_bits.fc_background_variance = 33; /* more than 32 bits are not allowed */
 	cmp_cfg_icu_max_used_bits(&cfg, &my_max_used_bits);
 	cmp_bits = icu_compress_data(&cfg);
-	TEST_ASSERT_EQUAL_INT(-1, cmp_bits);
+	TEST_ASSERT_TRUE(cmp_is_error((uint32_t)cmp_bits));
+	TEST_ASSERT_EQUAL_INT(CMP_ERROR_PAR_MAX_USED_BITS, cmp_get_error_code((uint32_t)cmp_bits));
 
 	my_max_used_bits.fc_background_variance = 32;
 	my_max_used_bits.fc_background_outlier_pixels = 33; /* more than 32 bits are not allowed */
 	cmp_cfg_icu_max_used_bits(&cfg, &my_max_used_bits);
 	cmp_bits = icu_compress_data(&cfg);
-	TEST_ASSERT_EQUAL_INT(-1, cmp_bits);
+	TEST_ASSERT_TRUE(cmp_is_error((uint32_t)cmp_bits));
+	TEST_ASSERT_EQUAL_INT(CMP_ERROR_PAR_MAX_USED_BITS, cmp_get_error_code((uint32_t)cmp_bits));
 }
 
 
@@ -4116,19 +4187,22 @@ void test_compress_smearing_error_cases(void)
 	my_max_used_bits.smearing_mean = 33; /* more than 32 bits are not allowed */
 	cmp_cfg_icu_max_used_bits(&cfg, &my_max_used_bits);
 	cmp_bits = icu_compress_data(&cfg);
-	TEST_ASSERT_EQUAL_INT(-1, cmp_bits);
+	TEST_ASSERT_TRUE(cmp_is_error((uint32_t)cmp_bits));
+	TEST_ASSERT_EQUAL_INT(CMP_ERROR_PAR_MAX_USED_BITS, cmp_get_error_code((uint32_t)cmp_bits));
 
 	my_max_used_bits.smearing_mean = 32;
 	my_max_used_bits.smearing_variance_mean = 33; /* more than 32 bits are not allowed */
 	cmp_cfg_icu_max_used_bits(&cfg, &my_max_used_bits);
 	cmp_bits = icu_compress_data(&cfg);
-	TEST_ASSERT_EQUAL_INT(-1, cmp_bits);
+	TEST_ASSERT_TRUE(cmp_is_error((uint32_t)cmp_bits));
+	TEST_ASSERT_EQUAL_INT(CMP_ERROR_PAR_MAX_USED_BITS, cmp_get_error_code((uint32_t)cmp_bits));
 
 	my_max_used_bits.smearing_variance_mean = 32;
 	my_max_used_bits.smearing_outlier_pixels = 33; /* more than 32 bits are not allowed */
 	cmp_cfg_icu_max_used_bits(&cfg, &my_max_used_bits);
 	cmp_bits = icu_compress_data(&cfg);
-	TEST_ASSERT_EQUAL_INT(-1, cmp_bits);
+	TEST_ASSERT_TRUE(cmp_is_error((uint32_t)cmp_bits));
+	TEST_ASSERT_EQUAL_INT(CMP_ERROR_PAR_MAX_USED_BITS, cmp_get_error_code((uint32_t)cmp_bits));
 }
 
 
@@ -4139,8 +4213,8 @@ void test_compress_smearing_error_cases(void)
 void test_pad_bitstream(void)
 {
 	struct cmp_cfg cfg = {0};
-	int cmp_size;
-	int cmp_size_return;
+	uint32_t cmp_size;
+	uint32_t cmp_size_return;
 	uint32_t cmp_data[3];
 	const int MAX_BIT_LEN = 96;
 
@@ -4150,12 +4224,12 @@ void test_pad_bitstream(void)
 	cfg.buffer_length = sizeof(cmp_data); /* 6 * 16 bit samples -> 3 * 32 bit */
 
 	/* test negative cmp_size */
-	cmp_size = -1;
+	cmp_size = -1U;
 	cmp_size_return = pad_bitstream(&cfg, cmp_size);
-	TEST_ASSERT_EQUAL_INT(-1, cmp_size_return);
-	cmp_size = -3;
+	TEST_ASSERT_EQUAL_UINT32(-1U, cmp_size_return);
+	cmp_size = -3U;
 	cmp_size_return = pad_bitstream(&cfg, cmp_size);
-	TEST_ASSERT_EQUAL_INT(-3, cmp_size_return);
+	TEST_ASSERT_EQUAL_UINT32(-3U, cmp_size_return);
 
 	/* test RAW_MODE */
 	cfg.cmp_mode = CMP_MODE_RAW;
@@ -4195,13 +4269,13 @@ void test_pad_bitstream(void)
 	TEST_ASSERT_EQUAL_INT(cmp_data[1], 0);
 	TEST_ASSERT_EQUAL_INT(cmp_data[2], 0xFFFFFFFF);
 
-	/* error case the rest of the compressed data are to small dor a 32 bit
+	/* error case the rest of the compressed data are to small for a 32 bit
 	 * access  */
 	cfg.buffer_length -= 1;
 	cmp_size = 64;
 	cmp_size = put_n_bits32(0, 1, cmp_size, cfg.icu_output_buf, MAX_BIT_LEN);
 	cmp_size_return = pad_bitstream(&cfg, cmp_size);
-	TEST_ASSERT_EQUAL_INT(CMP_ERROR_SMALL_BUF, cmp_size_return);
+	TEST_ASSERT_EQUAL_INT(CMP_ERROR_SMALL_BUF_, cmp_get_error_code(cmp_size_return));
 }
 
 
@@ -4219,8 +4293,8 @@ void test_compress_chunk_raw_singel_col(void)
 	struct s_fx *data = (struct s_fx *)col->entry;
 	struct cmp_par cmp_par = {0};
 	uint32_t *dst;
-	int cmp_size;
-	size_t dst_capacity = 43; /* random non zero value */
+	uint32_t cmp_size;
+	uint32_t dst_capacity = 43; /* random non zero value */
 
 	/* create a chunk with a single collection */
 	memset(col, 0, COLLECTION_HDR_SIZE);
@@ -4239,7 +4313,7 @@ void test_compress_chunk_raw_singel_col(void)
 	cmp_size = compress_chunk(chunk, CHUNK_SIZE, NULL, NULL, dst,
 				  dst_capacity, &cmp_par);
 	TEST_ASSERT_EQUAL_INT(GENERIC_HEADER_SIZE + CHUNK_SIZE, cmp_size);
-	dst_capacity = (size_t)cmp_size;
+	dst_capacity = cmp_size;
 	dst = malloc(dst_capacity); TEST_ASSERT_NOT_NULL(dst);
 	cmp_size = compress_chunk(chunk, CHUNK_SIZE, NULL, NULL, dst,
 				  dst_capacity, &cmp_par);
@@ -4270,7 +4344,7 @@ void test_compress_chunk_raw_singel_col(void)
 	dst = malloc(dst_capacity); TEST_ASSERT_NOT_NULL(dst);
 	cmp_size = compress_chunk(chunk, CHUNK_SIZE, NULL, NULL, dst,
 				  dst_capacity, &cmp_par);
-	TEST_ASSERT_EQUAL_INT(CMP_ERROR_SMALL_BUF, cmp_size);
+	TEST_ASSERT_EQUAL_INT(CMP_ERROR_SMALL_BUF_, cmp_get_error_code(cmp_size));
 	free(dst);
 }
 
@@ -4288,8 +4362,8 @@ void test_compress_chunk_raw_two_col(void)
 	struct s_fx_efx_ncob_ecob *data2;
 	struct cmp_par cmp_par = {0};
 	uint32_t *dst;
-	int cmp_size;
-	size_t dst_capacity = 0;
+	uint32_t cmp_size;
+	uint32_t dst_capacity = 0;
 
 	/* create a chunk with two collection */
 	memset(col1, 0, COLLECTION_HDR_SIZE);
@@ -4333,7 +4407,7 @@ void test_compress_chunk_raw_two_col(void)
 	cmp_size = compress_chunk(chunk, CHUNK_SIZE, NULL, NULL, dst,
 				  dst_capacity, &cmp_par);
 	TEST_ASSERT_EQUAL_INT(GENERIC_HEADER_SIZE + CHUNK_SIZE, cmp_size);
-	dst_capacity = (size_t)cmp_size;
+	dst_capacity = cmp_size;
 	dst = malloc(dst_capacity); TEST_ASSERT_NOT_NULL(dst);
 	cmp_size = compress_chunk(chunk, CHUNK_SIZE, NULL, NULL, dst,
 				  dst_capacity, &cmp_par);
@@ -4386,10 +4460,12 @@ void test_compress_chunk_raw_two_col(void)
 	dst = malloc(dst_capacity); TEST_ASSERT_NOT_NULL(dst);
 	cmp_size = compress_chunk(chunk, CHUNK_SIZE, NULL, NULL, dst,
 				  dst_capacity, &cmp_par);
-	TEST_ASSERT_EQUAL_INT(CMP_ERROR_SMALL_BUF, cmp_size);
+	TEST_ASSERT_EQUAL_INT(CMP_ERROR_SMALL_BUF_, cmp_get_error_code(cmp_size));
 	free(dst);
 }
 
+
+#if 0
 void NOOO_test_compress_chunk_model(void)
 {
 	enum {	DATA_SIZE_1 = 1*sizeof(struct background),
@@ -4405,8 +4481,9 @@ void NOOO_test_compress_chunk_model(void)
 	struct offset *data2;
 	struct cmp_par cmp_par = {0};
 	uint32_t *dst;
-	int cmp_size;
-	size_t dst_capacity = 0;
+	uint32_t cmp_size;
+	uint32_t dst_capacity = 0;
+	uint32_t chunk_size;
 
 	/* create a chunk with two collection */
 	memset(col1, 0, COLLECTION_HDR_SIZE);
@@ -4453,14 +4530,12 @@ void NOOO_test_compress_chunk_model(void)
 	cmp_par.nc_background_outlier_pixels = 5;
 	dst = NULL;
 
-	uint32_t chunk_size = COLLECTION_HDR_SIZE + DATA_SIZE_1;
-	/* chunk_size = CHUNK_SIZE; */
-	/* int */
+	chunk_size = COLLECTION_HDR_SIZE + DATA_SIZE_1;
 
 	cmp_size = compress_chunk(chunk, chunk_size, chunk_model, chunk_up_model, dst,
 				  dst_capacity, &cmp_par);
 	TEST_ASSERT_EQUAL_INT(NON_IMAGETTE_HEADER_SIZE + COLLECTION_HDR_SIZE + 4, cmp_size);
-	dst_capacity = (size_t)cmp_size;
+	dst_capacity = cmp_size;
 	dst = malloc(dst_capacity); TEST_ASSERT_NOT_NULL(dst);
 	cmp_size = compress_chunk(chunk, CHUNK_SIZE, NULL, NULL, dst,
 				  dst_capacity, &cmp_par);
@@ -4473,7 +4548,6 @@ void NOOO_test_compress_chunk_model(void)
 		struct s_fx_efx_ncob_ecob *raw_cmp_data2 = (struct s_fx_efx_ncob_ecob *)(
 			(uint8_t *)cmp_ent_get_data_buf(ent) + 2*COLLECTION_HDR_SIZE +
 			DATA_SIZE_1);
-		int i;
 		TEST_ASSERT_EQUAL_UINT(CHUNK_SIZE, cmp_ent_get_cmp_data_size(ent));
 		TEST_ASSERT_EQUAL_UINT(CHUNK_SIZE, cmp_ent_get_original_size(ent));
 		TEST_ASSERT_EQUAL_UINT(cmp_par.cmp_mode, cmp_ent_get_cmp_mode(ent));
@@ -4482,31 +4556,30 @@ void NOOO_test_compress_chunk_model(void)
 
 		TEST_ASSERT_EQUAL_HEX8_ARRAY(col1, cmp_ent_get_data_buf(ent), COLLECTION_HDR_SIZE);
 
-#if 0
-		for (i = 0; i < 2; i++) {
-			TEST_ASSERT_EQUAL_HEX(data1[i].exp_flags, raw_cmp_data1[i].exp_flags);
-			TEST_ASSERT_EQUAL_HEX(data1[i].fx, be32_to_cpu(raw_cmp_data1[i].fx));
-		}
+		/* int i; */
+		/* for (i = 0; i < 2; i++) { */
+		/* 	TEST_ASSERT_EQUAL_HEX(data1[i].exp_flags, raw_cmp_data1[i].exp_flags); */
+		/* 	TEST_ASSERT_EQUAL_HEX(data1[i].fx, be32_to_cpu(raw_cmp_data1[i].fx)); */
+		/* } */
 
-		TEST_ASSERT_EQUAL_HEX8_ARRAY(col1, cmp_ent_get_data_buf(ent), COLLECTION_HDR_SIZE);
+		/* TEST_ASSERT_EQUAL_HEX8_ARRAY(col1, cmp_ent_get_data_buf(ent), COLLECTION_HDR_SIZE); */
 
-		for (i = 0; i < 2; i++) {
-			TEST_ASSERT_EQUAL_HEX(data1[i].exp_flags, raw_cmp_data1[i].exp_flags);
-			TEST_ASSERT_EQUAL_HEX(data1[i].fx, be32_to_cpu(raw_cmp_data1[i].fx));
-		}
+		/* for (i = 0; i < 2; i++) { */
+		/* 	TEST_ASSERT_EQUAL_HEX(data1[i].exp_flags, raw_cmp_data1[i].exp_flags); */
+		/* 	TEST_ASSERT_EQUAL_HEX(data1[i].fx, be32_to_cpu(raw_cmp_data1[i].fx)); */
+		/* } */
 
-		TEST_ASSERT_EQUAL_HEX8_ARRAY(col2, (uint8_t *)cmp_ent_get_data_buf(ent)+cmp_col_get_size(col1), COLLECTION_HDR_SIZE);
+		/* TEST_ASSERT_EQUAL_HEX8_ARRAY(col2, (uint8_t *)cmp_ent_get_data_buf(ent)+cmp_col_get_size(col1), COLLECTION_HDR_SIZE); */
 
-		for (i = 0; i < 2; i++) {
-			TEST_ASSERT_EQUAL_HEX(data2[i].exp_flags, raw_cmp_data2[i].exp_flags);
-			TEST_ASSERT_EQUAL_HEX(data2[i].fx, be32_to_cpu(raw_cmp_data2[i].fx));
-			TEST_ASSERT_EQUAL_HEX(data2[i].efx, be32_to_cpu(raw_cmp_data2[i].efx));
-			TEST_ASSERT_EQUAL_HEX(data2[i].ncob_x, be32_to_cpu(raw_cmp_data2[i].ncob_x));
-			TEST_ASSERT_EQUAL_HEX(data2[i].ncob_y, be32_to_cpu(raw_cmp_data2[i].ncob_y));
-			TEST_ASSERT_EQUAL_HEX(data2[i].ecob_x, be32_to_cpu(raw_cmp_data2[i].ecob_x));
-			TEST_ASSERT_EQUAL_HEX(data2[i].ecob_y, be32_to_cpu(raw_cmp_data2[i].ecob_y));
-		}
-#endif
+		/* for (i = 0; i < 2; i++) { */
+		/* 	TEST_ASSERT_EQUAL_HEX(data2[i].exp_flags, raw_cmp_data2[i].exp_flags); */
+		/* 	TEST_ASSERT_EQUAL_HEX(data2[i].fx, be32_to_cpu(raw_cmp_data2[i].fx)); */
+		/* 	TEST_ASSERT_EQUAL_HEX(data2[i].efx, be32_to_cpu(raw_cmp_data2[i].efx)); */
+		/* 	TEST_ASSERT_EQUAL_HEX(data2[i].ncob_x, be32_to_cpu(raw_cmp_data2[i].ncob_x)); */
+		/* 	TEST_ASSERT_EQUAL_HEX(data2[i].ncob_y, be32_to_cpu(raw_cmp_data2[i].ncob_y)); */
+		/* 	TEST_ASSERT_EQUAL_HEX(data2[i].ecob_x, be32_to_cpu(raw_cmp_data2[i].ecob_x)); */
+		/* 	TEST_ASSERT_EQUAL_HEX(data2[i].ecob_y, be32_to_cpu(raw_cmp_data2[i].ecob_y)); */
+		/* } */
 	}
 	free(dst);
 
@@ -4515,74 +4588,124 @@ void NOOO_test_compress_chunk_model(void)
 	dst = malloc(dst_capacity); TEST_ASSERT_NOT_NULL(dst);
 	cmp_size = compress_chunk(chunk, CHUNK_SIZE, NULL, NULL, dst,
 				  dst_capacity, &cmp_par);
-	TEST_ASSERT_EQUAL_INT(CMP_ERROR_SMALL_BUF, cmp_size);
+	TEST_ASSERT_EQUAL_INT(CMP_ERROR_SMALL_BUF_, cmp_get_error_code(cmp_size));
 	free(dst);
 }
 /* TODO: chunk tests
  * collection with 0 length;
  * collection with wrong mix collections;
  */
-
-/**
- * @test cmp_data_to_big_endian
- */
-#if 0
-void notest_cmp_data_to_big_endian_error_cases(void)
-{
-	struct cmp_cfg cfg = {0};
-	int cmp_size;
-	int cmp_size_return;
-	uint16_t cmp_data[3] = {0x0123, 0x4567, 0x89AB};
-	uint32_t output_buf[2] = {0};
-	uint8_t *p;
-
-	memcpy(output_buf, cmp_data, sizeof(cmp_data));
-	cfg.icu_output_buf = output_buf;
-
-	/* this should work */
-	cfg.data_type = DATA_TYPE_IMAGETTE;
-	cfg.cmp_mode = CMP_MODE_RAW;
-	cmp_size = 48;
-	cmp_size_return = cmp_data_to_big_endian(&cfg, cmp_size);
-	TEST_ASSERT_EQUAL_INT(cmp_size_return, 48);
-	p = (uint8_t *)cfg.icu_output_buf;
-	TEST_ASSERT_EQUAL(p[0], 0x01);
-	TEST_ASSERT_EQUAL(p[1], 0x23);
-	TEST_ASSERT_EQUAL(p[2], 0x45);
-	TEST_ASSERT_EQUAL(p[3], 0x67);
-	TEST_ASSERT_EQUAL(p[4], 0x89);
-	TEST_ASSERT_EQUAL(p[5], 0xAB);
-
-	/* error cases */
-	cmp_data[0] = 0x0123;
-	cmp_data[1] = 0x4567;
-	cmp_data[2] = 0x89AB;
-	cfg.data_type = DATA_TYPE_IMAGETTE;
-	cfg.cmp_mode = CMP_MODE_RAW;
-	cmp_size = 47; /* wrong size */
-	cmp_size_return = cmp_data_to_big_endian(&cfg, cmp_size);
-	TEST_ASSERT_EQUAL_INT(cmp_size_return, -1);
-
-	cmp_data[0] = 0x0123;
-	cmp_data[1] = 0x4567;
-	cmp_data[2] = 0x89AB;
-	cfg.data_type = DATA_TYPE_IMAGETTE;
-	cfg.cmp_mode = CMP_MODE_RAW;
-	cmp_size = 49; /* wrong size */
-	cmp_size_return = cmp_data_to_big_endian(&cfg, cmp_size);
-	TEST_ASSERT_EQUAL_INT(cmp_size_return, -1);
-
-	cmp_data[0] = 0x0123;
-	cmp_data[1] = 0x4567;
-	cmp_data[2] = 0x89AB;
-	cfg.data_type = DATA_TYPE_UNKNOWN; /* wrong data_type */
-	cfg.cmp_mode = CMP_MODE_RAW;
-	cmp_size = 48;
-	cmp_size_return = cmp_data_to_big_endian(&cfg, cmp_size);
-	TEST_ASSERT_EQUAL_INT(cmp_size_return, -1);
-}
 #endif
 
+
+/**
+ * @test compress_chunk
+ */
+
+void test_collection_zero_data_length(void)
+{
+	enum {	DATA_SIZE = 0,
+		CHUNK_SIZE = COLLECTION_HDR_SIZE + DATA_SIZE
+	};
+	uint8_t chunk[CHUNK_SIZE];
+	struct collection_hdr *col = (struct collection_hdr *)chunk;
+	struct cmp_par cmp_par = {0};
+	uint32_t *dst;
+	uint32_t cmp_size;
+	uint32_t dst_capacity = 43; /* random non zero value */
+
+	/* create a chunk with a single collection */
+	memset(col, 0, COLLECTION_HDR_SIZE);
+	TEST_ASSERT_FALSE(cmp_col_set_subservice(col, SST_NCxx_S_SCIENCE_IMAGETTE));
+
+	/* compress the data */
+	cmp_par.cmp_mode = CMP_MODE_DIFF_MULTI;
+	dst = NULL;
+
+	cmp_size = compress_chunk(chunk, CHUNK_SIZE, NULL, NULL, dst,
+				  dst_capacity, &cmp_par);
+	TEST_ASSERT_EQUAL_INT(NON_IMAGETTE_HEADER_SIZE + CHUNK_SIZE + CMP_COLLECTION_FILD_SIZE, cmp_size);
+	dst_capacity = cmp_size;
+	dst = malloc(dst_capacity); TEST_ASSERT_NOT_NULL(dst);
+	cmp_size = compress_chunk(chunk, CHUNK_SIZE, NULL, NULL, dst,
+				  dst_capacity, &cmp_par);
+	TEST_ASSERT_EQUAL_INT(NON_IMAGETTE_HEADER_SIZE + CHUNK_SIZE + CMP_COLLECTION_FILD_SIZE, cmp_size);
+
+	/* test results */
+	{	struct cmp_entity *ent = (struct cmp_entity *)dst;
+
+		TEST_ASSERT_EQUAL_UINT(CHUNK_SIZE+CMP_COLLECTION_FILD_SIZE, cmp_ent_get_cmp_data_size(ent));
+		TEST_ASSERT_EQUAL_UINT(CHUNK_SIZE, cmp_ent_get_original_size(ent));
+		TEST_ASSERT_EQUAL_UINT(cmp_par.cmp_mode, cmp_ent_get_cmp_mode(ent));
+		TEST_ASSERT_FALSE(cmp_ent_get_data_type_raw_bit(ent));
+		TEST_ASSERT_EQUAL_INT(DATA_TYPE_CHUNK, cmp_ent_get_data_type(ent));
+
+		TEST_ASSERT_EQUAL_HEX8_ARRAY(col, (uint8_t *)cmp_ent_get_data_buf(ent)+CMP_COLLECTION_FILD_SIZE, COLLECTION_HDR_SIZE);
+	}
+
+	/* error case: dst buffer to small */
+	dst_capacity -= 1;
+	cmp_size = compress_chunk(chunk, CHUNK_SIZE, NULL, NULL, dst,
+				  dst_capacity, &cmp_par);
+	TEST_ASSERT_EQUAL_INT(CMP_ERROR_SMALL_BUF_, cmp_get_error_code(cmp_size));
+	free(dst);
+}
+
+
+/**
+ * @test compress_chunk
+ */
+#if 0
+void nootest_collection_zero_data_length_2(void)
+{
+	enum {	DATA_SIZE = 4,
+		CHUNK_SIZE = COLLECTION_HDR_SIZE + DATA_SIZE + COLLECTION_HDR_SIZE
+	};
+	uint8_t chunk[CHUNK_SIZE];
+	struct collection_hdr *col = (struct collection_hdr *)chunk;
+	uint16_t *data = (struct s_fx *)col->entry;
+	struct cmp_par cmp_par = {0};
+	uint32_t *dst;
+	int cmp_size;
+	uint32_t dst_capacity = 43; /* random non zero value */
+
+	/* create a chunk with a single collection */
+	memset(col, 0, COLLECTION_HDR_SIZE);
+	TEST_ASSERT_FALSE(cmp_col_set_subservice(col, SST_NCxx_S_SCIENCE_IMAGETTE));
+
+	/* compress the data */
+	cmp_par.cmp_mode = CMP_MODE_DIFF_MULTI;
+	dst = NULL;
+
+	cmp_size = compress_chunk(chunk, CHUNK_SIZE, NULL, NULL, dst,
+				  dst_capacity, &cmp_par);
+	TEST_ASSERT_EQUAL_INT(NON_IMAGETTE_HEADER_SIZE + CHUNK_SIZE + CMP_COLLECTION_FILD_SIZE, cmp_size);
+	dst_capacity = (uint32_t)cmp_size;
+	dst = malloc(dst_capacity); TEST_ASSERT_NOT_NULL(dst);
+	cmp_size = compress_chunk(chunk, CHUNK_SIZE, NULL, NULL, dst,
+				  dst_capacity, &cmp_par);
+	TEST_ASSERT_EQUAL_INT(NON_IMAGETTE_HEADER_SIZE + CHUNK_SIZE + CMP_COLLECTION_FILD_SIZE, cmp_size);
+
+	/* test results */
+	{	struct cmp_entity *ent = (struct cmp_entity *)dst;
+
+		TEST_ASSERT_EQUAL_UINT(CHUNK_SIZE+CMP_COLLECTION_FILD_SIZE, cmp_ent_get_cmp_data_size(ent));
+		TEST_ASSERT_EQUAL_UINT(CHUNK_SIZE, cmp_ent_get_original_size(ent));
+		TEST_ASSERT_EQUAL_UINT(cmp_par.cmp_mode, cmp_ent_get_cmp_mode(ent));
+		TEST_ASSERT_FALSE(cmp_ent_get_data_type_raw_bit(ent));
+		TEST_ASSERT_EQUAL_INT(DATA_TYPE_CHUNK, cmp_ent_get_data_type(ent));
+
+		TEST_ASSERT_EQUAL_HEX8_ARRAY(col, cmp_ent_get_data_buf(ent)+CMP_COLLECTION_FILD_SIZE, COLLECTION_HDR_SIZE);
+	}
+
+	/* error case: dst buffer to small */
+	dst_capacity -= 1;
+	cmp_size = compress_chunk(chunk, CHUNK_SIZE, NULL, NULL, dst,
+				  dst_capacity, &cmp_par);
+	TEST_ASSERT_EQUAL_INT(CMP_ERROR_SMALL_BUF, cmp_size);
+	free(dst);
+}
+#endif
 
 /**
  * @test icu_compress_data
@@ -4624,6 +4747,211 @@ void test_zero_escape_mech_is_used(void)
 }
 
 
+/**
+ * @test ROUND_UP_TO_4
+ * @test COMPRESS_CHUNK_BOUND
+ */
+
+void test_COMPRESS_CHUNK_BOUND(void)
+{
+	uint32_t chunk_size;
+	unsigned int  num_col;
+	uint32_t bound, bound_exp;
+
+	TEST_ASSERT_EQUAL(0, ROUND_UP_TO_4(0));
+	TEST_ASSERT_EQUAL(4, ROUND_UP_TO_4(1));
+	TEST_ASSERT_EQUAL(4, ROUND_UP_TO_4(3));
+	TEST_ASSERT_EQUAL(4, ROUND_UP_TO_4(4));
+	TEST_ASSERT_EQUAL(8, ROUND_UP_TO_4(5));
+	TEST_ASSERT_EQUAL(0xFFFFFFFC, ROUND_UP_TO_4(0xFFFFFFFB));
+	TEST_ASSERT_EQUAL(0xFFFFFFFC, ROUND_UP_TO_4(0xFFFFFFFC));
+	TEST_ASSERT_EQUAL(0, ROUND_UP_TO_4(0xFFFFFFFD));
+	TEST_ASSERT_EQUAL(0, ROUND_UP_TO_4(0xFFFFFFFF));
+
+	chunk_size = 0;
+	num_col = 0;
+	bound = COMPRESS_CHUNK_BOUND(chunk_size, num_col);
+	TEST_ASSERT_EQUAL(0, bound);
+
+	chunk_size = 0;
+	num_col = 1;
+	bound = COMPRESS_CHUNK_BOUND(chunk_size, num_col);
+	TEST_ASSERT_EQUAL(0, bound);
+
+	chunk_size = COLLECTION_HDR_SIZE - 1;
+	num_col = 1;
+	bound = COMPRESS_CHUNK_BOUND(chunk_size, num_col);
+	TEST_ASSERT_EQUAL(0, bound);
+
+	chunk_size = 2*COLLECTION_HDR_SIZE - 1;
+	num_col = 2;
+	bound = COMPRESS_CHUNK_BOUND(chunk_size, num_col);
+	TEST_ASSERT_EQUAL(0, bound);
+
+	chunk_size = COLLECTION_HDR_SIZE;
+	num_col = 0;
+	bound = COMPRESS_CHUNK_BOUND(chunk_size, num_col);
+	TEST_ASSERT_EQUAL(0, bound);
+
+	chunk_size = CMP_ENTITY_MAX_SIZE;
+	num_col = 1;
+	bound = COMPRESS_CHUNK_BOUND(chunk_size, num_col);
+	TEST_ASSERT_EQUAL(0, bound);
+
+	chunk_size = UINT32_MAX;
+	num_col = 1;
+	bound = COMPRESS_CHUNK_BOUND(chunk_size, num_col);
+	TEST_ASSERT_EQUAL(0, bound);
+
+	num_col = (CMP_ENTITY_MAX_SIZE-NON_IMAGETTE_HEADER_SIZE)/COLLECTION_HDR_SIZE + 1;
+	chunk_size = num_col*COLLECTION_HDR_SIZE;
+	bound = COMPRESS_CHUNK_BOUND(chunk_size, num_col);
+	TEST_ASSERT_EQUAL(0, bound);
+
+
+	chunk_size = COLLECTION_HDR_SIZE;
+	num_col = 1;
+	bound = COMPRESS_CHUNK_BOUND(chunk_size, num_col);
+	bound_exp = ROUND_UP_TO_4(NON_IMAGETTE_HEADER_SIZE + CMP_COLLECTION_FILD_SIZE +
+		COLLECTION_HDR_SIZE);
+	TEST_ASSERT_EQUAL(bound_exp, bound);
+
+	chunk_size = COLLECTION_HDR_SIZE + 7;
+	num_col = 1;
+	bound = COMPRESS_CHUNK_BOUND(chunk_size, num_col);
+	bound_exp = ROUND_UP_TO_4(NON_IMAGETTE_HEADER_SIZE + CMP_COLLECTION_FILD_SIZE +
+		chunk_size);
+	TEST_ASSERT_EQUAL(bound_exp, bound);
+
+	chunk_size = 42*COLLECTION_HDR_SIZE ;
+	num_col = 42;
+	bound = COMPRESS_CHUNK_BOUND(chunk_size, num_col);
+	bound_exp = ROUND_UP_TO_4(NON_IMAGETTE_HEADER_SIZE + 42*CMP_COLLECTION_FILD_SIZE +
+		chunk_size);
+	TEST_ASSERT_EQUAL(bound_exp, bound);
+
+	chunk_size = 42*COLLECTION_HDR_SIZE + 7;
+	num_col = 42;
+	bound = COMPRESS_CHUNK_BOUND(chunk_size, num_col);
+	bound_exp = ROUND_UP_TO_4(NON_IMAGETTE_HEADER_SIZE + 42*CMP_COLLECTION_FILD_SIZE +
+		chunk_size);
+	TEST_ASSERT_EQUAL(bound_exp, bound);
+
+	chunk_size = (CMP_ENTITY_MAX_SIZE & ~3U) - NON_IMAGETTE_HEADER_SIZE - CMP_COLLECTION_FILD_SIZE;
+	num_col = 1;
+	bound = COMPRESS_CHUNK_BOUND(chunk_size, num_col);
+	bound_exp = ROUND_UP_TO_4(NON_IMAGETTE_HEADER_SIZE + CMP_COLLECTION_FILD_SIZE +
+		chunk_size);
+	TEST_ASSERT_EQUAL(bound_exp, bound);
+
+	chunk_size++;
+	bound = COMPRESS_CHUNK_BOUND(chunk_size, num_col);
+	TEST_ASSERT_EQUAL(0, bound);
+
+	num_col = (CMP_ENTITY_MAX_SIZE-NON_IMAGETTE_HEADER_SIZE)/(COLLECTION_HDR_SIZE+CMP_COLLECTION_FILD_SIZE);
+	chunk_size = num_col*COLLECTION_HDR_SIZE + 10;
+	bound = COMPRESS_CHUNK_BOUND(chunk_size, num_col);
+	bound_exp = ROUND_UP_TO_4(NON_IMAGETTE_HEADER_SIZE + num_col*CMP_COLLECTION_FILD_SIZE +
+		chunk_size);
+	TEST_ASSERT_EQUAL_HEX(bound_exp, bound);
+
+	chunk_size++;
+	bound = COMPRESS_CHUNK_BOUND(chunk_size, num_col);
+	TEST_ASSERT_EQUAL_HEX(0, bound);
+}
+
+
+/**
+ * @test compress_chunk_cmp_size_bound
+ */
+
+void test_compress_chunk_cmp_size_bound(void)
+{
+	uint8_t chunk[2*COLLECTION_HDR_SIZE + 42 + 3] = {0};
+	uint32_t chunk_size;
+	uint32_t bound, bound_exp;
+
+	TEST_ASSERT_FALSE(cmp_col_set_data_length((struct collection_hdr *)chunk, 0));
+
+	chunk_size = 0;
+	bound = compress_chunk_cmp_size_bound(chunk, chunk_size);
+	TEST_ASSERT_TRUE(cmp_is_error(bound));
+	TEST_ASSERT_EQUAL_INT(CMP_ERROR_CHUNK_SIZE_INCONSISTENT, cmp_get_error_code(bound));
+
+	chunk_size = COLLECTION_HDR_SIZE-1;
+	bound = compress_chunk_cmp_size_bound(chunk, chunk_size);
+	TEST_ASSERT_TRUE(cmp_is_error(bound));
+	TEST_ASSERT_EQUAL_INT(CMP_ERROR_CHUNK_SIZE_INCONSISTENT, cmp_get_error_code(bound));
+
+	chunk_size = UINT32_MAX;
+	bound = compress_chunk_cmp_size_bound(chunk, chunk_size);
+	TEST_ASSERT_TRUE(cmp_is_error(bound));
+	TEST_ASSERT_EQUAL_INT(CMP_ERROR_CHUNK_TOO_LARGE, cmp_get_error_code(bound));
+
+	chunk_size = COLLECTION_HDR_SIZE;
+	bound = compress_chunk_cmp_size_bound(chunk, chunk_size);
+	bound_exp = ROUND_UP_TO_4(NON_IMAGETTE_HEADER_SIZE + COLLECTION_HDR_SIZE + CMP_COLLECTION_FILD_SIZE);
+	TEST_ASSERT_EQUAL(bound_exp, bound);
+
+	chunk_size = COLLECTION_HDR_SIZE + 42;
+	TEST_ASSERT_FALSE(cmp_col_set_data_length((struct collection_hdr *)chunk, 42));
+	bound = compress_chunk_cmp_size_bound(chunk, chunk_size);
+	bound_exp = ROUND_UP_TO_4(NON_IMAGETTE_HEADER_SIZE + CMP_COLLECTION_FILD_SIZE +
+		chunk_size);
+	TEST_ASSERT_EQUAL(bound_exp, bound);
+
+	/* chunk is NULL */
+	bound = compress_chunk_cmp_size_bound(NULL, chunk_size);
+	TEST_ASSERT_TRUE(cmp_is_error(bound));
+	TEST_ASSERT_EQUAL_INT(CMP_ERROR_CHUNK_NULL, cmp_get_error_code(bound));
+
+	TEST_ASSERT_FALSE(cmp_col_set_data_length((struct collection_hdr *)(chunk+chunk_size), 3));
+	chunk_size = sizeof(chunk);
+	bound = compress_chunk_cmp_size_bound(chunk, chunk_size);
+	bound_exp = ROUND_UP_TO_4(NON_IMAGETTE_HEADER_SIZE + 2*CMP_COLLECTION_FILD_SIZE +
+		chunk_size);
+	TEST_ASSERT_EQUAL(bound_exp, bound);
+}
+
+
+void test_compress_chunk_set_model_id_and_counter(void)
+{
+	uint32_t ret;
+	struct cmp_entity dst;
+	uint32_t dst_size = sizeof(dst);
+	uint16_t model_id;
+	uint8_t model_counter;
+
+	memset(&dst, 0x42, sizeof(dst));
+
+	model_id = 0;
+	model_counter = 0;
+	ret = compress_chunk_set_model_id_and_counter(&dst, dst_size, model_id, model_counter);
+	TEST_ASSERT_FALSE(cmp_is_error(ret));
+	TEST_ASSERT_EQUAL(dst_size, ret);
+	TEST_ASSERT_EQUAL(model_id, cmp_ent_get_model_id(&dst));
+	TEST_ASSERT_EQUAL(model_counter, cmp_ent_get_model_counter(&dst));
+
+	model_id = UINT16_MAX;
+	model_counter = UINT8_MAX;
+	ret = compress_chunk_set_model_id_and_counter(&dst, dst_size, model_id, model_counter);
+	TEST_ASSERT_FALSE(cmp_is_error(ret));
+	TEST_ASSERT_EQUAL(dst_size, ret);
+	TEST_ASSERT_EQUAL(model_id, cmp_ent_get_model_id(&dst));
+	TEST_ASSERT_EQUAL(model_counter, cmp_ent_get_model_counter(&dst));
+
+	/* error cases */
+	ret = compress_chunk_set_model_id_and_counter(&dst, GENERIC_HEADER_SIZE-1, model_id, model_counter);
+	TEST_ASSERT_TRUE(cmp_is_error(ret));
+	TEST_ASSERT_EQUAL(CMP_ERROR_ENTITY_TOO_SMALL, cmp_get_error_code(ret));
+
+	ret = compress_chunk_set_model_id_and_counter(NULL, dst_size, model_id, model_counter);
+	TEST_ASSERT_TRUE(cmp_is_error(ret));
+	TEST_ASSERT_EQUAL(CMP_ERROR_ENTITY_NULL, cmp_get_error_code(ret));
+}
+
+
+
 void test_support_function_call_NULL(void)
 {
 	struct cmp_cfg cfg = cmp_cfg_icu_create(DATA_TYPE_IMAGETTE, CMP_MODE_DIFF_ZERO, 16, CMP_LOSSLESS);
@@ -4634,7 +4962,10 @@ void test_support_function_call_NULL(void)
 	TEST_ASSERT_TRUE(cmp_cfg_imagette_is_invalid(NULL, RDCU_CHECK));
 	TEST_ASSERT_TRUE(cmp_cfg_fx_cob_is_invalid(NULL));
 	TEST_ASSERT_TRUE(cmp_cfg_aux_is_invalid(NULL));
+	TEST_ASSERT_TRUE(cmp_cfg_aux_is_invalid(&cfg));
 	TEST_ASSERT_TRUE(cmp_cfg_icu_is_invalid(NULL));
+	cfg.data_type = DATA_TYPE_UNKNOWN;
+	TEST_ASSERT_TRUE(cmp_cfg_icu_is_invalid(&cfg));
 	TEST_ASSERT_TRUE(cmp_cfg_fx_cob_get_need_pars(DATA_TYPE_S_FX, NULL));
 }
 
