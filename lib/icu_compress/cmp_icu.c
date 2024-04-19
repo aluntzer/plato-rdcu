@@ -2688,6 +2688,7 @@ uint32_t compress_chunk(void *chunk, uint32_t chunk_size,
 	size_t read_bytes;
 
 	RETURN_ERROR_IF(chunk == NULL, CHUNK_NULL, "");
+	RETURN_ERROR_IF(cmp_par == NULL, PAR_NULL, "");
 	RETURN_ERROR_IF(chunk_size < COLLECTION_HDR_SIZE, CHUNK_SIZE_INCONSISTENT,
 			"chunk_size: %"PRIu32"", chunk_size);
 	RETURN_ERROR_IF(chunk_size > CMP_ENTITY_MAX_ORIGINAL_SIZE, CHUNK_TOO_LARGE,

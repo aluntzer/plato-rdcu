@@ -88,6 +88,8 @@ const char* cmp_get_error_string(enum cmp_error code)
 		return "Buffer related parameter is not valid";
 	case CMP_ERROR_PAR_MAX_USED_BITS:
 		return "Maximum used bits parameters are not valid";
+	case CMP_ERROR_PAR_NULL:
+		return "Pointer to the compression parameters structure is NULL.";
 
 	case CMP_ERROR_CHUNK_NULL:
 		return "Pointer to the chunk is NULL. No data, no compression";
