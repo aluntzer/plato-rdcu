@@ -2282,7 +2282,7 @@ static void cmp_ent_parse_generic_header(const struct cmp_entity *ent)
 
 		debug_print("Compressed with cmp_tool version: %u.%02u", major, minor);
 	} else
-		debug_print("ICU ASW Version ID: %08" PRIx32, version_id);
+		debug_print("ICU ASW Version ID: 0x%08" PRIx32, version_id);
 
 	cmp_ent_size = cmp_ent_get_size(ent);
 	debug_print("Compression Entity Size: %" PRIu32 " byte", cmp_ent_size);
@@ -2291,16 +2291,16 @@ static void cmp_ent_parse_generic_header(const struct cmp_entity *ent)
 	debug_print("Original Data Size: %" PRIu32 " byte", original_size);
 
 	start_coarse_time = cmp_ent_get_coarse_start_time(ent);
-	debug_print("Compression Coarse Start Time: %" PRIu32, start_coarse_time);
+	debug_print("Compression Coarse Start Time: 0x%" PRIx32, start_coarse_time);
 
 	start_fine_time = cmp_ent_get_fine_start_time(ent);
-	debug_print("Compression Fine Start Time: %d", start_fine_time);
+	debug_print("Compression Fine Start Time: 0x%x", start_fine_time);
 
 	end_coarse_time = cmp_ent_get_coarse_end_time(ent);
-	debug_print("Compression Coarse End Time: %" PRIu32, end_coarse_time);
+	debug_print("Compression Coarse End Time: 0x%" PRIx32, end_coarse_time);
 
 	end_fine_time = cmp_ent_get_fine_end_time(ent);
-	debug_print("Compression Fine End Time: %d", end_fine_time);
+	debug_print("Compression Fine End Time: 0x%x", end_fine_time);
 
 #ifdef HAS_TIME_H
 	{
