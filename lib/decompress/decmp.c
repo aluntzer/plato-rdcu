@@ -2188,6 +2188,7 @@ static long parse_cmp_collection(uint8_t *cmp_col, int n, struct cmp_cfg *cfg, i
 	uint32_t cmp_data_size; /* size of the compressed data in the collection (not including the header) */
 	uint16_t original_col_size; /* size of the decompressed collection data (not including the header) */
 	size_t sample_size;
+	void *void_poiter; /* used to suppress unaligned cast warning */
 
 	/* get to the collection we want to decompress */
 	for (i = 0; i < n; i++) {
@@ -2211,7 +2212,8 @@ static long parse_cmp_collection(uint8_t *cmp_col, int n, struct cmp_cfg *cfg, i
 	else
 		*coll_uncompressed = 0;
 
-	cfg->icu_output_buf = (void *)(col_hdr); /* unaligned cast -> reading compressed data as uint8_t * */
+	void_poiter = (void *)(col_hdr); /* unaligned cast -> reading compressed data as uint8_t * */
+	cfg->icu_output_buf = void_poiter;
 	cfg->buffer_length = cmp_data_size + COLLECTION_HDR_SIZE;
 
 	cfg->data_type = convert_subservice_to_cmp_data_type(cmp_col_get_subservice(col_hdr));
