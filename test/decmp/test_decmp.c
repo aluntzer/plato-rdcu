@@ -116,7 +116,7 @@ void test_bitstream(void)
 			TEST_ASSERT_EQUAL_size_t(j, s);
 			for (j = 0; j < k; j++)
 				TEST_ASSERT_EQUAL_UINT(j, bit_read_bits(&dec, 8));
-			TEST_ASSERT_TRUE(bit_end_of_stream(&dec));
+			TEST_ASSERT_EQUAL(1, bit_end_of_stream(&dec));
 			TEST_ASSERT_EQUAL_INT(BIT_ALL_READ_IN, bit_refill(&dec));
 		}
 	}
