@@ -297,7 +297,7 @@ static __inline uint32_t re_map_to_pos(uint32_t value_to_unmap)
 
 
 /**
- * @brief decompress the next code word in the bitstream and decorate it with
+ * @brief decompress the next code word in the bitstream and decorrelate it with
  *	the model
  *
  * @param setup		pointer to the decoder setup
@@ -316,7 +316,7 @@ static int decode_value(const struct decoder_setup *setup, uint32_t *decoded_val
 	/* map the unsigned decode value back to a signed value */
 	*decoded_value = re_map_to_pos(*decoded_value);
 
-	/* decorate data the data with the model */
+	/* decorrelate data the data with the model */
 	*decoded_value += round_fwd(model, setup->lossy_par);
 
 	/* we mask only the used bits in case there is an overflow when adding the model */
