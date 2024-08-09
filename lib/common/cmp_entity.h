@@ -172,7 +172,7 @@ int cmp_ent_write_cmp_pars(struct cmp_entity *ent, const struct cmp_cfg *cfg,
  * compression entity header
  */
 int cmp_ent_write_rdcu_cmp_pars(struct cmp_entity *ent, const struct cmp_info *info,
-				const struct cmp_cfg *cfg);
+				const struct rdcu_cfg *rcfg);
 
 
 /* set functions for generic compression entity header */

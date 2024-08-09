@@ -23,8 +23,8 @@
 #include "../common/cmp_support.h"
 
 int rdcu_start_compression(void);
-int rdcu_inject_edac_error(const struct cmp_cfg *cfg, uint32_t addr);
-int rdcu_compress_data_parallel(const struct cmp_cfg *cfg,
+int rdcu_inject_edac_error(const struct rdcu_cfg *rcfg, uint32_t addr);
+int rdcu_compress_data_parallel(const struct rdcu_cfg *rcfg,
 				const struct cmp_info *last_info);
 
 #endif /* CMP_RDCU_TESTING_H */

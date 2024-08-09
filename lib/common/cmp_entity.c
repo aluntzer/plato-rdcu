@@ -1930,14 +1930,15 @@ int cmp_ent_write_cmp_pars(struct cmp_entity *ent, const struct cmp_cfg *cfg,
  *
  * @param ent	pointer to a compression entity
  * @param info	pointer to a decompression information structure
- * @param cfg	pointer to a compression configuration structure for adaptive
- *	compression parameters (can be NULL if non adaptive data_type is used)
+ * @param rcfg	pointer to a RDCU compression configuration structure for
+ *	adaptive compression parameters (can be NULL if non adaptive data_type
+ *	is used)
  *
  * @returns 0 on success, negative on error
  */
 
 int cmp_ent_write_rdcu_cmp_pars(struct cmp_entity *ent, const struct cmp_info *info,
-				const struct cmp_cfg *cfg)
+				const struct rdcu_cfg *rcfg)
 {
 	uint32_t ent_cmp_data_size;
 	enum cmp_data_type data_type;
@@ -1996,17 +1997,17 @@ int cmp_ent_write_rdcu_cmp_pars(struct cmp_entity *ent, const struct cmp_info *i
 	 * if an adaptive imagette compression data type is ent in the entity
 	 */
 	if (cmp_ap_imagette_data_type_is_used(data_type)) {
-		if (!cfg) {
+		if (!rcfg) {
 			debug_print("Error: Need the compression configuration to get the adaptive parameters.");
 			return -1;
 		}
-		if (cmp_ent_set_ima_ap1_spill(ent, cfg->ap1_spill))
+		if (cmp_ent_set_ima_ap1_spill(ent, rcfg->ap1_spill))
 			return -1;
-		if (cmp_ent_set_ima_ap1_golomb_par(ent, cfg->ap1_golomb_par))
+		if (cmp_ent_set_ima_ap1_golomb_par(ent, rcfg->ap1_golomb_par))
 			return -1;
-		if (cmp_ent_set_ima_ap2_spill(ent, cfg->ap2_spill))
+		if (cmp_ent_set_ima_ap2_spill(ent, rcfg->ap2_spill))
 			return -1;
-		if (cmp_ent_set_ima_ap2_golomb_par(ent, cfg->ap2_golomb_par))
+		if (cmp_ent_set_ima_ap2_golomb_par(ent, rcfg->ap2_golomb_par))
 			return -1;
 	}
 

@@ -2819,3 +2819,92 @@ uint32_t compress_chunk_set_model_id_and_counter(void *dst, uint32_t dst_size,
 
 	return dst_size;
 }
+
+
+/**
+ * @brief compress data the same way as the RDCU HW compressor
+ *
+ * @param rcfg	pointer to a RDCU compression configuration (created with the
+ *		rdcu_cfg_create() function, set up with the rdcu_cfg_buffers()
+ *		and rdcu_cfg_imagette() functions)
+ * @param info	pointer to a compression information structure contains the
+ *		metadata of a compression (can be NULL)
+ *
+ * @returns the bit length of the bitstream on success; negative on error,
+ *	CMP_ERROR_SMALL_BUF (-2) if the compressed data buffer is too small to
+ *	hold the whole compressed data
+ *
+ * @warning only the small buffer error in the info.cmp_err field is implemented
+ */
+
+int32_t compress_like_rdcu(const struct rdcu_cfg *rcfg, struct cmp_info *info)
+{
+	struct cmp_cfg cfg = {0};
+	uint32_t cmp_size_bit;
+
+	if (info)
+		memset(info, 0, sizeof(*info));
+
+	if (!rcfg)
+		return (int32_t)compress_data_internal(NULL, 0);
+
+	cfg.data_type = DATA_TYPE_IMAGETTE;
+	cfg.max_used_bits = &MAX_USED_BITS_SAFE;
+
+	cfg.input_buf = rcfg->input_buf;
+	cfg.model_buf = rcfg->model_buf;
+	cfg.samples = rcfg->samples;
+	cfg.buffer_length = (rcfg->buffer_length * sizeof(uint16_t));
+	cfg.cmp_mode = rcfg->cmp_mode;
+	cfg.model_value = rcfg->model_value;
+	cfg.round = rcfg->round;
+
+	if (info) {
+		info->cmp_err = 0;
+		info->cmp_mode_used = (uint8_t)rcfg->cmp_mode;
+		info->model_value_used = (uint8_t)rcfg->model_value;
+		info->round_used = (uint8_t)rcfg->round;
+		info->spill_used = rcfg->spill;
+		info->golomb_par_used = rcfg->golomb_par;
+		info->samples_used = rcfg->samples;
+		info->rdcu_new_model_adr_used = rcfg->rdcu_new_model_adr;
+		info->rdcu_cmp_adr_used = rcfg->rdcu_buffer_adr;
+
+		if (rcfg->ap1_golomb_par && rcfg->ap1_golomb_par) {
+			uint32_t ap1_cmp_size, ap2_cmp_size;
+
+			cfg.cmp_par_imagette = rcfg->ap1_golomb_par;
+			cfg.spill_imagette = rcfg->ap1_spill;
+			ap1_cmp_size = compress_data_internal(&cfg, 0);
+			if (cmp_is_error(ap1_cmp_size) || ap1_cmp_size > INT32_MAX)
+				ap1_cmp_size = 0;
+
+			cfg.cmp_par_imagette = rcfg->ap2_golomb_par;
+			cfg.spill_imagette = rcfg->ap2_spill;
+			ap2_cmp_size = compress_data_internal(&cfg, 0);
+			if (cmp_is_error(ap2_cmp_size) || ap2_cmp_size > INT32_MAX)
+				ap2_cmp_size = 0;
+
+			info->ap1_cmp_size = ap1_cmp_size;
+			info->ap2_cmp_size = ap2_cmp_size;
+		}
+	}
+
+	cfg.cmp_par_imagette = rcfg->golomb_par;
+	cfg.spill_imagette = rcfg->spill;
+	cfg.icu_new_model_buf = rcfg->icu_new_model_buf;
+	cfg.icu_output_buf = rcfg->icu_output_buf;
+
+	cmp_size_bit = compress_data_internal(&cfg, 0);
+
+	if (info) {
+		if (cmp_get_error_code(cmp_size_bit) == CMP_ERROR_SMALL_BUF_)
+			info->cmp_err |= 1UL << 0;/* SMALL_BUFFER_ERR_BIT;*/ /* set small buffer error */
+		if (cmp_is_error(cmp_size_bit))
+			info->cmp_size = 0;
+		else
+			info->cmp_size = cmp_size_bit;
+	}
+
+	return (int32_t)cmp_size_bit;
+}

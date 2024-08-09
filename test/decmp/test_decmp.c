@@ -947,86 +947,42 @@ void test_re_map_to_pos(void)
 
 
 /**
- * returns the needed size of the compression entry header plus the max size of the
- * compressed data if ent ==  NULL if ent is set the size of the compression
- * entry (entity header + compressed data)
+ * @test decompress_cmp_entiy
  */
 
-size_t icu_compress_data_entity(struct cmp_entity *ent, const struct cmp_cfg *cfg)
-{
-	uint32_t s;
-	struct cmp_cfg cfg_cpy;
-	int cmp_size_bits;
-
-	if (!cfg)
-		return 0;
-
-	if (cfg->icu_output_buf)
-		debug_print("Warning the set buffer for the compressed data is ignored! The compressed data are write to the compression entry.");
-
-	s = cmp_cal_size_of_data(cfg->buffer_length, cfg->data_type);
-	if (!s)
-		return 0;
-	/* we round down to the next 4-byte allied address because we access the
-	 * cmp_buffer in uint32_t words
-	 */
-	if (cfg->cmp_mode != CMP_MODE_RAW)
-		s &= ~0x3U;
-
-	s = cmp_ent_create(ent, cfg->data_type, cfg->cmp_mode == CMP_MODE_RAW, s);
-
-	if (!ent || !s)
-		return s;
-
-	cfg_cpy = *cfg;
-	cfg_cpy.icu_output_buf = cmp_ent_get_data_buf(ent);
-	if (!cfg_cpy.icu_output_buf)
-		return 0;
-	cmp_size_bits = icu_compress_data(&cfg_cpy);
-	if (cmp_size_bits < 0)
-		return 0;
-
-	/* XXX overwrite the size of the compression entity with the size of the actual
-	 * size of the compressed data; not all allocated memory is normally used
-	 */
-	s = cmp_ent_create(ent, cfg->data_type, cfg->cmp_mode == CMP_MODE_RAW,
-			   cmp_bit_to_byte((unsigned int)cmp_size_bits));
-
-	if (cmp_ent_write_cmp_pars(ent, cfg, cmp_size_bits))
-		return 0;
-
-	return s;
-}
-
-
-void test_cmp_decmp_n_imagette_raw(void)
+void test_cmp_decmp_rdcu_raw(void)
 {
 	int cmp_size, decmp_size;
 	size_t s, i;
-	struct cmp_cfg cfg = cmp_cfg_icu_create(DATA_TYPE_IMAGETTE, CMP_MODE_RAW, 0, CMP_LOSSLESS);
+	struct rdcu_cfg rcfg = {0};
+	struct cmp_info info;
 	uint16_t data[] = {0, 1, 2, 0x42, (uint16_t)INT16_MIN, INT16_MAX, UINT16_MAX};
 	uint32_t *compressed_data;
 	uint16_t *decompressed_data;
 	struct cmp_entity *ent;
 
-	s = cmp_cfg_icu_buffers(&cfg, data, ARRAY_SIZE(data), NULL, NULL,
-				NULL, ARRAY_SIZE(data));
-	TEST_ASSERT_TRUE(s);
-	compressed_data = malloc(s);
-	TEST_ASSERT_TRUE(compressed_data);
-	s = cmp_cfg_icu_buffers(&cfg, data, ARRAY_SIZE(data), NULL, NULL,
-				compressed_data, ARRAY_SIZE(data));
-	TEST_ASSERT_TRUE(s);
+	rcfg.cmp_mode = CMP_MODE_RAW;
+	rcfg.input_buf = data;
+	rcfg.samples = ARRAY_SIZE(data);
+	rcfg.buffer_length = ARRAY_SIZE(data);
 
-	cmp_size = icu_compress_data(&cfg);
+	compressed_data = malloc(sizeof(data));
+	TEST_ASSERT_TRUE(compressed_data);
+	rcfg.icu_output_buf = compressed_data;
+
+	cmp_size = compress_like_rdcu(&rcfg, &info);
 	TEST_ASSERT_EQUAL_INT(sizeof(data)*CHAR_BIT, cmp_size);
 
-	s = cmp_ent_build(NULL, 0, 0, 0, 0, 0, &cfg, cmp_size);
+	s = cmp_ent_create(NULL, DATA_TYPE_IMAGETTE , rcfg.cmp_mode == CMP_MODE_RAW,
+			   cmp_bit_to_byte((unsigned int)cmp_size));
 	TEST_ASSERT_TRUE(s);
 	ent = malloc(s);
 	TEST_ASSERT_TRUE(ent);
-	s = cmp_ent_build(ent, 0, 0, 0, 0, 0, &cfg, cmp_size);
+	s = cmp_ent_create(ent, DATA_TYPE_IMAGETTE , rcfg.cmp_mode == CMP_MODE_RAW,
+			   cmp_bit_to_byte((unsigned int)cmp_size));
 	TEST_ASSERT_TRUE(s);
+	TEST_ASSERT_FALSE(cmp_ent_write_rdcu_cmp_pars(ent, &info, NULL));
+
 	memcpy(cmp_ent_get_data_buf(ent), compressed_data, ((unsigned int)cmp_size+7)/8);
 
 	decmp_size = decompress_cmp_entiy(ent, NULL, NULL, NULL);
@@ -1045,6 +1001,10 @@ void test_cmp_decmp_n_imagette_raw(void)
 	free(decompressed_data);
 }
 
+
+/**
+ * @test decompress_imagette
+ */
 
 void test_decompress_imagette_model(void)
 {

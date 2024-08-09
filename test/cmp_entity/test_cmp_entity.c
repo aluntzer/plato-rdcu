@@ -1436,7 +1436,7 @@ void test_cmp_ent_write_rdcu_cmp_pars(void)
 	uint32_t size;
 	struct cmp_entity *ent;
 	struct cmp_info info;
-	struct cmp_cfg cfg;
+	struct rdcu_cfg rcfg;
 
 	info.cmp_mode_used = CMP_MODE_DIFF_ZERO;
 	info.spill_used = 42;
@@ -1498,10 +1498,10 @@ void test_cmp_ent_write_rdcu_cmp_pars(void)
 
 	/* adaptive configuration */
 	info.cmp_mode_used = CMP_MODE_MODEL_MULTI;
-	cfg.ap1_golomb_par = 0xFF;
-	cfg.ap1_spill = 1;
-	cfg.ap2_golomb_par = 0x32;
-	cfg.ap2_spill = 201;
+	rcfg.ap1_golomb_par = 0xFF;
+	rcfg.ap1_spill = 1;
+	rcfg.ap2_golomb_par = 0x32;
+	rcfg.ap2_spill = 201;
 
 	/* create a adaptive imagette compression entity */
 	size = cmp_ent_create(NULL, DATA_TYPE_IMAGETTE_ADAPTIVE, info.cmp_mode_used == CMP_MODE_RAW, 12);
@@ -1510,7 +1510,7 @@ void test_cmp_ent_write_rdcu_cmp_pars(void)
 	size = cmp_ent_create(ent, DATA_TYPE_IMAGETTE_ADAPTIVE, info.cmp_mode_used == CMP_MODE_RAW, 12);
 	TEST_ASSERT_NOT_EQUAL_INT(0, size);
 
-	error = cmp_ent_write_rdcu_cmp_pars(ent, &info, &cfg);
+	error = cmp_ent_write_rdcu_cmp_pars(ent, &info, &rcfg);
 	TEST_ASSERT_FALSE(error);
 
 	TEST_ASSERT_EQUAL_INT(DATA_TYPE_IMAGETTE_ADAPTIVE, cmp_ent_get_data_type(ent));
@@ -1525,20 +1525,20 @@ void test_cmp_ent_write_rdcu_cmp_pars(void)
 
 	TEST_ASSERT_EQUAL_INT(info.spill_used, cmp_ent_get_ima_spill(ent));
 	TEST_ASSERT_EQUAL_INT(info.golomb_par_used, cmp_ent_get_ima_golomb_par(ent));
-	TEST_ASSERT_EQUAL_INT(cfg.ap1_spill, cmp_ent_get_ima_ap1_spill(ent));
-	TEST_ASSERT_EQUAL_INT(cfg.ap1_golomb_par, cmp_ent_get_ima_ap1_golomb_par(ent));
-	TEST_ASSERT_EQUAL_INT(cfg.ap2_spill, cmp_ent_get_ima_ap2_spill(ent));
-	TEST_ASSERT_EQUAL_INT(cfg.ap2_golomb_par, cmp_ent_get_ima_ap2_golomb_par(ent));
+	TEST_ASSERT_EQUAL_INT(rcfg.ap1_spill, cmp_ent_get_ima_ap1_spill(ent));
+	TEST_ASSERT_EQUAL_INT(rcfg.ap1_golomb_par, cmp_ent_get_ima_ap1_golomb_par(ent));
+	TEST_ASSERT_EQUAL_INT(rcfg.ap2_spill, cmp_ent_get_ima_ap2_spill(ent));
+	TEST_ASSERT_EQUAL_INT(rcfg.ap2_golomb_par, cmp_ent_get_ima_ap2_golomb_par(ent));
 
 
 	/** error cases **/
 
 	/* ent = NULL */
-	error = cmp_ent_write_rdcu_cmp_pars(NULL, &info, &cfg);
+	error = cmp_ent_write_rdcu_cmp_pars(NULL, &info, &rcfg);
 	TEST_ASSERT_TRUE(error);
 
 	/* info = NULL */
-	error = cmp_ent_write_rdcu_cmp_pars(ent, NULL, &cfg);
+	error = cmp_ent_write_rdcu_cmp_pars(ent, NULL, &rcfg);
 	TEST_ASSERT_TRUE(error);
 
 	/* cfg = NULL and adaptive data type */
@@ -1547,35 +1547,35 @@ void test_cmp_ent_write_rdcu_cmp_pars(void)
 
 	/* compressed data are to big for the compression entity */
 	info.cmp_size = 12*8 + 1;
-	error = cmp_ent_write_rdcu_cmp_pars(ent, &info, &cfg);
+	error = cmp_ent_write_rdcu_cmp_pars(ent, &info, &rcfg);
 	TEST_ASSERT_TRUE(error);
 	info.cmp_size = 1;
 
 	/* wrong data_type */
 	cmp_ent_set_data_type(ent, DATA_TYPE_S_FX, 0);
-	error = cmp_ent_write_rdcu_cmp_pars(ent, &info, &cfg);
+	error = cmp_ent_write_rdcu_cmp_pars(ent, &info, &rcfg);
 	TEST_ASSERT_TRUE(error);
 	cmp_ent_set_data_type(ent, DATA_TYPE_F_CAM_IMAGETTE_ADAPTIVE, 0);
 	/* this should work */
-	error = cmp_ent_write_rdcu_cmp_pars(ent, &info, &cfg);
+	error = cmp_ent_write_rdcu_cmp_pars(ent, &info, &rcfg);
 	TEST_ASSERT_FALSE(error);
 
 	/* original_size to high */
 	info.samples_used = 0x800000;
-	error = cmp_ent_write_rdcu_cmp_pars(ent, &info, &cfg);
+	error = cmp_ent_write_rdcu_cmp_pars(ent, &info, &rcfg);
 	TEST_ASSERT_TRUE(error);
 	info.samples_used = 0x7FFFFF;
 	/* this should work */
-	error = cmp_ent_write_rdcu_cmp_pars(ent, &info, &cfg);
+	error = cmp_ent_write_rdcu_cmp_pars(ent, &info, &rcfg);
 	TEST_ASSERT_FALSE(error);
 
 	/* cmp_mode to high */
 	info.cmp_mode_used = 0x100;
-	error = cmp_ent_write_rdcu_cmp_pars(ent, &info, &cfg);
+	error = cmp_ent_write_rdcu_cmp_pars(ent, &info, &rcfg);
 	TEST_ASSERT_TRUE(error);
 	info.cmp_mode_used = 0xFF;
 	/* this should work */
-	error = cmp_ent_write_rdcu_cmp_pars(ent, &info, &cfg);
+	error = cmp_ent_write_rdcu_cmp_pars(ent, &info, &rcfg);
 	TEST_ASSERT_FALSE(error);
 
 	TEST_ASSERT_EQUAL_INT(1, sizeof(info.model_value_used));
@@ -1602,79 +1602,79 @@ void test_cmp_ent_write_rdcu_cmp_pars(void)
 
 	/* spill to high */
 	info.spill_used = 0x10000;
-	error = cmp_ent_write_rdcu_cmp_pars(ent, &info, &cfg);
+	error = cmp_ent_write_rdcu_cmp_pars(ent, &info, &rcfg);
 	TEST_ASSERT_TRUE(error);
 	info.spill_used = 0xFFFF;
 	/* this should work */
-	error = cmp_ent_write_rdcu_cmp_pars(ent, &info, &cfg);
+	error = cmp_ent_write_rdcu_cmp_pars(ent, &info, &rcfg);
 	TEST_ASSERT_FALSE(error);
 
 	/* golomb_par to high */
 	info.golomb_par_used = 0x100;
-	error = cmp_ent_write_rdcu_cmp_pars(ent, &info, &cfg);
+	error = cmp_ent_write_rdcu_cmp_pars(ent, &info, &rcfg);
 	TEST_ASSERT_TRUE(error);
 	info.golomb_par_used = 0xFF;
 	/* this should work */
-	error = cmp_ent_write_rdcu_cmp_pars(ent, &info, &cfg);
+	error = cmp_ent_write_rdcu_cmp_pars(ent, &info, &rcfg);
 	TEST_ASSERT_FALSE(error);
 
 	/* adaptive 1 spill to high */
-	cfg.ap1_spill = 0x10000;
-	error = cmp_ent_write_rdcu_cmp_pars(ent, &info, &cfg);
+	rcfg.ap1_spill = 0x10000;
+	error = cmp_ent_write_rdcu_cmp_pars(ent, &info, &rcfg);
 	TEST_ASSERT_TRUE(error);
-	cfg.ap1_spill = 0xFFFF;
+	rcfg.ap1_spill = 0xFFFF;
 	/* this should work */
-	error = cmp_ent_write_rdcu_cmp_pars(ent, &info, &cfg);
+	error = cmp_ent_write_rdcu_cmp_pars(ent, &info, &rcfg);
 	TEST_ASSERT_FALSE(error);
 
 	/* adaptive 1  golomb_par to high */
-	cfg.ap1_golomb_par = 0x100;
-	error = cmp_ent_write_rdcu_cmp_pars(ent, &info, &cfg);
+	rcfg.ap1_golomb_par = 0x100;
+	error = cmp_ent_write_rdcu_cmp_pars(ent, &info, &rcfg);
 	TEST_ASSERT_TRUE(error);
-	cfg.ap1_golomb_par = 0xFF;
+	rcfg.ap1_golomb_par = 0xFF;
 	/* this should work */
-	error = cmp_ent_write_rdcu_cmp_pars(ent, &info, &cfg);
+	error = cmp_ent_write_rdcu_cmp_pars(ent, &info, &rcfg);
 	TEST_ASSERT_FALSE(error);
 
 	/* adaptive 2 spill to high */
-	cfg.ap2_spill = 0x10000;
-	error = cmp_ent_write_rdcu_cmp_pars(ent, &info, &cfg);
+	rcfg.ap2_spill = 0x10000;
+	error = cmp_ent_write_rdcu_cmp_pars(ent, &info, &rcfg);
 	TEST_ASSERT_TRUE(error);
-	cfg.ap2_spill = 0xFFFF;
+	rcfg.ap2_spill = 0xFFFF;
 	/* this should work */
-	error = cmp_ent_write_rdcu_cmp_pars(ent, &info, &cfg);
+	error = cmp_ent_write_rdcu_cmp_pars(ent, &info, &rcfg);
 	TEST_ASSERT_FALSE(error);
 
 	/* adaptive 2  golomb_par to high */
-	cfg.ap2_golomb_par = 0x100;
-	error = cmp_ent_write_rdcu_cmp_pars(ent, &info, &cfg);
+	rcfg.ap2_golomb_par = 0x100;
+	error = cmp_ent_write_rdcu_cmp_pars(ent, &info, &rcfg);
 	TEST_ASSERT_TRUE(error);
-	cfg.ap2_golomb_par = 0xFF;
+	rcfg.ap2_golomb_par = 0xFF;
 	/* this should work */
-	error = cmp_ent_write_rdcu_cmp_pars(ent, &info, &cfg);
+	error = cmp_ent_write_rdcu_cmp_pars(ent, &info, &rcfg);
 	TEST_ASSERT_FALSE(error);
 
 	/* The entity's raw data bit is not set, but the configuration contains raw data */
 	info.cmp_mode_used = CMP_MODE_RAW;
-	error = cmp_ent_write_rdcu_cmp_pars(ent, &info, &cfg);
+	error = cmp_ent_write_rdcu_cmp_pars(ent, &info, &rcfg);
 	TEST_ASSERT_TRUE(error);
 	info.cmp_mode_used = CMP_MODE_MODEL_MULTI;
 	/* this should work */
-	error = cmp_ent_write_rdcu_cmp_pars(ent, &info, &cfg);
+	error = cmp_ent_write_rdcu_cmp_pars(ent, &info, &rcfg);
 	TEST_ASSERT_FALSE(error);
 
 	/* The entity's raw data bit is set, but the configuration contains no raw data */
 	cmp_ent_set_data_type(ent, DATA_TYPE_IMAGETTE_ADAPTIVE, 1); /* set raw bit */
-	error = cmp_ent_write_rdcu_cmp_pars(ent, &info, &cfg);
+	error = cmp_ent_write_rdcu_cmp_pars(ent, &info, &rcfg);
 	TEST_ASSERT_TRUE(error);
 	cmp_ent_set_data_type(ent, DATA_TYPE_F_CAM_IMAGETTE_ADAPTIVE, 0);
 	/* this should work */
-	error = cmp_ent_write_rdcu_cmp_pars(ent, &info, &cfg);
+	error = cmp_ent_write_rdcu_cmp_pars(ent, &info, &rcfg);
 	TEST_ASSERT_FALSE(error);
 
 	/* compression error set */
 	info.cmp_err = 1;
-	error = cmp_ent_write_rdcu_cmp_pars(ent, &info, &cfg);
+	error = cmp_ent_write_rdcu_cmp_pars(ent, &info, &rcfg);
 	TEST_ASSERT_TRUE(error);
 	info.cmp_err = 0;
 

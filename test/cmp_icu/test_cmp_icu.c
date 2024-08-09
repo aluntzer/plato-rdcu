@@ -33,6 +33,7 @@
 
 #include <cmp_icu.h>
 #include <cmp_data_types.h>
+#include <cmp_rdcu_cfg.h>
 #include "../../lib/icu_compress/cmp_icu.c" /* this is a hack to test static functions */
 
 

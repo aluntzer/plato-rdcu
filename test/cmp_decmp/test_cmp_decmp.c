@@ -31,6 +31,7 @@
 #include <cmp_chunk.h>
 #include <decmp.h>
 #include <cmp_data_types.h>
+#include <cmp_rdcu_cfg.h>
 #include <leon_inttypes.h>
 #include <byteorder.h>
 #include <cmp_error.h>
@@ -812,10 +813,10 @@ void test_random_round_trip_like_rdcu_compression(void)
 
 void test_random_compression_decompress_rdcu_data(void)
 {
-	struct cmp_cfg cfg;
+	struct rdcu_cfg rcfg;
 	struct cmp_info info = {0};
-	uint32_t cmp_buffer_size;
-	int s, i, cmp_size_bits;
+	int error, s, i;
+	int32_t cmp_size_bits;
 	void *compressed_data;
 	uint16_t *decompressed_data;
 	enum {N_SAMPLES = 5};
@@ -824,27 +825,17 @@ void test_random_compression_decompress_rdcu_data(void)
 		CMP_BUFFER_FAKTOR = 2 /* compression data buffer size / data to compress buffer size */
 	};
 
-	cfg = cmp_cfg_icu_create(DATA_TYPE_IMAGETTE, CMP_MODE_RAW, 8, CMP_LOSSLESS);
-	TEST_ASSERT_NOT_EQUAL_INT(cfg.data_type, DATA_TYPE_UNKNOWN);
+	compressed_data = malloc(sizeof(uint16_t)*N_SAMPLES*CMP_BUFFER_FAKTOR);
+	error = rdcu_cfg_create(&rcfg, CMP_MODE_RAW, 8, CMP_LOSSLESS);
+	TEST_ASSERT_FALSE(error);
 
-	cmp_buffer_size = cmp_cfg_icu_buffers(&cfg, data, N_SAMPLES, NULL, NULL,
-					      NULL, N_SAMPLES*CMP_BUFFER_FAKTOR);
-	compressed_data = malloc(cmp_buffer_size);
-	cmp_buffer_size = cmp_cfg_icu_buffers(&cfg, data, N_SAMPLES, NULL, NULL,
-					      compressed_data, N_SAMPLES*CMP_BUFFER_FAKTOR);
-	TEST_ASSERT_EQUAL_INT(cmp_buffer_size, cmp_cal_size_of_data(CMP_BUFFER_FAKTOR*N_SAMPLES, DATA_TYPE_IMAGETTE));
+	rcfg.input_buf = data;
+	rcfg.samples = N_SAMPLES;
+	rcfg.icu_output_buf = compressed_data;
+	rcfg.buffer_length = CMP_BUFFER_FAKTOR*N_SAMPLES;
 
-	cmp_size_bits = icu_compress_data(&cfg);
+	cmp_size_bits = compress_like_rdcu(&rcfg, &info);
 	TEST_ASSERT(cmp_size_bits > 0);
-	info.cmp_size = (uint32_t)cmp_size_bits;
-	info.cmp_mode_used = (uint8_t)cfg.cmp_mode;
-	info.model_value_used = (uint8_t)cfg.model_value;
-	info.round_used = (uint8_t)cfg.round;
-	info.spill_used = cfg.spill;
-	info.golomb_par_used = cfg.golomb_par;
-	info.samples_used = cfg.samples;
-	info.rdcu_new_model_adr_used = cfg.rdcu_new_model_adr;
-	info.rdcu_cmp_adr_used = cfg.rdcu_buffer_adr;
 
 	s = decompress_rdcu_data(compressed_data, &info, NULL, NULL, NULL);
 	TEST_ASSERT_EQUAL(sizeof(data), s);

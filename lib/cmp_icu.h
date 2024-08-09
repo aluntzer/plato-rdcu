@@ -23,6 +23,7 @@
 #include "common/cmp_support.h"
 
 #define CMP_PAR_UNUSED 0
+int32_t compress_like_rdcu(const struct rdcu_cfg *rcfg, struct cmp_info *info);
 
 /* create and setup a compression configuration */
 struct cmp_cfg cmp_cfg_icu_create(enum cmp_data_type data_type, enum cmp_mode cmp_mode,
