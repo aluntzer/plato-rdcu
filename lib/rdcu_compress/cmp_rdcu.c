@@ -50,7 +50,7 @@ static int interrupt_signal_enabled = RDCU_INTR_SIG_DEFAULT;
 /**
  * @brief save repeating 3 lines of code...
  *
- * @note This function depends on the SpW implantation and must be adjusted to it.
+ * @note This function depends on the SpW implementation and must be adjusted to it.
  *
  * @note prints abort message if pending status is non-zero after 10 retries
  */
@@ -91,7 +91,7 @@ int rdcu_interrupt_compression(void)
 	rdcu_syncing();
 
 	/* clear local bit immediately, this is a write-only register.
-	 * we would not want to restart compression by accidentially calling
+	 * we would not want to restart compression by accidentally calling
 	 * rdcu_sync_compr_ctrl() again
 	 */
 	rdcu_clear_data_compr_interrupt();

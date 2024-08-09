@@ -60,12 +60,12 @@ struct cmp_cfg rdcu_cfg_create(enum cmp_data_type data_type, enum cmp_mode cmp_m
 
 
 /**
- * @brief check if a buffer is in outside the RDCU SRAM
+ * @brief check if a buffer is outside the RDCU SRAM
  *
  * @param addr	start address of the buffer
  * @param size	length of the buffer in bytes
  *
- * @returns 0 if buffer in inside the RDCU SRAM, 1 when the buffer is outside
+ * @returns 0 if the buffer is inside the RDCU SRAM, 1 when the buffer is outside
  */
 
 static int outside_sram_range(uint32_t addr, uint32_t size)
@@ -92,7 +92,7 @@ static int outside_sram_range(uint32_t addr, uint32_t size)
  * @param start_b	start address of the 2nd buffer
  * @param end_b		end address of the 2nd buffer
  *
- * @returns 0 if buffers are not overlapping, otherwise buffer are
+ * @returns 0 if buffers are not overlapping, otherwise buffers are
  *	overlapping
  */
 

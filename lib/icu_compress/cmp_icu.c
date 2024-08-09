@@ -569,7 +569,7 @@ static uint32_t encode_normal(uint32_t value, uint32_t stream_len,
 
 
 /**
- * @brief subtract the model from the data, encode the result and puts it into
+ * @brief subtracts the model from the data, encodes the result and puts it into
  *	bitstream, for encoding outlier use the zero escape symbol mechanism
  *
  * @param data		data to encode
@@ -599,11 +599,11 @@ static uint32_t encode_value_zero(uint32_t data, uint32_t model, uint32_t stream
 	 *	return ...
 	 */
 	if (data < (setup->spillover_par - 1)) { /* detect non-outlier */
-		data++; /* add 1 to every value so we can use 0 as escape symbol */
+		data++; /* add 1 to every value so we can use 0 as the escape symbol */
 		return encode_normal(data, stream_len, setup);
 	}
 
-	data++; /* add 1 to every value so we can use 0 as escape symbol */
+	data++; /* add 1 to every value so we can use 0 as the escape symbol */
 
 	/* use zero as escape symbol */
 	stream_len = encode_normal(0, stream_len, setup);
@@ -618,7 +618,7 @@ static uint32_t encode_value_zero(uint32_t data, uint32_t model, uint32_t stream
 
 
 /**
- * @brief subtract the model from the data, encode the result and put it into
+ * @brief subtract the model from the data, encode the result and puts it into
  *	bitstream, for encoding outlier use the multi escape symbol mechanism
  *
  * @param data		data to encode
@@ -728,7 +728,7 @@ static uint32_t cmp_buffer_length_to_bits(uint32_t buffer_length)
 
 
 /**
- * @brief configure an encoder setup structure to have a setup to encode a vale
+ * @brief configure an encoder setup structure to have a setup to encode a value
  *
  * @param setup		pointer to the encoder setup
  * @param cmp_par	compression parameter
@@ -755,7 +755,7 @@ static void configure_encoder_setup(struct encoder_setup *setup,
 	setup->encoder_par2 = ilog_2(cmp_par);
 	setup->spillover_par = spillover;
 
-	/* for encoder_par1 which are a power of two we can use the faster rice_encoder */
+	/* for encoder_par1 which is a power of two we can use the faster rice_encoder */
 	if (is_a_pow_of_2(setup->encoder_par1))
 		setup->generate_cw_f = &rice_encoder;
 	else
@@ -1706,7 +1706,7 @@ static uint32_t compress_l_fx_efx_ncob_ecob(const struct cmp_cfg *cfg, uint32_t 
 				cfg->round, cfg->max_used_bits->l_efx, cfg);
 	configure_encoder_setup(&setup_ecob, cfg->cmp_par_ecob, cfg->spill_ecob,
 				cfg->round, cfg->max_used_bits->l_ecob, cfg);
-	/* we use compression parameter for both variance data fields */
+	/* we use compression parameters for both variance data fields */
 	configure_encoder_setup(&setup_fx_var, cfg->cmp_par_fx_cob_variance, cfg->spill_fx_cob_variance,
 				cfg->round, cfg->max_used_bits->l_fx_variance, cfg);
 	configure_encoder_setup(&setup_cob_var, cfg->cmp_par_fx_cob_variance, cfg->spill_fx_cob_variance,
@@ -2746,7 +2746,7 @@ uint32_t compress_chunk(void *chunk, uint32_t chunk_size,
 
 
 /**
- * @brief returns the maximum compressed size in a worst case scenario
+ * @brief returns the maximum compressed size in a worst-case scenario
  * In case the input data is not compressible
  * This function is primarily useful for memory allocation purposes
  * (destination buffer size).

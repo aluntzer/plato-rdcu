@@ -148,7 +148,7 @@ struct rmap_instruction {
 	uint8_t	cmd_resp:1;
 	uint8_t cmd:4;
 	uint8_t	reply_addr_len:2;
-#elif defined (__LITTLE_ENDIAN)
+#elif defined(__LITTLE_ENDIAN)
 	uint8_t	reply_addr_len:2;
 	uint8_t cmd:4;
 	uint8_t	cmd_resp:1;

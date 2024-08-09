@@ -49,7 +49,7 @@
 
 /* valid compression parameter ranges for ICU non-imagette compression */
 #define MIN_NON_IMA_GOLOMB_PAR	1U
-#define MAX_NON_IMA_GOLOMB_PAR	UINT16_MAX /* the compression entity dos not allow larger values */
+#define MAX_NON_IMA_GOLOMB_PAR	UINT16_MAX /* the compression entity does not allow larger values */
 #define MIN_NON_IMA_SPILL	2U
 /* for maximum spill value look at cmp_icu_max_spill function */
 #define MAX_ICU_ROUND		3U
@@ -275,7 +275,7 @@ struct cmp_status {
 
 
 /**
- * @brief The cmp_info structure contain the information and metadata of an
+ * @brief The cmp_info structure contains the information and metadata of an
  *	executed RDCU compression.
  */
 
@@ -283,7 +283,7 @@ struct cmp_info {
 	uint32_t cmp_mode_used;       /**< Compression mode used */
 	uint32_t spill_used;          /**< Spillover threshold used */
 	uint32_t golomb_par_used;     /**< Golomb parameter used */
-	uint32_t samples_used;        /**< Number of samples (16 bit value) to be stored */
+	uint32_t samples_used;        /**< Number of samples (16-bit value) to be stored */
 	uint32_t cmp_size;            /**< Compressed data size; measured in bits */
 	uint32_t ap1_cmp_size;        /**< Adaptive compressed data size 1; measured in bits */
 	uint32_t ap2_cmp_size;        /**< Adaptive compressed data size 2; measured in bits */

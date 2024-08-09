@@ -57,7 +57,7 @@
  *
  * This does of course not apply as long as you do access your lists only
  * at slow rates (i.e. in the order of several tens of ms) or if performance
- * is not at all critial.
+ * is not at all critical.
  *
  */
 

@@ -330,7 +330,7 @@ static int decode_value(const struct decoder_setup *setup, uint32_t *decoded_val
 
 
 /**
- * @brief configure a decoder setup structure to have a setup to decode a vale
+ * @brief configure a decoder setup structure to have a setup to decode a value
  *
  * @param setup		pointer to the decoder setup
  * @param dec		pointer to a bit_decoder context

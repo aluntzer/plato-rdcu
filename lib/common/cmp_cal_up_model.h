@@ -53,7 +53,7 @@
 
 
 /**
- * @brief implantation of the model update equation
+ * @brief implementation of the model update equation
  * @note check before that model_value is not greater than MAX_MODEL_VALUE
  *
  * @warning: Do not use this macro with types larger than uint32_t
