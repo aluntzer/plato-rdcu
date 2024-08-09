@@ -561,32 +561,17 @@ static uint32_t generate_random_chunk(void *chunk, struct chunk_def col_array[],
 /**
  * @brief generate random compression configuration
  *
- * @param cfg	pointer to a compression configuration
+ * @param rcfg	pointer to a RDCU compression configuration
  */
 
-void generate_random_cmp_cfg(struct cmp_cfg *cfg)
+void generate_random_rdcu_cfg(struct rdcu_cfg *rcfg)
 {
-	if (cmp_imagette_data_type_is_used(cfg->data_type)) {
-		cfg->cmp_par_imagette = cmp_rand_between(MIN_IMA_GOLOMB_PAR, MAX_IMA_GOLOMB_PAR);
-		cfg->ap1_golomb_par = cmp_rand_between(MIN_IMA_GOLOMB_PAR, MAX_IMA_GOLOMB_PAR);
-		cfg->ap2_golomb_par = cmp_rand_between(MIN_IMA_GOLOMB_PAR, MAX_IMA_GOLOMB_PAR);
-		cfg->spill_imagette = cmp_rand_between(MIN_IMA_SPILL, cmp_ima_max_spill(cfg->golomb_par));
-		cfg->ap1_spill = cmp_rand_between(MIN_IMA_SPILL, cmp_ima_max_spill(cfg->ap1_golomb_par));
-		cfg->ap2_spill = cmp_rand_between(MIN_IMA_SPILL, cmp_ima_max_spill(cfg->ap2_golomb_par));
-	} else {
-		cfg->cmp_par_1 = cmp_rand_between(MIN_NON_IMA_GOLOMB_PAR, MAX_NON_IMA_GOLOMB_PAR);
-		cfg->cmp_par_2 = cmp_rand_between(MIN_NON_IMA_GOLOMB_PAR, MAX_NON_IMA_GOLOMB_PAR);
-		cfg->cmp_par_3 = cmp_rand_between(MIN_NON_IMA_GOLOMB_PAR, MAX_NON_IMA_GOLOMB_PAR);
-		cfg->cmp_par_4 = cmp_rand_between(MIN_NON_IMA_GOLOMB_PAR, MAX_NON_IMA_GOLOMB_PAR);
-		cfg->cmp_par_5 = cmp_rand_between(MIN_NON_IMA_GOLOMB_PAR, MAX_NON_IMA_GOLOMB_PAR);
-		cfg->cmp_par_6 = cmp_rand_between(MIN_NON_IMA_GOLOMB_PAR, MAX_NON_IMA_GOLOMB_PAR);
-		cfg->spill_par_1 = cmp_rand_between(MIN_NON_IMA_SPILL, cmp_icu_max_spill(cfg->cmp_par_exp_flags));
-		cfg->spill_par_2 = cmp_rand_between(MIN_NON_IMA_SPILL, cmp_icu_max_spill(cfg->cmp_par_fx));
-		cfg->spill_par_3 = cmp_rand_between(MIN_NON_IMA_SPILL, cmp_icu_max_spill(cfg->cmp_par_ncob));
-		cfg->spill_par_4 = cmp_rand_between(MIN_NON_IMA_SPILL, cmp_icu_max_spill(cfg->cmp_par_efx));
-		cfg->spill_par_5 = cmp_rand_between(MIN_NON_IMA_SPILL, cmp_icu_max_spill(cfg->cmp_par_ecob));
-		cfg->spill_par_6 = cmp_rand_between(MIN_NON_IMA_SPILL, cmp_icu_max_spill(cfg->cmp_par_fx_cob_variance));
-	}
+		rcfg->golomb_par = cmp_rand_between(MIN_IMA_GOLOMB_PAR, MAX_IMA_GOLOMB_PAR);
+		rcfg->ap1_golomb_par = cmp_rand_between(MIN_IMA_GOLOMB_PAR, MAX_IMA_GOLOMB_PAR);
+		rcfg->ap2_golomb_par = cmp_rand_between(MIN_IMA_GOLOMB_PAR, MAX_IMA_GOLOMB_PAR);
+		rcfg->spill = cmp_rand_between(MIN_IMA_SPILL, cmp_ima_max_spill(rcfg->golomb_par));
+		rcfg->ap1_spill = cmp_rand_between(MIN_IMA_SPILL, cmp_ima_max_spill(rcfg->ap1_golomb_par));
+		rcfg->ap2_spill = cmp_rand_between(MIN_IMA_SPILL, cmp_ima_max_spill(rcfg->ap2_golomb_par));
 }
 
 
@@ -644,10 +629,10 @@ void generate_random_cmp_par(struct cmp_par *par)
  * @brief compress the given configuration and decompress it afterwards; finally
  *	compare the results
  *
- * @param cfg	pointer to a compression configuration
+ * @param rcfg	pointer to a RDCU compression configuration
  */
 
-void compression_decompression(struct cmp_cfg *cfg)
+void compression_decompression_like_rdcu(struct rdcu_cfg *rcfg)
 {
 	int cmp_size_bits, s, error;
 	uint32_t data_size, cmp_data_size, cmp_ent_size;
@@ -655,61 +640,51 @@ void compression_decompression(struct cmp_cfg *cfg)
 	void *decompressed_data;
 	static void *model_of_data;
 	void *updated_model = NULL;
+	struct cmp_info info;
 
-	if (!cfg) {
+	if (!rcfg) {
 		free(model_of_data);
 		return;
 	}
 
-	TEST_ASSERT_NOT_NULL(cfg);
+	TEST_ASSERT_NOT_NULL(rcfg);
 
-	TEST_ASSERT_NULL(cfg->icu_output_buf);
+	TEST_ASSERT_NULL(rcfg->icu_output_buf);
 
-	data_size = cmp_cal_size_of_data(cfg->samples, cfg->data_type);
+	data_size = rcfg->samples * sizeof(uint16_t);
+	TEST_ASSERT_NOT_EQUAL_UINT(0, data_size);
 
 	/* create a compression entity */
-	cmp_data_size = cmp_cal_size_of_data(cfg->buffer_length, cfg->data_type);
-	/* cmp_data_size &= ~0x3U; /1* the size of the compressed data should be a multiple of 4 *1/ */
-	TEST_ASSERT_NOT_EQUAL_INT(0, cmp_data_size);
+	cmp_data_size = rcfg->buffer_length * sizeof(uint16_t);
+	TEST_ASSERT_NOT_EQUAL_UINT(0, cmp_data_size);
 
-	cmp_ent_size = cmp_ent_create(NULL, cfg->data_type, cfg->cmp_mode == CMP_MODE_RAW, cmp_data_size);
+	cmp_ent_size = cmp_ent_create(NULL, DATA_TYPE_IMAGETTE, rcfg->cmp_mode == CMP_MODE_RAW, cmp_data_size);
 	TEST_ASSERT_NOT_EQUAL_UINT(0, cmp_ent_size);
 	ent = malloc(cmp_ent_size); TEST_ASSERT_TRUE(ent);
-	cmp_ent_size = cmp_ent_create(ent, cfg->data_type, cfg->cmp_mode == CMP_MODE_RAW, cmp_data_size);
+	cmp_ent_size = cmp_ent_create(ent, DATA_TYPE_IMAGETTE, rcfg->cmp_mode == CMP_MODE_RAW, cmp_data_size);
 	TEST_ASSERT_NOT_EQUAL_UINT(0, cmp_ent_size);
 
 	/* we put the compressed data direct into the compression entity */
-	cfg->icu_output_buf = cmp_ent_get_data_buf(ent);
-	TEST_ASSERT_NOT_NULL(cfg->icu_output_buf);
+	rcfg->icu_output_buf = cmp_ent_get_data_buf(ent);
+	TEST_ASSERT_NOT_NULL(rcfg->icu_output_buf);
 
 	/* now compress the data */
-	cmp_size_bits = icu_compress_data(cfg);
-
+	cmp_size_bits = compress_like_rdcu(rcfg, &info);
 	TEST_ASSERT(cmp_size_bits > 0);
 
 	/* put the compression parameters in the entity header */
-	{
-		/* mock values */
-		uint32_t version_id = ~0U;
-		uint64_t start_time = 32;
-		uint64_t end_time = 42;
-		uint16_t model_id = 0xCAFE;
-		uint8_t model_counter = 0;
-		uint32_t ent_size;
-
-		ent_size = cmp_ent_build(ent, version_id, start_time, end_time,
-					 model_id, model_counter, cfg, cmp_size_bits);
-		TEST_ASSERT_NOT_EQUAL_UINT(0, ent_size);
-		error = cmp_ent_set_size(ent, ent_size);
-		TEST_ASSERT_FALSE(error);
-	}
+	cmp_ent_size = cmp_ent_create(ent, DATA_TYPE_IMAGETTE, rcfg->cmp_mode == CMP_MODE_RAW,
+				      cmp_bit_to_byte((unsigned int)cmp_size_bits));
+	TEST_ASSERT_NOT_EQUAL_UINT(0, cmp_ent_size);
+	error = cmp_ent_write_rdcu_cmp_pars(ent, &info, rcfg);
+	TEST_ASSERT_FALSE(error);
 
 	/* allocate the buffers for decompression */
 	TEST_ASSERT_NOT_EQUAL_INT(0, data_size);
 	s = decompress_cmp_entiy(ent, model_of_data, NULL, NULL);
 	decompressed_data = malloc((size_t)s); TEST_ASSERT_NOT_NULL(decompressed_data);
 
-	if (model_mode_is_used(cfg->cmp_mode)) {
+	if (model_mode_is_used(rcfg->cmp_mode)) {
 		updated_model = malloc(data_size);
 		TEST_ASSERT_NOT_NULL(updated_model);
 	}
@@ -717,12 +692,12 @@ void compression_decompression(struct cmp_cfg *cfg)
 	/* now we try to decompress the data */
 	s = decompress_cmp_entiy(ent, model_of_data, updated_model, decompressed_data);
 	TEST_ASSERT_EQUAL_INT(data_size, s);
-	TEST_ASSERT_FALSE(memcmp(decompressed_data, cfg->input_buf, data_size));
+	TEST_ASSERT_FALSE(memcmp(decompressed_data, rcfg->input_buf, data_size));
 
-	if (model_mode_is_used(cfg->cmp_mode)) {
+	if (model_mode_is_used(rcfg->cmp_mode)) {
 		TEST_ASSERT_NOT_NULL(updated_model);
 		TEST_ASSERT_NOT_NULL(model_of_data);
-		TEST_ASSERT_FALSE(memcmp(updated_model, cfg->icu_new_model_buf, data_size));
+		TEST_ASSERT_FALSE(memcmp(updated_model, rcfg->icu_new_model_buf, data_size));
 		memcpy(model_of_data, updated_model, data_size);
 	} else { /* non-model mode */
 		/* reset model */
@@ -731,7 +706,7 @@ void compression_decompression(struct cmp_cfg *cfg)
 		memcpy(model_of_data, decompressed_data, data_size);
 	}
 
-	cfg->icu_output_buf = NULL;
+	rcfg->icu_output_buf = NULL;
 	free(ent);
 	free(decompressed_data);
 	free(updated_model);
@@ -753,8 +728,7 @@ void test_random_round_trip_like_rdcu_compression(void)
 {
 	enum cmp_data_type data_type;
 	enum cmp_mode cmp_mode;
-	struct cmp_cfg cfg;
-	uint32_t cmp_buffer_size;
+	struct rdcu_cfg rcfg;
 	enum {
 		MAX_DATA_TO_COMPRESS_SIZE = 0x1000B,
 		CMP_BUFFER_FAKTOR = 3 /* compression data buffer size / data to compress buffer size */
@@ -782,25 +756,32 @@ void test_random_round_trip_like_rdcu_compression(void)
 		/* for (cmp_mode = CMP_MODE_RAW; cmp_mode <= CMP_MODE_STUFF; cmp_mode++) { */
 		for (cmp_mode = CMP_MODE_RAW; cmp_mode <= CMP_MODE_DIFF_MULTI; cmp_mode++) {
 			/* printf("cmp_mode: %i\n", cmp_mode); */
-			cfg = cmp_cfg_icu_create(data_type, cmp_mode, model_value,
-						 CMP_LOSSLESS);
-			TEST_ASSERT_NOT_EQUAL_INT(cfg.data_type, DATA_TYPE_UNKNOWN);
+			int error = rdcu_cfg_create(&rcfg, cmp_mode,
+						    model_value, CMP_LOSSLESS);
+			TEST_ASSERT_FALSE(error);
 
-			generate_random_cmp_cfg(&cfg);
+			generate_random_rdcu_cfg(&rcfg);
 
-			if (!model_mode_is_used(cmp_mode))
-				cmp_buffer_size = cmp_cfg_icu_buffers(&cfg, data_to_compress1,
-								      samples, NULL, NULL, NULL, samples*CMP_BUFFER_FAKTOR);
-			else
-				cmp_buffer_size = cmp_cfg_icu_buffers(&cfg, data_to_compress2,
-								      samples, data_to_compress1, updated_model, NULL, samples*CMP_BUFFER_FAKTOR);
+			if (!model_mode_is_used(cmp_mode)) {
+				rcfg.input_buf = data_to_compress1;
+				rcfg.samples = samples;
+				rcfg.model_buf = NULL;
+				rcfg.icu_new_model_buf = NULL;
+				rcfg.icu_output_buf = NULL;
+				rcfg.buffer_length = samples*CMP_BUFFER_FAKTOR;
+			} else {
+				rcfg.input_buf = data_to_compress2;
+				rcfg.samples = samples;
+				rcfg.model_buf = data_to_compress1;
+				rcfg.icu_new_model_buf = updated_model;
+				rcfg.icu_output_buf = NULL;
+				rcfg.buffer_length = samples*CMP_BUFFER_FAKTOR;
+			}
 
-			TEST_ASSERT_EQUAL_UINT(cmp_buffer_size, cmp_cal_size_of_data(CMP_BUFFER_FAKTOR*samples, data_type));
-
-			compression_decompression(&cfg);
+			compression_decompression_like_rdcu(&rcfg);
 		}
 	}
-	compression_decompression(NULL);
+	compression_decompression_like_rdcu(NULL);
 	free(data_to_compress1);
 	free(data_to_compress2);
 	free(updated_model);
