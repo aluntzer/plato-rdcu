@@ -1990,14 +1990,14 @@ static int cmp_ent_read_header(struct cmp_entity *ent, struct cmp_cfg *cfg)
 			return -1;
 		}
 	} else {
-		int32_t samples = cmp_input_size_to_samples(cmp_ent_get_original_size(ent), cfg->data_type);
+		uint32_t org_size = cmp_ent_get_original_size(ent);
 
-		if (samples < 0) {
-			debug_print("Error: original_size and data product type in the compression header are not compatible.");
+		if (org_size % sizeof(uint16_t)) {
+			debug_print("Error: The original size of an imagette product type in the compression header must be a multiple of 2.");
 			cfg->samples = 0;
 			return -1;
 		}
-		cfg->samples = (uint32_t)samples;
+		cfg->samples = org_size/sizeof(uint16_t);
 	}
 
 	cfg->icu_output_buf = cmp_ent_get_data_buf(ent);
@@ -2269,7 +2269,7 @@ int decompress_cmp_entiy(struct cmp_entity *ent, void *model_of_data,
 
 	if (cfg.data_type != DATA_TYPE_CHUNK) { /* perform a non-chunk decompression */
 		if (cfg.cmp_mode == CMP_MODE_RAW) {
-			uint32_t data_size = cmp_cal_size_of_data(cfg.samples, cfg.data_type);
+			uint32_t data_size = cfg.samples * sizeof(uint16_t);
 
 			if (decompressed_data) {
 				memcpy(decompressed_data, cmp_ent_get_data_buf(ent), data_size);

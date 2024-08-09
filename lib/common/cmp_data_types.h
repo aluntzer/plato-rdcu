@@ -327,8 +327,6 @@ enum cmp_data_type convert_subservice_to_cmp_data_type(uint8_t subservice);
 uint8_t convert_cmp_data_type_to_subservice(enum cmp_data_type data_type);
 
 size_t size_of_a_sample(enum cmp_data_type data_type);
-uint32_t cmp_cal_size_of_data(uint32_t samples, enum cmp_data_type data_type);
-int32_t cmp_input_size_to_samples(uint32_t size, enum cmp_data_type data_type);
 
 
 /* endianness functions */

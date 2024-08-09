@@ -1783,146 +1783,6 @@ uint32_t cmp_ent_get_cmp_data_size(const struct cmp_entity *ent)
 
 
 /**
- * @brief write the compression parameters from a compression configuration
- *	into the compression entity header
- * @note NO compressed data are put into the entity and NO change of the entity
- *	size
- *
- * @param ent		pointer to a compression entity
- * @param cfg		pointer to a compression configuration
- * @param cmp_size_bits	size of the compressed data in bits
- *
- * @returns 0 on success, negative on error
- */
-
-int cmp_ent_write_cmp_pars(struct cmp_entity *ent, const struct cmp_cfg *cfg,
-			   int cmp_size_bits)
-{
-	uint32_t ent_cmp_data_size;
-
-	if (!cfg)
-		return -1;
-
-	if (cmp_size_bits < 0)
-		return -1;
-
-	if (cfg->data_type != cmp_ent_get_data_type(ent)) {
-		debug_print("Error: The entity data product type dos not match the configuration data product type.");
-		return -1;
-	}
-
-	if (cmp_ent_get_data_type_raw_bit(ent) != (cfg->cmp_mode == CMP_MODE_RAW)) {
-		debug_print("Error: The entity's raw data bit does not match up with the compression mode.");
-		return -1;
-	}
-
-	ent_cmp_data_size = cmp_ent_get_cmp_data_size(ent);
-
-	/* check if the entity can hold the compressed data */
-	if (ent_cmp_data_size < cmp_bit_to_byte((unsigned int)cmp_size_bits)) {
-		debug_print("Error: The entity size is to small to hold the compressed data.");
-		return -2;
-	}
-
-	/* set compression parameter fields in the generic entity header */
-	if (cmp_ent_set_original_size(ent, cmp_cal_size_of_data(cfg->samples,
-								cfg->data_type)))
-		return -1;
-	if (cmp_ent_set_cmp_mode(ent, cfg->cmp_mode))
-		return -1;
-	if (cmp_ent_set_model_value(ent, cfg->model_value))
-		return -1;
-	if (cfg->max_used_bits)
-		cmp_ent_set_max_used_bits_version(ent, cfg->max_used_bits->version);
-	else
-		cmp_ent_set_max_used_bits_version(ent, 0);
-	if (cmp_ent_set_lossy_cmp_par(ent, cfg->round))
-		return -1;
-
-	if (cfg->cmp_mode == CMP_MODE_RAW) /* no specific header is used for raw data we are done */
-		return 0;
-
-	switch (cmp_ent_get_data_type(ent)) {
-	case DATA_TYPE_IMAGETTE_ADAPTIVE:
-	case DATA_TYPE_SAT_IMAGETTE_ADAPTIVE:
-	case DATA_TYPE_F_CAM_IMAGETTE_ADAPTIVE:
-		if (cmp_ent_set_ima_ap1_spill(ent, cfg->ap1_spill))
-			return -1;
-		if (cmp_ent_set_ima_ap1_golomb_par(ent, cfg->ap1_golomb_par))
-			return -1;
-		if (cmp_ent_set_ima_ap2_spill(ent, cfg->ap2_spill))
-			return -1;
-		if (cmp_ent_set_ima_ap2_golomb_par(ent, cfg->ap2_golomb_par))
-			return -1;
-		/* fall through */
-	case DATA_TYPE_IMAGETTE:
-	case DATA_TYPE_SAT_IMAGETTE:
-	case DATA_TYPE_F_CAM_IMAGETTE:
-		if (cmp_ent_set_ima_spill(ent, cfg->spill))
-			return -1;
-		if (cmp_ent_set_ima_golomb_par(ent, cfg->golomb_par))
-			return -1;
-		break;
-	case DATA_TYPE_CHUNK:
-		if (cmp_ent_set_non_ima_cmp_par1(ent, cfg->cmp_par_1))
-			return -1;
-		if (cmp_ent_set_non_ima_spill1(ent, cfg->spill_par_1))
-			return -1;
-
-		if (cmp_ent_set_non_ima_cmp_par2(ent, cfg->cmp_par_2))
-			return -1;
-		if (cmp_ent_set_non_ima_spill2(ent, cfg->spill_par_2))
-			return -1;
-
-		if (cmp_ent_set_non_ima_cmp_par3(ent, cfg->cmp_par_3))
-			return -1;
-		if (cmp_ent_set_non_ima_spill3(ent, cfg->spill_par_3))
-			return -1;
-
-		if (cmp_ent_set_non_ima_cmp_par4(ent, cfg->cmp_par_4))
-			return -1;
-		if (cmp_ent_set_non_ima_spill4(ent, cfg->spill_par_4))
-			return -1;
-
-		if (cmp_ent_set_non_ima_cmp_par5(ent, cfg->cmp_par_5))
-			return -1;
-		if (cmp_ent_set_non_ima_spill5(ent, cfg->spill_par_5))
-			return -1;
-
-		if (cmp_ent_set_non_ima_cmp_par6(ent, cfg->cmp_par_6))
-			return -1;
-		if (cmp_ent_set_non_ima_spill6(ent, cfg->spill_par_6))
-			return -1;
-
-		break;
-	/* the compression entity data type field only supports imagette or chunk data types*/
-	case DATA_TYPE_OFFSET:
-	case DATA_TYPE_F_CAM_OFFSET:
-	case DATA_TYPE_BACKGROUND:
-	case DATA_TYPE_F_CAM_BACKGROUND:
-	case DATA_TYPE_SMEARING:
-	case DATA_TYPE_S_FX:
-	case DATA_TYPE_S_FX_EFX:
-	case DATA_TYPE_S_FX_NCOB:
-	case DATA_TYPE_S_FX_EFX_NCOB_ECOB:
-	case DATA_TYPE_L_FX:
-	case DATA_TYPE_L_FX_EFX:
-	case DATA_TYPE_L_FX_NCOB:
-	case DATA_TYPE_L_FX_EFX_NCOB_ECOB:
-	case DATA_TYPE_F_FX:
-	case DATA_TYPE_F_FX_EFX:
-	case DATA_TYPE_F_FX_NCOB:
-	case DATA_TYPE_F_FX_EFX_NCOB_ECOB:
-	case DATA_TYPE_UNKNOWN:
-	default:
-		return -1;
-	}
-
-	return 0;
-}
-
-
-/**
  * @brief write the parameters from the RDCU decompression information structure
  *	in the compression entity header
  * @note no compressed data are put into the entity and no change of the entity
@@ -1973,7 +1833,7 @@ int cmp_ent_write_rdcu_cmp_pars(struct cmp_entity *ent, const struct cmp_info *i
 	}
 
 	/* set compression parameter fields in the generic entity header */
-	if (cmp_ent_set_original_size(ent, cmp_cal_size_of_data(info->samples_used, DATA_TYPE_IMAGETTE)))
+	if (cmp_ent_set_original_size(ent, info->samples_used * sizeof(uint16_t)))
 		return -1;
 	if (cmp_ent_set_cmp_mode(ent, info->cmp_mode_used))
 		return -1;
@@ -2061,60 +1921,6 @@ uint32_t cmp_ent_create(struct cmp_entity *ent, enum cmp_data_type data_type,
 	cmp_ent_set_data_type(ent, data_type, raw_mode_flag);
 
 	return ent_size;
-}
-
-
-/**
- * @brief create a compression entity and set the header fields
- *
- * @note this function simplifies the entity set up by creating an entity and
- *	setting the header fields in one function call
- * @note no compressed data are put into the entity
- *
- * @param ent			pointer to a compression entity; if NULL, the
- *	function returns the needed size
- * @param version_id		applications software version identifier
- * @param start_time		compression start timestamp (coarse and fine)
- * @param end_time		compression end timestamp (coarse and fine)
- * @param model_id		model identifier
- * @param model_counter		model counter
- * @param cfg			pointer to compression configuration (can be NULL)
- * @param cmp_size_bits		length of the compressed data in bits
- *
- * @returns the size of the compression entity or 0 on error
- */
-
-uint32_t cmp_ent_build(struct cmp_entity *ent, uint32_t version_id,
-		       uint64_t start_time, uint64_t end_time, uint16_t model_id,
-		       uint8_t model_counter, const struct cmp_cfg *cfg, int cmp_size_bits)
-{
-	uint32_t cmp_size_bytes = cmp_bit_to_byte((unsigned int)cmp_size_bits);
-	uint32_t hdr_size;
-
-	if (!cfg)
-		return 0;
-
-	if (cmp_size_bits < 0)
-		return 0;
-
-	if (!cmp_ent_create(ent, cfg->data_type, cfg->cmp_mode == CMP_MODE_RAW, cmp_size_bytes))
-		return 0;
-
-	if (ent) {
-		cmp_ent_set_version_id(ent, version_id);
-		if (cmp_ent_set_start_timestamp(ent, start_time))
-			return 0;
-		if (cmp_ent_set_end_timestamp(ent, end_time))
-			return 0;
-		cmp_ent_set_model_id(ent, model_id);
-		cmp_ent_set_model_counter(ent, model_counter);
-		if (cmp_ent_write_cmp_pars(ent, cfg, cmp_size_bits))
-			return 0;
-	}
-
-	hdr_size = cmp_ent_cal_hdr_size(cfg->data_type, cfg->cmp_mode == CMP_MODE_RAW);
-
-	return hdr_size + cmp_size_bytes;
 }
 
 

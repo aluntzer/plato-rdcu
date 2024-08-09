@@ -155,18 +155,6 @@ compile_time_assert(sizeof(struct cmp_entity) == NON_IMAGETTE_HEADER_SIZE, CMP_E
 uint32_t cmp_ent_create(struct cmp_entity *ent, enum cmp_data_type data_type,
 			int raw_mode_flag, uint32_t cmp_size_byte);
 
-/* create a compression entity and set the header fields */
-uint32_t cmp_ent_build(struct cmp_entity *ent, uint32_t version_id,
-		       uint64_t start_time, uint64_t end_time, uint16_t model_id,
-		       uint8_t model_counter, const struct cmp_cfg *cfg, int cmp_size_bits);
-
-/*
- * write the compression parameters from a compression configuration into the
- * compression entity header
- */
-int cmp_ent_write_cmp_pars(struct cmp_entity *ent, const struct cmp_cfg *cfg,
-			   int cmp_size_bits);
-
 /*
  * write the parameters from the RDCU decompression information structure in the
  * compression entity header

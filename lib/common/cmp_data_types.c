@@ -590,67 +590,6 @@ size_t size_of_a_sample(enum cmp_data_type data_type)
 }
 
 
-/**
- * @brief calculate the need bytes for the data
- *
- * @param samples	number of data samples
- * @param data_type	compression data_type
- *
- * @note for non-imagette data program types the collection header size is added
- *
- * @returns the size in bytes to store the data sample; zero on failure
- */
-
-uint32_t cmp_cal_size_of_data(uint32_t samples, enum cmp_data_type data_type)
-{
-	size_t s = size_of_a_sample(data_type);
-	uint64_t x; /* use 64 bit to catch overflow */
-
-	if (!s)
-		return 0;
-
-	x = (uint64_t)s*samples;
-
-	if (!rdcu_supported_data_type_is_used(data_type))
-		x += COLLECTION_HDR_SIZE;
-
-	if (x > UINT_MAX) /* catch overflow */
-		return 0;
-
-	return (unsigned int)x;
-}
-
-
-/**
- * @brief calculates the number of samples for a given data size for the
- *	different compression modes
- *
- * @param size		size of the data in bytes
- * @param data_type	compression data type
- *
- * @returns the number samples for the given compression mode; negative on error
- */
-
-int32_t cmp_input_size_to_samples(uint32_t size, enum cmp_data_type data_type)
-{
-	uint32_t samples_size = (uint32_t)size_of_a_sample(data_type);
-
-	if (!samples_size)
-		return -1;
-
-	if (!rdcu_supported_data_type_is_used(data_type)) {
-		if (size < COLLECTION_HDR_SIZE)
-			return -1;
-		size -= COLLECTION_HDR_SIZE;
-	}
-
-	if (size % samples_size)
-		return -1;
-
-	return (int)(size/samples_size);
-}
-
-
 static uint32_t be24_to_cpu(uint32_t a)
 {
 	return be32_to_cpu(a) >> 8;
