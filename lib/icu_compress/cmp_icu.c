@@ -548,8 +548,8 @@ static uint32_t compress_imagette(const struct cmp_cfg *cfg, uint32_t stream_len
 		break;
 	}
 
-	configure_encoder_setup(&setup, cfg->golomb_par, cfg->spill, cfg->round,
-				max_data_bits, cfg);
+	configure_encoder_setup(&setup, cfg->cmp_par_imagette,
+				cfg->spill_imagette, cfg->round, max_data_bits, cfg);
 
 	for (i = 0;; i++) {
 		stream_len = encode_value(get_unaligned(&data_buf[i]),
@@ -1751,14 +1751,14 @@ static uint32_t compress_smearing(const struct cmp_cfg *cfg, uint32_t stream_len
 static uint32_t cmp_cfg_icu_is_invalid_error_code(const struct cmp_cfg *cfg)
 {
 
-	RETURN_ERROR_IF(cmp_cfg_gen_par_is_invalid(cfg, ICU_CHECK) , PAR_GENERIC, "");
+	RETURN_ERROR_IF(cmp_cfg_gen_par_is_invalid(cfg) , PAR_GENERIC, "");
 	RETURN_ERROR_IF(cmp_cfg_icu_buffers_is_invalid(cfg), PAR_BUFFERS, "");
 
 	if (cfg->cmp_mode != CMP_MODE_RAW)
 		RETURN_ERROR_IF(cmp_cfg_icu_max_used_bits_out_of_limit(cfg->max_used_bits), PAR_MAX_USED_BITS, "");
 
 	if (cmp_imagette_data_type_is_used(cfg->data_type)) {
-		RETURN_ERROR_IF(cmp_cfg_imagette_is_invalid(cfg, ICU_CHECK), PAR_SPECIFIC, "");
+		RETURN_ERROR_IF(cmp_cfg_imagette_is_invalid(cfg), PAR_SPECIFIC, "");
 	} else if (cmp_fx_cob_data_type_is_used(cfg->data_type)) {
 		RETURN_ERROR_IF(cmp_cfg_fx_cob_is_invalid(cfg), PAR_SPECIFIC, "");
 	} else if (cmp_aux_data_type_is_used(cfg->data_type)) {

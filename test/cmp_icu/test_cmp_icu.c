@@ -2194,10 +2194,9 @@ void test_support_function_call_NULL(void)
 	cfg.data_type = DATA_TYPE_IMAGETTE;
 	cfg.cmp_mode = CMP_MODE_DIFF_ZERO;
 
-	TEST_ASSERT_TRUE(cmp_cfg_gen_par_is_invalid(NULL, ICU_CHECK));
-	TEST_ASSERT_TRUE(cmp_cfg_gen_par_is_invalid(&cfg, RDCU_CHECK+1));
+	TEST_ASSERT_TRUE(cmp_cfg_gen_par_is_invalid(NULL));
 	TEST_ASSERT_TRUE(cmp_cfg_icu_buffers_is_invalid(NULL));
-	TEST_ASSERT_TRUE(cmp_cfg_imagette_is_invalid(NULL, RDCU_CHECK));
+	TEST_ASSERT_TRUE(cmp_cfg_imagette_is_invalid(NULL));
 	TEST_ASSERT_TRUE(cmp_cfg_fx_cob_is_invalid(NULL));
 	TEST_ASSERT_TRUE(cmp_cfg_aux_is_invalid(NULL));
 	TEST_ASSERT_TRUE(cmp_cfg_aux_is_invalid(&cfg));

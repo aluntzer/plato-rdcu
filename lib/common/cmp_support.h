@@ -95,12 +95,6 @@
 /* imagette sample to byte conversion factor; one imagette samples has 16 bits (2 bytes) */
 #define IMA_SAM2BYT  2
 
-/**
- * @brief options for configuration check functions
- */
-
-enum check_opt {ICU_CHECK, RDCU_CHECK};
-
 
 /**
  * @brief defined compression data product types
@@ -157,8 +151,8 @@ __extension__
 struct cmp_cfg {
 	void *input_buf;            /**< Pointer to the data to compress buffer */
 	void *model_buf;            /**< Pointer to the model buffer */
-	void *icu_new_model_buf;    /**< Pointer to the updated model buffer (not used for RDCU compression )*/
-	uint32_t *icu_output_buf;   /**< Pointer to the compressed data buffer (not used for RDCU compression) */
+	void *icu_new_model_buf;    /**< Pointer to the updated model buffer */
+	uint32_t *icu_output_buf;   /**< Pointer to the compressed data buffer */
 	uint32_t samples;           /**< Number of samples to compress, length of the data and model buffer
 				     * (including the multi entity header by non-imagette data)
 				     */
@@ -174,39 +168,33 @@ struct cmp_cfg {
 	uint32_t round;             /**< lossy compression parameter */
 	union {
 		uint32_t cmp_par_1;
-		uint32_t golomb_par;        /* TODO: remove this */      /**< Golomb parameter for imagette data compression */
 		uint32_t cmp_par_imagette;  /**< Golomb parameter for imagette data compression */
 		uint32_t cmp_par_exp_flags; /**< Compression parameter for exposure flags compression */
 	};
 	union {
 		uint32_t spill_par_1;
-		uint32_t spill;             /* TODO: remove this */           /**< Spillover threshold parameter for imagette data compression */
 		uint32_t spill_imagette;    /**< Spillover threshold parameter for imagette data compression */
 		uint32_t spill_exp_flags;   /**< Spillover threshold parameter for exposure flags compression */
 	};
 
 	union {
 		uint32_t cmp_par_2;
-		uint32_t ap1_golomb_par;      /**< Adaptive 2 spillover threshold for imagette data; HW only */
 		uint32_t cmp_par_fx;          /**< Compression parameter for normal flux compression */
 		uint32_t cmp_par_offset_mean; /**< Compression parameter for auxiliary science mean compression */
 	};
 	union {
 		uint32_t spill_par_2;
-		uint32_t ap1_spill;         /**< Adaptive 2 Golomb parameter; HW only */
 		uint32_t spill_fx;          /**< Spillover threshold parameter for normal flux compression */
 		uint32_t spill_offset_mean; /**< Spillover threshold parameter for auxiliary science mean compression */
 	};
 
 	union {
 		uint32_t cmp_par_3;
-		uint32_t ap2_golomb_par;           /**< Adaptive 2 spillover threshold for imagette data; HW only */
 		uint32_t cmp_par_ncob;             /**< Compression parameter for normal center of brightness compression */
 		uint32_t cmp_par_offset_variance;  /**< Compression parameter for auxiliary science variance compression */
 	};
 	union {
 		uint32_t spill_par_3;
-		uint32_t ap2_spill;                 /**< Adaptive 2 Golomb parameter; HW only */
 		uint32_t spill_ncob;                /**< Spillover threshold parameter for normal center of brightness compression */
 		uint32_t spill_offset_variance;     /**< Spillover threshold parameter for auxiliary science variance compression */
 	};
@@ -350,10 +338,10 @@ unsigned int cmp_bit_to_byte(unsigned int cmp_size_bit);
 unsigned int cmp_bit_to_4byte(unsigned int cmp_size_bit);
 
 int cmp_cfg_icu_is_invalid(const struct cmp_cfg *cfg);
-int cmp_cfg_gen_par_is_invalid(const struct cmp_cfg *cfg, enum check_opt opt);
+int cmp_cfg_gen_par_is_invalid(const struct cmp_cfg *cfg);
 int cmp_cfg_icu_buffers_is_invalid(const struct cmp_cfg *cfg);
 int cmp_cfg_icu_max_used_bits_out_of_limit(const struct cmp_max_used_bits *max_used_bits);
-int cmp_cfg_imagette_is_invalid(const struct cmp_cfg *cfg, enum check_opt opt);
+int cmp_cfg_imagette_is_invalid(const struct cmp_cfg *cfg);
 int cmp_cfg_fx_cob_is_invalid(const struct cmp_cfg *cfg);
 int cmp_cfg_aux_is_invalid(const struct cmp_cfg *cfg);
 uint32_t cmp_ima_max_spill(unsigned int golomb_par);
@@ -370,7 +358,6 @@ int cmp_aux_data_type_is_used(enum cmp_data_type data_type);
 int cmp_mode_is_supported(enum cmp_mode cmp_mode);
 int model_mode_is_used(enum cmp_mode cmp_mode);
 int raw_mode_is_used(enum cmp_mode cmp_mode);
-int rdcu_supported_cmp_mode_is_used(enum cmp_mode cmp_mode);
 int zero_escape_mech_is_used(enum cmp_mode cmp_mode);
 int multi_escape_mech_is_used(enum cmp_mode cmp_mode);
 

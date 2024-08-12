@@ -48,7 +48,7 @@ static int rdcu_cfg_gen_pars_are_invalid(const struct rdcu_cfg *rcfg)
 	if (!rcfg)
 		return 1;
 
-	if (!rdcu_supported_cmp_mode_is_used(rcfg->cmp_mode)) {
+	if (!cmp_mode_is_supported(rcfg->cmp_mode)) {
 		debug_print("Error: selected cmp_mode: %i is not supported for a RDCU compression.", rcfg->cmp_mode);
 		rcfg_invalid++;
 	}

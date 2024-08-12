@@ -445,8 +445,8 @@ static int decompress_imagette(const struct cmp_cfg *cfg, struct bit_decoder *de
 		break;
 	}
 
-	configure_decoder_setup(&setup, dec, cfg->cmp_mode, cfg->golomb_par,
-				cfg->spill, cfg->round, max_data_bits);
+	configure_decoder_setup(&setup, dec, cfg->cmp_mode, cfg->cmp_par_imagette,
+				cfg->spill_imagette, cfg->round, max_data_bits);
 
 	for (i = 0; ; i++) {
 		err = decode_value(&setup, &decoded_value, model);
@@ -1799,7 +1799,7 @@ static int decompressed_data_internal(const struct cmp_cfg *cfg, enum decmp_type
 		return -1;
 
 	if (cmp_imagette_data_type_is_used(cfg->data_type)) {
-		if (cmp_cfg_imagette_is_invalid(cfg, ICU_CHECK))
+		if (cmp_cfg_imagette_is_invalid(cfg))
 			return -1;
 	} else if (cmp_fx_cob_data_type_is_used(cfg->data_type)) {
 		if (cmp_cfg_fx_cob_is_invalid(cfg))
@@ -2021,16 +2021,12 @@ static int cmp_ent_read_header(struct cmp_entity *ent, struct cmp_cfg *cfg)
 	case DATA_TYPE_IMAGETTE_ADAPTIVE:
 	case DATA_TYPE_SAT_IMAGETTE_ADAPTIVE:
 	case DATA_TYPE_F_CAM_IMAGETTE_ADAPTIVE:
-		cfg->ap1_golomb_par = cmp_ent_get_ima_ap1_golomb_par(ent);
-		cfg->ap1_spill = cmp_ent_get_ima_ap1_spill(ent);
-		cfg->ap2_golomb_par = cmp_ent_get_ima_ap2_golomb_par(ent);
-		cfg->ap2_spill = cmp_ent_get_ima_ap2_spill(ent);
-		/* fall through */
+		/* we do not read in adaptive parameters */
 	case DATA_TYPE_IMAGETTE:
 	case DATA_TYPE_SAT_IMAGETTE:
 	case DATA_TYPE_F_CAM_IMAGETTE:
-		cfg->spill = cmp_ent_get_ima_spill(ent);
-		cfg->golomb_par = cmp_ent_get_ima_golomb_par(ent);
+		cfg->cmp_par_imagette = cmp_ent_get_ima_golomb_par(ent);
+		cfg->spill_imagette = cmp_ent_get_ima_spill(ent);
 		break;
 	case DATA_TYPE_OFFSET:
 	case DATA_TYPE_F_CAM_OFFSET:
@@ -2382,8 +2378,8 @@ int decompress_rdcu_data(uint32_t *compressed_data, const struct cmp_info *info,
 	cfg.cmp_mode = info->cmp_mode_used;
 	cfg.model_value = info->model_value_used;
 	cfg.round = info->round_used;
-	cfg.spill = info->spill_used;
-	cfg.golomb_par = info->golomb_par_used;
+	cfg.spill_imagette = info->spill_used;
+	cfg.cmp_par_imagette = info->golomb_par_used;
 	cfg.samples = info->samples_used;
 	cfg.icu_output_buf = compressed_data;
 	cfg.buffer_length = (info->cmp_size+7)/8;

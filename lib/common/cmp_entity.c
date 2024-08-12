@@ -1677,6 +1677,8 @@ void *cmp_ent_get_data_buf(struct cmp_entity *ent)
 		break;
 	case DATA_TYPE_UNKNOWN:
 	default:
+		/* default branch never reached; cmp_ent_get_data_type returns
+		 * DATA_TYPE_UNKNOWN if data type is unknown */
 		debug_print("Error: Compression data type not supported.");
 		return NULL;
 	}
