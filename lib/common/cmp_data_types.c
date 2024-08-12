@@ -592,7 +592,11 @@ size_t size_of_a_sample(enum cmp_data_type data_type)
 
 static uint32_t be24_to_cpu(uint32_t a)
 {
+#ifdef __LITTLE_ENDIAN
 	return be32_to_cpu(a) >> 8;
+#else
+	return a;
+#endif /* __LITTLE_ENDIAN */
 }
 
 
