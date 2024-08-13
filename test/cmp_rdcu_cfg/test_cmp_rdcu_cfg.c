@@ -91,6 +91,10 @@ void test_rdcu_cfg_create(void)
 	TEST_ASSERT_EQUAL(cmp_mode, rcfg.cmp_mode);
 	TEST_ASSERT_EQUAL(model_value, rcfg.model_value);
 	TEST_ASSERT_EQUAL(lossy_par, rcfg.round);
+
+	/* rcfg == NULL */
+	error = rdcu_cfg_create(NULL, cmp_mode, model_value, lossy_par);
+	TEST_ASSERT_TRUE(error);
 }
 
 

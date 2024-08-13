@@ -45,9 +45,6 @@ static int rdcu_cfg_gen_pars_are_invalid(const struct rdcu_cfg *rcfg)
 {
 	int rcfg_invalid = 0;
 
-	if (!rcfg)
-		return 1;
-
 	if (!cmp_mode_is_supported(rcfg->cmp_mode)) {
 		debug_print("Error: selected cmp_mode: %i is not supported for a RDCU compression.", rcfg->cmp_mode);
 		rcfg_invalid++;
@@ -378,9 +375,6 @@ static int rdcu_cfg_golomb_spill_are_invalid(uint32_t golomb_par, uint32_t spill
 static int rdcu_cfg_imagette_is_invalid(const struct rdcu_cfg *rcfg)
 {
 	int rcfg_invalid = 0;
-
-	if (!rcfg)
-		return 1;
 
 	rcfg_invalid += rdcu_cfg_golomb_spill_are_invalid(rcfg->golomb_par, rcfg->spill,
 							 "imagette");

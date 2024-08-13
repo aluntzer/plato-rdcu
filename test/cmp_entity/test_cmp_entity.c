@@ -1315,7 +1315,7 @@ void test_cmp_ent_get_data_buf(void)
 
 	/* RAW mode test */
 	for (data_type = DATA_TYPE_IMAGETTE;
-	     data_type <= DATA_TYPE_F_CAM_BACKGROUND;
+	     data_type <= DATA_TYPE_CHUNK;
 	     data_type++) {
 		s = cmp_ent_create(&ent, data_type, 1, 0);
 		TEST_ASSERT_NOT_EQUAL_INT(0, s);
