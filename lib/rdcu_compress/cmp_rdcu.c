@@ -406,6 +406,21 @@ int rdcu_read_cmp_info(struct cmp_info *info)
 
 
 /**
+ * @brief calculate the need bytes to hold a bitstream
+ * @note we round up the result to multiples of 4 bytes
+ *
+ * @param cmp_size_bit	compressed data size, measured in bits
+ *
+ * @returns the size in bytes to store the hole bitstream
+ */
+
+static unsigned int cmp_bit_to_4byte(unsigned int cmp_size_bit)
+{
+	return (cmp_bit_to_byte(cmp_size_bit) + 3) & ~0x3UL;
+}
+
+
+/**
  * @brief read the compressed bitstream from the RDCU SRAM
  *
  * @param info			compression information contains the metadata of a compression

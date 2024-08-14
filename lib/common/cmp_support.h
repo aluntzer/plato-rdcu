@@ -333,9 +333,7 @@ struct fx_cob_par {
 
 int is_a_pow_of_2(unsigned int v);
 unsigned int ilog_2(uint32_t x);
-
 unsigned int cmp_bit_to_byte(unsigned int cmp_size_bit);
-unsigned int cmp_bit_to_4byte(unsigned int cmp_size_bit);
 
 int cmp_cfg_icu_is_invalid(const struct cmp_cfg *cfg);
 int cmp_cfg_gen_par_is_invalid(const struct cmp_cfg *cfg);
