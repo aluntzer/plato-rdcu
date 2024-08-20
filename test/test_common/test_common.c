@@ -6,7 +6,12 @@
 #include "pcg_basic.h"
 #include "test_common.h"
 
-#include <unity.h>
+#ifdef FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION
+#  include "../fuzz/fuzz_helpers.h"
+#  define TEST_ASSERT(cond) FUZZ_ASSERT(cond)
+#else
+#  include <unity.h>
+#endif
 
 void cmp_rand_seed(uint64_t seed)
 {
@@ -38,11 +43,12 @@ uint32_t cmp_rand_between(uint32_t min, uint32_t max)
 }
 
 
-uint32_t cmp_rand_nbits(unsigned int nbits)
+uint32_t cmp_rand_nbits(unsigned int n_bits)
 {
-	TEST_ASSERT(nbits > 0);
+	TEST_ASSERT(n_bits > 0);
+	TEST_ASSERT(n_bits <= 32);
 
-	return cmp_rand32() >> (32 - nbits);
+	return cmp_rand32() >> (32 - n_bits);
 }
 
 

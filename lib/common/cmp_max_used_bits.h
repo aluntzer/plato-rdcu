@@ -29,6 +29,7 @@
 /* predefined maximum used bits registry constants */
 extern const struct cmp_max_used_bits MAX_USED_BITS_SAFE;
 extern const struct cmp_max_used_bits MAX_USED_BITS_V1;
+#define MAX_USED_BITS MAX_USED_BITS_SAFE
 
 
 /**
