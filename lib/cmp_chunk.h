@@ -164,8 +164,8 @@ void compress_chunk_init(uint64_t(return_timestamp)(void), uint32_t version_id);
  *	fails (which can be tested with cmp_is_error())
  */
 
-uint32_t compress_chunk(void *chunk, uint32_t chunk_size,
-			void *chunk_model, void *updated_chunk_model,
+uint32_t compress_chunk(const void *chunk, uint32_t chunk_size,
+			const void *chunk_model, void *updated_chunk_model,
 			uint32_t *dst, uint32_t dst_capacity,
 			const struct cmp_par *cmp_par);
 

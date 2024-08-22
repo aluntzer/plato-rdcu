@@ -386,6 +386,22 @@ static void *get_collection_data(void *col)
 
 
 /**
+ * @brief return a pointer of the data of a collection
+ *
+ * @param col	pointer to a collection header (can be NULL)
+ *
+ * @returns pointer to the collection data; NULL if col is NULL
+ */
+
+static const void *get_collection_data_const(const void *col)
+{
+	if (col)
+		col = (const uint8_t *)col + COLLECTION_HDR_SIZE;
+	return col;
+}
+
+
+/**
  * @brief decompress imagette data
  *
  * @param cfg	pointer to the compression configuration structure
@@ -402,21 +418,21 @@ static int decompress_imagette(const struct cmp_cfg *cfg, struct bit_decoder *de
 	uint32_t max_data_bits;
 	struct decoder_setup setup;
 	uint16_t *data_buf;
-	uint16_t *model_buf;
+	const uint16_t *model_buf;
 	uint16_t *up_model_buf;
-	uint16_t *next_model_p;
+	const uint16_t *next_model_p;
 	uint16_t model;
 
 	switch (decmp_type) {
 	case RDCU_DECOMPRESSION: /* RDCU compresses the header like data */
-		data_buf = cfg->input_buf;
+		data_buf = cfg->dst;
 		model_buf = cfg->model_buf;
-		up_model_buf = cfg->icu_new_model_buf;
+		up_model_buf = cfg->updated_model_buf;
 		break;
 	case ICU_DECOMRESSION:
-		data_buf = get_collection_data(cfg->input_buf);
-		model_buf = get_collection_data(cfg->model_buf);
-		up_model_buf = get_collection_data(cfg->icu_new_model_buf);
+		data_buf = get_collection_data(cfg->dst);
+		model_buf = get_collection_data_const(cfg->model_buf);
+		up_model_buf = get_collection_data(cfg->updated_model_buf);
 		break;
 	}
 
@@ -527,16 +543,16 @@ static int decompress_s_fx(const struct cmp_cfg *cfg, struct bit_decoder *dec)
 	int err;
 	uint32_t decoded_value;
 	struct decoder_setup setup_exp_flags, setup_fx;
-	struct s_fx *data_buf = get_collection_data(cfg->input_buf);
-	struct s_fx *model_buf = get_collection_data(cfg->model_buf);
+	struct s_fx *data_buf = get_collection_data(cfg->dst);
+	const struct s_fx *model_buf = get_collection_data_const(cfg->model_buf);
 	struct s_fx *up_model_buf;
-	struct s_fx *next_model_p;
+	const struct s_fx *next_model_p;
 	struct s_fx model;
 
 	if (model_mode_is_used(cfg->cmp_mode)) {
 		model = model_buf[0];
 		next_model_p = &model_buf[1];
-		up_model_buf = get_collection_data(cfg->icu_new_model_buf);
+		up_model_buf = get_collection_data(cfg->updated_model_buf);
 	} else {
 		memset(&model, 0, sizeof(model));
 		next_model_p = data_buf;
@@ -590,14 +606,14 @@ static int decompress_s_fx_efx(const struct cmp_cfg *cfg, struct bit_decoder *de
 	int err;
 	uint32_t decoded_value;
 	struct decoder_setup setup_exp_flags, setup_fx, setup_efx;
-	struct s_fx_efx *data_buf = get_collection_data(cfg->input_buf);
-	struct s_fx_efx *model_buf = get_collection_data(cfg->model_buf);
+	struct s_fx_efx *data_buf = get_collection_data(cfg->dst);
+	const struct s_fx_efx *model_buf = get_collection_data_const(cfg->model_buf);
 	struct s_fx_efx *up_model_buf;
-	struct s_fx_efx *next_model_p;
+	const struct s_fx_efx *next_model_p;
 	struct s_fx_efx model;
 
 	if (model_mode_is_used(cfg->cmp_mode)) {
-		up_model_buf = get_collection_data(cfg->icu_new_model_buf);
+		up_model_buf = get_collection_data(cfg->updated_model_buf);
 		model = model_buf[0];
 		next_model_p = &model_buf[1];
 	} else {
@@ -662,14 +678,14 @@ static int decompress_s_fx_ncob(const struct cmp_cfg *cfg, struct bit_decoder *d
 	int err;
 	uint32_t decoded_value;
 	struct decoder_setup setup_exp_flags, setup_fx, setup_ncob;
-	struct s_fx_ncob *data_buf = get_collection_data(cfg->input_buf);
-	struct s_fx_ncob *model_buf = get_collection_data(cfg->model_buf);
+	struct s_fx_ncob *data_buf = get_collection_data(cfg->dst);
+	const struct s_fx_ncob *model_buf = get_collection_data_const(cfg->model_buf);
 	struct s_fx_ncob *up_model_buf;
-	struct s_fx_ncob *next_model_p;
+	const struct s_fx_ncob *next_model_p;
 	struct s_fx_ncob model;
 
 	if (model_mode_is_used(cfg->cmp_mode)) {
-		up_model_buf = get_collection_data(cfg->icu_new_model_buf);
+		up_model_buf = get_collection_data(cfg->updated_model_buf);
 		model = model_buf[0];
 		next_model_p = &model_buf[1];
 	} else {
@@ -741,14 +757,14 @@ static int decompress_s_fx_efx_ncob_ecob(const struct cmp_cfg *cfg, struct bit_d
 	int err;
 	uint32_t decoded_value;
 	struct decoder_setup setup_exp_flags, setup_fx, setup_ncob, setup_efx, setup_ecob;
-	struct s_fx_efx_ncob_ecob *data_buf = get_collection_data(cfg->input_buf);
-	struct s_fx_efx_ncob_ecob *model_buf = get_collection_data(cfg->model_buf);
+	struct s_fx_efx_ncob_ecob *data_buf = get_collection_data(cfg->dst);
+	const struct s_fx_efx_ncob_ecob *model_buf = get_collection_data_const(cfg->model_buf);
 	struct s_fx_efx_ncob_ecob *up_model_buf;
-	struct s_fx_efx_ncob_ecob *next_model_p;
+	const struct s_fx_efx_ncob_ecob *next_model_p;
 	struct s_fx_efx_ncob_ecob model;
 
 	if (model_mode_is_used(cfg->cmp_mode)) {
-		up_model_buf = get_collection_data(cfg->icu_new_model_buf);
+		up_model_buf = get_collection_data(cfg->updated_model_buf);
 		model = model_buf[0];
 		next_model_p = &model_buf[1];
 	} else {
@@ -845,14 +861,14 @@ static int decompress_l_fx(const struct cmp_cfg *cfg, struct bit_decoder *dec)
 	int err;
 	uint32_t decoded_value;
 	struct decoder_setup setup_exp_flags, setup_fx, setup_fx_var;
-	struct l_fx *data_buf = get_collection_data(cfg->input_buf);
-	struct l_fx *model_buf = get_collection_data(cfg->model_buf);
+	struct l_fx *data_buf = get_collection_data(cfg->dst);
+	const struct l_fx *model_buf = get_collection_data_const(cfg->model_buf);
 	struct l_fx *up_model_buf;
-	struct l_fx *next_model_p;
+	const struct l_fx *next_model_p;
 	struct l_fx model;
 
 	if (model_mode_is_used(cfg->cmp_mode)) {
-		up_model_buf = get_collection_data(cfg->icu_new_model_buf);
+		up_model_buf = get_collection_data(cfg->updated_model_buf);
 		model = model_buf[0];
 		next_model_p = &model_buf[1];
 	} else {
@@ -917,14 +933,14 @@ static int decompress_l_fx_efx(const struct cmp_cfg *cfg, struct bit_decoder *de
 	int err;
 	uint32_t decoded_value;
 	struct decoder_setup setup_exp_flags, setup_fx, setup_efx, setup_fx_var;
-	struct l_fx_efx *data_buf = get_collection_data(cfg->input_buf);
-	struct l_fx_efx *model_buf = get_collection_data(cfg->model_buf);
+	struct l_fx_efx *data_buf = get_collection_data(cfg->dst);
+	const struct l_fx_efx *model_buf = get_collection_data_const(cfg->model_buf);
 	struct l_fx_efx *up_model_buf;
-	struct l_fx_efx *next_model_p;
+	const struct l_fx_efx *next_model_p;
 	struct l_fx_efx model;
 
 	if (model_mode_is_used(cfg->cmp_mode)) {
-		up_model_buf = get_collection_data(cfg->icu_new_model_buf);
+		up_model_buf = get_collection_data(cfg->updated_model_buf);
 		model = model_buf[0];
 		next_model_p = &model_buf[1];
 	} else {
@@ -999,14 +1015,14 @@ static int decompress_l_fx_ncob(const struct cmp_cfg *cfg, struct bit_decoder *d
 	uint32_t decoded_value;
 	struct decoder_setup setup_exp_flags, setup_fx, setup_ncob,
 			     setup_fx_var, setup_cob_var;
-	struct l_fx_ncob *data_buf = get_collection_data(cfg->input_buf);
-	struct l_fx_ncob *model_buf = get_collection_data(cfg->model_buf);
+	struct l_fx_ncob *data_buf = get_collection_data(cfg->dst);
+	const struct l_fx_ncob *model_buf = get_collection_data_const(cfg->model_buf);
 	struct l_fx_ncob *up_model_buf;
-	struct l_fx_ncob *next_model_p;
+	const struct l_fx_ncob *next_model_p;
 	struct l_fx_ncob model;
 
 	if (model_mode_is_used(cfg->cmp_mode)) {
-		up_model_buf = get_collection_data(cfg->icu_new_model_buf);
+		up_model_buf = get_collection_data(cfg->updated_model_buf);
 		model = model_buf[0];
 		next_model_p = &model_buf[1];
 	} else {
@@ -1104,14 +1120,14 @@ static int decompress_l_fx_efx_ncob_ecob(const struct cmp_cfg *cfg, struct bit_d
 	uint32_t decoded_value;
 	struct decoder_setup setup_exp_flags, setup_fx, setup_ncob, setup_efx,
 			     setup_ecob, setup_fx_var, setup_cob_var;
-	struct l_fx_efx_ncob_ecob *data_buf = get_collection_data(cfg->input_buf);
-	struct l_fx_efx_ncob_ecob *model_buf = get_collection_data(cfg->model_buf);
+	struct l_fx_efx_ncob_ecob *data_buf = get_collection_data(cfg->dst);
+	const struct l_fx_efx_ncob_ecob *model_buf = get_collection_data_const(cfg->model_buf);
 	struct l_fx_efx_ncob_ecob *up_model_buf;
-	struct l_fx_efx_ncob_ecob *next_model_p;
+	const struct l_fx_efx_ncob_ecob *next_model_p;
 	struct l_fx_efx_ncob_ecob model;
 
 	if (model_mode_is_used(cfg->cmp_mode)) {
-		up_model_buf = get_collection_data(cfg->icu_new_model_buf);
+		up_model_buf = get_collection_data(cfg->updated_model_buf);
 		model = model_buf[0];
 		next_model_p = &model_buf[1];
 	} else {
@@ -1233,14 +1249,14 @@ static int decompress_offset(const struct cmp_cfg *cfg, struct bit_decoder *dec)
 	int err;
 	uint32_t decoded_value;
 	struct decoder_setup setup_mean, setup_var;
-	struct offset *data_buf = get_collection_data(cfg->input_buf);
-	struct offset *model_buf = get_collection_data(cfg->model_buf);
+	struct offset *data_buf = get_collection_data(cfg->dst);
+	const struct offset *model_buf = get_collection_data_const(cfg->model_buf);
 	struct offset *up_model_buf;
-	struct offset *next_model_p;
+	const struct offset *next_model_p;
 	struct offset model;
 
 	if (model_mode_is_used(cfg->cmp_mode)) {
-		up_model_buf = get_collection_data(cfg->icu_new_model_buf);
+		up_model_buf = get_collection_data(cfg->updated_model_buf);
 		model = model_buf[0];
 		next_model_p = &model_buf[1];
 	} else {
@@ -1313,14 +1329,14 @@ static int decompress_background(const struct cmp_cfg *cfg, struct bit_decoder *
 	int err;
 	uint32_t decoded_value;
 	struct decoder_setup setup_mean, setup_var, setup_pix;
-	struct background *data_buf = get_collection_data(cfg->input_buf);
-	struct background *model_buf = get_collection_data(cfg->model_buf);
+	struct background *data_buf = get_collection_data(cfg->dst);
+	const struct background *model_buf = get_collection_data_const(cfg->model_buf);
 	struct background *up_model_buf;
-	struct background *next_model_p;
+	const struct background *next_model_p;
 	struct background model;
 
 	if (model_mode_is_used(cfg->cmp_mode)) {
-		up_model_buf = get_collection_data(cfg->icu_new_model_buf);
+		up_model_buf = get_collection_data(cfg->updated_model_buf);
 		model = model_buf[0];
 		next_model_p = &model_buf[1];
 	} else {
@@ -1405,14 +1421,14 @@ static int decompress_smearing(const struct cmp_cfg *cfg, struct bit_decoder *de
 	int err;
 	uint32_t decoded_value;
 	struct decoder_setup setup_mean, setup_var, setup_pix;
-	struct smearing *data_buf = get_collection_data(cfg->input_buf);
-	struct smearing *model_buf = get_collection_data(cfg->model_buf);
+	struct smearing *data_buf = get_collection_data(cfg->dst);
+	const struct smearing *model_buf = get_collection_data_const(cfg->model_buf);
 	struct smearing *up_model_buf;
-	struct smearing *next_model_p;
+	const struct smearing *next_model_p;
 	struct smearing model;
 
 	if (model_mode_is_used(cfg->cmp_mode)) {
-		up_model_buf = get_collection_data(cfg->icu_new_model_buf);
+		up_model_buf = get_collection_data(cfg->updated_model_buf);
 		model = model_buf[0];
 		next_model_p = &model_buf[1];
 	} else {
@@ -1476,15 +1492,15 @@ static int decompress_smearing(const struct cmp_cfg *cfg, struct bit_decoder *de
 
 static int decompress_collection_hdr(const struct cmp_cfg *cfg)
 {
-	if (cfg->buffer_length < COLLECTION_HDR_SIZE)
+	if (cfg->stream_size < COLLECTION_HDR_SIZE)
 		return -1;
 
-	if (cfg->icu_output_buf) {
-		if (cfg->input_buf)
-			memcpy(cfg->input_buf, cfg->icu_output_buf, COLLECTION_HDR_SIZE);
+	if (cfg->src) {
+		if (cfg->dst)
+			memcpy(cfg->dst, cfg->src, COLLECTION_HDR_SIZE);
 
-		if (model_mode_is_used(cfg->cmp_mode) && cfg->icu_new_model_buf)
-			memcpy(cfg->icu_new_model_buf, cfg->icu_output_buf, COLLECTION_HDR_SIZE);
+		if (model_mode_is_used(cfg->cmp_mode) && cfg->updated_model_buf)
+			memcpy(cfg->updated_model_buf, cfg->src, COLLECTION_HDR_SIZE);
 	}
 	return COLLECTION_HDR_SIZE;
 }
@@ -1511,7 +1527,7 @@ static int decompressed_data_internal(const struct cmp_cfg *cfg, enum decmp_type
 	if (!cfg)
 		return -1;
 
-	if (!cfg->icu_output_buf)
+	if (!cfg->src)
 		return -1;
 
 	if (cmp_imagette_data_type_is_used(cfg->data_type)) {
@@ -1535,24 +1551,24 @@ static int decompressed_data_internal(const struct cmp_cfg *cfg, enum decmp_type
 	if (decmp_type == ICU_DECOMRESSION)
 		data_size += COLLECTION_HDR_SIZE;
 	/* data_size = cmp_cal_size_of_data(cfg->samples, cfg->data_type); */
-	/* if (!cfg->input_buf || !data_size) */
+	/* if (!cfg->dst || !data_size) */
 	/* 	return (int)data_size; */
 
 	if (cfg->cmp_mode == CMP_MODE_RAW) {
 		/* if (data_size < cfg->buffer_length/CHAR_BIT) */
 		/* 	return -1; */
 
-		if (cfg->input_buf) {
+		if (cfg->dst) {
 			/* uint32_t s = cmp_col_get_size(cfg->icu_output_buf); */
 			/* assert(s==data_size); */
-			memcpy(cfg->input_buf, cfg->icu_output_buf, data_size);
+			memcpy(cfg->dst, cfg->src, data_size);
 			switch (decmp_type) {
 			case ICU_DECOMRESSION:
-				if (be_to_cpu_chunk(cfg->input_buf, data_size))
+				if (be_to_cpu_chunk(cfg->dst, data_size))
 					return -1;
 				break;
 			case RDCU_DECOMPRESSION:
-				if (be_to_cpu_data_type(cfg->input_buf, data_size,
+				if (be_to_cpu_data_type(cfg->dst, data_size,
 							cfg->data_type))
 					return -1;
 				break;
@@ -1564,7 +1580,7 @@ static int decompressed_data_internal(const struct cmp_cfg *cfg, enum decmp_type
 		struct bit_decoder dec;
 		int hdr_size = 0;
 
-		if (!cfg->input_buf)
+		if (!cfg->dst)
 			return (int)data_size;
 
 		if (decmp_type == ICU_DECOMRESSION) {
@@ -1573,8 +1589,8 @@ static int decompressed_data_internal(const struct cmp_cfg *cfg, enum decmp_type
 				return -1;
 		}
 
-		bit_init_decoder(&dec, (uint8_t *)cfg->icu_output_buf+hdr_size,
-				 cfg->buffer_length-(uint32_t)hdr_size);
+		bit_init_decoder(&dec, (const uint8_t *)cfg->src+hdr_size,
+				 cfg->stream_size-(uint32_t)hdr_size);
 
 		switch (cfg->data_type) {
 		case DATA_TYPE_IMAGETTE:
@@ -1668,7 +1684,7 @@ static int decompressed_data_internal(const struct cmp_cfg *cfg, enum decmp_type
  * @returns 0 on success; otherwise error
  */
 
-static int cmp_ent_read_header(struct cmp_entity *ent, struct cmp_cfg *cfg)
+static int cmp_ent_read_header(const struct cmp_entity *ent, struct cmp_cfg *cfg)
 {
 	if (!cfg)
 		return -1;
@@ -1687,12 +1703,12 @@ static int cmp_ent_read_header(struct cmp_entity *ent, struct cmp_cfg *cfg)
 	}
 	cfg->model_value = cmp_ent_get_model_value(ent);
 	cfg->round = cmp_ent_get_lossy_cmp_par(ent);
-	cfg->buffer_length = cmp_ent_get_cmp_data_size(ent);
+	cfg->stream_size = cmp_ent_get_cmp_data_size(ent);
 
 	if (cfg->data_type == DATA_TYPE_CHUNK) {
 		cfg->samples = 0;
-		if ((cfg->buffer_length < (COLLECTION_HDR_SIZE + CMP_COLLECTION_FILD_SIZE) && (cfg->cmp_mode != CMP_MODE_RAW)) ||
-		    (cfg->buffer_length < COLLECTION_HDR_SIZE && (cfg->cmp_mode == CMP_MODE_RAW))) {
+		if ((cfg->stream_size < (COLLECTION_HDR_SIZE + CMP_COLLECTION_FILD_SIZE) && (cfg->cmp_mode != CMP_MODE_RAW)) ||
+		    (cfg->stream_size < COLLECTION_HDR_SIZE && (cfg->cmp_mode == CMP_MODE_RAW))) {
 			debug_print("Error: The compressed data size in the compression header is smaller than a collection header.");
 			return -1;
 		}
@@ -1707,7 +1723,7 @@ static int cmp_ent_read_header(struct cmp_entity *ent, struct cmp_cfg *cfg)
 		cfg->samples = org_size/sizeof(uint16_t);
 	}
 
-	cfg->icu_output_buf = cmp_ent_get_data_buf(ent);
+	cfg->src = cmp_ent_get_data_buf_const(ent);
 
 	if (cmp_ent_get_reserved(ent)) {
 		debug_print("Error: The reserved field in the compressed header should be zero. Compressed data may be corrupted.");
@@ -1784,7 +1800,7 @@ static int cmp_ent_read_header(struct cmp_entity *ent, struct cmp_cfg *cfg)
  * @return The size of the compressed collection data in bytes
  */
 
-static uint16_t get_cmp_collection_data_length(uint8_t *cmp_col)
+static uint16_t get_cmp_collection_data_length(const uint8_t *cmp_col)
 {
 	uint16_t cmp_data_size;
 	/* If a non-raw mode is used to compress all collections, a
@@ -1825,7 +1841,7 @@ static uint16_t get_cmp_collection_data_length(uint8_t *cmp_col)
  * @return The total size of the compressed collection in bytes
  */
 
-static uint32_t get_cmp_collection_size(uint8_t *cmp_col)
+static uint32_t get_cmp_collection_size(const uint8_t *cmp_col)
 {
 	return CMP_COLLECTION_FILD_SIZE + COLLECTION_HDR_SIZE
 		+ get_cmp_collection_data_length(cmp_col);
@@ -1844,12 +1860,12 @@ static uint32_t get_cmp_collection_size(uint8_t *cmp_col)
  *	on error
  */
 
-static int get_num_of_chunks(struct cmp_entity *ent)
+static int get_num_of_chunks(const struct cmp_entity *ent)
 {
-	uint8_t *cmp_data_p = cmp_ent_get_data_buf(ent);
+	const uint8_t *cmp_data_p = cmp_ent_get_data_buf_const(ent);
 	long cmp_data_size = cmp_ent_get_cmp_data_size(ent);
 	int n = 0;
-	uint8_t *p = cmp_data_p;
+	const uint8_t *p = cmp_data_p;
 	/* highest plausible address of compressed collection */
 	const uint8_t *limit_ptr = cmp_data_p + cmp_data_size - COLLECTION_HDR_SIZE;
 
@@ -1881,22 +1897,23 @@ static int get_num_of_chunks(struct cmp_entity *ent)
  *	decompressed data, or -1 on error.
  */
 
-static long parse_cmp_collection(uint8_t *cmp_col, int n, struct cmp_cfg *cfg, int *coll_uncompressed)
+static long parse_cmp_collection(const uint8_t *cmp_col, int n, struct cmp_cfg *cfg,
+				 int *coll_uncompressed)
 {
 	int i;
 	long decmp_pos = 0; /* position where to put the uncompressed result */
 	/* pointer to the collection header */
-	struct collection_hdr *col_hdr = (struct collection_hdr *)(cmp_col + CMP_COLLECTION_FILD_SIZE);
+	const struct collection_hdr *col_hdr =
+		(const struct collection_hdr *)(cmp_col + CMP_COLLECTION_FILD_SIZE);
 	uint32_t cmp_data_size; /* size of the compressed data in the collection (not including the header) */
 	uint16_t original_col_size; /* size of the decompressed collection data (not including the header) */
 	size_t sample_size;
-	void *void_poiter; /* used to suppress unaligned cast warning */
 
 	/* get to the collection we want to decompress */
 	for (i = 0; i < n; i++) {
 		decmp_pos += cmp_col_get_size(col_hdr);
 		cmp_col += get_cmp_collection_size(cmp_col);
-		col_hdr = (struct collection_hdr *)(cmp_col + CMP_COLLECTION_FILD_SIZE);
+		col_hdr = (const struct collection_hdr *)(cmp_col + CMP_COLLECTION_FILD_SIZE);
 	}
 
 	cmp_data_size = get_cmp_collection_data_length(cmp_col);
@@ -1914,9 +1931,8 @@ static long parse_cmp_collection(uint8_t *cmp_col, int n, struct cmp_cfg *cfg, i
 	else
 		*coll_uncompressed = 0;
 
-	void_poiter = (void *)(col_hdr); /* unaligned cast -> reading compressed data as uint8_t * */
-	cfg->icu_output_buf = void_poiter;
-	cfg->buffer_length = cmp_data_size + COLLECTION_HDR_SIZE;
+	cfg->src = col_hdr;
+	cfg->stream_size = cmp_data_size + COLLECTION_HDR_SIZE;
 
 	cfg->data_type = convert_subservice_to_cmp_data_type(cmp_col_get_subservice(col_hdr));
 	sample_size = size_of_a_sample(cfg->data_type);
@@ -1948,7 +1964,7 @@ static long parse_cmp_collection(uint8_t *cmp_col, int n, struct cmp_cfg *cfg, i
  * @returns the size of the decompressed data on success; returns negative on failure
  */
 
-int decompress_cmp_entiy(struct cmp_entity *ent, void *model_of_data,
+int decompress_cmp_entiy(const struct cmp_entity *ent, const void *model_of_data,
 			 void *up_model_buf, void *decompressed_data)
 {
 	struct cmp_cfg cfg;
@@ -1974,7 +1990,7 @@ int decompress_cmp_entiy(struct cmp_entity *ent, void *model_of_data,
 			uint32_t data_size = cfg.samples * sizeof(uint16_t);
 
 			if (decompressed_data) {
-				memcpy(decompressed_data, cmp_ent_get_data_buf(ent), data_size);
+				memcpy(decompressed_data, cmp_ent_get_data_buf_const(ent), data_size);
 				if (cmp_input_big_to_cpu_endianness(decompressed_data, data_size, cfg.data_type))
 					return -1;
 			}
@@ -1982,8 +1998,8 @@ int decompress_cmp_entiy(struct cmp_entity *ent, void *model_of_data,
 		}
 
 		cfg.model_buf = model_of_data;
-		cfg.icu_new_model_buf = up_model_buf;
-		cfg.input_buf = decompressed_data;
+		cfg.updated_model_buf = up_model_buf;
+		cfg.dst = decompressed_data;
 
 		return decompressed_data_internal(&cfg, RDCU_DECOMPRESSION);
 	}
@@ -1992,14 +2008,14 @@ int decompress_cmp_entiy(struct cmp_entity *ent, void *model_of_data,
 
 	if (cfg.cmp_mode == CMP_MODE_RAW) {
 		if (decompressed_data) {
-			memcpy(decompressed_data, cfg.icu_output_buf, cfg.buffer_length);
-			cpu_to_be_chunk(decompressed_data, cfg.buffer_length);
+			memcpy(decompressed_data, cfg.src, cfg.stream_size);
+			cpu_to_be_chunk(decompressed_data, cfg.stream_size);
 		}
 		/* if (up_model_buf) { /1* TODO: if diff non model mode? *1/ */
 		/* 	memcpy(up_model_buf, cfg.icu_output_buf, cfg.buffer_length); */
 		/* 	cpu_to_be_chunk(up_model_buf, cfg.buffer_length); */
 		/* } */
-		return (int)cfg.buffer_length;
+		return (int)cfg.stream_size;
 	}
 
 	n_chunks = get_num_of_chunks(ent);
@@ -2010,23 +2026,23 @@ int decompress_cmp_entiy(struct cmp_entity *ent, void *model_of_data,
 		int decmp_chunk_size;
 		int col_uncompressed;
 		struct cmp_cfg cmp_cpy = cfg;
-		long offset = parse_cmp_collection(cmp_ent_get_data_buf(ent), i,
+		long offset = parse_cmp_collection(cmp_ent_get_data_buf_const(ent), i,
 						   &cmp_cpy, &col_uncompressed);
 		if (offset < 0)
 			return -1;
 
 		if (decompressed_data)
-			cmp_cpy.input_buf = (uint8_t *)decompressed_data + offset;
+			cmp_cpy.dst = (uint8_t *)decompressed_data + offset;
 		if (model_of_data)
-			cmp_cpy.model_buf = (uint8_t *)model_of_data + offset;
+			cmp_cpy.model_buf = (const uint8_t *)model_of_data + offset;
 		if (up_model_buf)
-			cmp_cpy.icu_new_model_buf = (uint8_t *)up_model_buf + offset;
+			cmp_cpy.updated_model_buf = (uint8_t *)up_model_buf + offset;
 
 		if (col_uncompressed) {
-			if (cmp_cpy.icu_new_model_buf && model_mode_is_used(cmp_cpy.cmp_mode)) {
-				uint32_t s = cmp_cpy.buffer_length;
-				memcpy(cmp_cpy.icu_new_model_buf, cmp_cpy.icu_output_buf, s);
-				if (be_to_cpu_chunk(cmp_cpy.icu_new_model_buf, s))
+			if (cmp_cpy.updated_model_buf && model_mode_is_used(cmp_cpy.cmp_mode)) {
+				uint32_t s = cmp_cpy.stream_size;
+				memcpy(cmp_cpy.updated_model_buf, cmp_cpy.src, s);
+				if (be_to_cpu_chunk(cmp_cpy.updated_model_buf, s))
 					return -1;
 			}
 			cmp_cpy.cmp_mode = CMP_MODE_RAW;
@@ -2058,8 +2074,8 @@ int decompress_cmp_entiy(struct cmp_entity *ent, void *model_of_data,
  * @returns the size of the decompressed data on success; returns negative on failure
  */
 
-int decompress_rdcu_data(uint32_t *compressed_data, const struct cmp_info *info,
-			 uint16_t *model_of_data, uint16_t *up_model_buf,
+int decompress_rdcu_data(const uint32_t *compressed_data, const struct cmp_info *info,
+			 const uint16_t *model_of_data, uint16_t *up_model_buf,
 			 uint16_t *decompressed_data)
 
 {
@@ -2078,8 +2094,8 @@ int decompress_rdcu_data(uint32_t *compressed_data, const struct cmp_info *info,
 
 	cfg.data_type = DATA_TYPE_IMAGETTE;
 	cfg.model_buf = model_of_data;
-	cfg.icu_new_model_buf = up_model_buf;
-	cfg.input_buf = decompressed_data;
+	cfg.updated_model_buf = up_model_buf;
+	cfg.dst = decompressed_data;
 
 	cfg.cmp_mode = info->cmp_mode_used;
 	cfg.model_value = info->model_value_used;
@@ -2087,8 +2103,8 @@ int decompress_rdcu_data(uint32_t *compressed_data, const struct cmp_info *info,
 	cfg.spill_imagette = info->spill_used;
 	cfg.cmp_par_imagette = info->golomb_par_used;
 	cfg.samples = info->samples_used;
-	cfg.icu_output_buf = compressed_data;
-	cfg.buffer_length = (info->cmp_size+7)/8;
+	cfg.src = compressed_data;
+	cfg.stream_size = (info->cmp_size+7)/8;
 
 	return decompressed_data_internal(&cfg, RDCU_DECOMPRESSION);
 }

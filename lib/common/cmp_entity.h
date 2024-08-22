@@ -75,7 +75,6 @@ struct imagette_header {
 	union{
 		struct {
 			uint8_t spare1;
-			uint8_t ima_cmp_dat[];		/**< compressed data for imagette specific header */
 		} __attribute__((packed));
 		struct {
 			uint16_t ap1_spill_used;	/**< Adaptive Spillover threshold used 1 */
@@ -84,7 +83,6 @@ struct imagette_header {
 			uint8_t  ap2_golomb_par_used;	/**< Adaptive Golomb parameter used 2 */
 			uint8_t  spare2;
 			uint16_t spare3;
-			uint8_t  ap_ima_cmp_data[];	/**< compressed data for adaptive imagette specific header */
 		} __attribute__((packed));
 	};
 } __attribute__((packed));
@@ -110,7 +108,6 @@ struct non_imagette_header {
 	uint32_t spill_6_used:24;	/**< spillover threshold 6 used */
 	uint16_t cmp_par_6_used;	/**< compression parameter 6 used */
 	uint16_t spare;
-	uint8_t  cmp_data[];
 } __attribute__((packed));
 compile_time_assert(sizeof(struct non_imagette_header) == SPECIFIC_NON_IMAGETTE_HEADER_SIZE, NON_IMAGETTE_HEADER_T_SIZE_IS_NOT_CORRECT);
 
@@ -292,6 +289,7 @@ uint16_t cmp_ent_get_non_ima_cmp_par6(const struct cmp_entity *ent);
 
 /* get function for the compressed data buffer in the entity */
 void *cmp_ent_get_data_buf(struct cmp_entity *ent);
+const void *cmp_ent_get_data_buf_const(const struct cmp_entity *ent);
 uint32_t cmp_ent_get_cmp_data_size(const struct cmp_entity *ent);
 int32_t cmp_ent_get_cmp_data(struct cmp_entity *ent, uint32_t *data_buf,
 			     uint32_t data_buf_size);

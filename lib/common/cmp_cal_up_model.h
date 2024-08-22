@@ -13,7 +13,7 @@
  * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
  * more details.
  *
- * @brief functions to calculate the update (new) model
+ * @brief functions to calculate the updated (new) model
  */
 
 #ifndef CMP_CAL_UP_MODEL_H
@@ -69,17 +69,17 @@
 #define cmp_up_model(data, model, model_value, round)							\
 	__extension__											\
 	({												\
-		__typeof__(data) __ret;									\
+		uint32_t __ret;										\
 		switch (sizeof(data)) {									\
 		case sizeof(uint8_t):									\
 		case sizeof(uint16_t):									\
-			__ret = (__typeof__(__ret))cmp_up_model16(data, model, model_value, round);	\
+			__ret = cmp_up_model16(data, model, model_value, round);			\
 			break;										\
 		case sizeof(uint32_t):									\
-			__ret = (__typeof__(__ret))cmp_up_model32(data, model, model_value, round);	\
+			__ret = cmp_up_model32(data, model, model_value, round);			\
 			break;										\
 		}											\
-		__ret;											\
+		(__typeof__(data))__ret;								\
 	})
 
 

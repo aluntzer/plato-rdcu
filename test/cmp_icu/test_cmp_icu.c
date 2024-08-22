@@ -1454,9 +1454,9 @@ void test_pad_bitstream(void)
 	const int MAX_BIT_LEN = 96;
 
 	memset(cmp_data, 0xFF, sizeof(cmp_data));
-	cfg.icu_output_buf = cmp_data;
+	cfg.dst = cmp_data;
 	cfg.data_type = DATA_TYPE_IMAGETTE; /* 16 bit samples */
-	cfg.buffer_length = sizeof(cmp_data); /* 6 * 16 bit samples -> 3 * 32 bit */
+	cfg.stream_size = sizeof(cmp_data); /* 6 * 16 bit samples -> 3 * 32 bit */
 
 	/* test negative cmp_size */
 	cmp_size = -1U;
@@ -1479,7 +1479,7 @@ void test_pad_bitstream(void)
 	cfg.cmp_mode = CMP_MODE_MODEL_MULTI;
 	cmp_size = 0;
 	/* set the first 32 bits zero no change should occur */
-	cmp_size = put_n_bits32(0, 32, cmp_size, cfg.icu_output_buf, MAX_BIT_LEN);
+	cmp_size = put_n_bits32(0, 32, cmp_size, cfg.dst, MAX_BIT_LEN);
 	cmp_size_return = pad_bitstream(&cfg, cmp_size);
 	TEST_ASSERT_EQUAL_INT(cmp_size, cmp_size_return);
 	TEST_ASSERT_EQUAL_INT(cmp_data[0], 0);
@@ -1487,7 +1487,7 @@ void test_pad_bitstream(void)
 	TEST_ASSERT_EQUAL_INT(cmp_data[2], 0xFFFFFFFF);
 
 	/* set the first 33 bits zero; and checks the padding  */
-	cmp_size = put_n_bits32(0, 1, cmp_size, cfg.icu_output_buf, MAX_BIT_LEN);
+	cmp_size = put_n_bits32(0, 1, cmp_size, cfg.dst, MAX_BIT_LEN);
 	cmp_size_return = pad_bitstream(&cfg, cmp_size);
 	TEST_ASSERT_EQUAL_INT(cmp_size, cmp_size_return);
 	TEST_ASSERT_EQUAL_INT(cmp_data[0], 0);
@@ -1497,7 +1497,7 @@ void test_pad_bitstream(void)
 	/* set the first 63 bits zero; and checks the padding  */
 	cmp_data[1] = 0xFFFFFFFF;
 	cmp_size = 32;
-	cmp_size = put_n_bits32(0, 31, cmp_size, cfg.icu_output_buf, MAX_BIT_LEN);
+	cmp_size = put_n_bits32(0, 31, cmp_size, cfg.dst, MAX_BIT_LEN);
 	cmp_size_return = pad_bitstream(&cfg, cmp_size);
 	TEST_ASSERT_EQUAL_INT(cmp_size, cmp_size_return);
 	TEST_ASSERT_EQUAL_INT(cmp_data[0], 0);
@@ -1506,9 +1506,9 @@ void test_pad_bitstream(void)
 
 	/* error case the rest of the compressed data are to small for a 32 bit
 	 * access  */
-	cfg.buffer_length -= 1;
+	cfg.stream_size -= 1;
 	cmp_size = 64;
-	cmp_size = put_n_bits32(0, 1, cmp_size, cfg.icu_output_buf, MAX_BIT_LEN);
+	cmp_size = put_n_bits32(0, 1, cmp_size, cfg.dst, MAX_BIT_LEN);
 	cmp_size_return = pad_bitstream(&cfg, cmp_size);
 	TEST_ASSERT_EQUAL_INT(CMP_ERROR_SMALL_BUF_, cmp_get_error_code(cmp_size_return));
 }

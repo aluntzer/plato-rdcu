@@ -98,7 +98,7 @@ void test_ent_version_id(void)
 	struct cmp_entity ent = {0};
 	uint32_t version_id;
 	uint32_t version_id_read;
-	uint8_t *entity_p = (uint8_t *)&ent;
+	const uint8_t *entity_p = (const uint8_t *)&ent;
 
 	version_id = 0x12345678;
 	error = cmp_ent_set_version_id(&ent, version_id);
@@ -132,7 +132,7 @@ void test_ent_size(void)
 	struct cmp_entity ent = {0};
 	uint32_t size;
 	uint32_t size_read;
-	uint8_t *entity_p = (uint8_t *)&ent;
+	const uint8_t *entity_p = (const uint8_t *)&ent;
 
 	size = 0x123456;
 	error = cmp_ent_set_size(&ent, size);
@@ -168,7 +168,7 @@ void test_ent_original_size(void)
 	struct cmp_entity ent = {0};
 	uint32_t original_size;
 	uint32_t original_size_read;
-	uint8_t *entity_p = (uint8_t *)&ent;
+	const uint8_t *entity_p = (const uint8_t *)&ent;
 
 	original_size = 0x123456;
 	error = cmp_ent_set_original_size(&ent, original_size);
@@ -206,7 +206,7 @@ void test_ent_start_timestamp(void)
 	uint64_t start_timestamp_read;
 	uint32_t coarse_start_timestamp_read;
 	uint16_t fine_start_timestamp_read;
-	uint8_t *entity_p = (uint8_t *)&ent;
+	const uint8_t *entity_p = (const uint8_t *)&ent;
 
 	start_timestamp = 0x123456789ABCULL;
 	error = cmp_ent_set_start_timestamp(&ent, start_timestamp);
@@ -250,7 +250,7 @@ void test_ent_coarse_start_time(void)
 	struct cmp_entity ent = {0};
 	uint32_t coarse_start_time;
 	uint32_t coarse_start_time_read;
-	uint8_t *entity_p = (uint8_t *)&ent;
+	const uint8_t *entity_p = (const uint8_t *)&ent;
 
 	coarse_start_time = 0x12345678;
 	error = cmp_ent_set_coarse_start_time(&ent, coarse_start_time);
@@ -284,7 +284,7 @@ void test_ent_fine_start_time(void)
 	struct cmp_entity ent = {0};
 	uint16_t fine_start_time;
 	uint16_t fine_start_time_read;
-	uint8_t *entity_p = (uint8_t *)&ent;
+	const uint8_t *entity_p = (const uint8_t *)&ent;
 
 	fine_start_time = 0x1234;
 	error = cmp_ent_set_fine_start_time(&ent, fine_start_time);
@@ -318,7 +318,7 @@ void test_ent_end_timestamp(void)
 	uint64_t end_timestamp_read;
 	uint32_t coarse_end_timestamp_read;
 	uint16_t fine_end_timestamp_read;
-	uint8_t *entity_p = (uint8_t *)&ent;
+	const uint8_t *entity_p = (const uint8_t *)&ent;
 
 	end_timestamp	= 0x123456789ABCULL;
 	error = cmp_ent_set_end_timestamp(&ent, end_timestamp);
@@ -362,7 +362,7 @@ void test_ent_coarse_end_time(void)
 	struct cmp_entity ent = {0};
 	uint32_t coarse_end_time;
 	uint32_t coarse_end_time_read;
-	uint8_t *entity_p = (uint8_t *)&ent;
+	const uint8_t *entity_p = (const uint8_t *)&ent;
 
 	coarse_end_time = 0x12345678;
 	error = cmp_ent_set_coarse_end_time(&ent, coarse_end_time);
@@ -396,7 +396,7 @@ void test_ent_fine_end_time(void)
 	struct cmp_entity ent = {0};
 	uint16_t fine_end_time;
 	uint16_t fine_end_time_read;
-	uint8_t *entity_p = (uint8_t *)&ent;
+	const uint8_t *entity_p = (const uint8_t *)&ent;
 
 	fine_end_time = 0x1234;
 	error = cmp_ent_set_fine_end_time(&ent, fine_end_time);
@@ -429,7 +429,7 @@ void test_cmp_ent_data_type(void)
 	struct cmp_entity ent = {0};
 	enum cmp_data_type data_type, data_type_read;
 	int raw_mode_flag, raw_mode_flag_read;
-	uint8_t *entity_p = (uint8_t *)&ent;
+	const uint8_t *entity_p = (const uint8_t *)&ent;
 
 	/* test raw_mode */
 	raw_mode_flag = 1;
@@ -486,7 +486,7 @@ void test_ent_cmp_mode(void)
 	int error;
 	struct cmp_entity ent = {0};
 	enum cmp_mode cmp_mode, cmp_mode_read;
-	uint8_t *entity_p = (uint8_t *)&ent;
+	const uint8_t *entity_p = (const uint8_t *)&ent;
 
 	cmp_mode = (enum cmp_mode)0x12;
 	error = cmp_ent_set_cmp_mode(&ent, cmp_mode);
@@ -519,7 +519,7 @@ void test_ent_model_value(void)
 	int error;
 	struct cmp_entity ent = {0};
 	uint32_t model_value, model_value_read;
-	uint8_t *entity_p = (uint8_t *)&ent;
+	const uint8_t *entity_p = (const uint8_t *)&ent;
 
 	model_value = 0x12;
 	error = cmp_ent_set_model_value(&ent, model_value);
@@ -552,7 +552,7 @@ void test_ent_model_id(void)
 	int error;
 	struct cmp_entity ent = {0};
 	uint32_t model_id, model_id_read;
-	uint8_t *entity_p = (uint8_t *)&ent;
+	const uint8_t *entity_p = (const uint8_t *)&ent;
 
 	model_id = 0x1234;
 	error = cmp_ent_set_model_id(&ent, model_id);
@@ -586,7 +586,7 @@ void test_ent_model_counter(void)
 	int error;
 	struct cmp_entity ent = {0};
 	uint32_t model_counter, model_counter_read;
-	uint8_t *entity_p = (uint8_t *)&ent;
+	const uint8_t *entity_p = (const uint8_t *)&ent;
 
 	model_counter = 0x12;
 	error = cmp_ent_set_model_counter(&ent, model_counter);
@@ -619,7 +619,7 @@ void test_ent_reserved(void)
 	int error;
 	struct cmp_entity ent = {0};
 	uint8_t reserved, reserved_read;
-	uint8_t *entity_p = (uint8_t *)&ent;
+	const uint8_t *entity_p = (const uint8_t *)&ent;
 
 	reserved = 0x12;
 	error = cmp_ent_set_reserved(&ent, reserved);
@@ -649,7 +649,7 @@ void test_ent_lossy_cmp_par(void)
 	int error;
 	struct cmp_entity ent = {0};
 	uint32_t lossy_cmp_par, lossy_cmp_par_read;
-	uint8_t *entity_p = (uint8_t *)&ent;
+	const uint8_t *entity_p = (const uint8_t *)&ent;
 
 	lossy_cmp_par = 0x1234;
 	error = cmp_ent_set_lossy_cmp_par(&ent, lossy_cmp_par);
@@ -683,7 +683,7 @@ void test_ent_ima_spill(void)
 	int error;
 	struct cmp_entity ent = {0};
 	uint32_t ima_spill, ima_spill_read;
-	uint8_t *entity_p = (uint8_t *)&ent;
+	const uint8_t *entity_p = (const uint8_t *)&ent;
 
 	ima_spill = 0x1234;
 	error = cmp_ent_set_ima_spill(&ent, ima_spill);
@@ -717,7 +717,7 @@ void test_ent_ima_golomb_par(void)
 	int error;
 	struct cmp_entity ent = {0};
 	uint32_t ima_golomb_par, ima_golomb_par_read;
-	uint8_t *entity_p = (uint8_t *)&ent;
+	const uint8_t *entity_p = (const uint8_t *)&ent;
 
 	ima_golomb_par = 0x12;
 	error = cmp_ent_set_ima_golomb_par(&ent, ima_golomb_par);
@@ -750,7 +750,7 @@ void test_ent_ima_ap1_spill(void)
 	int error;
 	struct cmp_entity ent = {0};
 	uint32_t ima_ap1_spill, ima_ap1_spill_read;
-	uint8_t *entity_p = (uint8_t *)&ent;
+	const uint8_t *entity_p = (const uint8_t *)&ent;
 
 	ima_ap1_spill = 0x1234;
 	error = cmp_ent_set_ima_ap1_spill(&ent, ima_ap1_spill);
@@ -784,7 +784,7 @@ void test_ent_ima_ap1_golomb_par(void)
 	int error;
 	struct cmp_entity ent = {0};
 	uint32_t ima_ap1_golomb_par, ima_ap1_golomb_par_read;
-	uint8_t *entity_p = (uint8_t *)&ent;
+	const uint8_t *entity_p = (const uint8_t *)&ent;
 
 	ima_ap1_golomb_par = 0x12;
 	error = cmp_ent_set_ima_ap1_golomb_par(&ent, ima_ap1_golomb_par);
@@ -817,7 +817,7 @@ void test_ent_ima_ap2_spill(void)
 	int error;
 	struct cmp_entity ent = {0};
 	uint32_t ima_ap2_spill, ima_ap2_spill_read;
-	uint8_t *entity_p = (uint8_t *)&ent;
+	const uint8_t *entity_p = (const uint8_t *)&ent;
 
 	ima_ap2_spill = 0x1234;
 	error = cmp_ent_set_ima_ap2_spill(&ent, ima_ap2_spill);
@@ -851,7 +851,7 @@ void test_ent_ima_ap2_golomb_par(void)
 	int error;
 	struct cmp_entity ent = {0};
 	uint32_t ima_ap2_golomb_par, ima_ap2_golomb_par_read;
-	uint8_t *entity_p = (uint8_t *)&ent;
+	const uint8_t *entity_p = (const uint8_t *)&ent;
 
 	ima_ap2_golomb_par = 0x12;
 	error = cmp_ent_set_ima_ap2_golomb_par(&ent, ima_ap2_golomb_par);
@@ -884,7 +884,7 @@ void test_ent_non_ima_spill1(void)
 	int error;
 	struct cmp_entity ent = {0};
 	uint32_t non_ima_spill1, non_ima_spill1_read;
-	uint8_t *entity_p = (uint8_t *)&ent;
+	const uint8_t *entity_p = (const uint8_t *)&ent;
 
 	non_ima_spill1 = 0x123456;
 	error = cmp_ent_set_non_ima_spill1(&ent, non_ima_spill1);
@@ -919,7 +919,7 @@ void test_ent_non_ima_cmp_par1(void)
 	int error;
 	struct cmp_entity ent = {0};
 	uint32_t non_ima_cmp_par1, non_ima_cmp_par1_read;
-	uint8_t *entity_p = (uint8_t *)&ent;
+	const uint8_t *entity_p = (const uint8_t *)&ent;
 
 	non_ima_cmp_par1 = 0x1234;
 	error = cmp_ent_set_non_ima_cmp_par1(&ent, non_ima_cmp_par1);
@@ -953,7 +953,7 @@ void test_ent_non_ima_spill2(void)
 	int error;
 	struct cmp_entity ent = {0};
 	uint32_t non_ima_spill2, non_ima_spill2_read;
-	uint8_t *entity_p = (uint8_t *)&ent;
+	const uint8_t *entity_p = (const uint8_t *)&ent;
 
 	non_ima_spill2 = 0x123456;
 	error = cmp_ent_set_non_ima_spill2(&ent, non_ima_spill2);
@@ -988,7 +988,7 @@ void test_ent_non_ima_cmp_par2(void)
 	int error;
 	struct cmp_entity ent = {0};
 	uint32_t non_ima_cmp_par2, non_ima_cmp_par2_read;
-	uint8_t *entity_p = (uint8_t *)&ent;
+	const uint8_t *entity_p = (const uint8_t *)&ent;
 
 	non_ima_cmp_par2 = 0x1234;
 	error = cmp_ent_set_non_ima_cmp_par2(&ent, non_ima_cmp_par2);
@@ -1022,7 +1022,7 @@ void test_ent_non_ima_spill3(void)
 	int error;
 	struct cmp_entity ent = {0};
 	uint32_t non_ima_spill3, non_ima_spill3_read;
-	uint8_t *entity_p = (uint8_t *)&ent;
+	const uint8_t *entity_p = (const uint8_t *)&ent;
 
 	non_ima_spill3 = 0x123456;
 	error = cmp_ent_set_non_ima_spill3(&ent, non_ima_spill3);
@@ -1057,7 +1057,7 @@ void test_ent_non_ima_cmp_par3(void)
 	int error;
 	struct cmp_entity ent = {0};
 	uint32_t non_ima_cmp_par3, non_ima_cmp_par3_read;
-	uint8_t *entity_p = (uint8_t *)&ent;
+	const uint8_t *entity_p = (const uint8_t *)&ent;
 
 	non_ima_cmp_par3 = 0x1234;
 	error = cmp_ent_set_non_ima_cmp_par3(&ent, non_ima_cmp_par3);
@@ -1091,7 +1091,7 @@ void test_ent_non_ima_spill4(void)
 	int error;
 	struct cmp_entity ent = {0};
 	uint32_t non_ima_spill4, non_ima_spill4_read;
-	uint8_t *entity_p = (uint8_t *)&ent;
+	const uint8_t *entity_p = (const uint8_t *)&ent;
 
 	non_ima_spill4 = 0x123456;
 	error = cmp_ent_set_non_ima_spill4(&ent, non_ima_spill4);
@@ -1126,7 +1126,7 @@ void test_ent_non_ima_cmp_par4(void)
 	int error;
 	struct cmp_entity ent = {0};
 	uint32_t non_ima_cmp_par4, non_ima_cmp_par4_read;
-	uint8_t *entity_p = (uint8_t *)&ent;
+	const uint8_t *entity_p = (const uint8_t *)&ent;
 
 	non_ima_cmp_par4 = 0x1234;
 	error = cmp_ent_set_non_ima_cmp_par4(&ent, non_ima_cmp_par4);
@@ -1160,7 +1160,7 @@ void test_ent_non_ima_spill5(void)
 	int error;
 	struct cmp_entity ent = {0};
 	uint32_t non_ima_spill5, non_ima_spill5_read;
-	uint8_t *entity_p = (uint8_t *)&ent;
+	const uint8_t *entity_p = (const uint8_t *)&ent;
 
 	non_ima_spill5 = 0x123456;
 	error = cmp_ent_set_non_ima_spill5(&ent, non_ima_spill5);
@@ -1195,7 +1195,7 @@ void test_ent_non_ima_cmp_par5(void)
 	int error;
 	struct cmp_entity ent = {0};
 	uint32_t non_ima_cmp_par5, non_ima_cmp_par5_read;
-	uint8_t *entity_p = (uint8_t *)&ent;
+	const uint8_t *entity_p = (const uint8_t *)&ent;
 
 	non_ima_cmp_par5 = 0x1234;
 	error = cmp_ent_set_non_ima_cmp_par5(&ent, non_ima_cmp_par5);
@@ -1229,7 +1229,7 @@ void test_ent_non_ima_spill6(void)
 	int error;
 	struct cmp_entity ent = {0};
 	uint32_t non_ima_spill6, non_ima_spill6_read;
-	uint8_t *entity_p = (uint8_t *)&ent;
+	const uint8_t *entity_p = (const uint8_t *)&ent;
 
 	non_ima_spill6 = 0x123456;
 	error = cmp_ent_set_non_ima_spill6(&ent, non_ima_spill6);
@@ -1264,7 +1264,7 @@ void test_ent_non_ima_cmp_par6(void)
 	int error;
 	struct cmp_entity ent = {0};
 	uint32_t non_ima_cmp_par6, non_ima_cmp_par6_read;
-	uint8_t *entity_p = (uint8_t *)&ent;
+	const uint8_t *entity_p = (const uint8_t *)&ent;
 
 	non_ima_cmp_par6 = 0x1234;
 	error = cmp_ent_set_non_ima_cmp_par6(&ent, non_ima_cmp_par6);
@@ -1296,7 +1296,7 @@ void test_cmp_ent_get_data_buf(void)
 {
 	enum cmp_data_type data_type;
 	struct cmp_entity ent = {0};
-	char *adr;
+	const char *adr;
 	uint32_t s, hdr_size;
 	int error;
 

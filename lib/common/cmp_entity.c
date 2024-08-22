@@ -1620,75 +1620,6 @@ uint16_t cmp_ent_get_non_ima_cmp_par6(const struct cmp_entity *ent)
 
 
 /**
- * @brief get the start address of the compressed data in the compression
- *	entity
- *
- * @param ent	pointer to a compression entity
- *
- * @note this only works if the data_type in the compression entity is set
- *
- * @returns a pointer to buffer where the compressed data are located in entity
- *	on success, NULL on error
- */
-
-void *cmp_ent_get_data_buf(struct cmp_entity *ent)
-{
-	enum cmp_data_type data_type;
-	void *data_ptr;
-
-	if (!ent)
-		return NULL;
-
-	data_type = cmp_ent_get_data_type(ent);
-
-	switch (data_type) {
-	case DATA_TYPE_IMAGETTE:
-	case DATA_TYPE_SAT_IMAGETTE:
-	case DATA_TYPE_F_CAM_IMAGETTE:
-		data_ptr = ent->ima.ima_cmp_dat;
-		break;
-	case DATA_TYPE_IMAGETTE_ADAPTIVE:
-	case DATA_TYPE_SAT_IMAGETTE_ADAPTIVE:
-	case DATA_TYPE_F_CAM_IMAGETTE_ADAPTIVE:
-		data_ptr = ent->ima.ap_ima_cmp_data;
-		break;
-	case DATA_TYPE_OFFSET:
-	case DATA_TYPE_BACKGROUND:
-	case DATA_TYPE_SMEARING:
-	case DATA_TYPE_S_FX:
-	case DATA_TYPE_S_FX_EFX:
-	case DATA_TYPE_S_FX_NCOB:
-	case DATA_TYPE_S_FX_EFX_NCOB_ECOB:
-	case DATA_TYPE_L_FX:
-	case DATA_TYPE_L_FX_EFX:
-	case DATA_TYPE_L_FX_NCOB:
-	case DATA_TYPE_L_FX_EFX_NCOB_ECOB:
-	case DATA_TYPE_F_FX:
-	case DATA_TYPE_F_FX_EFX:
-	case DATA_TYPE_F_FX_NCOB:
-	case DATA_TYPE_F_FX_EFX_NCOB_ECOB:
-	case DATA_TYPE_F_CAM_OFFSET:
-	case DATA_TYPE_F_CAM_BACKGROUND:
-	case DATA_TYPE_CHUNK:
-		data_ptr = ent->non_ima.cmp_data;
-		break;
-	case DATA_TYPE_UNKNOWN:
-	default:
-		/* default branch never reached; cmp_ent_get_data_type returns
-		 * DATA_TYPE_UNKNOWN if data type is unknown */
-		debug_print("Error: Compression data type not supported.");
-		return NULL;
-	}
-
-	/* the uncompressed data do not have a specific entity header */
-	if (cmp_ent_get_data_type_raw_bit(ent))
-		return (uint8_t *)ent + GENERIC_HEADER_SIZE;
-
-	return data_ptr;
-}
-
-
-/**
  * @brief copy the data from a compression entity to a buffer
  *
  * @param ent		pointer to the compression entity containing the compressed data
@@ -1755,6 +1686,47 @@ static uint32_t cmp_ent_get_hdr_size(const struct cmp_entity *ent)
 {
 	return cmp_ent_cal_hdr_size(cmp_ent_get_data_type(ent),
 				    cmp_ent_get_data_type_raw_bit(ent));
+}
+
+
+/**
+ * @brief get the start address of the compressed data in the compression
+ *	entity
+ *
+ * @param ent	pointer to a compression entity
+ *
+ * @note this only works if the data_type in the compression entity is set
+ *
+ * @returns a pointer to the location where the compressed data are located in entity
+ *	on success, NULL on error
+ */
+
+void *cmp_ent_get_data_buf(struct cmp_entity *ent)
+{
+	uint32_t hdr_size = cmp_ent_get_hdr_size(ent);
+	if (!hdr_size)
+		return NULL;
+	return (uint8_t *)ent + hdr_size;
+}
+
+
+/**
+ * @brief same as cmp_ent_get_data_buf but with const pointers
+ *
+ * @param ent	const pointer to a compression entity
+ *
+ * @note this only works if the data_type in the compression entity is set
+ *
+ * @returns a const pointer to the location where the compressed data are located
+ *	in entity on success, NULL on error
+ */
+
+const void *cmp_ent_get_data_buf_const(const struct cmp_entity *ent)
+{
+	uint32_t hdr_size = cmp_ent_get_hdr_size(ent);
+	if (!hdr_size)
+		return NULL;
+	return (const uint8_t *)ent + hdr_size;
 }
 
 

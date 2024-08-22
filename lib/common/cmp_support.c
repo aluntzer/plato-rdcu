@@ -414,7 +414,7 @@ int cmp_cfg_icu_buffers_is_invalid(const struct cmp_cfg *cfg)
 	if (!cfg)
 		return 1;
 
-	if (cfg->input_buf == NULL) {
+	if (cfg->src == NULL) {
 		debug_print("Error: The data_to_compress buffer for the data to be compressed is NULL.");
 		cfg_invalid++;
 	}
@@ -422,18 +422,18 @@ int cmp_cfg_icu_buffers_is_invalid(const struct cmp_cfg *cfg)
 	if (cfg->samples == 0)
 		debug_print("Warning: The samples parameter is 0. No data are compressed. This behavior may not be intended.");
 
-	if (cfg->icu_output_buf) {
-		if (cfg->buffer_length == 0 && cfg->samples != 0) {
+	if (cfg->dst) {
+		if (cfg->stream_size == 0 && cfg->samples != 0) {
 			debug_print("Error: The buffer_length is set to 0. There is no space to store the compressed data.");
 			cfg_invalid++;
 		}
 
-		if (raw_mode_is_used(cfg->cmp_mode) && cfg->buffer_length < cfg->samples) {
+		if (raw_mode_is_used(cfg->cmp_mode) && cfg->stream_size < cfg->samples) {
 			debug_print("Error: The compressed_data_len_samples is to small to hold the data form the data_to_compress.");
 			cfg_invalid++;
 		}
 
-		if (cfg->icu_output_buf == cfg->input_buf) {
+		if (cfg->dst == cfg->src) {
 			debug_print("Error: The compressed_data buffer is the same as the data_to_compress buffer.");
 			cfg_invalid++;
 		}
@@ -445,23 +445,23 @@ int cmp_cfg_icu_buffers_is_invalid(const struct cmp_cfg *cfg)
 			cfg_invalid++;
 		}
 
-		if (cfg->model_buf == cfg->input_buf) {
+		if (cfg->model_buf == cfg->src) {
 			debug_print("Error: The model_of_data buffer is the same as the data_to_compress buffer.");
 			cfg_invalid++;
 		}
 
-		if (cfg->model_buf == cfg->icu_output_buf) {
+		if (cfg->model_buf == cfg->dst) {
 			debug_print("Error: The model_of_data buffer is the same as the compressed_data buffer.");
 			cfg_invalid++;
 		}
 
-		if (cfg->icu_new_model_buf) {
-			if (cfg->icu_new_model_buf == cfg->input_buf) {
+		if (cfg->updated_model_buf) {
+			if (cfg->updated_model_buf == cfg->src) {
 				debug_print("Error: The updated_model buffer is the same as the data_to_compress buffer.");
 				cfg_invalid++;
 			}
 
-			if (cfg->icu_new_model_buf == cfg->icu_output_buf) {
+			if (cfg->updated_model_buf == cfg->dst) {
 				debug_print("Error: The compressed_data buffer is the same as the compressed_data buffer.");
 				cfg_invalid++;
 			}

@@ -63,22 +63,24 @@
  * @returns the return value of the compress_chunk() function
  */
 
-uint32_t chunk_round_trip(void *chunk, uint32_t chunk_size,
-			  void *chunk_model, void *updated_chunk_model,
+uint32_t chunk_round_trip(const void *chunk, uint32_t chunk_size,
+			  const void *chunk_model, void *updated_chunk_model,
 			  uint32_t *dst, uint32_t dst_capacity,
-			  struct cmp_par *cmp_par,
+			  const struct cmp_par *cmp_par,
 			  int use_decmp_buf, int use_decmp_up_model)
 {
 	uint32_t cmp_size;
-	void *model_cpy = NULL;
+	void *model_cpy_p = NULL;
+	const void *model_cpy = NULL;
 
 	/* if in-place model update is used (up_model == model), the model
 	 * needed for decompression is destroyed; therefore we make a copy
 	 */
 	if (chunk_model) {
 		if (updated_chunk_model == chunk_model) {
-			model_cpy = TEST_malloc(chunk_size);
-			memcpy(model_cpy, chunk_model, chunk_size);
+			model_cpy_p = TEST_malloc(chunk_size);
+			memcpy(model_cpy_p, chunk_model, chunk_size);
+			model_cpy = model_cpy_p;
 		} else {
 			model_cpy = chunk_model;
 		}
@@ -127,7 +129,7 @@ uint32_t chunk_round_trip(void *chunk, uint32_t chunk_size,
 	}
 
 	if (updated_chunk_model == chunk_model)
-		free(model_cpy);
+		free(model_cpy_p);
 
 	return cmp_size;
 }

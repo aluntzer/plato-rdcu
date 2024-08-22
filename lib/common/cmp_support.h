@@ -143,28 +143,26 @@ enum cmp_mode {
 
 /**
  * @brief The cmp_cfg structure can contain the complete configuration for a SW
- *	compression
+ *	(de)compression
  */
 
 __extension__
 struct cmp_cfg {
-	void *input_buf;            /**< Pointer to the data to compress buffer */
-	void *model_buf;            /**< Pointer to the model buffer */
-	void *icu_new_model_buf;    /**< Pointer to the updated model buffer */
-	uint32_t *icu_output_buf;   /**< Pointer to the compressed data buffer */
-	uint32_t samples;           /**< Number of samples to compress, length of the data and model buffer
-				     * (including the multi entity header by non-imagette data)
-				     */
-	uint32_t buffer_length;     /**< Length of the compressed data buffer in number of samples */
-	enum cmp_data_type data_type; /**< Compression Data Product Types */
-	enum cmp_mode cmp_mode;     /**< 0: raw mode
-				     * 1: model mode with zero escape symbol mechanism
-				     * 2: 1d differencing mode without input model with zero escape symbol mechanism
-				     * 3: model mode with multi escape symbol mechanism
-				     * 4: 1d differencing mode without input model multi escape symbol mechanism
-				     */
-	uint32_t model_value;       /**< Model weighting parameter */
-	uint32_t round;             /**< lossy compression parameter */
+	const void *src;              /**< Pointer to the source data buffer (data to be compressed for compression; compressed data for decompression) */
+	void *dst;                    /**< Pointer to the destination buffer (compressed data for compression; decompressed data for decompression) */
+	const void *model_buf;        /**< Pointer to the model buffer */
+	void *updated_model_buf;      /**< Pointer to the updated model buffer */
+	uint32_t samples;             /**< Number of samples in a collection, length of the data and model buffers */
+	uint32_t stream_size;         /**< Length of the compressed data buffer in number of samples */
+	enum cmp_data_type data_type; /**< Compression Data Product Type */
+	enum cmp_mode cmp_mode;       /**< 0: raw mode
+				       * 1: model mode with zero escape symbol mechanism
+				       * 2: 1d differencing mode without input model with zero escape symbol mechanism
+				       * 3: model mode with multi escape symbol mechanism
+				       * 4: 1d differencing mode without input model multi escape symbol mechanism
+				       */
+	uint32_t model_value;         /**< Model weighting parameter */
+	uint32_t round;               /**< lossy compression parameter */
 	union {
 		uint32_t cmp_par_1;
 		uint32_t cmp_par_imagette;  /**< Golomb parameter for imagette data compression */

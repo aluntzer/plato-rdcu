@@ -23,11 +23,11 @@
 #include "../../lib/cmp_chunk.h"
 
 
-uint32_t chunk_round_trip(void *data, uint32_t data_size,
-			  void *model, void *up_model,
-			  uint32_t *cmp_data, uint32_t cmp_data_capacity,
-			  struct cmp_par *cmp_par, int use_decmp_buf, int
-			  use_decmp_up_model);
+uint32_t chunk_round_trip(const void *chunk, uint32_t chunk_size,
+			  const void *chunk_model, void *updated_chunk_model,
+			  uint32_t *dst, uint32_t dst_capacity,
+			  const struct cmp_par *cmp_par, int use_decmp_buf,
+			  int use_decmp_up_model);
 
 
 #endif /* CHUNK_ROUND_TRIP_H */

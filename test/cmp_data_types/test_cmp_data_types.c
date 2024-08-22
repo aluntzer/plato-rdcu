@@ -46,12 +46,12 @@ void test_cmp_col_get_and_set(void)
 	int err;
 	size_t i;
 	struct collection_hdr *col = malloc(sizeof(struct collection_hdr));
-	uint8_t *u8_p = (uint8_t *)col;
+	const uint8_t *u8_p = (const uint8_t *)col;
 	uint64_t timestamp;
 	uint16_t configuration_id, collection_id, collection_length;
 	uint8_t pkt_type, subservice, ccd_id, sequence_num;
 
-	TEST_ASSERT_TRUE(col);
+	TEST_ASSERT_NOT_NULL(col);
 
 	memset(col, 0, sizeof(struct collection_hdr));
 
@@ -255,7 +255,7 @@ void test_cmp_input_big_to_cpu_endianness(void)
 			struct offset entry[2];
 		} __attribute__((packed)) data = {0};
 		size_t i;
-		uint8_t *p_8 = (uint8_t *)&data;
+		const uint8_t *p_8 = (const uint8_t *)&data;
 
 		data_type = DATA_TYPE_OFFSET;
 

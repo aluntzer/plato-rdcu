@@ -22,11 +22,11 @@
 #include "common/cmp_entity.h"
 #include "common/cmp_support.h"
 
-int decompress_cmp_entiy(struct cmp_entity *ent, void *model_of_data,
+int decompress_cmp_entiy(const struct cmp_entity *ent, const void *model_of_data,
 			 void *up_model_buf, void *decompressed_data);
 
-int decompress_rdcu_data(uint32_t *compressed_data, const struct cmp_info *info,
-			 uint16_t *model_of_data, uint16_t *up_model_buf,
+int decompress_rdcu_data(const uint32_t *compressed_data, const struct cmp_info *info,
+			 const uint16_t *model_of_data, uint16_t *up_model_buf,
 			 uint16_t *decompressed_data);
 
 #endif /* DECMP_H */
