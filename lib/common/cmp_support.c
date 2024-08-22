@@ -473,71 +473,6 @@ int cmp_cfg_icu_buffers_is_invalid(const struct cmp_cfg *cfg)
 
 
 /**
- * @brief check if all entries in the max_used_bits structure are in the allowed range
- *
- * @param max_used_bits	pointer to max_used_bits structure to check
- *
- * @returns 0 if all entries are valid, otherwise one or more entries are invalid
- */
-
-
-int cmp_cfg_icu_max_used_bits_out_of_limit(const struct cmp_max_used_bits *max_used_bits)
-{
-#define CHECK_MAX_USED_BITS_LIMIT(entry) \
-	do { \
-		if (max_used_bits->entry > MAX_USED_BITS_SAFE.entry) { \
-			debug_print("Error: The " #entry " entry in the max_used_bits structure is too large (actual: %x, max: %x).",  max_used_bits->entry, MAX_USED_BITS_SAFE.entry); \
-			error++; \
-		} \
-	} while (0)
-
-	int error = 0;
-
-	if (!max_used_bits) {
-		debug_print("Error: The pointer to the max_used_bits structure is NULL.");
-		return 1;
-	}
-
-	CHECK_MAX_USED_BITS_LIMIT(s_exp_flags);
-	CHECK_MAX_USED_BITS_LIMIT(s_fx);
-	CHECK_MAX_USED_BITS_LIMIT(s_efx);
-	CHECK_MAX_USED_BITS_LIMIT(s_ncob);
-	CHECK_MAX_USED_BITS_LIMIT(s_ecob);
-	CHECK_MAX_USED_BITS_LIMIT(f_fx);
-	CHECK_MAX_USED_BITS_LIMIT(f_efx);
-	CHECK_MAX_USED_BITS_LIMIT(f_ncob);
-	CHECK_MAX_USED_BITS_LIMIT(f_ecob);
-	CHECK_MAX_USED_BITS_LIMIT(l_exp_flags);
-	CHECK_MAX_USED_BITS_LIMIT(l_fx);
-	CHECK_MAX_USED_BITS_LIMIT(l_fx_variance);
-	CHECK_MAX_USED_BITS_LIMIT(l_efx);
-	CHECK_MAX_USED_BITS_LIMIT(l_ncob);
-	CHECK_MAX_USED_BITS_LIMIT(l_ecob);
-	CHECK_MAX_USED_BITS_LIMIT(l_cob_variance);
-	CHECK_MAX_USED_BITS_LIMIT(nc_imagette);
-	CHECK_MAX_USED_BITS_LIMIT(saturated_imagette);
-	CHECK_MAX_USED_BITS_LIMIT(nc_offset_mean);
-	CHECK_MAX_USED_BITS_LIMIT(nc_offset_variance);
-	CHECK_MAX_USED_BITS_LIMIT(nc_background_mean);
-	CHECK_MAX_USED_BITS_LIMIT(nc_background_variance);
-	CHECK_MAX_USED_BITS_LIMIT(nc_background_outlier_pixels);
-	CHECK_MAX_USED_BITS_LIMIT(smearing_mean);
-	CHECK_MAX_USED_BITS_LIMIT(smearing_variance_mean);
-	CHECK_MAX_USED_BITS_LIMIT(smearing_outlier_pixels);
-	CHECK_MAX_USED_BITS_LIMIT(fc_imagette);
-	CHECK_MAX_USED_BITS_LIMIT(fc_offset_mean);
-	CHECK_MAX_USED_BITS_LIMIT(fc_offset_variance);
-	CHECK_MAX_USED_BITS_LIMIT(fc_background_mean);
-	CHECK_MAX_USED_BITS_LIMIT(fc_background_variance);
-	CHECK_MAX_USED_BITS_LIMIT(fc_background_outlier_pixels);
-
-	return error;
-
-#undef CHECK_MAX_USED_BITS_LIMIT
-}
-
-
-/**
  * @brief check if the combination of the different compression parameters is invalid
  *
  * @param cmp_par	compression parameter
@@ -818,9 +753,6 @@ int cmp_cfg_icu_is_invalid(const struct cmp_cfg *cfg)
 	cfg_invalid += cmp_cfg_gen_par_is_invalid(cfg);
 
 	cfg_invalid += cmp_cfg_icu_buffers_is_invalid(cfg);
-
-	if (cfg->cmp_mode != CMP_MODE_RAW)
-		cfg_invalid += cmp_cfg_icu_max_used_bits_out_of_limit(cfg->max_used_bits);
 
 	if (cmp_imagette_data_type_is_used(cfg->data_type))
 		cfg_invalid += cmp_cfg_imagette_is_invalid(cfg);

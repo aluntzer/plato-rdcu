@@ -610,32 +610,32 @@ void test_ent_model_counter(void)
 
 
 /**
- * @test cmp_ent_set_max_used_bits_version
- * @test cmp_ent_get_max_used_bits_version
+ * @test cmp_ent_set_reserved
+ * @test cmp_ent_get_reserved
  */
 
-void test_ent_max_used_bits_version(void)
+void test_ent_reserved(void)
 {
 	int error;
 	struct cmp_entity ent = {0};
-	uint8_t max_used_bits_version, max_used_bits_version_read;
+	uint8_t reserved, reserved_read;
 	uint8_t *entity_p = (uint8_t *)&ent;
 
-	max_used_bits_version = 0x12;
-	error = cmp_ent_set_max_used_bits_version(&ent, max_used_bits_version);
+	reserved = 0x12;
+	error = cmp_ent_set_reserved(&ent, reserved);
 	TEST_ASSERT_FALSE(error);
 
-	max_used_bits_version_read = cmp_ent_get_max_used_bits_version(&ent);
-	TEST_ASSERT_EQUAL_UINT32(max_used_bits_version, max_used_bits_version_read);
+	reserved_read = cmp_ent_get_reserved(&ent);
+	TEST_ASSERT_EQUAL_UINT32(reserved, reserved_read);
 
 	/* check the right position in the header */
 	TEST_ASSERT_EQUAL_HEX(0x12, entity_p[29]);
 
 	/* error cases */
-	error = cmp_ent_set_max_used_bits_version(NULL, max_used_bits_version);
+	error = cmp_ent_set_reserved(NULL, reserved);
 	TEST_ASSERT_TRUE(error);
-	max_used_bits_version_read = cmp_ent_get_max_used_bits_version(NULL);
-	TEST_ASSERT_EQUAL_UINT32(0, max_used_bits_version_read);
+	reserved_read = cmp_ent_get_reserved(NULL);
+	TEST_ASSERT_EQUAL_UINT32(0, reserved_read);
 }
 
 
@@ -1464,7 +1464,7 @@ void test_cmp_ent_write_rdcu_cmp_pars(void)
         TEST_ASSERT_EQUAL_INT(info.samples_used * sizeof(uint16_t), cmp_ent_get_original_size(ent));
         TEST_ASSERT_EQUAL_INT(info.cmp_mode_used, cmp_ent_get_cmp_mode(ent));
         TEST_ASSERT_EQUAL_INT(info.model_value_used, cmp_ent_get_model_value(ent));
-        TEST_ASSERT_EQUAL_INT(0, cmp_ent_get_max_used_bits_version(ent));
+        TEST_ASSERT_EQUAL_INT(0, cmp_ent_get_reserved(ent));
         TEST_ASSERT_EQUAL_INT(info.round_used, cmp_ent_get_lossy_cmp_par(ent));
 
         TEST_ASSERT_EQUAL_INT(info.spill_used, cmp_ent_get_ima_spill(ent));
@@ -1491,7 +1491,7 @@ void test_cmp_ent_write_rdcu_cmp_pars(void)
         TEST_ASSERT_EQUAL_INT(info.samples_used * sizeof(uint16_t), cmp_ent_get_original_size(ent));
         TEST_ASSERT_EQUAL_INT(info.cmp_mode_used, cmp_ent_get_cmp_mode(ent));
         TEST_ASSERT_EQUAL_INT(info.model_value_used, cmp_ent_get_model_value(ent));
-        TEST_ASSERT_EQUAL_INT(0, cmp_ent_get_max_used_bits_version(ent));
+        TEST_ASSERT_EQUAL_INT(0, cmp_ent_get_reserved(ent));
         TEST_ASSERT_EQUAL_INT(info.round_used, cmp_ent_get_lossy_cmp_par(ent));
 
         free(ent);
@@ -1520,7 +1520,7 @@ void test_cmp_ent_write_rdcu_cmp_pars(void)
         TEST_ASSERT_EQUAL_INT(info.samples_used * sizeof(uint16_t), cmp_ent_get_original_size(ent));
         TEST_ASSERT_EQUAL_INT(info.cmp_mode_used, cmp_ent_get_cmp_mode(ent));
         TEST_ASSERT_EQUAL_INT(info.model_value_used, cmp_ent_get_model_value(ent));
-        TEST_ASSERT_EQUAL_INT(0, cmp_ent_get_max_used_bits_version(ent));
+        TEST_ASSERT_EQUAL_INT(0, cmp_ent_get_reserved(ent));
         TEST_ASSERT_EQUAL_INT(info.round_used, cmp_ent_get_lossy_cmp_par(ent));
 
         TEST_ASSERT_EQUAL_INT(info.spill_used, cmp_ent_get_ima_spill(ent));
@@ -1712,7 +1712,7 @@ void test_cmp_ent_create(void)
 	TEST_ASSERT_EQUAL_INT(0, cmp_ent_get_original_size(ent));
 	TEST_ASSERT_EQUAL_INT(0, cmp_ent_get_cmp_mode(ent));
 	TEST_ASSERT_EQUAL_INT(0, cmp_ent_get_model_value(ent));
-	TEST_ASSERT_EQUAL_INT(0, cmp_ent_get_max_used_bits_version(ent));
+	TEST_ASSERT_EQUAL_INT(0, cmp_ent_get_reserved(ent));
 	TEST_ASSERT_EQUAL_INT(0, cmp_ent_get_lossy_cmp_par(ent));
 
 	TEST_ASSERT_EQUAL_INT(0, cmp_ent_get_ima_spill(ent));
@@ -1736,7 +1736,7 @@ void test_cmp_ent_create(void)
 	TEST_ASSERT_EQUAL_INT(0, cmp_ent_get_original_size(ent));
 	TEST_ASSERT_EQUAL_INT(0, cmp_ent_get_cmp_mode(ent));
 	TEST_ASSERT_EQUAL_INT(0, cmp_ent_get_model_value(ent));
-	TEST_ASSERT_EQUAL_INT(0, cmp_ent_get_max_used_bits_version(ent));
+	TEST_ASSERT_EQUAL_INT(0, cmp_ent_get_reserved(ent));
 	TEST_ASSERT_EQUAL_INT(0, cmp_ent_get_lossy_cmp_par(ent));
 
 	TEST_ASSERT_EQUAL_INT(0, cmp_ent_get_ima_spill(ent));
@@ -1760,7 +1760,7 @@ void test_cmp_ent_create(void)
 	TEST_ASSERT_EQUAL_INT(0, cmp_ent_get_original_size(ent));
 	TEST_ASSERT_EQUAL_INT(0, cmp_ent_get_cmp_mode(ent));
 	TEST_ASSERT_EQUAL_INT(0, cmp_ent_get_model_value(ent));
-	TEST_ASSERT_EQUAL_INT(0, cmp_ent_get_max_used_bits_version(ent));
+	TEST_ASSERT_EQUAL_INT(0, cmp_ent_get_reserved(ent));
 	TEST_ASSERT_EQUAL_INT(0, cmp_ent_get_lossy_cmp_par(ent));
 	free(ent);
 
@@ -1861,7 +1861,7 @@ void test_cmp_ent_print(void)
 	uint32_t ap2_spill = 333;
 	uint32_t ap2_golomb_par = 43;
 	uint32_t cmp_size_byte = 60;
-	uint8_t max_used_bits_version = 42;
+	uint8_t reserved = 42;
 
 	size = cmp_ent_create(NULL, data_type, 0, cmp_size_byte);
 	TEST_ASSERT_EQUAL_UINT(IMAGETTE_ADAPTIVE_HEADER_SIZE+60, size);
@@ -1880,7 +1880,7 @@ void test_cmp_ent_print(void)
 	cmp_ent_set_model_value(ent, model_value_used);
 	cmp_ent_set_model_id(ent, model_id);
 	cmp_ent_set_model_counter(ent, model_counter);
-	cmp_ent_set_max_used_bits_version(ent, max_used_bits_version);
+	cmp_ent_set_reserved(ent, reserved);
 	cmp_ent_set_lossy_cmp_par(ent, lossy_cmp_par_used);
 
 	cmp_ent_set_ima_spill(ent, spill);
@@ -1928,7 +1928,7 @@ void test_cmp_ent_parse(void)
 	uint32_t ap2_spill = 333;
 	uint32_t ap2_golomb_par = 43;
 	uint32_t cmp_size_byte = 60;
-	uint8_t max_used_bits_version = 42;
+	uint8_t resvered = 42;
 
 	size = cmp_ent_create(NULL, data_type, 0, cmp_size_byte);
 	TEST_ASSERT_EQUAL_UINT(IMAGETTE_ADAPTIVE_HEADER_SIZE+60, size);
@@ -1947,7 +1947,7 @@ void test_cmp_ent_parse(void)
 	cmp_ent_set_model_value(ent, model_value_used);
 	cmp_ent_set_model_id(ent, model_id);
 	cmp_ent_set_model_counter(ent, model_counter);
-	cmp_ent_set_max_used_bits_version(ent, max_used_bits_version);
+	cmp_ent_set_reserved(ent, resvered);
 	cmp_ent_set_lossy_cmp_par(ent, lossy_cmp_par_used);
 
 	cmp_ent_set_ima_spill(ent, spill);

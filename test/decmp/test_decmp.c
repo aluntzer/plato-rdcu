@@ -1029,7 +1029,6 @@ void test_decompress_imagette_model(void)
 	cfg.model_value = 16;
 	cfg.cmp_par_imagette = 4;
 	cfg.spill_imagette = 48;
-	cfg.max_used_bits = &MAX_USED_BITS_SAFE;
 
 	bit_init_decoder(&dec, cfg.icu_output_buf, cfg.buffer_length);
 

@@ -36,6 +36,7 @@
 #include <leon_inttypes.h>
 #include <byteorder.h>
 #include <cmp_error.h>
+#include <cmp_max_used_bits.h>
 
 #if defined __has_include
 #  if __has_include(<time.h>)

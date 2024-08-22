@@ -446,21 +446,20 @@ int cmp_ent_set_model_counter(struct cmp_entity *ent, uint32_t model_counter)
 
 
 /**
- * @brief set version identifier for the maximum used bits registry in the
- *	compression entity header
+ * @brief set reserved field in the compression entity header
  *
- * @param ent			pointer to a compression entity
- * @param max_used_bits_version	the identifier for the maximum used bits registry
+ * @param ent		pointer to a compression entity
+ * @param reserved	intentionally reserved
  *
  * @returns 0 on success, otherwise error
  */
 
-int cmp_ent_set_max_used_bits_version(struct cmp_entity *ent, uint8_t max_used_bits_version)
+int cmp_ent_set_reserved(struct cmp_entity *ent, uint8_t reserved)
 {
 	if (!ent)
 		return -1;
 
-	ent->max_used_bits_version = max_used_bits_version;
+	ent->reserved = reserved;
 
 	return 0;
 }
@@ -1239,21 +1238,19 @@ uint8_t cmp_ent_get_model_counter(const struct cmp_entity *ent)
 
 
 /**
- * @brief get the version identifier for the maximum used bits registry from the
- *	compression entity header
+ * @brief get the reserved field from the compression entity header
  *
  * @param ent	pointer to a compression entity
  *
- * @returns the version identifier for the maximum used bits registry on success,
- *	0 on error
+ * @returns the reserved filed on success, 0 on error
  */
 
-uint8_t cmp_ent_get_max_used_bits_version(const struct cmp_entity *ent)
+uint8_t cmp_ent_get_reserved(const struct cmp_entity *ent)
 {
 	if (!ent)
 		return 0;
 
-	return ent->max_used_bits_version;
+	return ent->reserved;
 }
 
 
@@ -1840,9 +1837,8 @@ int cmp_ent_write_rdcu_cmp_pars(struct cmp_entity *ent, const struct cmp_info *i
 	if (cmp_ent_set_cmp_mode(ent, info->cmp_mode_used))
 		return -1;
 	cmp_ent_set_model_value(ent, info->model_value_used);
-	/* The RDCU data compressor does not have the maximum used bit feature,
-	 * so the field is set to 0. */
-	cmp_ent_set_max_used_bits_version(ent, 0);
+
+	cmp_ent_set_reserved(ent, 0);
 
 	cmp_ent_set_lossy_cmp_par(ent, info->round_used);
 
@@ -2078,7 +2074,7 @@ void cmp_ent_print(struct cmp_entity *ent)
 static void cmp_ent_parse_generic_header(const struct cmp_entity *ent)
 {
 	MAYBE_UNUSED uint32_t version_id, cmp_ent_size, original_size, cmp_mode_used,
-		 model_value_used, model_id, model_counter, max_used_bits_version,
+		 model_value_used, model_id, model_counter, reserved,
 		 lossy_cmp_par_used, start_coarse_time, end_coarse_time;
 	MAYBE_UNUSED uint16_t start_fine_time, end_fine_time;
 	MAYBE_UNUSED enum cmp_data_type data_type;
@@ -2140,8 +2136,8 @@ static void cmp_ent_parse_generic_header(const struct cmp_entity *ent)
 	model_counter = cmp_ent_get_model_counter(ent);
 	debug_print("Model Counter: %" PRIu32, model_counter);
 
-	max_used_bits_version = cmp_ent_get_max_used_bits_version(ent);
-	debug_print("Maximum Used Bits Registry Version: %" PRIu32, max_used_bits_version);
+	reserved = cmp_ent_get_reserved(ent);
+	debug_print("Reserved Field: %" PRIu32, reserved);
 
 	lossy_cmp_par_used = cmp_ent_get_lossy_cmp_par(ent);
 	debug_print("Used Lossy Compression Parameters: %" PRIu32, lossy_cmp_par_used);

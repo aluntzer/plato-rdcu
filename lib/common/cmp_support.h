@@ -22,7 +22,6 @@
 #include <stdint.h>
 #include <stddef.h>
 
-#include "cmp_max_used_bits.h"
 #include "cmp_cal_up_model.h"
 
 #define CMP_COLLECTION_FILD_SIZE 2
@@ -237,7 +236,6 @@ struct cmp_cfg {
 		uint32_t spill_background_pixels_error; /**< Spillover threshold parameter for auxiliary science outlier pixels number compression */
 		uint32_t spill_smearing_pixels_error;   /**< Spillover threshold parameter for auxiliary science outlier pixels number compression */
 	};
-	const struct cmp_max_used_bits *max_used_bits;  /**< the maximum length of the different data product types in bits */
 };
 
 
@@ -338,7 +336,6 @@ unsigned int cmp_bit_to_byte(unsigned int cmp_size_bit);
 int cmp_cfg_icu_is_invalid(const struct cmp_cfg *cfg);
 int cmp_cfg_gen_par_is_invalid(const struct cmp_cfg *cfg);
 int cmp_cfg_icu_buffers_is_invalid(const struct cmp_cfg *cfg);
-int cmp_cfg_icu_max_used_bits_out_of_limit(const struct cmp_max_used_bits *max_used_bits);
 int cmp_cfg_imagette_is_invalid(const struct cmp_cfg *cfg);
 int cmp_cfg_fx_cob_is_invalid(const struct cmp_cfg *cfg);
 int cmp_cfg_aux_is_invalid(const struct cmp_cfg *cfg);
