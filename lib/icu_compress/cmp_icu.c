@@ -1755,23 +1755,23 @@ static uint32_t cmp_collection(const uint8_t *col,
 		cfg->updated_model_buf = updated_model + COLLECTION_HDR_SIZE;
 
 	/* is enough capacity in the dst buffer to store the data uncompressed */
-	if ((!dst || dst_capacity >= dst_size + col_data_length) &&
+	if ((dst == NULL || dst_capacity >= dst_size + col_data_length) &&
 	    cfg->cmp_mode != CMP_MODE_RAW) {
 		/* we set the compressed buffer size to the data size -1 to provoke
 		 * a CMP_ERROR_SMALL_BUF_ error if the data are not compressible
 		 */
 		cfg->stream_size = dst_size + col_data_length - 1;
-		dst_size_bits = compress_data_internal(cfg, dst_size<<3);
+		dst_size_bits = compress_data_internal(cfg, dst_size << 3);
 
 		if (cmp_get_error_code(dst_size_bits) == CMP_ERROR_SMALL_BUF_ ||
-		    (!dst && cmp_bit_to_byte(dst_size_bits)-dst_size > col_data_length)) { /* if dst == NULL compress_data_internal will not return a CMP_ERROR_SMALL_BUF */
+		    (!dst && dst_size_bits > cmp_stream_size_to_bits(cfg->stream_size))) { /* if dst == NULL compress_data_internal will not return a CMP_ERROR_SMALL_BUF */
 			/* can not compress the data with the given parameters;
 			 * put them uncompressed (raw) into the dst buffer */
 			enum cmp_mode cmp_mode_cpy = cfg->cmp_mode;
 
 			cfg->stream_size = dst_size + col_data_length;
 			cfg->cmp_mode = CMP_MODE_RAW;
-			dst_size_bits = compress_data_internal(cfg, dst_size<<3);
+			dst_size_bits = compress_data_internal(cfg, dst_size << 3);
 			cfg->cmp_mode = cmp_mode_cpy;
 			/* updated model is in this case a copy of the data to compress */
 			if (model_mode_is_used(cfg->cmp_mode) && cfg->updated_model_buf)
@@ -1779,7 +1779,7 @@ static uint32_t cmp_collection(const uint8_t *col,
 		}
 	} else {
 		cfg->stream_size = dst_capacity;
-		dst_size_bits = compress_data_internal(cfg, dst_size<<3);
+		dst_size_bits = compress_data_internal(cfg, dst_size << 3);
 	}
 	FORWARD_IF_ERROR(dst_size_bits, "compression failed");
 
