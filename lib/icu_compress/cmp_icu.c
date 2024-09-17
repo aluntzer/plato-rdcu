@@ -137,7 +137,7 @@ static uint32_t map_to_pos(uint32_t value_to_map, unsigned int max_data_bits)
  */
 
 static uint32_t put_n_bits32(uint32_t value, unsigned int n_bits, uint32_t bit_offset,
-			uint32_t *bitstream_adr, unsigned int max_stream_len)
+			     uint32_t *bitstream_adr, unsigned int max_stream_len)
 {
 	/*
 	 *                               UNSEGMENTED
@@ -1471,6 +1471,78 @@ static uint32_t compress_smearing(const struct cmp_cfg *cfg, uint32_t stream_len
 
 
 /**
+ * @brief check if two buffers are overlapping
+ * @see https://stackoverflow.com/a/325964
+ *
+ * @param buf_a		start address of the 1st buffer (can be NULL)
+ * @param size_a	byte size of the 1st buffer
+ * @param buf_b		start address of the 2nd buffer (can be NULL)
+ * @param size_b	byte size of the 2nd buffer
+ *
+ * @returns 0 if buffers are not overlapping, otherwise buffers are
+ *	overlapping
+ */
+
+static int buffer_overlaps(const void *buf_a, size_t size_a,
+			   const void *buf_b, size_t size_b)
+{
+	if (!buf_a)
+		return 0;
+
+	if (!buf_b)
+		return 0;
+
+	if ((const char *)buf_a < (const char *)buf_b + size_b &&
+	    (const char *)buf_b < (const char *)buf_a + size_a)
+		return 1;
+
+	return 0;
+}
+
+
+/**
+ * @brief check if the ICU buffer parameters are invalid
+ *
+ * @param cfg	pointer to the compressor configuration to check
+ *
+ * @returns 0 if the buffer parameters are valid, otherwise invalid
+ */
+
+static uint32_t check_compression_buffers(const struct cmp_cfg *cfg)
+{
+	size_t data_size;
+
+	RETURN_ERROR_IF(cfg == NULL , GENERIC, "");
+
+	RETURN_ERROR_IF(cfg->src == NULL , CHUNK_NULL, "");
+
+	data_size = size_of_a_sample(cfg->data_type) * cfg->samples;
+
+	if (cfg->samples == 0)
+		debug_print("Warning: The samples parameter is 0. No data are compressed. This behavior may not be intended.");
+
+	RETURN_ERROR_IF(buffer_overlaps(cfg->dst, cfg->stream_size, cfg->src, data_size), PAR_BUFFERS,
+		"The compressed data buffer and the data to compress buffer are overlapping.");
+
+	if (model_mode_is_used(cfg->cmp_mode)) {
+		RETURN_ERROR_IF(cfg->model_buf == NULL , PAR_NO_MODEL, "");
+
+		RETURN_ERROR_IF(buffer_overlaps(cfg->model_buf, data_size, cfg->src, data_size), PAR_BUFFERS,
+				"The model buffer and the data to compress buffer are overlapping.");
+		RETURN_ERROR_IF(buffer_overlaps(cfg->model_buf, data_size, cfg->dst, cfg->stream_size), PAR_BUFFERS,
+				"The model buffer and the compressed data buffer are overlapping.");
+
+		RETURN_ERROR_IF(buffer_overlaps(cfg->updated_model_buf, data_size, cfg->src, data_size), PAR_BUFFERS,
+				"The updated model buffer and the data to compress buffer are overlapping.");
+		RETURN_ERROR_IF(buffer_overlaps(cfg->updated_model_buf, data_size, cfg->dst, cfg->stream_size), PAR_BUFFERS,
+				"The updated model buffer and the compressed data buffer are overlapping.");
+	}
+
+	return CMP_ERROR(NO_ERROR);
+}
+
+
+/**
  * @brief checks if the ICU compression configuration is valid
  *
  * @param cfg	pointer to the cmp_cfg structure to be validated
@@ -1483,17 +1555,16 @@ static uint32_t cmp_cfg_icu_is_invalid_error_code(const struct cmp_cfg *cfg)
 {
 
 	RETURN_ERROR_IF(cmp_cfg_gen_par_is_invalid(cfg) , PAR_GENERIC, "");
-	RETURN_ERROR_IF(cmp_cfg_icu_buffers_is_invalid(cfg), PAR_BUFFERS, "");
 
 	if (cmp_imagette_data_type_is_used(cfg->data_type)) {
 		RETURN_ERROR_IF(cmp_cfg_imagette_is_invalid(cfg), PAR_SPECIFIC, "");
 	} else if (cmp_fx_cob_data_type_is_used(cfg->data_type)) {
 		RETURN_ERROR_IF(cmp_cfg_fx_cob_is_invalid(cfg), PAR_SPECIFIC, "");
-	} else if (cmp_aux_data_type_is_used(cfg->data_type)) {
-		RETURN_ERROR_IF(cmp_cfg_aux_is_invalid(cfg), PAR_SPECIFIC, "");
 	} else {
-		RETURN_ERROR(INT_DATA_TYPE_UNSUPPORTED, "");
+		RETURN_ERROR_IF(cmp_cfg_aux_is_invalid(cfg), PAR_SPECIFIC, "");
 	}
+
+	FORWARD_IF_ERROR(check_compression_buffers(cfg), "");
 
 	return CMP_ERROR(NO_ERROR);
 }
@@ -1563,11 +1634,9 @@ static uint32_t compress_data_internal(const struct cmp_cfg *cfg, uint32_t strea
 		/* TODO: move this check to the memcpy */
 		RETURN_ERROR_IF(raw_stream_size > cfg->stream_size, SMALL_BUF_, "");
 	}
+
 	if (cfg->samples == 0) /* nothing to compress we are done */
 		return stream_len;
-
-	FORWARD_IF_ERROR(cmp_cfg_icu_is_invalid_error_code(cfg), "");
-
 
 	if (raw_mode_is_used(cfg->cmp_mode)) {
 		uint32_t raw_size = cfg->samples * (uint32_t)size_of_a_sample(cfg->data_type);
@@ -1576,7 +1645,8 @@ static uint32_t compress_data_internal(const struct cmp_cfg *cfg, uint32_t strea
 			uint8_t *p = (uint8_t *)cfg->dst + (stream_len >> 3);
 
 			memcpy(p, cfg->src, raw_size);
-			RETURN_ERROR_IF(cpu_to_be_data_type(p, raw_size, cfg->data_type), GENERIC, "");
+			RETURN_ERROR_IF(cpu_to_be_data_type(p, raw_size, cfg->data_type),
+					INT_DATA_TYPE_UNSUPPORTED, "");
 		}
 		bitsize += stream_len + raw_size*8; /* convert to bits */
 	} else {
@@ -1707,7 +1777,6 @@ static uint32_t set_cmp_col_size(uint8_t *cmp_col_size_field, uint32_t cmp_col_s
  *	success or an error code if it fails (which can be tested with
  *	cmp_is_error())
  */
-
 static uint32_t cmp_collection(const uint8_t *col,
 			       const uint8_t *model, uint8_t *updated_model,
 			       uint32_t *dst, uint32_t dst_capacity,
@@ -1722,12 +1791,19 @@ static uint32_t cmp_collection(const uint8_t *col,
 	/* sanity check of the collection header */
 	cfg->data_type = convert_subservice_to_cmp_data_type(cmp_col_get_subservice(col_hdr));
 	sample_size = (uint16_t)size_of_a_sample(cfg->data_type);
-	RETURN_ERROR_IF(sample_size == 0, COL_SUBSERVICE_UNSUPPORTED,
-			"unsupported subservice: %u", cmp_col_get_subservice(col_hdr));
 	RETURN_ERROR_IF(col_data_length % sample_size, COL_SIZE_INCONSISTENT,
 			"col_data_length: %u %% sample_size: %u != 0", col_data_length, sample_size);
 	cfg->samples = col_data_length/sample_size;
 
+	/* prepare the different buffers */
+	cfg->src = col + COLLECTION_HDR_SIZE;
+	if (model)
+		cfg->model_buf = model + COLLECTION_HDR_SIZE;
+	if (updated_model)
+		cfg->updated_model_buf = updated_model + COLLECTION_HDR_SIZE;
+	cfg->dst = dst;
+	cfg->stream_size = dst_capacity;
+	FORWARD_IF_ERROR(cmp_cfg_icu_is_invalid_error_code(cfg), "");
 
 	if (cfg->cmp_mode != CMP_MODE_RAW) {
 		/* hear we reserve space for the compressed data size field */
@@ -1745,14 +1821,6 @@ static uint32_t cmp_collection(const uint8_t *col,
 	dst_size += COLLECTION_HDR_SIZE;
 	if (model_mode_is_used(cfg->cmp_mode) && updated_model)
 		memcpy(updated_model, col, COLLECTION_HDR_SIZE);
-
-	/* prepare the different buffers */
-	cfg->dst = dst;
-	cfg->src = col + COLLECTION_HDR_SIZE;
-	if (model)
-		cfg->model_buf = model + COLLECTION_HDR_SIZE;
-	if (updated_model)
-		cfg->updated_model_buf = updated_model + COLLECTION_HDR_SIZE;
 
 	/* is enough capacity in the dst buffer to store the data uncompressed */
 	if ((dst == NULL || dst_capacity >= dst_size + col_data_length) &&
@@ -1940,22 +2008,29 @@ static enum chunk_type cmp_col_get_chunk_type(const struct collection_hdr *col)
 
 /**
  * @brief Set the compression configuration from the compression parameters
- *	based on the chunk type
+ *	based on the chunk type of the collection
  *
- * @param[in] par		pointer to a compression parameters struct
- * @param[in] chunk_type	the type of the chunk to be compressed
- * @param[out] cfg		pointer to a compression configuration
+ * @param[in] col	pointer to a collection header
+ * @param[in] par	pointer to a compression parameters struct
+ * @param[out] cfg	pointer to a compression configuration
+ *
+ * @returns the chunk type of the collection
  */
 
-static void init_cmp_cfg_from_cmp_par(const struct cmp_par *par, enum chunk_type chunk_type,
-				     struct cmp_cfg *cfg)
+static enum chunk_type init_cmp_cfg_from_cmp_par(const struct collection_hdr *col,
+						 const struct cmp_par *par,
+						 struct cmp_cfg *cfg)
 {
+	enum chunk_type chunk_type = cmp_col_get_chunk_type(col);
+
 	memset(cfg, 0, sizeof(struct cmp_cfg));
 
-	/* the ranges of the parameters are checked in cmp_cfg_icu_is_invalid() */
+	/* the ranges of the parameters are checked in cmp_cfg_icu_is_invalid_error_code() */
 	cfg->cmp_mode = par->cmp_mode;
 	cfg->model_value = par->model_value;
-	cfg->round = par->lossy_par;
+	if (par->lossy_par)
+		debug_print("Warning: lossy compression is not supported for chunk compression, lossy_par will be ignored.");
+	cfg->round = 0;
 
 	switch (chunk_type) {
 	case CHUNK_TYPE_NCAM_IMAGETTE:
@@ -2005,6 +2080,9 @@ static void init_cmp_cfg_from_cmp_par(const struct cmp_par *par, enum chunk_type
 		cfg->cmp_par_background_pixels_error = par->fc_background_outlier_pixels;
 		break;
 	case CHUNK_TYPE_UNKNOWN:
+	default: /* default case never reached because cmp_col_get_chunk_type
+		    returns CHUNK_TYPE_UNKNOWN if the type is unknown */
+		chunk_type = CHUNK_TYPE_UNKNOWN;
 		break;
 	}
 
@@ -2014,6 +2092,8 @@ static void init_cmp_cfg_from_cmp_par(const struct cmp_par *par, enum chunk_type
 	cfg->spill_par_4 = cmp_guess_good_spill(cfg->cmp_par_4);
 	cfg->spill_par_5 = cmp_guess_good_spill(cfg->cmp_par_5);
 	cfg->spill_par_6 = cmp_guess_good_spill(cfg->cmp_par_6);
+
+	return chunk_type;
 }
 
 
@@ -2083,21 +2163,17 @@ uint32_t compress_chunk(const void *chunk, uint32_t chunk_size,
 	RETURN_ERROR_IF(chunk_size > CMP_ENTITY_MAX_ORIGINAL_SIZE, CHUNK_TOO_LARGE,
 			"chunk_size: %"PRIu32"", chunk_size);
 
-	chunk_type = cmp_col_get_chunk_type(col);
+	chunk_type = init_cmp_cfg_from_cmp_par(col, cmp_par, &cfg);
 	RETURN_ERROR_IF(chunk_type == CHUNK_TYPE_UNKNOWN, COL_SUBSERVICE_UNSUPPORTED,
 			"unsupported subservice: %u", cmp_col_get_subservice(col));
-
-	init_cmp_cfg_from_cmp_par(cmp_par, chunk_type, &cfg);
 
 	/* reserve space for the compression entity header, we will build the
 	 * header after the compression of the chunk
 	 */
 	cmp_size_byte = cmp_ent_build_chunk_header(NULL, chunk_size, &cfg, start_timestamp, 0);
-	if (dst) {
-		RETURN_ERROR_IF(dst_capacity < cmp_size_byte, SMALL_BUF_,
-				"dst_capacity must be at least as large as the minimum size of the compression unit.");
-		memset(dst, 0, cmp_size_byte);
-	}
+	RETURN_ERROR_IF(dst && dst_capacity < cmp_size_byte, SMALL_BUF_,
+			"dst_capacity must be at least as large as the minimum size of the compression unit.");
+
 
 	/* compress one collection after another */
 	for (read_bytes = 0;
@@ -2257,25 +2333,22 @@ int32_t compress_like_rdcu(const struct rdcu_cfg *rcfg, struct cmp_info *info)
 		info->samples_used = rcfg->samples;
 		info->rdcu_new_model_adr_used = rcfg->rdcu_new_model_adr;
 		info->rdcu_cmp_adr_used = rcfg->rdcu_buffer_adr;
+		info->cmp_size = 0;
+		info->ap1_cmp_size = 0;
+		info->ap2_cmp_size = 0;
 
-		if (rcfg->ap1_golomb_par && rcfg->ap1_golomb_par) {
-			uint32_t ap1_cmp_size, ap2_cmp_size;
+		cfg.cmp_par_imagette = rcfg->ap1_golomb_par;
+		cfg.spill_imagette = rcfg->ap1_spill;
+		if (cfg.cmp_par_imagette &&
+		    cmp_cfg_icu_is_invalid_error_code(&cfg) == CMP_ERROR_NO_ERROR)
+			info->ap1_cmp_size = compress_data_internal(&cfg, 0);
 
-			cfg.cmp_par_imagette = rcfg->ap1_golomb_par;
-			cfg.spill_imagette = rcfg->ap1_spill;
-			ap1_cmp_size = compress_data_internal(&cfg, 0);
-			if (cmp_is_error(ap1_cmp_size) || ap1_cmp_size > INT32_MAX)
-				ap1_cmp_size = 0;
 
-			cfg.cmp_par_imagette = rcfg->ap2_golomb_par;
-			cfg.spill_imagette = rcfg->ap2_spill;
-			ap2_cmp_size = compress_data_internal(&cfg, 0);
-			if (cmp_is_error(ap2_cmp_size) || ap2_cmp_size > INT32_MAX)
-				ap2_cmp_size = 0;
-
-			info->ap1_cmp_size = ap1_cmp_size;
-			info->ap2_cmp_size = ap2_cmp_size;
-		}
+		cfg.cmp_par_imagette = rcfg->ap2_golomb_par;
+		cfg.spill_imagette = rcfg->ap2_spill;
+		if (cfg.cmp_par_imagette &&
+		    cmp_cfg_icu_is_invalid_error_code(&cfg) == CMP_ERROR_NO_ERROR)
+			info->ap2_cmp_size = compress_data_internal(&cfg, 0);
 	}
 
 	cfg.cmp_par_imagette = rcfg->golomb_par;
@@ -2283,15 +2356,21 @@ int32_t compress_like_rdcu(const struct rdcu_cfg *rcfg, struct cmp_info *info)
 	cfg.updated_model_buf = rcfg->icu_new_model_buf;
 	cfg.dst = rcfg->icu_output_buf;
 
+	if (cmp_is_error(cmp_cfg_icu_is_invalid_error_code(&cfg)))
+		return (int32_t)cmp_cfg_icu_is_invalid_error_code(&cfg);
+
 	cmp_size_bit = compress_data_internal(&cfg, 0);
 
 	if (info) {
 		if (cmp_get_error_code(cmp_size_bit) == CMP_ERROR_SMALL_BUF_)
 			info->cmp_err |= 1UL << 0;/* SMALL_BUFFER_ERR_BIT;*/ /* set small buffer error */
-		if (cmp_is_error(cmp_size_bit))
+		if (cmp_is_error(cmp_size_bit)) {
 			info->cmp_size = 0;
-		else
+			info->ap1_cmp_size = 0;
+			info->ap2_cmp_size = 0;
+		} else {
 			info->cmp_size = cmp_size_bit;
+		}
 	}
 
 	return (int32_t)cmp_size_bit;

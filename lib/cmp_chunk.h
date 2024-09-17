@@ -24,6 +24,11 @@
 #include "common/cmp_entity.h"
 #include "common/cmp_error_list.h"
 
+/* valid specific compression parameter ranges for chunk compression
+ * (every parameter except cmp_mode, model_value, lossy_par)
+ */
+#define MIN_CHUNK_CMP_PAR	1U
+#define MAX_CHUNK_CMP_PAR	UINT16_MAX /* the compression entity does not allow larger values */
 
 #define ROUND_UP_TO_4(x) ((((x)+3)/4)*4)
 

@@ -1130,6 +1130,7 @@ void test_compress_imagette_diff(void)
 	struct rdcu_cfg rcfg = {0};
 	int error;
 	int32_t cmp_size;
+	struct cmp_info info;
 
 	uint32_t golomb_par = 1;
 	uint32_t spill = 8;
@@ -1150,6 +1151,74 @@ void test_compress_imagette_diff(void)
 	TEST_ASSERT_EQUAL_HEX(0xDF6002AB, be32_to_cpu(output_buf[0]));
 	TEST_ASSERT_EQUAL_HEX(0xFEB70000, be32_to_cpu(output_buf[1]));
 	TEST_ASSERT_EQUAL_HEX(0x00000000, be32_to_cpu(output_buf[2]));
+
+	rcfg.ap1_golomb_par = 2;
+	rcfg.ap1_spill = 1000;
+	rcfg.ap2_golomb_par = 1;
+	rcfg.ap2_spill = 0;
+	cmp_size = compress_like_rdcu(&rcfg, &info);
+	TEST_ASSERT_EQUAL_INT(66, cmp_size);
+	TEST_ASSERT_EQUAL_HEX(0xDF6002AB, be32_to_cpu(output_buf[0]));
+	TEST_ASSERT_EQUAL_HEX(0xFEB70000, be32_to_cpu(output_buf[1]));
+	TEST_ASSERT_EQUAL_HEX(0x00000000, be32_to_cpu(output_buf[2]));
+	TEST_ASSERT_EQUAL_INT(CMP_MODE_DIFF_ZERO, info.cmp_mode_used);
+	TEST_ASSERT_EQUAL_INT(8, info.spill_used);
+	TEST_ASSERT_EQUAL_INT(1, info.golomb_par_used);
+	TEST_ASSERT_EQUAL_INT(7, info.samples_used);
+	TEST_ASSERT_EQUAL_INT(66, info.cmp_size);
+	TEST_ASSERT_EQUAL_INT(0, info.ap1_cmp_size);
+	TEST_ASSERT_EQUAL_INT(0, info.ap2_cmp_size);
+	TEST_ASSERT_EQUAL_INT(0, info.rdcu_new_model_adr_used);
+	TEST_ASSERT_EQUAL_INT(0, info.rdcu_cmp_adr_used);
+	TEST_ASSERT_EQUAL_INT(8, info.model_value_used);
+	TEST_ASSERT_EQUAL_INT(0, info.round_used);
+	TEST_ASSERT_EQUAL_INT(0, info.cmp_err);
+
+	rcfg.ap1_golomb_par = 0;
+	rcfg.ap1_spill = 1000;
+	rcfg.ap2_golomb_par = 0;
+	rcfg.ap2_spill = 0;
+	cmp_size = compress_like_rdcu(&rcfg, &info);
+	TEST_ASSERT_EQUAL_INT(66, cmp_size);
+	TEST_ASSERT_EQUAL_HEX(0xDF6002AB, be32_to_cpu(output_buf[0]));
+	TEST_ASSERT_EQUAL_HEX(0xFEB70000, be32_to_cpu(output_buf[1]));
+	TEST_ASSERT_EQUAL_HEX(0x00000000, be32_to_cpu(output_buf[2]));
+	TEST_ASSERT_EQUAL_INT(CMP_MODE_DIFF_ZERO, info.cmp_mode_used);
+	TEST_ASSERT_EQUAL_INT(8, info.spill_used);
+	TEST_ASSERT_EQUAL_INT(1, info.golomb_par_used);
+	TEST_ASSERT_EQUAL_INT(7, info.samples_used);
+	TEST_ASSERT_EQUAL_INT(66, info.cmp_size);
+	TEST_ASSERT_EQUAL_INT(0, info.ap1_cmp_size);
+	TEST_ASSERT_EQUAL_INT(0, info.ap2_cmp_size);
+	TEST_ASSERT_EQUAL_INT(0, info.rdcu_new_model_adr_used);
+	TEST_ASSERT_EQUAL_INT(0, info.rdcu_cmp_adr_used);
+	TEST_ASSERT_EQUAL_INT(8, info.model_value_used);
+	TEST_ASSERT_EQUAL_INT(0, info.round_used);
+	TEST_ASSERT_EQUAL_INT(0, info.cmp_err);
+
+	/* small buffer error */
+	rcfg.ap1_golomb_par = 1;
+	rcfg.ap1_spill = 8;
+	rcfg.ap2_golomb_par = 1;
+	rcfg.ap2_spill = 8;
+	rcfg.buffer_length = 3;
+	cmp_size = compress_like_rdcu(&rcfg, &info);
+	TEST_ASSERT_EQUAL_INT(-2, cmp_size);
+	TEST_ASSERT_EQUAL_HEX(0xDF6002AB, be32_to_cpu(output_buf[0]));
+	TEST_ASSERT_EQUAL_HEX(0xFEB70000, be32_to_cpu(output_buf[1]));
+	TEST_ASSERT_EQUAL_HEX(0x00000000, be32_to_cpu(output_buf[2]));
+	TEST_ASSERT_EQUAL_INT(CMP_MODE_DIFF_ZERO, info.cmp_mode_used);
+	TEST_ASSERT_EQUAL_INT(8, info.spill_used);
+	TEST_ASSERT_EQUAL_INT(1, info.golomb_par_used);
+	TEST_ASSERT_EQUAL_INT(7, info.samples_used);
+	TEST_ASSERT_EQUAL_INT(0, info.cmp_size);
+	TEST_ASSERT_EQUAL_INT(0, info.ap1_cmp_size);
+	TEST_ASSERT_EQUAL_INT(0, info.ap2_cmp_size);
+	TEST_ASSERT_EQUAL_INT(0, info.rdcu_new_model_adr_used);
+	TEST_ASSERT_EQUAL_INT(0, info.rdcu_cmp_adr_used);
+	TEST_ASSERT_EQUAL_INT(8, info.model_value_used);
+	TEST_ASSERT_EQUAL_INT(0, info.round_used);
+	TEST_ASSERT_EQUAL_INT(0x1, info.cmp_err);
 
 	/* test: icu_output_buf = NULL */
 	rcfg.icu_output_buf = NULL;
@@ -1208,7 +1277,7 @@ void test_compress_imagette_model(void)
 	rcfg.model_buf = NULL; /* this is the error */
 	cmp_size = compress_like_rdcu(&rcfg, NULL);
 	TEST_ASSERT_TRUE(cmp_is_error((uint32_t)cmp_size));
-	TEST_ASSERT_EQUAL(CMP_ERROR_PAR_BUFFERS, cmp_get_error_code((uint32_t)cmp_size));
+	TEST_ASSERT_EQUAL(CMP_ERROR_PAR_NO_MODEL, cmp_get_error_code((uint32_t)cmp_size));
 }
 
 
@@ -1253,6 +1322,10 @@ void test_compress_imagette_raw(void)
 	cmp_size = compress_like_rdcu(&rcfg, NULL);
 	TEST_ASSERT_EQUAL_INT(7*16, cmp_size);
 
+	/* error case: cfg = NULL */
+	cmp_size = compress_like_rdcu(NULL, NULL);
+	TEST_ASSERT_TRUE(cmp_is_error((uint32_t)cmp_size));
+	TEST_ASSERT_EQUAL_INT(CMP_ERROR_GENERIC, cmp_get_error_code((uint32_t)cmp_size));
 
 	/* error case: input_buf = NULL */
 	memset(&rcfg, 0, sizeof(rcfg));
@@ -1263,7 +1336,7 @@ void test_compress_imagette_raw(void)
 
 	cmp_size = compress_like_rdcu(&rcfg, NULL);
 	TEST_ASSERT_TRUE(cmp_is_error((uint32_t)cmp_size));
-	TEST_ASSERT_EQUAL_INT(CMP_ERROR_PAR_BUFFERS, cmp_get_error_code((uint32_t)cmp_size));
+	TEST_ASSERT_EQUAL_INT(CMP_ERROR_CHUNK_NULL, cmp_get_error_code((uint32_t)cmp_size));
 
 
 	/* error case: compressed data buffer to small */
@@ -1293,7 +1366,7 @@ void test_compress_imagette_error_cases(void)
 	int32_t cmp_size;
 
 	rcfg.cmp_mode = CMP_MODE_DIFF_ZERO;
-	rcfg.input_buf = NULL;
+	rcfg.input_buf = data;
 	rcfg.samples = 0;  /* nothing to compress */
 	rcfg.golomb_par = 1;
 	rcfg.spill = 8;
@@ -1855,6 +1928,7 @@ void test_collection_zero_data_length(void)
 
 	/* compress the data */
 	cmp_par.cmp_mode = CMP_MODE_DIFF_MULTI;
+	cmp_par.nc_imagette = 1;
 	dst = NULL;
 
 	cmp_size = compress_chunk(chunk, CHUNK_SIZE, NULL, NULL, dst,
@@ -1942,23 +2016,257 @@ void nootest_collection_zero_data_length_2(void)
 }
 #endif
 
+
+static int n_timestamp_fail; /* fail after n calls */
+static uint64_t get_timstamp_test(void)
+{
+	static int n;
+
+	if (n < n_timestamp_fail) {
+		n++;
+		return 42;
+	}
+	n = 0;
+	return 1ULL << 48; /* invalid time stamp */
+}
+
 /**
- * @test compress_like_rdcu
+ * @test compress_chunk
  */
 
-void test_compress_like_rdcu_error_cases(void)
+void test_compress_chunk_error_cases(void)
 {
-	int32_t cmp_size;
-	struct rdcu_cfg rcfg = {0};
+	enum {	DATA_SIZE_1 = 2*sizeof(struct s_fx),
+		DATA_SIZE_2 = 3*sizeof(struct s_fx_efx_ncob_ecob),
+		CHUNK_SIZE = 2*COLLECTION_HDR_SIZE + DATA_SIZE_1 + DATA_SIZE_2
+	};
+	uint8_t chunk[CHUNK_SIZE];
+	uint8_t const chunk_model[CHUNK_SIZE] = {0}; /* model is set to zero */
+	uint8_t updated_chunk_model[CHUNK_SIZE];
+	uint32_t dst[COMPRESS_CHUNK_BOUND(CHUNK_SIZE, 2)/sizeof(uint32_t)];
+	uint32_t dst_capacity = sizeof(dst);
+	struct cmp_par cmp_par;
+	uint32_t cmp_size;
+	struct collection_hdr *col2;
 
-	/* cfg = NULL test */
-	cmp_size = compress_like_rdcu(NULL, NULL);
-	TEST_ASSERT_EQUAL(-1, cmp_size);
+	{ /* create a chunk with two collection */
+		struct collection_hdr *col1 = (struct collection_hdr *)chunk;
+		struct s_fx *data1 = (struct s_fx *)col1->entry;
+		struct s_fx_efx_ncob_ecob *data2;
+		memset(col1, 0, COLLECTION_HDR_SIZE);
+		TEST_ASSERT_FALSE(cmp_col_set_subservice(col1, SST_NCxx_S_SCIENCE_S_FX));
+		TEST_ASSERT_FALSE(cmp_col_set_data_length(col1, DATA_SIZE_1));
+		data1[0].exp_flags = 0;
+		data1[0].fx = 1;
+		data1[1].exp_flags = 0xF0;
+		data1[1].fx = 0xABCDE0FF;
+		col2 = (struct collection_hdr *)(chunk + COLLECTION_HDR_SIZE + DATA_SIZE_1);
+		memset(col2, 0, COLLECTION_HDR_SIZE);
+		TEST_ASSERT_FALSE(cmp_col_set_subservice(col2, SST_NCxx_S_SCIENCE_S_FX_EFX_NCOB_ECOB));
+		TEST_ASSERT_FALSE(cmp_col_set_data_length(col2, DATA_SIZE_2));
+		data2 = (struct s_fx_efx_ncob_ecob *)col2->entry;
+		data2[0].exp_flags = 1;
+		data2[0].fx = 2;
+		data2[0].efx = 3;
+		data2[0].ncob_x = 4;
+		data2[0].ncob_y = 5;
+		data2[0].ecob_x = 6;
+		data2[0].ecob_y = 7;
+		data2[1].exp_flags = 0;
+		data2[1].fx = 0;
+		data2[1].efx = 0;
+		data2[1].ncob_x = 0;
+		data2[1].ncob_y = 0;
+		data2[1].ecob_x = 0;
+		data2[1].ecob_y = 0;
+		data2[2].exp_flags = 0xF;
+		data2[2].fx = ~0U;
+		data2[2].efx = ~0U;
+		data2[2].ncob_x = ~0U;
+		data2[2].ncob_y = ~0U;
+		data2[2].ecob_x = ~0U;
+		data2[2].ecob_y = ~0U;
+	}
 
-	/* samples = 0 test */
-	rcfg.samples = 0;
-	cmp_size = compress_like_rdcu(&rcfg, NULL);
-	TEST_ASSERT_EQUAL(0, cmp_size);
+	/* compress the data */
+	cmp_par.cmp_mode = CMP_MODE_MODEL_ZERO;
+	cmp_par.model_value = 16;
+	cmp_par.lossy_par = 0;
+
+	cmp_par.nc_imagette = 1;
+
+	cmp_par.s_exp_flags = MAX_CHUNK_CMP_PAR;
+	cmp_par.s_fx = MIN_CHUNK_CMP_PAR;
+	cmp_par.s_ncob = 2;
+	cmp_par.s_efx = 0xFFFE;
+	cmp_par.s_ecob = 1;
+
+	compress_chunk_init(NULL, 23);
+
+	/* this sound not return an error */
+	cmp_size = compress_chunk(chunk, CHUNK_SIZE, chunk_model,
+				  NULL, dst, dst_capacity,
+				  &cmp_par);
+	TEST_ASSERT_EQUAL_INT(CMP_ERROR_NO_ERROR, cmp_get_error_code(cmp_size));
+	TEST_ASSERT_EQUAL(124, cmp_size);
+
+	/* error: no chunk */
+	cmp_size = compress_chunk(NULL, CHUNK_SIZE, chunk_model,
+				  updated_chunk_model, dst, dst_capacity,
+				  &cmp_par);
+	TEST_ASSERT_EQUAL_INT(CMP_ERROR_CHUNK_NULL, cmp_get_error_code(cmp_size));
+
+	/* error: chunk_size = 0 */
+	cmp_size = compress_chunk(chunk, 0, chunk_model,
+				  updated_chunk_model, dst, dst_capacity,
+				  &cmp_par);
+	TEST_ASSERT_EQUAL_INT(CMP_ERROR_CHUNK_SIZE_INCONSISTENT, cmp_get_error_code(cmp_size));
+
+	/* error: chunk_size does not match up with the collection size */
+	TEST_ASSERT_FALSE(cmp_col_set_data_length((struct collection_hdr *) chunk, 100));
+	cmp_size = compress_chunk(chunk, CHUNK_SIZE, chunk_model,
+				  updated_chunk_model, dst, dst_capacity,
+				  &cmp_par);
+	TEST_ASSERT_EQUAL_INT(CMP_ERROR_CHUNK_SIZE_INCONSISTENT, cmp_get_error_code(cmp_size));
+	TEST_ASSERT_FALSE(cmp_col_set_data_length((struct collection_hdr *) chunk, DATA_SIZE_1));
+
+	/* error: no model when needed */
+	cmp_size = compress_chunk(chunk, CHUNK_SIZE, NULL,
+				  updated_chunk_model, dst, dst_capacity,
+				  &cmp_par);
+	TEST_ASSERT_EQUAL_INT(CMP_ERROR_PAR_NO_MODEL, cmp_get_error_code(cmp_size));
+	/* this should work */
+	cmp_par.cmp_mode = CMP_MODE_DIFF_ZERO;
+	cmp_size = compress_chunk(chunk, CHUNK_SIZE, NULL,
+				  updated_chunk_model, dst, dst_capacity,
+				  &cmp_par);
+	TEST_ASSERT_EQUAL_INT(CMP_ERROR_NO_ERROR, cmp_get_error_code(cmp_size));
+	cmp_par.cmp_mode = CMP_MODE_MODEL_ZERO;
+
+	memset(dst, 0xFF, sizeof(dst));
+
+	/* error chunk and model are the same */
+	cmp_size = compress_chunk(chunk, CHUNK_SIZE, chunk,
+				  updated_chunk_model, dst, dst_capacity,
+				  &cmp_par);
+	TEST_ASSERT_EQUAL_INT(CMP_ERROR_PAR_BUFFERS, cmp_get_error_code(cmp_size));
+
+	/* error chunk and updated model are the same */
+	cmp_size = compress_chunk(chunk, CHUNK_SIZE, chunk_model,
+				  chunk, dst, dst_capacity,
+				  &cmp_par);
+	TEST_ASSERT_EQUAL_INT(CMP_ERROR_PAR_BUFFERS, cmp_get_error_code(cmp_size));
+
+	/* buffer and dst are the same */
+	cmp_size = compress_chunk(chunk, CHUNK_SIZE, dst,
+				  updated_chunk_model, dst, dst_capacity, &cmp_par);
+	TEST_ASSERT_EQUAL_INT(CMP_ERROR_PAR_BUFFERS, cmp_get_error_code(cmp_size));
+
+	/* error updated model buffer and dst are the same */
+	cmp_size = compress_chunk(chunk, CHUNK_SIZE, chunk_model,
+				  dst, dst, dst_capacity, &cmp_par);
+	TEST_ASSERT_EQUAL_INT(CMP_ERROR_PAR_BUFFERS, cmp_get_error_code(cmp_size));
+
+	/* chunk buffer and dst are the same */
+	cmp_size = compress_chunk(chunk, CHUNK_SIZE, chunk_model,
+				  updated_chunk_model, (void*)chunk, dst_capacity,
+				  &cmp_par);
+	TEST_ASSERT_EQUAL_INT(CMP_ERROR_PAR_BUFFERS, cmp_get_error_code(cmp_size));
+
+	/* error: cmp_par = NULL */
+	cmp_size = compress_chunk(chunk, CHUNK_SIZE, chunk_model,
+				  updated_chunk_model, dst, dst_capacity,
+				  NULL);
+	TEST_ASSERT_EQUAL_INT(CMP_ERROR_PAR_NULL, cmp_get_error_code(cmp_size));
+
+	/* error: cmp_par invalid*/
+	cmp_par.s_exp_flags = 0;
+	cmp_size = compress_chunk(chunk, CHUNK_SIZE, chunk_model,
+				  updated_chunk_model, dst, dst_capacity,
+				  &cmp_par);
+	TEST_ASSERT_EQUAL_INT(CMP_ERROR_PAR_SPECIFIC, cmp_get_error_code(cmp_size));
+	cmp_par.s_exp_flags = MAX_CHUNK_CMP_PAR;
+
+	/* error: chunk size to big */
+	cmp_size = compress_chunk(chunk, CMP_ENTITY_MAX_ORIGINAL_SIZE+1, chunk_model,
+				  updated_chunk_model, dst, dst_capacity,
+				  &cmp_par);
+	TEST_ASSERT_EQUAL_INT(CMP_ERROR_CHUNK_TOO_LARGE, cmp_get_error_code(cmp_size));
+
+	/* error: dst buffer smaller than entity header */
+	cmp_size = compress_chunk(chunk, CHUNK_SIZE, chunk_model,
+				  updated_chunk_model, dst, 5, &cmp_par);
+	TEST_ASSERT_EQUAL_INT(CMP_ERROR_SMALL_BUF_, cmp_get_error_code(cmp_size));
+
+	/* error: invalid collection type */
+	TEST_ASSERT_FALSE(cmp_col_set_subservice((struct collection_hdr *)chunk, 42));
+	cmp_size = compress_chunk(chunk, CHUNK_SIZE, chunk_model,
+				  updated_chunk_model, dst, dst_capacity,
+				  &cmp_par);
+	TEST_ASSERT_EQUAL_INT(CMP_ERROR_COL_SUBSERVICE_UNSUPPORTED, cmp_get_error_code(cmp_size));
+	TEST_ASSERT_FALSE(cmp_col_set_subservice((struct collection_hdr *)chunk, SST_NCxx_S_SCIENCE_S_FX));
+
+	/* error: TODO */
+	TEST_ASSERT_FALSE(cmp_col_set_data_length(col2, DATA_SIZE_2-1));
+	cmp_size = compress_chunk(chunk, CHUNK_SIZE-1, chunk_model,
+				  updated_chunk_model, NULL, dst_capacity,
+				  &cmp_par);
+	TEST_ASSERT_EQUAL_INT(CMP_ERROR_COL_SIZE_INCONSISTENT, cmp_get_error_code(cmp_size));
+	TEST_ASSERT_FALSE(cmp_col_set_data_length(col2, DATA_SIZE_2));
+
+	/* this sound work */
+	cmp_par.lossy_par = 0x1;
+	{
+		size_t i;
+		for (i = 0; i < ARRAY_SIZE(dst); i++)
+			TEST_ASSERT_EQUAL_HEX(0xFFFFFFFF, dst[i]);
+	}
+	cmp_size = compress_chunk(chunk, CHUNK_SIZE, chunk_model,
+				  updated_chunk_model, dst, dst_capacity,
+				  &cmp_par);
+	TEST_ASSERT_EQUAL_INT(CMP_ERROR_NO_ERROR, cmp_get_error_code(cmp_size));
+	TEST_ASSERT_EQUAL(124, cmp_size);
+
+	/* error: invalid collection combination */
+	TEST_ASSERT_FALSE(cmp_col_set_subservice((struct collection_hdr *)(chunk + COLLECTION_HDR_SIZE + DATA_SIZE_1),
+						 SST_NCxx_S_SCIENCE_SMEARING));
+	cmp_size = compress_chunk(chunk, CHUNK_SIZE, chunk_model,
+				  updated_chunk_model, dst, dst_capacity,
+				  &cmp_par);
+	TEST_ASSERT_EQUAL_INT(CMP_ERROR_CHUNK_SUBSERVICE_INCONSISTENT, cmp_get_error_code(cmp_size));
+	TEST_ASSERT_FALSE(cmp_col_set_subservice((struct collection_hdr *)(chunk + COLLECTION_HDR_SIZE + DATA_SIZE_1),
+						 SST_NCxx_S_SCIENCE_S_FX_EFX_NCOB_ECOB));
+
+	/* error: start time stamp error */
+	compress_chunk_init(&get_timstamp_test, 23);
+	cmp_size = compress_chunk(chunk, CHUNK_SIZE, chunk_model,
+				  updated_chunk_model, dst, dst_capacity,
+				  &cmp_par);
+	TEST_ASSERT_EQUAL_INT(CMP_ERROR_ENTITY_TIMESTAMP, cmp_get_error_code(cmp_size));
+
+	/* error: end time stamp error */
+	n_timestamp_fail = 1;
+	compress_chunk_init(&get_timstamp_test, 23);
+	cmp_size = compress_chunk(chunk, CHUNK_SIZE, chunk_model,
+				  updated_chunk_model, dst, dst_capacity,
+				  &cmp_par);
+	TEST_ASSERT_EQUAL_INT(CMP_ERROR_ENTITY_TIMESTAMP, cmp_get_error_code(cmp_size));
+	n_timestamp_fail = INT_MAX;
+
+	{ /* error: trigger CMP_ERROR_ENTITY_HEADER */
+		uint32_t ent_hdr_size;
+		uint32_t entity[25];
+		uint32_t chunk_size = 42;
+		struct cmp_cfg cfg = {0};
+		uint64_t start_timestamp = 123;
+		uint32_t cmp_ent_size_byte = sizeof(entity);
+
+		cfg.cmp_mode = CMP_MODE_DIFF_ZERO;
+		cfg.cmp_par_1 = UINT16_MAX + 1; /* to big for entity header */
+		ent_hdr_size = cmp_ent_build_chunk_header(entity, chunk_size, &cfg,
+							  start_timestamp, cmp_ent_size_byte);
+		TEST_ASSERT_EQUAL_INT(CMP_ERROR_ENTITY_HEADER, cmp_get_error_code(ent_hdr_size));
+	}
 }
 
 
@@ -2195,15 +2503,12 @@ void test_support_function_call_NULL(void)
 	cfg.cmp_mode = CMP_MODE_DIFF_ZERO;
 
 	TEST_ASSERT_TRUE(cmp_cfg_gen_par_is_invalid(NULL));
-	TEST_ASSERT_TRUE(cmp_cfg_icu_buffers_is_invalid(NULL));
 	TEST_ASSERT_TRUE(cmp_cfg_imagette_is_invalid(NULL));
 	TEST_ASSERT_TRUE(cmp_cfg_fx_cob_is_invalid(NULL));
 	TEST_ASSERT_TRUE(cmp_cfg_aux_is_invalid(NULL));
 	TEST_ASSERT_TRUE(cmp_cfg_aux_is_invalid(&cfg));
-	TEST_ASSERT_TRUE(cmp_cfg_icu_is_invalid(NULL));
-	cfg.data_type = DATA_TYPE_UNKNOWN;
-	TEST_ASSERT_TRUE(cmp_cfg_icu_is_invalid(&cfg));
 	TEST_ASSERT_TRUE(cmp_cfg_fx_cob_get_need_pars(DATA_TYPE_S_FX, NULL));
+	TEST_ASSERT_TRUE(check_compression_buffers(NULL));
 }
 
 
@@ -2231,3 +2536,35 @@ void test_print_cmp_info(void)
 	print_cmp_info(&info);
 	print_cmp_info(NULL);
 }
+
+
+/**
+ * @test detect_buf_overlap
+ */
+
+void test_buffer_overlaps(void)
+{
+	char buf_a[3];
+	char buf_b[3];
+	int overlap;
+
+
+	overlap = buffer_overlaps(buf_a, sizeof(buf_a), buf_b, sizeof(buf_b));
+	TEST_ASSERT_FALSE(overlap);
+	overlap = buffer_overlaps(NULL, sizeof(buf_a), buf_b, sizeof(buf_b));
+	TEST_ASSERT_FALSE(overlap);
+	overlap = buffer_overlaps(buf_a, sizeof(buf_a), NULL, sizeof(buf_b));
+	TEST_ASSERT_FALSE(overlap);
+
+	overlap = buffer_overlaps(buf_a, sizeof(buf_a), buf_a, sizeof(buf_a));
+	TEST_ASSERT_TRUE(overlap);
+
+	overlap = buffer_overlaps(&buf_a[1], 1, buf_a, sizeof(buf_a));
+	TEST_ASSERT_TRUE(overlap);
+
+	overlap = buffer_overlaps(&buf_a[0], 2, &buf_a[1], 2);
+	overlap = buffer_overlaps(&buf_a[1], 2, &buf_a[0], 2);
+	TEST_ASSERT_TRUE(overlap);
+}
+
+

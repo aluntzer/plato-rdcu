@@ -331,9 +331,7 @@ int is_a_pow_of_2(unsigned int v);
 unsigned int ilog_2(uint32_t x);
 unsigned int cmp_bit_to_byte(unsigned int cmp_size_bit);
 
-int cmp_cfg_icu_is_invalid(const struct cmp_cfg *cfg);
 int cmp_cfg_gen_par_is_invalid(const struct cmp_cfg *cfg);
-int cmp_cfg_icu_buffers_is_invalid(const struct cmp_cfg *cfg);
 int cmp_cfg_imagette_is_invalid(const struct cmp_cfg *cfg);
 int cmp_cfg_fx_cob_is_invalid(const struct cmp_cfg *cfg);
 int cmp_cfg_aux_is_invalid(const struct cmp_cfg *cfg);

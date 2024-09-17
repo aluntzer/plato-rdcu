@@ -400,79 +400,6 @@ int cmp_cfg_gen_par_is_invalid(const struct cmp_cfg *cfg)
 
 
 /**
- * @brief check if the ICU buffer parameters are invalid
- *
- * @param cfg	pointer to the compressor configuration
- *
- * @returns 0 if the buffer parameters are valid, otherwise invalid
- */
-
-int cmp_cfg_icu_buffers_is_invalid(const struct cmp_cfg *cfg)
-{
-	int cfg_invalid = 0;
-
-	if (!cfg)
-		return 1;
-
-	if (cfg->src == NULL) {
-		debug_print("Error: The data_to_compress buffer for the data to be compressed is NULL.");
-		cfg_invalid++;
-	}
-
-	if (cfg->samples == 0)
-		debug_print("Warning: The samples parameter is 0. No data are compressed. This behavior may not be intended.");
-
-	if (cfg->dst) {
-		if (cfg->stream_size == 0 && cfg->samples != 0) {
-			debug_print("Error: The buffer_length is set to 0. There is no space to store the compressed data.");
-			cfg_invalid++;
-		}
-
-		if (raw_mode_is_used(cfg->cmp_mode) && cfg->stream_size < cfg->samples) {
-			debug_print("Error: The compressed_data_len_samples is to small to hold the data form the data_to_compress.");
-			cfg_invalid++;
-		}
-
-		if (cfg->dst == cfg->src) {
-			debug_print("Error: The compressed_data buffer is the same as the data_to_compress buffer.");
-			cfg_invalid++;
-		}
-	}
-
-	if (model_mode_is_used(cfg->cmp_mode)) {
-		if (cfg->model_buf == NULL) {
-			debug_print("Error: The model_of_data buffer for the model data is NULL.");
-			cfg_invalid++;
-		}
-
-		if (cfg->model_buf == cfg->src) {
-			debug_print("Error: The model_of_data buffer is the same as the data_to_compress buffer.");
-			cfg_invalid++;
-		}
-
-		if (cfg->model_buf == cfg->dst) {
-			debug_print("Error: The model_of_data buffer is the same as the compressed_data buffer.");
-			cfg_invalid++;
-		}
-
-		if (cfg->updated_model_buf) {
-			if (cfg->updated_model_buf == cfg->src) {
-				debug_print("Error: The updated_model buffer is the same as the data_to_compress buffer.");
-				cfg_invalid++;
-			}
-
-			if (cfg->updated_model_buf == cfg->dst) {
-				debug_print("Error: The compressed_data buffer is the same as the compressed_data buffer.");
-				cfg_invalid++;
-			}
-		}
-	}
-
-	return cfg_invalid;
-}
-
-
-/**
  * @brief check if the combination of the different compression parameters is invalid
  *
  * @param cmp_par	compression parameter
@@ -731,38 +658,6 @@ int cmp_cfg_aux_is_invalid(const struct cmp_cfg *cfg)
 		debug_print("Error: The compression data type is not an auxiliary science compression data type.");
 		cfg_invalid++;
 	}
-	return cfg_invalid;
-}
-
-
-/**
- * @brief check if a compression configuration is invalid for a ICU compression
- *
- * @param cfg	pointer to a compressor configuration
- *
- * @returns 0 if the compression configuration is valid, otherwise invalid
- */
-
-int cmp_cfg_icu_is_invalid(const struct cmp_cfg *cfg)
-{
-	int cfg_invalid = 0;
-
-	if (!cfg)
-		return 1;
-
-	cfg_invalid += cmp_cfg_gen_par_is_invalid(cfg);
-
-	cfg_invalid += cmp_cfg_icu_buffers_is_invalid(cfg);
-
-	if (cmp_imagette_data_type_is_used(cfg->data_type))
-		cfg_invalid += cmp_cfg_imagette_is_invalid(cfg);
-	else if (cmp_fx_cob_data_type_is_used(cfg->data_type))
-		cfg_invalid += cmp_cfg_fx_cob_is_invalid(cfg);
-	else if (cmp_aux_data_type_is_used(cfg->data_type))
-		cfg_invalid += cmp_cfg_aux_is_invalid(cfg);
-	else
-		cfg_invalid++;
-
 	return cfg_invalid;
 }
 
