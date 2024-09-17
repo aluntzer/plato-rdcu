@@ -486,21 +486,12 @@ static void configure_encoder_setup(struct encoder_setup *setup,
 	else
 		setup->generate_cw_f = &golomb_encoder;
 
-	switch (cfg->cmp_mode) {
-	case CMP_MODE_MODEL_ZERO:
-	case CMP_MODE_DIFF_ZERO:
+	/* CMP_MODE_RAW is already handled before */
+	if (cfg->cmp_mode == CMP_MODE_MODEL_ZERO ||
+	    cfg->cmp_mode == CMP_MODE_DIFF_ZERO)
 		setup->encode_method_f = &encode_value_zero;
-		break;
-	case CMP_MODE_MODEL_MULTI:
-	case CMP_MODE_DIFF_MULTI:
+	else
 		setup->encode_method_f = &encode_value_multi;
-		break;
-	/* LCOV_EXCL_START */
-	case CMP_MODE_RAW:
-		/* CMP_MODE_RAW is already handled before; nothing to do here */
-		break;
-	/* LCOV_EXCL_STOP */
-	}
 }
 
 
@@ -533,20 +524,14 @@ static uint32_t compress_imagette(const struct cmp_cfg *cfg, uint32_t stream_len
 		up_model_buf = cfg->updated_model_buf;
 	}
 
-	switch (cfg->data_type) {
-	case DATA_TYPE_IMAGETTE:
-	case DATA_TYPE_IMAGETTE_ADAPTIVE:
-		max_data_bits = MAX_USED_BITS.nc_imagette;
-		break;
-	case DATA_TYPE_SAT_IMAGETTE:
-	case DATA_TYPE_SAT_IMAGETTE_ADAPTIVE:
-		max_data_bits = MAX_USED_BITS.saturated_imagette;
-		break;
-	default:
-	case DATA_TYPE_F_CAM_IMAGETTE:
-	case DATA_TYPE_F_CAM_IMAGETTE_ADAPTIVE:
+	if (cfg->data_type == DATA_TYPE_F_CAM_IMAGETTE ||
+	    cfg->data_type == DATA_TYPE_F_CAM_IMAGETTE_ADAPTIVE) {
 		max_data_bits = MAX_USED_BITS.fc_imagette;
-		break;
+	} else if (cfg->data_type == DATA_TYPE_SAT_IMAGETTE ||
+		   cfg->data_type == DATA_TYPE_SAT_IMAGETTE_ADAPTIVE) {
+		max_data_bits = MAX_USED_BITS.saturated_imagette;
+	} else { /* DATA_TYPE_IMAGETTE, DATA_TYPE_IMAGETTE_ADAPTIVE */
+		max_data_bits = MAX_USED_BITS.nc_imagette;
 	}
 
 	configure_encoder_setup(&setup, cfg->cmp_par_imagette,
@@ -1273,17 +1258,14 @@ static uint32_t compress_offset(const struct cmp_cfg *cfg, uint32_t stream_len)
 	{
 		unsigned int mean_bits_used, variance_bits_used;
 
-		switch (cfg->data_type) {
-		case DATA_TYPE_F_CAM_OFFSET:
+		if (cfg->data_type == DATA_TYPE_F_CAM_OFFSET) {
 			mean_bits_used = MAX_USED_BITS.fc_offset_mean;
 			variance_bits_used = MAX_USED_BITS.fc_offset_variance;
-			break;
-		case DATA_TYPE_OFFSET:
-		default:
+		} else { /* DATA_TYPE_OFFSET */
 			mean_bits_used = MAX_USED_BITS.nc_offset_mean;
 			variance_bits_used = MAX_USED_BITS.nc_offset_variance;
-			break;
 		}
+
 		configure_encoder_setup(&setup_mean, cfg->cmp_par_offset_mean, cfg->spill_offset_mean,
 					cfg->round, mean_bits_used, cfg);
 		configure_encoder_setup(&setup_var, cfg->cmp_par_offset_variance, cfg->spill_offset_variance,
@@ -1348,18 +1330,14 @@ static uint32_t compress_background(const struct cmp_cfg *cfg, uint32_t stream_l
 	{
 		unsigned int mean_used_bits, varinace_used_bits, pixels_error_used_bits;
 
-		switch (cfg->data_type) {
-		case DATA_TYPE_F_CAM_BACKGROUND:
+		if (cfg->data_type == DATA_TYPE_F_CAM_BACKGROUND) {
 			mean_used_bits = MAX_USED_BITS.fc_background_mean;
 			varinace_used_bits = MAX_USED_BITS.fc_background_variance;
 			pixels_error_used_bits = MAX_USED_BITS.fc_background_outlier_pixels;
-			break;
-		case DATA_TYPE_BACKGROUND:
-		default:
+		} else { /* DATA_TYPE_BACKGROUND */
 			mean_used_bits = MAX_USED_BITS.nc_background_mean;
 			varinace_used_bits = MAX_USED_BITS.nc_background_variance;
 			pixels_error_used_bits = MAX_USED_BITS.nc_background_outlier_pixels;
-			break;
 		}
 		configure_encoder_setup(&setup_mean, cfg->cmp_par_background_mean, cfg->spill_background_mean,
 					cfg->round, mean_used_bits, cfg);
