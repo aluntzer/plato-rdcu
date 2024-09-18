@@ -28,7 +28,7 @@
 enum cmp_error {
 	CMP_ERROR_NO_ERROR = 0,
 	CMP_ERROR_GENERIC = 1,
-	CMP_ERROR_SMALL_BUF_ = 2,
+	CMP_ERROR_SMALL_BUFFER = 2,
 	CMP_ERROR_DATA_VALUE_TOO_LARGE = 3,
 	/* compression parameter errors */
 	CMP_ERROR_PAR_GENERIC = 20,

@@ -167,7 +167,7 @@ static uint32_t put_n_bits32(uint32_t value, unsigned int n_bits, uint32_t bit_o
 
 	/* Check if the bitstream buffer is large enough */
 	if (stream_len > max_stream_len)
-		return CMP_ERROR(SMALL_BUF_);
+		return CMP_ERROR(SMALL_BUFFER);
 
 	local_adr = bitstream_adr + (bit_offset >> 5);
 
@@ -1610,7 +1610,7 @@ static uint32_t compress_data_internal(const struct cmp_cfg *cfg, uint32_t strea
 			+ cfg->samples * (uint32_t)size_of_a_sample(cfg->data_type);
 
 		/* TODO: move this check to the memcpy */
-		RETURN_ERROR_IF(raw_stream_size > cfg->stream_size, SMALL_BUF_, "");
+		RETURN_ERROR_IF(raw_stream_size > cfg->stream_size, SMALL_BUFFER, "");
 	}
 
 	if (cfg->samples == 0) /* nothing to compress we are done */
@@ -1793,7 +1793,7 @@ static uint32_t cmp_collection(const uint8_t *col,
 	 */
 	if (dst) {
 		RETURN_ERROR_IF(dst_size + COLLECTION_HDR_SIZE > dst_capacity,
-				SMALL_BUF_, "");
+				SMALL_BUFFER, "");
 		memcpy((uint8_t *)dst + dst_size, col, COLLECTION_HDR_SIZE);
 	}
 	dst_size += COLLECTION_HDR_SIZE;
@@ -1804,12 +1804,12 @@ static uint32_t cmp_collection(const uint8_t *col,
 	if ((dst == NULL || dst_capacity >= dst_size + col_data_length) &&
 	    cfg->cmp_mode != CMP_MODE_RAW) {
 		/* we set the compressed buffer size to the data size -1 to provoke
-		 * a CMP_ERROR_SMALL_BUF_ error if the data are not compressible
+		 * a CMP_ERROR_SMALL_BUFFER error if the data are not compressible
 		 */
 		cfg->stream_size = dst_size + col_data_length - 1;
 		dst_size_bits = compress_data_internal(cfg, dst_size << 3);
 
-		if (cmp_get_error_code(dst_size_bits) == CMP_ERROR_SMALL_BUF_ ||
+		if (cmp_get_error_code(dst_size_bits) == CMP_ERROR_SMALL_BUFFER ||
 		    (!dst && dst_size_bits > cmp_stream_size_to_bits(cfg->stream_size))) { /* if dst == NULL compress_data_internal will not return a CMP_ERROR_SMALL_BUF */
 			/* can not compress the data with the given parameters;
 			 * put them uncompressed (raw) into the dst buffer */
@@ -2149,7 +2149,7 @@ uint32_t compress_chunk(const void *chunk, uint32_t chunk_size,
 	 * header after the compression of the chunk
 	 */
 	cmp_size_byte = cmp_ent_build_chunk_header(NULL, chunk_size, &cfg, start_timestamp, 0);
-	RETURN_ERROR_IF(dst && dst_capacity < cmp_size_byte, SMALL_BUF_,
+	RETURN_ERROR_IF(dst && dst_capacity < cmp_size_byte, SMALL_BUFFER,
 			"dst_capacity must be at least as large as the minimum size of the compression unit.");
 
 
@@ -2338,7 +2338,7 @@ uint32_t compress_like_rdcu(const struct rdcu_cfg *rcfg, struct cmp_info *info)
 	cmp_size_bit = compress_data_internal(&cfg, 0);
 
 	if (info) {
-		if (cmp_get_error_code(cmp_size_bit) == CMP_ERROR_SMALL_BUF_)
+		if (cmp_get_error_code(cmp_size_bit) == CMP_ERROR_SMALL_BUFFER)
 			info->cmp_err |= 1UL << 0;/* SMALL_BUFFER_ERR_BIT;*/ /* set small buffer error */
 		if (cmp_is_error(cmp_size_bit)) {
 			info->cmp_size = 0;

@@ -97,7 +97,7 @@ uint32_t chunk_round_trip(const void *chunk, uint32_t chunk_size,
 		}
 		cmp_size2 = compress_chunk(chunk, chunk_size, chunk_model, updated_chunk_model,
 					   NULL, dst_capacity, cmp_par);
-		if (cmp_get_error_code(cmp_size) == CMP_ERROR_SMALL_BUF_) {
+		if (cmp_get_error_code(cmp_size) == CMP_ERROR_SMALL_BUFFER) {
 			TEST_ASSERT(!cmp_is_error(cmp_size));
 		} else {
 			TEST_ASSERT(cmp_size == cmp_size2);

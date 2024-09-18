@@ -532,7 +532,7 @@ void test_put_n_bits32(void)
 	v = 0x1; n = 1; o = 96;
 	rval = put_n_bits32(v, n, o, testarray0, l);
 	TEST_ASSERT_TRUE(cmp_is_error(rval));
-	TEST_ASSERT_EQUAL_INT(CMP_ERROR_SMALL_BUF_, cmp_get_error_code(rval));
+	TEST_ASSERT_EQUAL_INT(CMP_ERROR_SMALL_BUFFER, cmp_get_error_code(rval));
 	TEST_ASSERT(testarray0[0] == 0);
 	TEST_ASSERT(testarray0[1] == 0);
 	TEST_ASSERT(testarray0[2] == 0);
@@ -545,7 +545,7 @@ void test_put_n_bits32(void)
 	v = 0x0; n = 32; o = INT32_MAX;
 	rval = put_n_bits32(v, n, o, testarray1, l);
 	TEST_ASSERT_TRUE(cmp_is_error(rval));
-	TEST_ASSERT_EQUAL_INT(CMP_ERROR_SMALL_BUF_, cmp_get_error_code(rval));
+	TEST_ASSERT_EQUAL_INT(CMP_ERROR_SMALL_BUFFER, cmp_get_error_code(rval));
 	TEST_ASSERT(testarray1[0] == 0xffffffff);
 	TEST_ASSERT(testarray1[1] == 0xffffffff);
 	TEST_ASSERT(testarray1[2] == 0xffffffff);
@@ -854,7 +854,7 @@ void test_encode_value_zero(void)
 	data = 23; model = 26;
 	stream_len = encode_value_zero(data, model, stream_len, &setup);
 	TEST_ASSERT_TRUE(cmp_is_error(stream_len));
-	TEST_ASSERT_EQUAL_INT(CMP_ERROR_SMALL_BUF_, cmp_get_error_code(stream_len));
+	TEST_ASSERT_EQUAL_INT(CMP_ERROR_SMALL_BUFFER, cmp_get_error_code(stream_len));
 
 	/* reset bitstream to all bits set */
 	bitstream[0] = ~0U;
@@ -906,7 +906,7 @@ void test_encode_value_zero(void)
 	data = 31; model = 0;
 	stream_len = encode_value_zero(data, model, stream_len, &setup);
 	TEST_ASSERT_TRUE(cmp_is_error(stream_len));
-	TEST_ASSERT_EQUAL_INT(CMP_ERROR_SMALL_BUF_, cmp_get_error_code(stream_len));
+	TEST_ASSERT_EQUAL_INT(CMP_ERROR_SMALL_BUFFER, cmp_get_error_code(stream_len));
 	TEST_ASSERT_EQUAL_HEX(0, be32_to_cpu(bitstream[0]));
 	TEST_ASSERT_EQUAL_HEX(0, be32_to_cpu(bitstream[1]));
 	TEST_ASSERT_EQUAL_HEX(0, be32_to_cpu(bitstream[2]));
@@ -989,7 +989,7 @@ void test_encode_value_multi(void)
 	/* small buffer error */
 	data = 0; model = 38;
 	stream_len = encode_value_multi(data, model, stream_len, &setup);
-	TEST_ASSERT_EQUAL_INT(CMP_ERROR_SMALL_BUF_, cmp_get_error_code(stream_len));
+	TEST_ASSERT_EQUAL_INT(CMP_ERROR_SMALL_BUFFER, cmp_get_error_code(stream_len));
 
 	/* small buffer error when creating the multi escape symbol*/
 	bitstream[0] = 0;
@@ -999,7 +999,7 @@ void test_encode_value_multi(void)
 	stream_len = 32;
 	data = 31; model = 0;
 	stream_len = encode_value_multi(data, model, stream_len, &setup);
-	TEST_ASSERT_EQUAL_INT(CMP_ERROR_SMALL_BUF_, cmp_get_error_code(stream_len));
+	TEST_ASSERT_EQUAL_INT(CMP_ERROR_SMALL_BUFFER, cmp_get_error_code(stream_len));
 	TEST_ASSERT_EQUAL_HEX(0, bitstream[0]);
 	TEST_ASSERT_EQUAL_HEX(0, bitstream[1]);
 }
@@ -1087,7 +1087,7 @@ void test_encode_value(void)
 
 	/* small buffer error bitstream can not hold more data*/
 	cmp_size = encode_value(data, model, cmp_size, &setup);
-	TEST_ASSERT_EQUAL_UINT(CMP_ERROR_SMALL_BUF_, cmp_get_error_code(cmp_size));
+	TEST_ASSERT_EQUAL_UINT(CMP_ERROR_SMALL_BUFFER, cmp_get_error_code(cmp_size));
 
 	/* reset bitstream */
 	bitstream[0] = 0;
@@ -1226,7 +1226,7 @@ void test_compress_imagette_diff(void)
 	rcfg.ap2_spill = 8;
 	rcfg.buffer_length = 3;
 	cmp_size = compress_like_rdcu(&rcfg, &info);
-	TEST_ASSERT_EQUAL_INT(CMP_ERROR_SMALL_BUF_, cmp_get_error_code(cmp_size));
+	TEST_ASSERT_EQUAL_INT(CMP_ERROR_SMALL_BUFFER, cmp_get_error_code(cmp_size));
 	TEST_ASSERT_EQUAL_HEX(0xDF6002AB, be32_to_cpu(output_buf[0]));
 	TEST_ASSERT_EQUAL_HEX(0xFEB70000, be32_to_cpu(output_buf[1]));
 	TEST_ASSERT_EQUAL_HEX(0x00000000, be32_to_cpu(output_buf[2]));
@@ -1371,7 +1371,7 @@ void test_compress_imagette_raw(void)
 
 	cmp_size = compress_like_rdcu(&rcfg, NULL);
 	TEST_ASSERT_TRUE(cmp_is_error(cmp_size));
-	TEST_ASSERT_EQUAL_INT(CMP_ERROR_SMALL_BUF_, cmp_get_error_code(cmp_size));
+	TEST_ASSERT_EQUAL_INT(CMP_ERROR_SMALL_BUFFER, cmp_get_error_code(cmp_size));
 
 	free(output_buf);
 }
@@ -1410,7 +1410,7 @@ void test_compress_imagette_error_cases(void)
 	rcfg.buffer_length = 4;
 
 	cmp_size = compress_like_rdcu(&rcfg, NULL);
-	TEST_ASSERT_EQUAL_INT(CMP_ERROR_SMALL_BUF_, cmp_get_error_code(cmp_size));
+	TEST_ASSERT_EQUAL_INT(CMP_ERROR_SMALL_BUFFER, cmp_get_error_code(cmp_size));
 
 	/* compressed data buffer to small test part 2 */
 	rcfg.cmp_mode = CMP_MODE_DIFF_ZERO;
@@ -1422,7 +1422,7 @@ void test_compress_imagette_error_cases(void)
 	rcfg.buffer_length = 1;
 
 	cmp_size = compress_like_rdcu(&rcfg, NULL);
-	TEST_ASSERT_EQUAL_INT(CMP_ERROR_SMALL_BUF_, cmp_get_error_code(cmp_size));
+	TEST_ASSERT_EQUAL_INT(CMP_ERROR_SMALL_BUFFER, cmp_get_error_code(cmp_size));
 
 
 	/* test unknown cmp_mode */
@@ -1522,7 +1522,7 @@ void test_pad_bitstream(void)
 	cmp_size = 64;
 	cmp_size = put_n_bits32(0, 1, cmp_size, cfg.dst, MAX_BIT_LEN);
 	cmp_size_return = pad_bitstream(&cfg, cmp_size);
-	TEST_ASSERT_EQUAL_INT(CMP_ERROR_SMALL_BUF_, cmp_get_error_code(cmp_size_return));
+	TEST_ASSERT_EQUAL_INT(CMP_ERROR_SMALL_BUFFER, cmp_get_error_code(cmp_size_return));
 }
 
 
@@ -1651,7 +1651,7 @@ void test_compress_chunk_raw_singel_col(void)
 	dst = malloc(dst_capacity); TEST_ASSERT_NOT_NULL(dst);
 	cmp_size = compress_chunk(chunk, CHUNK_SIZE, NULL, NULL, dst,
 				  dst_capacity, &cmp_par);
-	TEST_ASSERT_EQUAL_INT(CMP_ERROR_SMALL_BUF_, cmp_get_error_code(cmp_size));
+	TEST_ASSERT_EQUAL_INT(CMP_ERROR_SMALL_BUFFER, cmp_get_error_code(cmp_size));
 	free(dst);
 }
 
@@ -1771,7 +1771,7 @@ void test_compress_chunk_raw_two_col(void)
 	dst = malloc(dst_capacity); TEST_ASSERT_NOT_NULL(dst);
 	cmp_size = compress_chunk(chunk, CHUNK_SIZE, NULL, NULL, dst,
 				  dst_capacity, &cmp_par);
-	TEST_ASSERT_EQUAL_INT(CMP_ERROR_SMALL_BUF_, cmp_get_error_code(cmp_size));
+	TEST_ASSERT_EQUAL_INT(CMP_ERROR_SMALL_BUFFER, cmp_get_error_code(cmp_size));
 	free(dst);
 }
 
@@ -1897,7 +1897,7 @@ void test_collection_zero_data_length(void)
 	dst_capacity -= 1;
 	cmp_size = compress_chunk(chunk, CHUNK_SIZE, NULL, NULL, dst,
 				  dst_capacity, &cmp_par);
-	TEST_ASSERT_EQUAL_INT(CMP_ERROR_SMALL_BUF_, cmp_get_error_code(cmp_size));
+	TEST_ASSERT_EQUAL_INT(CMP_ERROR_SMALL_BUFFER, cmp_get_error_code(cmp_size));
 	free(dst);
 }
 
@@ -2082,7 +2082,7 @@ void test_compress_chunk_error_cases(void)
 	/* error: dst buffer smaller than entity header */
 	cmp_size = compress_chunk(chunk, CHUNK_SIZE, chunk_model,
 				  updated_chunk_model, dst, 5, &cmp_par);
-	TEST_ASSERT_EQUAL_INT(CMP_ERROR_SMALL_BUF_, cmp_get_error_code(cmp_size));
+	TEST_ASSERT_EQUAL_INT(CMP_ERROR_SMALL_BUFFER, cmp_get_error_code(cmp_size));
 
 	/* error: invalid collection type */
 	TEST_ASSERT_FALSE(cmp_col_set_subservice((struct collection_hdr *)chunk, 42));

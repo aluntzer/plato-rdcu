@@ -74,7 +74,7 @@ const char* cmp_get_error_string(enum cmp_error code)
 		return "No error detected";
 	case CMP_ERROR_GENERIC:
 		return "Error (generic)";
-	case CMP_ERROR_SMALL_BUF_:
+	case CMP_ERROR_SMALL_BUFFER:
 		return "Destination buffer is too small to hold the whole compressed data";
 	case CMP_ERROR_DATA_VALUE_TOO_LARGE:
 		return "Data value is larger than expected";

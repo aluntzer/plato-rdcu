@@ -1029,14 +1029,14 @@ void test_random_collection_round_trip(void)
 					cmp_size = chunk_round_trip(data, (uint32_t)size, model, updated_model,
 								    cmp_data, cmp_data_capacity,
 								    &par, 1, model_mode_is_used(par.cmp_mode));
-					TEST_ASSERT_EQUAL_INT(CMP_ERROR_SMALL_BUF_, cmp_get_error_code(cmp_size));
+					TEST_ASSERT_EQUAL_INT(CMP_ERROR_SMALL_BUFFER, cmp_get_error_code(cmp_size));
 				}
 
 				cmp_data_capacity = cmp_size2 - cmp_rand_between(1, cmp_size2);
 				cmp_size = chunk_round_trip(data, (uint32_t)size, model, updated_model,
 							    cmp_data, cmp_data_capacity,
 							    &par, 1, model_mode_is_used(par.cmp_mode));
-				TEST_ASSERT_EQUAL_INT(CMP_ERROR_SMALL_BUF_, cmp_get_error_code(cmp_size));
+				TEST_ASSERT_EQUAL_INT(CMP_ERROR_SMALL_BUFFER, cmp_get_error_code(cmp_size));
 			}
 		}
 	}
@@ -1111,7 +1111,7 @@ void test_cmp_collection_raw(void)
 
 	/* error case: buffer for the compressed data is to small */
 	dst_capacity -= 1;
-	TEST_ASSERT_EQUAL_INT(CMP_ERROR_SMALL_BUF_,
+	TEST_ASSERT_EQUAL_INT(CMP_ERROR_SMALL_BUFFER,
 			      cmp_get_error_code(compress_chunk(col, col_size, NULL, NULL, dst, dst_capacity, &par)));
 
 	free(col);
@@ -1196,7 +1196,7 @@ void test_cmp_collection_diff(void)
 
 	/* error cases dst buffer to small */
 	dst_capacity -= 1;
-	TEST_ASSERT_EQUAL_INT(CMP_ERROR_SMALL_BUF_, cmp_get_error_code(compress_chunk(col, col_size, NULL, NULL, dst, dst_capacity, &par)));
+	TEST_ASSERT_EQUAL_INT(CMP_ERROR_SMALL_BUFFER, cmp_get_error_code(compress_chunk(col, col_size, NULL, NULL, dst, dst_capacity, &par)));
 
 	free(col);
 	free(dst);
@@ -1473,7 +1473,7 @@ void test_cmp_decmp_chunk_raw(void)
 
 		dst_capacity -= 1;
 		cmp_size = compress_chunk(chunk, chunk_size, NULL, NULL, dst, dst_capacity, &par);
-		TEST_ASSERT_EQUAL_INT(CMP_ERROR_SMALL_BUF_, cmp_get_error_code(cmp_size));
+		TEST_ASSERT_EQUAL_INT(CMP_ERROR_SMALL_BUFFER, cmp_get_error_code(cmp_size));
 	}
 
 	free(dst);
@@ -1586,7 +1586,7 @@ void test_cmp_decmp_chunk_worst_case(void)
 
 	/* error case: buffer to small for compressed data */
 	cmp_size_byte = compress_chunk(chunk, chunk_size, NULL, NULL, dst, chunk_size, &par);
-	TEST_ASSERT_EQUAL_INT(CMP_ERROR_SMALL_BUF_, cmp_get_error_code(cmp_size_byte));
+	TEST_ASSERT_EQUAL_INT(CMP_ERROR_SMALL_BUFFER, cmp_get_error_code(cmp_size_byte));
 
 	free(chunk);
 }
