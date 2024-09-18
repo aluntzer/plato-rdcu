@@ -952,7 +952,8 @@ void test_re_map_to_pos(void)
 
 void test_cmp_decmp_rdcu_raw(void)
 {
-	int cmp_size, decmp_size;
+	uint32_t cmp_size;
+	int decmp_size;
 	size_t s, i;
 	struct rdcu_cfg rcfg = {0};
 	struct cmp_info info;
@@ -971,19 +972,19 @@ void test_cmp_decmp_rdcu_raw(void)
 	rcfg.icu_output_buf = compressed_data;
 
 	cmp_size = compress_like_rdcu(&rcfg, &info);
-	TEST_ASSERT_EQUAL_INT(sizeof(data)*CHAR_BIT, cmp_size);
+	TEST_ASSERT_EQUAL_UINT(sizeof(data)*CHAR_BIT, cmp_size);
 
 	s = cmp_ent_create(NULL, DATA_TYPE_IMAGETTE , rcfg.cmp_mode == CMP_MODE_RAW,
-			   cmp_bit_to_byte((unsigned int)cmp_size));
+			   cmp_bit_to_byte(cmp_size));
 	TEST_ASSERT_TRUE(s);
 	ent = malloc(s);
 	TEST_ASSERT_TRUE(ent);
 	s = cmp_ent_create(ent, DATA_TYPE_IMAGETTE , rcfg.cmp_mode == CMP_MODE_RAW,
-			   cmp_bit_to_byte((unsigned int)cmp_size));
+			   cmp_bit_to_byte(cmp_size));
 	TEST_ASSERT_TRUE(s);
 	TEST_ASSERT_FALSE(cmp_ent_write_rdcu_cmp_pars(ent, &info, NULL));
 
-	memcpy(cmp_ent_get_data_buf(ent), compressed_data, ((unsigned int)cmp_size+7)/8);
+	memcpy(cmp_ent_get_data_buf(ent), compressed_data, (cmp_size+7)/8);
 
 	decmp_size = decompress_cmp_entiy(ent, NULL, NULL, NULL);
 	TEST_ASSERT_EQUAL_INT(sizeof(data), decmp_size);

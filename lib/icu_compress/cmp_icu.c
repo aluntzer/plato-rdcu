@@ -2273,14 +2273,13 @@ uint32_t compress_chunk_set_model_id_and_counter(void *dst, uint32_t dst_size,
  * @param info	pointer to a compression information structure contains the
  *		metadata of a compression (can be NULL)
  *
- * @returns the bit length of the bitstream on success; negative on error,
- *	CMP_ERROR_SMALL_BUF (-2) if the compressed data buffer is too small to
- *	hold the whole compressed data
+ * @returns the bit length of the bitstream on success or an error code if it
+ *	fails (which can be tested with cmp_is_error())
  *
  * @warning only the small buffer error in the info.cmp_err field is implemented
  */
 
-int32_t compress_like_rdcu(const struct rdcu_cfg *rcfg, struct cmp_info *info)
+uint32_t compress_like_rdcu(const struct rdcu_cfg *rcfg, struct cmp_info *info)
 {
 	struct cmp_cfg cfg = {0};
 	uint32_t cmp_size_bit;
@@ -2289,7 +2288,7 @@ int32_t compress_like_rdcu(const struct rdcu_cfg *rcfg, struct cmp_info *info)
 		memset(info, 0, sizeof(*info));
 
 	if (!rcfg)
-		return (int32_t)compress_data_internal(NULL, 0);
+		return compress_data_internal(NULL, 0);
 
 	cfg.data_type = DATA_TYPE_IMAGETTE;
 
@@ -2334,8 +2333,7 @@ int32_t compress_like_rdcu(const struct rdcu_cfg *rcfg, struct cmp_info *info)
 	cfg.updated_model_buf = rcfg->icu_new_model_buf;
 	cfg.dst = rcfg->icu_output_buf;
 
-	if (cmp_is_error(cmp_cfg_icu_is_invalid_error_code(&cfg)))
-		return (int32_t)cmp_cfg_icu_is_invalid_error_code(&cfg);
+	FORWARD_IF_ERROR(cmp_cfg_icu_is_invalid_error_code(&cfg), "");
 
 	cmp_size_bit = compress_data_internal(&cfg, 0);
 
@@ -2351,5 +2349,5 @@ int32_t compress_like_rdcu(const struct rdcu_cfg *rcfg, struct cmp_info *info)
 		}
 	}
 
-	return (int32_t)cmp_size_bit;
+	return cmp_size_bit;
 }

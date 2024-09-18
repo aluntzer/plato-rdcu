@@ -1152,7 +1152,7 @@ void test_compress_imagette_diff(void)
 	uint32_t output_buf[3] = {0xFFFF, 0xFFFF, 0xFFFF};
 	struct rdcu_cfg rcfg = {0};
 	int error;
-	int32_t cmp_size;
+	uint32_t cmp_size;
 	struct cmp_info info;
 
 	uint32_t golomb_par = 1;
@@ -1226,7 +1226,7 @@ void test_compress_imagette_diff(void)
 	rcfg.ap2_spill = 8;
 	rcfg.buffer_length = 3;
 	cmp_size = compress_like_rdcu(&rcfg, &info);
-	TEST_ASSERT_EQUAL_INT(-2, cmp_size);
+	TEST_ASSERT_EQUAL_INT(CMP_ERROR_SMALL_BUF_, cmp_get_error_code(cmp_size));
 	TEST_ASSERT_EQUAL_HEX(0xDF6002AB, be32_to_cpu(output_buf[0]));
 	TEST_ASSERT_EQUAL_HEX(0xFEB70000, be32_to_cpu(output_buf[1]));
 	TEST_ASSERT_EQUAL_HEX(0x00000000, be32_to_cpu(output_buf[2]));
@@ -1266,7 +1266,7 @@ void test_compress_imagette_model(void)
 	uint32_t buffer_length = 8;
 	uint32_t golomb_par = 3;
 	uint32_t spill = 8;
-	int32_t cmp_size;
+	uint32_t cmp_size;
 	int error;
 
 	error = rdcu_cfg_create(&rcfg, CMP_MODE_MODEL_MULTI, model_value, CMP_LOSSLESS);
@@ -1299,8 +1299,8 @@ void test_compress_imagette_model(void)
 	/* error case: model mode without model data */
 	rcfg.model_buf = NULL; /* this is the error */
 	cmp_size = compress_like_rdcu(&rcfg, NULL);
-	TEST_ASSERT_TRUE(cmp_is_error((uint32_t)cmp_size));
-	TEST_ASSERT_EQUAL(CMP_ERROR_PAR_NO_MODEL, cmp_get_error_code((uint32_t)cmp_size));
+	TEST_ASSERT_TRUE(cmp_is_error(cmp_size));
+	TEST_ASSERT_EQUAL(CMP_ERROR_PAR_NO_MODEL, cmp_get_error_code(cmp_size));
 }
 
 
@@ -1314,7 +1314,7 @@ void test_compress_imagette_raw(void)
 	void *output_buf = malloc(7*sizeof(uint16_t));
 	uint16_t cmp_data[7];
 	struct rdcu_cfg rcfg = {0};
-	int32_t cmp_size;
+	uint32_t cmp_size;
 
 	rcfg.cmp_mode = CMP_MODE_RAW;
 	rcfg.model_buf = NULL;
@@ -1347,8 +1347,8 @@ void test_compress_imagette_raw(void)
 
 	/* error case: cfg = NULL */
 	cmp_size = compress_like_rdcu(NULL, NULL);
-	TEST_ASSERT_TRUE(cmp_is_error((uint32_t)cmp_size));
-	TEST_ASSERT_EQUAL_INT(CMP_ERROR_GENERIC, cmp_get_error_code((uint32_t)cmp_size));
+	TEST_ASSERT_TRUE(cmp_is_error(cmp_size));
+	TEST_ASSERT_EQUAL_INT(CMP_ERROR_GENERIC, cmp_get_error_code(cmp_size));
 
 	/* error case: input_buf = NULL */
 	memset(&rcfg, 0, sizeof(rcfg));
@@ -1358,8 +1358,8 @@ void test_compress_imagette_raw(void)
 	rcfg.buffer_length = 7;
 
 	cmp_size = compress_like_rdcu(&rcfg, NULL);
-	TEST_ASSERT_TRUE(cmp_is_error((uint32_t)cmp_size));
-	TEST_ASSERT_EQUAL_INT(CMP_ERROR_CHUNK_NULL, cmp_get_error_code((uint32_t)cmp_size));
+	TEST_ASSERT_TRUE(cmp_is_error(cmp_size));
+	TEST_ASSERT_EQUAL_INT(CMP_ERROR_CHUNK_NULL, cmp_get_error_code(cmp_size));
 
 
 	/* error case: compressed data buffer to small */
@@ -1370,8 +1370,8 @@ void test_compress_imagette_raw(void)
 	rcfg.buffer_length = 6; /* the buffer is to small */
 
 	cmp_size = compress_like_rdcu(&rcfg, NULL);
-	TEST_ASSERT_TRUE(cmp_is_error((uint32_t)cmp_size));
-	TEST_ASSERT_EQUAL_INT(CMP_ERROR_SMALL_BUF_, cmp_get_error_code((uint32_t)cmp_size));
+	TEST_ASSERT_TRUE(cmp_is_error(cmp_size));
+	TEST_ASSERT_EQUAL_INT(CMP_ERROR_SMALL_BUF_, cmp_get_error_code(cmp_size));
 
 	free(output_buf);
 }
@@ -1386,7 +1386,7 @@ void test_compress_imagette_error_cases(void)
 	uint16_t data[] = {0xFFFF, 1, 0, 42, 0x8000, 0x7FFF, 0xFFFF};
 	uint32_t output_buf[2] = {0xFFFF, 0xFFFF};
 	struct rdcu_cfg rcfg = {0};
-	int32_t cmp_size;
+	uint32_t cmp_size;
 
 	rcfg.cmp_mode = CMP_MODE_DIFF_ZERO;
 	rcfg.input_buf = data;
@@ -1410,7 +1410,7 @@ void test_compress_imagette_error_cases(void)
 	rcfg.buffer_length = 4;
 
 	cmp_size = compress_like_rdcu(&rcfg, NULL);
-	TEST_ASSERT_EQUAL_INT(CMP_ERROR_SMALL_BUF, cmp_size);
+	TEST_ASSERT_EQUAL_INT(CMP_ERROR_SMALL_BUF_, cmp_get_error_code(cmp_size));
 
 	/* compressed data buffer to small test part 2 */
 	rcfg.cmp_mode = CMP_MODE_DIFF_ZERO;
@@ -1422,7 +1422,7 @@ void test_compress_imagette_error_cases(void)
 	rcfg.buffer_length = 1;
 
 	cmp_size = compress_like_rdcu(&rcfg, NULL);
-	TEST_ASSERT_EQUAL_INT(CMP_ERROR_SMALL_BUF, cmp_size);
+	TEST_ASSERT_EQUAL_INT(CMP_ERROR_SMALL_BUF_, cmp_get_error_code(cmp_size));
 
 
 	/* test unknown cmp_mode */
@@ -1435,8 +1435,8 @@ void test_compress_imagette_error_cases(void)
 	rcfg.buffer_length = 4;
 
 	cmp_size = compress_like_rdcu(&rcfg, NULL);
-	TEST_ASSERT_TRUE(cmp_is_error((uint32_t)cmp_size));
-	TEST_ASSERT_EQUAL_INT(CMP_ERROR_PAR_GENERIC, cmp_get_error_code((uint32_t)cmp_size));
+	TEST_ASSERT_TRUE(cmp_is_error(cmp_size));
+	TEST_ASSERT_EQUAL_INT(CMP_ERROR_PAR_GENERIC, cmp_get_error_code(cmp_size));
 
 	/* test golomb_par = 0 */
 	rcfg.cmp_mode = CMP_MODE_DIFF_ZERO;
@@ -1448,8 +1448,8 @@ void test_compress_imagette_error_cases(void)
 	rcfg.buffer_length = 4;
 
 	cmp_size = compress_like_rdcu(&rcfg, NULL);
-	TEST_ASSERT_TRUE(cmp_is_error((uint32_t)cmp_size));
-	TEST_ASSERT_EQUAL_INT(CMP_ERROR_PAR_SPECIFIC, cmp_get_error_code((uint32_t)cmp_size));
+	TEST_ASSERT_TRUE(cmp_is_error(cmp_size));
+	TEST_ASSERT_EQUAL_INT(CMP_ERROR_PAR_SPECIFIC, cmp_get_error_code(cmp_size));
 }
 
 

@@ -709,8 +709,8 @@ void generate_random_cmp_par(struct cmp_par *par)
 
 void compression_decompression_like_rdcu(struct rdcu_cfg *rcfg)
 {
-	int cmp_size_bits, s, error;
-	uint32_t data_size, cmp_data_size, cmp_ent_size;
+	int s, error;
+	uint32_t cmp_size_bits, data_size, cmp_data_size, cmp_ent_size;
 	struct cmp_entity *ent;
 	void *decompressed_data;
 	static void *model_of_data;
@@ -745,11 +745,11 @@ void compression_decompression_like_rdcu(struct rdcu_cfg *rcfg)
 
 	/* now compress the data */
 	cmp_size_bits = compress_like_rdcu(rcfg, &info);
-	TEST_ASSERT(cmp_size_bits > 0);
+	TEST_ASSERT(!cmp_is_error(cmp_size_bits));
 
 	/* put the compression parameters in the entity header */
 	cmp_ent_size = cmp_ent_create(ent, DATA_TYPE_IMAGETTE, rcfg->cmp_mode == CMP_MODE_RAW,
-				      cmp_bit_to_byte((unsigned int)cmp_size_bits));
+				      cmp_bit_to_byte(cmp_size_bits));
 	TEST_ASSERT_NOT_EQUAL_UINT(0, cmp_ent_size);
 	error = cmp_ent_write_rdcu_cmp_pars(ent, &info, rcfg);
 	TEST_ASSERT_FALSE(error);
@@ -889,7 +889,7 @@ void test_random_compression_decompress_rdcu_data(void)
 	struct rdcu_cfg rcfg;
 	struct cmp_info info = {0};
 	int error, s, i;
-	int32_t cmp_size_bits;
+	uint32_t cmp_size_bits;
 	void *compressed_data;
 	uint16_t *decompressed_data;
 	enum {N_SAMPLES = 5};
@@ -908,7 +908,7 @@ void test_random_compression_decompress_rdcu_data(void)
 	rcfg.buffer_length = CMP_BUFFER_FAKTOR*N_SAMPLES;
 
 	cmp_size_bits = compress_like_rdcu(&rcfg, &info);
-	TEST_ASSERT(cmp_size_bits > 0);
+	TEST_ASSERT(!cmp_is_error(cmp_size_bits));
 
 	s = decompress_rdcu_data(compressed_data, &info, NULL, NULL, NULL);
 	TEST_ASSERT_EQUAL(sizeof(data), s);

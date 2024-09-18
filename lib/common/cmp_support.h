@@ -27,13 +27,7 @@
 #define CMP_COLLECTION_FILD_SIZE 2
 
 
-/* return code if the bitstream buffer is too small to store the whole bitstream */
-#define CMP_ERROR_SMALL_BUF -2
 
-/* return code if the value or the model is bigger than the max_used_bits
- * parameter allows
- */
-#define CMP_ERROR_HIGH_VALUE -3
 
 #define CMP_LOSSLESS	0
 #define CMP_PAR_UNUNSED	0

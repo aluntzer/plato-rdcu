@@ -22,6 +22,6 @@
 
 #include "common/cmp_support.h"
 
-int32_t compress_like_rdcu(const struct rdcu_cfg *rcfg, struct cmp_info *info);
+uint32_t compress_like_rdcu(const struct rdcu_cfg *rcfg, struct cmp_info *info);
 
 #endif /* CMP_ICU_H */
