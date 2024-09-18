@@ -41,7 +41,7 @@
 
 
 /* subservice types for service 212 */
-#define SST_NCxx_S_SCIENCE_IMAGETTE		3 /* N-Camera image data */
+#define SST_NCxx_S_SCIENCE_IMAGETTE		3 /* N-Camera imagette data */
 #define SST_NCxx_S_SCIENCE_SAT_IMAGETTE		4 /* Extended imagettes for saturated star extra pixels */
 #define SST_NCxx_S_SCIENCE_OFFSET		5 /* Offset values Mean of the pixels of offset windows */
 #define SST_NCxx_S_SCIENCE_BACKGROUND		6 /* Background values Mean of the pixels of background windows */
