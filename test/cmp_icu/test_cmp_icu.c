@@ -1259,7 +1259,7 @@ void test_compress_imagette_model(void)
 	uint16_t data[]  = {0x0000, 0x0001, 0x0042, 0x8000, 0x7FFF, 0xFFFF, 0xFFFF};
 	uint16_t model[] = {0x0000, 0xFFFF, 0xF301, 0x8FFF, 0x0000, 0xFFFF, 0x0000};
 	uint16_t model_up[7] = {0};
-	uint32_t output_buf[3] = {~0U, ~0U, ~0U};
+	uint32_t output_buf[4] = {~0U, ~0U, ~0U, ~0U};
 	struct rdcu_cfg rcfg = {0};
 	uint32_t model_value = 8;
 	uint32_t samples = 7;
@@ -1450,6 +1450,48 @@ void test_compress_imagette_error_cases(void)
 	cmp_size = compress_like_rdcu(&rcfg, NULL);
 	TEST_ASSERT_TRUE(cmp_is_error(cmp_size));
 	TEST_ASSERT_EQUAL_INT(CMP_ERROR_PAR_SPECIFIC, cmp_get_error_code(cmp_size));
+
+	/* test golomb_par  to hight */
+	rcfg.cmp_mode = CMP_MODE_DIFF_ZERO;
+	rcfg.input_buf = data;
+	rcfg.samples = 2;
+	rcfg.golomb_par = MAX_CHUNK_CMP_PAR+1;
+	rcfg.spill = 8;
+	rcfg.icu_output_buf = (uint32_t *)output_buf;
+	rcfg.buffer_length = 4;
+
+	cmp_size = compress_like_rdcu(&rcfg, NULL);
+	TEST_ASSERT_TRUE(cmp_is_error(cmp_size));
+	TEST_ASSERT_EQUAL_INT(CMP_ERROR_PAR_SPECIFIC, cmp_get_error_code(cmp_size));
+
+	/* round to hight */
+	rcfg.cmp_mode = CMP_MODE_DIFF_ZERO;
+	rcfg.input_buf = data;
+	rcfg.samples = 2;
+	rcfg.golomb_par = MAX_CHUNK_CMP_PAR;
+	rcfg.spill = 8;
+	rcfg.icu_output_buf = (uint32_t *)output_buf;
+	rcfg.buffer_length = 4;
+	rcfg.round = MAX_ICU_ROUND+1;
+
+	cmp_size = compress_like_rdcu(&rcfg, NULL);
+	TEST_ASSERT_TRUE(cmp_is_error(cmp_size));
+	TEST_ASSERT_EQUAL_INT(CMP_ERROR_PAR_GENERIC, cmp_get_error_code(cmp_size));
+
+	/* model_value to hight */
+	rcfg.cmp_mode = CMP_MODE_MODEL_ZERO;
+	rcfg.input_buf = data;
+	rcfg.samples = 2;
+	rcfg.golomb_par = MAX_CHUNK_CMP_PAR;
+	rcfg.spill = 8;
+	rcfg.icu_output_buf = (uint32_t *)output_buf;
+	rcfg.buffer_length = 4;
+	rcfg.round = MAX_ICU_ROUND;
+	rcfg.model_value = MAX_MODEL_VALUE+1;
+
+	cmp_size = compress_like_rdcu(&rcfg, NULL);
+	TEST_ASSERT_TRUE(cmp_is_error(cmp_size));
+	TEST_ASSERT_EQUAL_INT(CMP_ERROR_PAR_GENERIC, cmp_get_error_code(cmp_size));
 }
 
 
@@ -1844,6 +1886,26 @@ void test_compress_chunk_aux(void)
 	cmp_size = compress_chunk(chunk, CHUNK_SIZE, NULL, NULL, dst,
 				  dst_capacity, &cmp_par);
 	TEST_ASSERT_EQUAL_INT(CMP_ERROR_PAR_SPECIFIC, cmp_get_error_code(cmp_size));
+
+	cmp_par.nc_background_outlier_pixels = MAX_CHUNK_CMP_PAR+1;
+	cmp_size = compress_chunk(chunk, CHUNK_SIZE, NULL, NULL, dst,
+				  dst_capacity, &cmp_par);
+	TEST_ASSERT_EQUAL_INT(CMP_ERROR_PAR_SPECIFIC, cmp_get_error_code(cmp_size));
+
+	/* wrong cmp_mode */
+	cmp_par.nc_background_outlier_pixels = MAX_CHUNK_CMP_PAR;
+	cmp_par.cmp_mode = 5;
+	cmp_size = compress_chunk(chunk, CHUNK_SIZE, NULL, NULL, dst,
+				  dst_capacity, &cmp_par);
+	TEST_ASSERT_EQUAL_INT(CMP_ERROR_PAR_GENERIC, cmp_get_error_code(cmp_size));
+
+	/* wrong model value */
+	cmp_par.cmp_mode = CMP_MODE_MODEL_ZERO;
+	cmp_par.model_value = MAX_MODEL_VALUE +1 ;
+	cmp_size = compress_chunk(chunk, CHUNK_SIZE, NULL, NULL, dst,
+				  dst_capacity, &cmp_par);
+	TEST_ASSERT_EQUAL_INT(CMP_ERROR_PAR_GENERIC, cmp_get_error_code(cmp_size));
+	free(dst);
 }
 
 
@@ -2430,16 +2492,43 @@ void test_support_function_call_NULL(void)
 {
 	struct cmp_cfg cfg = {0};
 
-	cfg.data_type = DATA_TYPE_IMAGETTE;
 	cfg.cmp_mode = CMP_MODE_DIFF_ZERO;
 
 	TEST_ASSERT_TRUE(cmp_cfg_gen_par_is_invalid(NULL));
+	TEST_ASSERT_TRUE(cmp_cfg_gen_par_is_invalid(&cfg));
+	cfg.data_type = DATA_TYPE_F_FX_EFX;
+	TEST_ASSERT_TRUE(cmp_cfg_imagette_is_invalid(&cfg));
 	TEST_ASSERT_TRUE(cmp_cfg_imagette_is_invalid(NULL));
+	cfg.data_type = DATA_TYPE_IMAGETTE;
 	TEST_ASSERT_TRUE(cmp_cfg_fx_cob_is_invalid(NULL));
+	TEST_ASSERT_TRUE(cmp_cfg_fx_cob_is_invalid(&cfg));
 	TEST_ASSERT_TRUE(cmp_cfg_aux_is_invalid(NULL));
 	TEST_ASSERT_TRUE(cmp_cfg_aux_is_invalid(&cfg));
+	TEST_ASSERT_FALSE(cmp_aux_data_type_is_used(DATA_TYPE_S_FX));
 	TEST_ASSERT_TRUE(cmp_cfg_fx_cob_get_need_pars(DATA_TYPE_S_FX, NULL));
 	TEST_ASSERT_TRUE(check_compression_buffers(NULL));
+	cfg.cmp_mode = 5;
+	TEST_ASSERT_TRUE(cmp_cfg_imagette_is_invalid(&cfg));
+}
+
+
+/*
+ * @test cmp_cfg_fx_cob_get_need_pars
+ */
+
+void test_missing_cmp_cfg_fx_cob_get_need_pars(void)
+{
+	struct fx_cob_par used_par;
+	enum cmp_data_type data_type;
+
+	data_type = DATA_TYPE_F_FX;
+	TEST_ASSERT_FALSE(cmp_cfg_fx_cob_get_need_pars(data_type, &used_par));
+	data_type = DATA_TYPE_F_FX_EFX;
+	TEST_ASSERT_FALSE(cmp_cfg_fx_cob_get_need_pars(data_type, &used_par));
+	data_type = DATA_TYPE_F_FX_NCOB;
+	TEST_ASSERT_FALSE(cmp_cfg_fx_cob_get_need_pars(data_type, &used_par));
+	data_type = DATA_TYPE_F_FX_EFX_NCOB_ECOB;
+	TEST_ASSERT_FALSE(cmp_cfg_fx_cob_get_need_pars(data_type, &used_par));
 }
 
 
@@ -2475,10 +2564,9 @@ void test_print_cmp_info(void)
 
 void test_buffer_overlaps(void)
 {
-	char buf_a[3];
-	char buf_b[3];
+	char buf_a[3] = {0};
+	char buf_b[3] = {0};
 	int overlap;
-
 
 	overlap = buffer_overlaps(buf_a, sizeof(buf_a), buf_b, sizeof(buf_b));
 	TEST_ASSERT_FALSE(overlap);
@@ -2499,3 +2587,20 @@ void test_buffer_overlaps(void)
 }
 
 
+/**
+ * @test cmp_get_error_string
+ */
+
+void test_cmp_get_error_string(void)
+{
+	enum cmp_error code;
+	const char *str;
+
+	for (code = CMP_ERROR_NO_ERROR; code <= CMP_ERROR_MAX_CODE; code++) {
+		str = cmp_get_error_string(code);
+		TEST_ASSERT_NOT_EQUAL('\0', str[0]);
+
+		str = cmp_get_error_name((-code));
+		TEST_ASSERT_NOT_EQUAL('\0', str[0]);
+	}
+}

@@ -287,6 +287,27 @@ void test_be_to_cpu_chunk(void)
 	{
 		struct {
 			uint8_t hdr[COLLECTION_HDR_SIZE];
+			uint16_t entry[2];
+		} __attribute__((packed)) data = {0};
+
+		data_type = DATA_TYPE_IMAGETTE;
+		data.entry[0] = 0x0001;
+		data.entry[1] = 0x0203;
+		check_endianness(&data, sizeof(data), data_type);
+
+		data_type = DATA_TYPE_SAT_IMAGETTE;
+		data.entry[0] = 0x0001;
+		data.entry[1] = 0x0203;
+		check_endianness(&data, sizeof(data), data_type);
+
+		data_type = DATA_TYPE_F_CAM_IMAGETTE;
+		data.entry[0] = 0x0001;
+		data.entry[1] = 0x0203;
+		check_endianness(&data, sizeof(data), data_type);
+	}
+	{
+		struct {
+			uint8_t hdr[COLLECTION_HDR_SIZE];
 			struct offset entry[2];
 		} __attribute__((packed)) data = {0};
 
@@ -678,4 +699,34 @@ void test_cmp_input_big_to_cpu_endianness_error_cases(void)
 	data_type = DATA_TYPE_UNKNOWN;
 	error = cmp_input_big_to_cpu_endianness(data, data_size_byte, data_type);
 	TEST_ASSERT_EQUAL(-1, error);
+
+	{ /* test adaptive data types */
+		size_t i;
+		uint16_t data_ap[2];
+
+		data_type = DATA_TYPE_IMAGETTE_ADAPTIVE;
+		data_ap[0] = 0x0001;
+		data_ap[1] = 0x0203;
+		error = cmp_input_big_to_cpu_endianness(data_ap, sizeof(data_ap), data_type);
+		TEST_ASSERT_EQUAL(00, error);
+		for (i = 0; i < sizeof(data_ap); i++)
+			TEST_ASSERT_EQUAL(i, ((uint8_t*)data_ap)[i] );
+
+		data_type = DATA_TYPE_SAT_IMAGETTE_ADAPTIVE;
+		data_ap[0] = 0x0001;
+		data_ap[1] = 0x0203;
+		error = cmp_input_big_to_cpu_endianness(data_ap, sizeof(data_ap), data_type);
+		TEST_ASSERT_EQUAL(00, error);
+		for (i = 0; i < sizeof(data_ap); i++)
+			TEST_ASSERT_EQUAL(i, ((uint8_t*)data_ap)[i] );
+
+		data_type = DATA_TYPE_F_CAM_IMAGETTE_ADAPTIVE;
+		data_ap[0] = 0x0001;
+		data_ap[1] = 0x0203;
+		error = cmp_input_big_to_cpu_endianness(data_ap, sizeof(data_ap), data_type);
+		TEST_ASSERT_EQUAL(00, error);
+		for (i = 0; i < sizeof(data_ap); i++)
+			TEST_ASSERT_EQUAL(i, ((uint8_t*)data_ap)[i] );
+	}
+
 }

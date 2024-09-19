@@ -894,7 +894,6 @@ int be_to_cpu_data_type(void *data, uint32_t data_size_byte, enum cmp_data_type 
 		be_to_cpus_f_fx_efx_ncob_ecob(data, samples);
 		break;
 	/* LCOV_EXCL_START */
-	case DATA_TYPE_UNKNOWN:
 	default:
 		debug_print("Error: Can not swap endianness for this compression data type.");
 		return -1;

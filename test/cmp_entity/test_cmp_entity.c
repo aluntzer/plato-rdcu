@@ -1345,6 +1345,62 @@ void test_cmp_ent_get_data_buf(void)
 
 
 /**
+ * @test cmp_ent_get_data_buf_const
+ */
+
+void test_cmp_ent_get_data_buf_const(void)
+{
+	enum cmp_data_type data_type;
+	struct cmp_entity ent = {0};
+	const char *adr;
+	uint32_t s, hdr_size;
+	int error;
+
+	for (data_type = DATA_TYPE_IMAGETTE;
+	     data_type <= DATA_TYPE_F_CAM_BACKGROUND;
+	     data_type++) {
+		s = cmp_ent_create(&ent, data_type, 0, 0);
+		TEST_ASSERT_NOT_EQUAL_INT(0, s);
+
+		adr = cmp_ent_get_data_buf_const(&ent);
+		TEST_ASSERT_NOT_NULL(adr);
+
+		hdr_size = cmp_ent_cal_hdr_size(data_type, 0);
+		TEST_ASSERT_EQUAL_INT(hdr_size, adr-(char *)&ent);
+	}
+
+	/* RAW mode test */
+	for (data_type = DATA_TYPE_IMAGETTE;
+	     data_type <= DATA_TYPE_CHUNK;
+	     data_type++) {
+		s = cmp_ent_create(&ent, data_type, 1, 0);
+		TEST_ASSERT_NOT_EQUAL_INT(0, s);
+
+		adr = cmp_ent_get_data_buf_const(&ent);
+		TEST_ASSERT_NOT_NULL(adr);
+
+		hdr_size = cmp_ent_cal_hdr_size(data_type, 1);
+		TEST_ASSERT_EQUAL_INT(hdr_size, adr-(char *)&ent);
+	}
+
+	/* ent = NULL test */
+	adr = cmp_ent_get_data_buf_const(NULL);
+	TEST_ASSERT_NULL(adr);
+
+	/* compression data type not supported test */
+	error = cmp_ent_set_data_type(&ent, DATA_TYPE_UNKNOWN, 0);
+	TEST_ASSERT_FALSE(error);
+	adr = cmp_ent_get_data_buf_const(&ent);
+	TEST_ASSERT_NULL(adr);
+
+	error = cmp_ent_set_data_type(&ent, (enum cmp_data_type)234, 1);
+	TEST_ASSERT_FALSE(error);
+	adr = cmp_ent_get_data_buf_const(&ent);
+	TEST_ASSERT_NULL(adr);
+}
+
+
+/**
  * @test cmp_ent_get_cmp_data
  */
 

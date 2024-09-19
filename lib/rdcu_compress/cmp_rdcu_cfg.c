@@ -158,7 +158,7 @@ static int rdcu_cfg_buffers_is_invalid(const struct rdcu_cfg *rcfg)
 
 	if (rcfg->cmp_mode == CMP_MODE_RAW) {
 		if (rcfg->buffer_length < rcfg->samples) {
-			debug_print("rdcu_buffer_length is smaller than the samples parameter. There is not enough space to copy the data in RAW mode.");
+			debug_print("Error: rdcu_buffer_length is smaller than the samples parameter. There is not enough space to copy the data in RAW mode.");
 			rcfg_invalid++;
 		}
 	}
