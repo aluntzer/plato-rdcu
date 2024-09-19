@@ -483,51 +483,6 @@ static int decompress_imagette(const struct cmp_cfg *cfg, struct bit_decoder *de
 }
 
 
-#if 0
-/**
- * @brief decompress the multi-entry packet header structure and sets the data,
- *	model and up_model pointers to the data after the header
- *
- * @param data		pointer to a pointer pointing to the data to be compressed
- * @param model		pointer to a pointer pointing to the model of the data
- * @param up_model	pointer to a pointer pointing to the updated model buffer
- * @param cfg		pointer to the compression configuration structure
- *
- * @returns the bit length of the bitstream on success
- *
- * @note the (void **) cast relies on all pointer types having the same internal
- *	representation which is common, but not universal; http://www.c-faq.com/ptrs/genericpp.html
- */
-
-static int decompress_multi_entry_hdr(void **data, void **model, void **up_model,
-				      const struct cmp_cfg *cfg)
-{
-	if (cfg->buffer_length < COLLECTION_HDR_SIZE)
-		return -1;
-
-	if (*data) {
-		if (cfg->icu_output_buf)
-			memcpy(*data, cfg->icu_output_buf, COLLECTION_HDR_SIZE);
-		*data = (uint8_t *)*data + COLLECTION_HDR_SIZE;
-	}
-
-	if (*model) {
-		if (cfg->icu_output_buf)
-			memcpy(*model, cfg->icu_output_buf, COLLECTION_HDR_SIZE);
-		*model = (uint8_t *)*model + COLLECTION_HDR_SIZE;
-	}
-
-	if (*up_model) {
-		if (cfg->icu_output_buf)
-			memcpy(*up_model, cfg->icu_output_buf, COLLECTION_HDR_SIZE);
-		*up_model = (uint8_t *)*up_model + COLLECTION_HDR_SIZE;
-	}
-
-	return COLLECTION_HDR_SIZE * CHAR_BIT;
-}
-#endif
-
-
 /**
  * @brief decompress short normal light flux (S_FX) data
  *
@@ -1550,17 +1505,9 @@ static int decompressed_data_internal(const struct cmp_cfg *cfg, enum decmp_type
 	data_size = cfg->samples * (uint32_t)size_of_a_sample(cfg->data_type);
 	if (decmp_type == ICU_DECOMRESSION)
 		data_size += COLLECTION_HDR_SIZE;
-	/* data_size = cmp_cal_size_of_data(cfg->samples, cfg->data_type); */
-	/* if (!cfg->dst || !data_size) */
-	/* 	return (int)data_size; */
 
 	if (cfg->cmp_mode == CMP_MODE_RAW) {
-		/* if (data_size < cfg->buffer_length/CHAR_BIT) */
-		/* 	return -1; */
-
 		if (cfg->dst) {
-			/* uint32_t s = cmp_col_get_size(cfg->icu_output_buf); */
-			/* assert(s==data_size); */
 			memcpy(cfg->dst, cfg->src, data_size);
 			switch (decmp_type) {
 			case ICU_DECOMRESSION:
