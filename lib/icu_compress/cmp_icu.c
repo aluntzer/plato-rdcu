@@ -275,9 +275,8 @@ static uint32_t golomb_encoder(uint32_t value, uint32_t m, uint32_t log2_m,
  * @param stream_len	length of the bitstream in bits
  * @param setup		pointer to the encoder setup
  *
- * @returns the bit length of the bitstream with the added encoded value on
- *	success; negative on error, CMP_ERROR_SMALL_BUF if the bitstream buffer
- *	is too small to put the value in the bitstream
+ * @returns the bit length of the bitstream on success or an error code if it
+ *	fails (which can be tested with cmp_is_error())
  */
 
 static uint32_t encode_normal(uint32_t value, uint32_t stream_len,
@@ -302,9 +301,8 @@ static uint32_t encode_normal(uint32_t value, uint32_t stream_len,
  * @param stream_len	length of the bitstream in bits
  * @param setup		pointer to the encoder setup
  *
- * @returns the bit length of the bitstream with the added encoded value on
- *	success; negative on error, CMP_ERROR_SMALL_BUF if the bitstream buffer
- *	is too small to put the value in the bitstream
+ * @returns the bit length of the bitstream on success or an error code if it
+ *	fails (which can be tested with cmp_is_error())
  *
  * @note no check if the data or model are in the allowed range
  * @note no check if the setup->spillover_par is in the allowed range
@@ -351,9 +349,8 @@ static uint32_t encode_value_zero(uint32_t data, uint32_t model, uint32_t stream
  * @param stream_len	length of the bitstream in bits
  * @param setup		pointer to the encoder setup
  *
- * @returns the bit length of the bitstream with the added encoded value on
- *	success; negative on error, CMP_ERROR_SMALL_BUF if the bitstream buffer
- *	is too small to put the value in the bitstream
+ * @returns the bit length of the bitstream on success or an error code if it
+ *	fails (which can be tested with cmp_is_error())
  *
  * @note no check if the data or model are in the allowed range
  * @note no check if the setup->spillover_par is in the allowed range
@@ -415,10 +412,8 @@ static uint32_t encode_value_multi(uint32_t data, uint32_t model, uint32_t strea
  * @param stream_len	length of the bitstream in bits
  * @param setup		pointer to the encoder setup
  *
- * @returns the bit length of the bitstream with the added encoded value on
- *	success; negative on error, CMP_ERROR_SMALL_BUF if the bitstream buffer
- *	is too small to put the value in the bitstream, CMP_ERROR_HIGH_VALUE if
- *	the value or the model is bigger than the max_used_bits parameter allows
+ * @returns the bit length of the bitstream on success or an error code if it
+ *	fails (which can be tested with cmp_is_error())
  */
 
 static uint32_t encode_value(uint32_t data, uint32_t model, uint32_t stream_len,
@@ -498,12 +493,11 @@ static void configure_encoder_setup(struct encoder_setup *setup,
 /**
  * @brief compress imagette data
  *
- * @param cfg	pointer to the compression configuration structure
+ * @param cfg		pointer to the compression configuration structure
+ * @param stream_len	already used length of the bitstream in bits
  *
- * @returns the bit length of the bitstream on success; negative on error,
- *	CMP_ERROR_SMALL_BUF if the bitstream buffer is too small to put the
- *	value in the bitstream, CMP_ERROR_HIGH_VALUE if the value or the model is
- *	bigger than the max_used_bits parameter allows
+ * @returns the bit length of the bitstream on success or an error code if it
+ *	fails (which can be tested with cmp_is_error())
  */
 
 static uint32_t compress_imagette(const struct cmp_cfg *cfg, uint32_t stream_len)
@@ -560,11 +554,11 @@ static uint32_t compress_imagette(const struct cmp_cfg *cfg, uint32_t stream_len
 /**
  * @brief compress short normal light flux (S_FX) data
  *
- * @param cfg	pointer to the compression configuration structure
+ * @param cfg		pointer to the compression configuration structure
+ * @param stream_len	already used length of the bitstream in bits
  *
- * @returns the bit length of the bitstream on success; negative on error,
- *	CMP_ERROR_SMALL_BUF if the bitstream buffer is too small to put the
- *	value in the bitstream
+ * @returns the bit length of the bitstream on success or an error code if it
+ *	fails (which can be tested with cmp_is_error())
  */
 
 static uint32_t compress_s_fx(const struct cmp_cfg *cfg, uint32_t stream_len)
@@ -621,11 +615,11 @@ static uint32_t compress_s_fx(const struct cmp_cfg *cfg, uint32_t stream_len)
 /**
  * @brief compress S_FX_EFX data
  *
- * @param cfg	pointer to the compression configuration structure
+ * @param cfg		pointer to the compression configuration structure
+ * @param stream_len	already used length of the bitstream in bits
  *
- * @returns the bit length of the bitstream on success; negative on error,
- *	CMP_ERROR_SMALL_BUF if the bitstream buffer is too small to put the
- *	value in the bitstream
+ * @returns the bit length of the bitstream on success or an error code if it
+ *	fails (which can be tested with cmp_is_error())
  */
 
 static uint32_t compress_s_fx_efx(const struct cmp_cfg *cfg, uint32_t stream_len)
@@ -690,11 +684,11 @@ static uint32_t compress_s_fx_efx(const struct cmp_cfg *cfg, uint32_t stream_len
 /**
  * @brief compress S_FX_NCOB data
  *
- * @param cfg	pointer to the compression configuration structure
+ * @param cfg		pointer to the compression configuration structure
+ * @param stream_len	already used length of the bitstream in bits
  *
- * @returns the bit length of the bitstream on success; negative on error,
- *	CMP_ERROR_SMALL_BUF if the bitstream buffer is too small to put the
- *	value in the bitstream
+ * @returns the bit length of the bitstream on success or an error code if it
+ *	fails (which can be tested with cmp_is_error())
  */
 
 static uint32_t compress_s_fx_ncob(const struct cmp_cfg *cfg, uint32_t stream_len)
@@ -765,11 +759,11 @@ static uint32_t compress_s_fx_ncob(const struct cmp_cfg *cfg, uint32_t stream_le
 /**
  * @brief compress S_FX_EFX_NCOB_ECOB data
  *
- * @param cfg	pointer to the compression configuration structure
+ * @param cfg		pointer to the compression configuration structure
+ * @param stream_len	already used length of the bitstream in bits
  *
- * @returns the bit length of the bitstream on success; negative on error,
- *	CMP_ERROR_SMALL_BUF if the bitstream buffer is too small to put the
- *	value in the bitstream
+ * @returns the bit length of the bitstream on success or an error code if it
+ *	fails (which can be tested with cmp_is_error())
  */
 
 static uint32_t compress_s_fx_efx_ncob_ecob(const struct cmp_cfg *cfg, uint32_t stream_len)
@@ -863,11 +857,11 @@ static uint32_t compress_s_fx_efx_ncob_ecob(const struct cmp_cfg *cfg, uint32_t 
 /**
  * @brief compress L_FX data
  *
- * @param cfg	pointer to the compression configuration structure
+ * @param cfg		pointer to the compression configuration structure
+ * @param stream_len	already used length of the bitstream in bits
  *
- * @returns the bit length of the bitstream on success; negative on error,
- *	CMP_ERROR_SMALL_BUF if the bitstream buffer is too small to put the
- *	value in the bitstream
+ * @returns the bit length of the bitstream on success or an error code if it
+ *	fails (which can be tested with cmp_is_error())
  */
 
 static uint32_t compress_l_fx(const struct cmp_cfg *cfg, uint32_t stream_len)
@@ -932,11 +926,11 @@ static uint32_t compress_l_fx(const struct cmp_cfg *cfg, uint32_t stream_len)
 /**
  * @brief compress L_FX_EFX data
  *
- * @param cfg	pointer to the compression configuration structure
+ * @param cfg		pointer to the compression configuration structure
+ * @param stream_len	already used length of the bitstream in bits
  *
- * @returns the bit length of the bitstream on success; negative on error,
- *	CMP_ERROR_SMALL_BUF if the bitstream buffer is too small to put the
- *	value in the bitstream
+ * @returns the bit length of the bitstream on success or an error code if it
+ *	fails (which can be tested with cmp_is_error())
  */
 
 static uint32_t compress_l_fx_efx(const struct cmp_cfg *cfg, uint32_t stream_len)
@@ -1009,11 +1003,11 @@ static uint32_t compress_l_fx_efx(const struct cmp_cfg *cfg, uint32_t stream_len
 /**
  * @brief compress L_FX_NCOB data
  *
- * @param cfg	pointer to the compression configuration structure
+ * @param cfg		pointer to the compression configuration structure
+ * @param stream_len	already used length of the bitstream in bits
  *
- * @returns the bit length of the bitstream on success; negative on error,
- *	CMP_ERROR_SMALL_BUF if the bitstream buffer is too small to put the
- *	value in the bitstream
+ * @returns the bit length of the bitstream on success or an error code if it
+ *	fails (which can be tested with cmp_is_error())
  */
 
 static uint32_t compress_l_fx_ncob(const struct cmp_cfg *cfg, uint32_t stream_len)
@@ -1108,11 +1102,11 @@ static uint32_t compress_l_fx_ncob(const struct cmp_cfg *cfg, uint32_t stream_le
 /**
  * @brief compress L_FX_EFX_NCOB_ECOB data
  *
- * @param cfg	pointer to the compression configuration structure
+ * @param cfg		pointer to the compression configuration structure
+ * @param stream_len	already used length of the bitstream in bits
  *
- * @returns the bit length of the bitstream on success; negative on error,
- *	CMP_ERROR_SMALL_BUF if the bitstream buffer is too small to put the
- *	value in the bitstream
+ * @returns the bit length of the bitstream on success or an error code if it
+ *	fails (which can be tested with cmp_is_error())
  */
 
 static uint32_t compress_l_fx_efx_ncob_ecob(const struct cmp_cfg *cfg, uint32_t stream_len)
@@ -1229,10 +1223,11 @@ static uint32_t compress_l_fx_efx_ncob_ecob(const struct cmp_cfg *cfg, uint32_t 
 /**
  * @brief compress offset data from the normal and fast cameras
  *
- * @param cfg	pointer to the compression configuration structure
- * @returns the bit length of the bitstream on success; negative on error,
- *	CMP_ERROR_SMALL_BUF if the bitstream buffer is too small to put the
- *	value in the bitstream
+ * @param cfg		pointer to the compression configuration structure
+ * @param stream_len	already used length of the bitstream in bits
+ *
+ * @returns the bit length of the bitstream on success or an error code if it
+ *	fails (which can be tested with cmp_is_error())
  */
 
 static uint32_t compress_offset(const struct cmp_cfg *cfg, uint32_t stream_len)
@@ -1301,10 +1296,11 @@ static uint32_t compress_offset(const struct cmp_cfg *cfg, uint32_t stream_len)
 /**
  * @brief compress background data from the normal and fast cameras
  *
- * @param cfg	pointer to the compression configuration structure
- * @returns the bit length of the bitstream on success; negative on error,
- *	CMP_ERROR_SMALL_BUF if the bitstream buffer is too small to put the
- *	value in the bitstream
+ * @param cfg		pointer to the compression configuration structure
+ * @param stream_len	already used length of the bitstream in bits
+ *
+ * @returns the bit length of the bitstream on success or an error code if it
+ *	fails (which can be tested with cmp_is_error())
  */
 
 static uint32_t compress_background(const struct cmp_cfg *cfg, uint32_t stream_len)
@@ -1382,11 +1378,11 @@ static uint32_t compress_background(const struct cmp_cfg *cfg, uint32_t stream_l
 /**
  * @brief compress smearing data from the normal cameras
  *
- * @param cfg	pointer to the compression configuration structure
+ * @param cfg		pointer to the compression configuration structure
+ * @param stream_len	already used length of the bitstream in bits
  *
- * @returns the bit length of the bitstream on success; negative on error,
- *	CMP_ERROR_SMALL_BUF if the bitstream buffer is too small to put the
- *	value in the bitstream
+ * @returns the bit length of the bitstream on success or an error code if it
+ *	fails (which can be tested with cmp_is_error())
  */
 
 static uint32_t compress_smearing(const struct cmp_cfg *cfg, uint32_t stream_len)
@@ -1554,9 +1550,8 @@ static uint32_t cmp_cfg_icu_is_invalid_error_code(const struct cmp_cfg *cfg)
  * @param cfg		pointer to the compression configuration structure
  * @param cmp_size	length of the bitstream in bits
  *
- * @returns the bit length of the bitstream on success; negative on error,
- *	CMP_ERROR_SMALL_BUF if the bitstream buffer is too small to put the
- *	value in the bitstream
+ * @returns the bit length of the bitstream on success or an error code if it
+ *	fails (which can be tested with cmp_is_error())
  */
 
 static uint32_t pad_bitstream(const struct cmp_cfg *cfg, uint32_t cmp_size)
@@ -1588,10 +1583,10 @@ static uint32_t pad_bitstream(const struct cmp_cfg *cfg, uint32_t cmp_size)
  * This function can compress all types of collection data (one at a time).
  * This function does not take the header of a collection into account.
  *
- * @param cfg	pointer to a compression configuration
+ * @param cfg		pointer to the compression configuration structure
+ * @param stream_len	already used length of the bitstream in bits
  *
- * @note the validity of the cfg structure is checked before the compression is
- *	 started
+ * @note the validity of the cfg structure is not checked
  *
  * @returns the bit length of the bitstream on success or an error code if it
  *	fails (which can be tested with cmp_is_error())
@@ -1810,7 +1805,7 @@ static uint32_t cmp_collection(const uint8_t *col,
 		dst_size_bits = compress_data_internal(cfg, dst_size << 3);
 
 		if (cmp_get_error_code(dst_size_bits) == CMP_ERROR_SMALL_BUFFER ||
-		    (!dst && dst_size_bits > cmp_stream_size_to_bits(cfg->stream_size))) { /* if dst == NULL compress_data_internal will not return a CMP_ERROR_SMALL_BUF */
+		    (!dst && dst_size_bits > cmp_stream_size_to_bits(cfg->stream_size))) { /* if dst == NULL compress_data_internal will not return a CMP_ERROR_SMALL_BUFFER */
 			/* can not compress the data with the given parameters;
 			 * put them uncompressed (raw) into the dst buffer */
 			enum cmp_mode cmp_mode_cpy = cfg->cmp_mode;
@@ -2086,7 +2081,7 @@ static enum chunk_type init_cmp_cfg_from_cmp_par(const struct collection_hdr *co
  * @param version_id		application software version identifier
  */
 
-void compress_chunk_init(uint64_t(return_timestamp)(void), uint32_t version_id)
+void compress_chunk_init(uint64_t (*return_timestamp)(void), uint32_t version_id)
 {
 	if (return_timestamp)
 		get_timestamp = return_timestamp;
@@ -2118,6 +2113,7 @@ void compress_chunk_init(uint64_t(return_timestamp)(void), uint32_t version_id)
  *				not enough space in the dst buffer to write the
  *				compressed data; size is internally rounded down
  *				to a multiple of 4
+ * @param cmp_par		pointer to a compression parameters struct
  * @returns the byte size of the compressed data or an error code if it
  *	fails (which can be tested with cmp_is_error())
  */

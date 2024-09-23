@@ -144,7 +144,7 @@ uint32_t compress_chunk_cmp_size_bound(const void *chunk, size_t chunk_size);
  * @param version_id		application software version identifier
  */
 
-void compress_chunk_init(uint64_t(return_timestamp)(void), uint32_t version_id);
+void compress_chunk_init(uint64_t (*return_timestamp)(void), uint32_t version_id);
 
 
 /**
@@ -170,6 +170,7 @@ void compress_chunk_init(uint64_t(return_timestamp)(void), uint32_t version_id);
  *				not enough space in the dst buffer to write the
  *				compressed data; size is internally rounded down
  *				to a multiple of 4
+ * @param cmp_par		pointer to a compression parameters struct
  * @returns the byte size of the compressed data or an error code if it
  *	fails (which can be tested with cmp_is_error())
  */

@@ -59,6 +59,7 @@
  *				decompressed data
  * @param use_decmp_up_model	if non-zero, a buffer for the updated model is
  *				allocated during the decompression
+ * @param cmp_par		pointer to a compression parameters struct
  *
  * @returns the return value of the compress_chunk() function
  */

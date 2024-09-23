@@ -477,7 +477,7 @@ int rmap_build_hdr(struct rmap_pkt *pkt, uint8_t *hdr)
  * @brief create an rmap packet from a buffer
  *
  * @param buf the buffer, with the target path stripped away, i.e.
- *	  starting with <logical address>, <protocol id>, ...
+ *	  starting with [logical address], [protocol id], ...
  * @param len the data length of the buffer (in bytes)
  *
  * @returns an rmap packet, containing the decoded buffer including any data,
@@ -732,7 +732,7 @@ static void rmap_parse_reply_pkt(uint8_t *pkt)
 /**
  * parse an RMAP packet:
  *
- * expected format: <logical address> <protocol id> ...
+ * expected format: [logical address] [protocol id] ...
  */
 
 void rmap_parse_pkt(uint8_t *pkt)

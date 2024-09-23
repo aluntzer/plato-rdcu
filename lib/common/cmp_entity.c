@@ -538,7 +538,7 @@ int cmp_ent_set_ima_golomb_par(struct cmp_entity *ent, uint32_t golomb_par_used)
 }
 
 
-/*
+/**
  * @brief set the used adaptive 1 spillover threshold parameter in the adaptive
  *	imagette specific compression entity header
  *
@@ -588,7 +588,7 @@ int cmp_ent_set_ima_ap1_golomb_par(struct cmp_entity *ent, uint32_t ap1_golomb_p
 }
 
 
-/*
+/**
  * @brief set the used adaptive 2 spillover threshold parameter in the adaptive
  *	imagette specific compression entity header
  *
@@ -638,7 +638,7 @@ int cmp_ent_set_ima_ap2_golomb_par(struct cmp_entity *ent, uint32_t ap2_golomb_p
 }
 
 
-/*
+/**
  * @brief set the used spillover threshold 1 parameter in the non-imagette
  *	specific compression entity header
  *
@@ -691,7 +691,7 @@ int cmp_ent_set_non_ima_cmp_par1(struct cmp_entity *ent, uint32_t cmp_par_1_used
 }
 
 
-/*
+/**
  * @brief set the used spillover threshold 2 parameter in the non-imagette
  *	specific compression entity header
  *
@@ -744,7 +744,7 @@ int cmp_ent_set_non_ima_cmp_par2(struct cmp_entity *ent, uint32_t cmp_par_2_used
 }
 
 
-/*
+/**
  * @brief set the used spillover threshold 3 parameter in the non-imagette
  *	specific compression entity header
  *
@@ -797,7 +797,7 @@ int cmp_ent_set_non_ima_cmp_par3(struct cmp_entity *ent, uint32_t cmp_par_3_used
 }
 
 
-/*
+/**
  * @brief set the used spillover threshold 4 parameter in the non-imagette
  *	specific compression entity header
  *
@@ -850,7 +850,7 @@ int cmp_ent_set_non_ima_cmp_par4(struct cmp_entity *ent, uint32_t cmp_par_4_used
 }
 
 
-/*
+/**
  * @brief set the used spillover threshold 5 parameter in the non-imagette
  *	specific compression entity header
  *
@@ -903,7 +903,7 @@ int cmp_ent_set_non_ima_cmp_par5(struct cmp_entity *ent, uint32_t cmp_par_5_used
 }
 
 
-/*
+/**
  * @brief set the used spillover threshold 6 parameter in the non-imagette
  *	specific compression entity header
  *
@@ -1895,7 +1895,7 @@ uint32_t cmp_ent_create(struct cmp_entity *ent, enum cmp_data_type data_type,
 
 
 #ifdef HAS_TIME_H
-/*
+/**
  * @brief Convert a calendar time expressed as a struct tm object to time since
  *	 epoch as a time_t object. The function interprets the input structure
  *	 as representing Universal Coordinated Time (UTC).
@@ -1939,7 +1939,7 @@ static time_t my_timegm(struct tm *tm)
 
 
 #ifdef HAS_TIME_H
-/*
+/**
  * @brief Generate a timestamp for the compression header
  *
  * @param ts	pointer to an object of type struct timespec of the

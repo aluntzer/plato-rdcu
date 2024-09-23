@@ -123,15 +123,16 @@ enum cmp_data_type {
 
 
 /**
- * @brief defined compression mode
+ * @brief compression modes
+ * This enum defines the various compression modes available
  */
 
 enum cmp_mode {
-	CMP_MODE_RAW,
-	CMP_MODE_MODEL_ZERO,
-	CMP_MODE_DIFF_ZERO,
-	CMP_MODE_MODEL_MULTI,
-	CMP_MODE_DIFF_MULTI
+	CMP_MODE_RAW,         /**< raw compression mode */
+	CMP_MODE_MODEL_ZERO,  /**< model compression mode with zero escape symbol mechanism */
+	CMP_MODE_DIFF_ZERO,   /**< 1-D differential compression mode with zero escape symbol mechanism */
+	CMP_MODE_MODEL_MULTI, /**< model compression mode with multi escape symbol mechanism */
+	CMP_MODE_DIFF_MULTI   /**< 1-D differential multi compression mode with multi escape symbol mechanism*/
 };
 
 
