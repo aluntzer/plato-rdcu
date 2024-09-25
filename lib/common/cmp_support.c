@@ -442,7 +442,7 @@ static int cmp_pars_are_invalid(uint32_t cmp_par, uint32_t spill, enum cmp_mode 
 
 		break;
 	default:
-		debug_print("Error: The compression mode is not supported.");
+		debug_print("Error: selected cmp_mode: %i is not supported.", cmp_mode);
 		cfg_invalid++;
 		break;
 	}

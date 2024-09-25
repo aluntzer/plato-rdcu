@@ -437,7 +437,7 @@ static int decompress_imagette(const struct cmp_cfg *cfg, struct bit_decoder *de
 	}
 
 	if (model_mode_is_used(cfg->cmp_mode)) {
-		model = model_buf[0];
+		model =  get_unaligned(&model_buf[0]);
 		next_model_p = &model_buf[1];
 	} else {
 		up_model_buf = NULL;
@@ -468,16 +468,19 @@ static int decompress_imagette(const struct cmp_cfg *cfg, struct bit_decoder *de
 		err = decode_value(&setup, &decoded_value, model);
 		if (err)
 			break;
-		data_buf[i] = (__typeof__(data_buf[i]))decoded_value;
 
-		if (up_model_buf)
-			up_model_buf[i] = cmp_up_model(data_buf[i], model, cfg->model_value,
+		put_unaligned((uint16_t)decoded_value, &data_buf[i]);
+
+		if (up_model_buf) {
+			uint16_t up_model = cmp_up_model((uint16_t)decoded_value, model, cfg->model_value,
 						       setup.lossy_par);
+			put_unaligned(up_model, &up_model_buf[i]);
+		}
 
 		if (i >= cfg->samples-1)
 			break;
 
-		model = next_model_p[i];
+		model = get_unaligned(&next_model_p[i]);
 	}
 	return err;
 }
@@ -1485,6 +1488,9 @@ static int decompressed_data_internal(const struct cmp_cfg *cfg, enum decmp_type
 	if (!cfg->src)
 		return -1;
 
+	if (cmp_cfg_gen_par_is_invalid(cfg))
+		return -1;
+
 	if (cmp_imagette_data_type_is_used(cfg->data_type)) {
 		if (cmp_cfg_imagette_is_invalid(cfg))
 			return -1;
@@ -1606,9 +1612,14 @@ static int decompressed_data_internal(const struct cmp_cfg *cfg, enum decmp_type
 			break;
 		case BIT_END_OF_BUFFER:
 			/* check if non consumed bits are zero */
-			if (bit_read_bits(&dec, sizeof(dec.bit_container)*8 - dec.bits_consumed) == 0)
-				break;
-			/* fall through */
+			{	unsigned int bits_not_read = sizeof(dec.bit_container)*8 - dec.bits_consumed;
+
+				if (bits_not_read > 57) /* can not read more than 57 bits */
+					bits_not_read = 57;
+
+				if (bit_read_bits(&dec, bits_not_read ) == 0)
+					break;
+			} /* fall through */
 		case BIT_UNFINISHED:
 			debug_print("Warning: Not all compressed data are processed.");
 			break;
@@ -1633,6 +1644,8 @@ static int decompressed_data_internal(const struct cmp_cfg *cfg, enum decmp_type
 
 static int cmp_ent_read_header(const struct cmp_entity *ent, struct cmp_cfg *cfg)
 {
+	uint32_t org_size;
+
 	if (!cfg)
 		return -1;
 
@@ -1652,6 +1665,10 @@ static int cmp_ent_read_header(const struct cmp_entity *ent, struct cmp_cfg *cfg
 	cfg->round = cmp_ent_get_lossy_cmp_par(ent);
 	cfg->stream_size = cmp_ent_get_cmp_data_size(ent);
 
+	if (cmp_cfg_gen_par_is_invalid(cfg))
+		return -1;
+
+	org_size = cmp_ent_get_original_size(ent);
 	if (cfg->data_type == DATA_TYPE_CHUNK) {
 		cfg->samples = 0;
 		if ((cfg->stream_size < (COLLECTION_HDR_SIZE + CMP_COLLECTION_FILD_SIZE) && (cfg->cmp_mode != CMP_MODE_RAW)) ||
@@ -1659,9 +1676,12 @@ static int cmp_ent_read_header(const struct cmp_entity *ent, struct cmp_cfg *cfg
 			debug_print("Error: The compressed data size in the compression header is smaller than a collection header.");
 			return -1;
 		}
+		if (org_size < COLLECTION_HDR_SIZE ||
+		    (org_size < (COLLECTION_HDR_SIZE + CMP_COLLECTION_FILD_SIZE) && cfg->cmp_mode != CMP_MODE_RAW)) {
+			debug_print("Error: The original decompressed data size in the compression header is smaller than the minimum size.");
+			return -1;
+		}
 	} else {
-		uint32_t org_size = cmp_ent_get_original_size(ent);
-
 		if (org_size % sizeof(uint16_t)) {
 			debug_print("Error: The original size of an imagette product type in the compression header must be a multiple of 2.");
 			cfg->samples = 0;
@@ -1684,6 +1704,12 @@ static int cmp_ent_read_header(const struct cmp_entity *ent, struct cmp_cfg *cfg
 		}
 		/* no specific header is used for raw data we are done */
 		return 0;
+	}
+
+	if (cmp_ent_cal_hdr_size(cfg->data_type, cfg->cmp_mode == CMP_MODE_RAW)
+	    > cmp_ent_get_size(ent)) {
+		debug_print("Error: The compression entity size is smaller than the minimum allowed size.");
+		return -1;
 	}
 
 	switch (cfg->data_type) {
@@ -1839,13 +1865,14 @@ static int get_num_of_chunks(const struct cmp_entity *ent)
  * @param cfg			pointer to the configuration structure
  * @param coll_uncompressed	pointer to store whether the collection is
  *				uncompressed or not
+ * @param decmp_size		size of the original decompressed data
  *
  * @return the byte offset where to put the uncompressed result in the
  *	decompressed data, or -1 on error.
  */
 
 static long parse_cmp_collection(const uint8_t *cmp_col, int n, struct cmp_cfg *cfg,
-				 int *coll_uncompressed)
+				 int *coll_uncompressed, int decmp_size)
 {
 	int i;
 	long decmp_pos = 0; /* position where to put the uncompressed result */
@@ -1891,6 +1918,11 @@ static long parse_cmp_collection(const uint8_t *cmp_col, int n, struct cmp_cfg *
 		return -1;
 	}
 	cfg->samples = original_col_size / sample_size;
+
+	if (decmp_pos + original_col_size + COLLECTION_HDR_SIZE > decmp_size) {
+		debug_print("Error: The compressed data and the original size do not match.");
+		return -1;
+	}
 
 	return decmp_pos;
 }
@@ -1958,10 +1990,6 @@ int decompress_cmp_entiy(const struct cmp_entity *ent, const void *model_of_data
 			memcpy(decompressed_data, cfg.src, cfg.stream_size);
 			cpu_to_be_chunk(decompressed_data, cfg.stream_size);
 		}
-		/* if (up_model_buf) { /1* TODO: if diff non model mode? *1/ */
-		/* 	memcpy(up_model_buf, cfg.icu_output_buf, cfg.buffer_length); */
-		/* 	cpu_to_be_chunk(up_model_buf, cfg.buffer_length); */
-		/* } */
 		return (int)cfg.stream_size;
 	}
 
@@ -1974,7 +2002,7 @@ int decompress_cmp_entiy(const struct cmp_entity *ent, const void *model_of_data
 		int col_uncompressed;
 		struct cmp_cfg cmp_cpy = cfg;
 		long offset = parse_cmp_collection(cmp_ent_get_data_buf_const(ent), i,
-						   &cmp_cpy, &col_uncompressed);
+						   &cmp_cpy, &col_uncompressed, decmp_size);
 		if (offset < 0)
 			return -1;
 
