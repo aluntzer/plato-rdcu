@@ -32,6 +32,26 @@
 #endif
 
 
+
+/**
+ * @brief allocates memory safely for tests
+ *
+ * @param size the size of memory to allocate
+ *
+ * @returns a pointer to the allocated memory, or NULL if allocation fails
+ */
+
+static void* TEST_malloc(size_t size)
+{
+    if (size > 0) {
+        void* const mem = malloc(size);
+        TEST_ASSERT(mem);
+        return mem;
+    }
+    return NULL;
+}
+
+
 /**
  * @brief performs chunk compression and checks if a decompression is possible
  *

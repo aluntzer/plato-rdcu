@@ -50,22 +50,3 @@ uint32_t cmp_rand_nbits(unsigned int n_bits)
 
 	return cmp_rand32() >> (32 - n_bits);
 }
-
-
-/**
- * @brief allocates memory safely for tests
- *
- * @param size The size of memory to allocate.
- *
- * @returns a pointer to the allocated memory, or NULL if allocation fails
- */
-
-void* TEST_malloc(size_t size)
-{
-    if (size > 0) {
-        void* const mem = malloc(size);
-        TEST_ASSERT(mem);
-        return mem;
-    }
-    return NULL;
-}
