@@ -78,7 +78,7 @@ typedef uint32_t (*generate_cw_f_pt)(uint32_t value, uint32_t encoder_par1,
 struct encoder_setup {
 	generate_cw_f_pt generate_cw_f; /**< function pointer to a code word encoder */
 	uint32_t (*encode_method_f)(uint32_t data, uint32_t model, uint32_t stream_len,
-			       const struct encoder_setup *setup); /**< pointer to the encoding function */
+				    const struct encoder_setup *setup); /**< pointer to the encoding function */
 	uint32_t *bitstream_adr; /**< start address of the compressed data bitstream */
 	uint32_t max_stream_len; /**< maximum length of the bitstream in bits */
 	uint32_t encoder_par1;   /**< encoding parameter 1 */
@@ -101,8 +101,8 @@ struct encoder_setup {
 
 static uint32_t map_to_pos(uint32_t value_to_map, unsigned int max_data_bits)
 {
+	uint32_t const mask = (~0U >> (32 - max_data_bits)); /* mask the used bits */
 	uint32_t result;
-	uint32_t mask = (~0U >> (32 - max_data_bits)); /* mask the used bits */
 
 	value_to_map &= mask;
 	if (value_to_map >> (max_data_bits - 1)) { /* check the leading signed bit */
@@ -149,10 +149,10 @@ static uint32_t put_n_bits32(uint32_t value, unsigned int n_bits, uint32_t bit_o
 	 * |-----------------------------|XXX|XXX|-----------------------------|
 	 * |----------bits_left----------|n_bits-|---------bits_right----------|
 	 */
-	uint32_t bits_left = bit_offset & 0x1F;
-	uint32_t bits_right = 64 - bits_left - n_bits;
-	uint32_t shift_left = 32 - n_bits;
-	uint32_t stream_len = n_bits + bit_offset; /* no check for overflow */
+	uint32_t const bits_left = bit_offset & 0x1F;
+	uint32_t const bits_right = 64 - bits_left - n_bits;
+	uint32_t const shift_left = 32 - n_bits;
+	uint32_t const stream_len = n_bits + bit_offset; /* no check for overflow */
 	uint32_t *local_adr;
 	uint32_t mask, tmp;
 
@@ -213,11 +213,11 @@ static uint32_t put_n_bits32(uint32_t value, unsigned int n_bits, uint32_t bit_o
 static uint32_t rice_encoder(uint32_t value, uint32_t m, uint32_t log2_m,
 			     uint32_t *cw)
 {
-	uint32_t q = value >> log2_m;   /* quotient of value/m */
-	uint32_t qc = (1U << q) - 1;    /* quotient code without ending zero */
+	uint32_t const q = value >> log2_m;  /* quotient of value/m */
+	uint32_t const qc = (1U << q) - 1;   /* quotient code without ending zero */
 
-	uint32_t r = value & (m-1);     /* remainder of value/m */
-	uint32_t rl = log2_m + 1;       /* length of the remainder (+1 for the 0 in the quotient code) */
+	uint32_t const r = value & (m-1);    /* remainder of value/m */
+	uint32_t const rl = log2_m + 1;      /* length of the remainder (+1 for the 0 in the quotient code) */
 
 	*cw = (qc << (rl & 0x1FU)) | r; /* put the quotient and remainder code together */
 	/*
@@ -247,17 +247,17 @@ static uint32_t rice_encoder(uint32_t value, uint32_t m, uint32_t log2_m,
 static uint32_t golomb_encoder(uint32_t value, uint32_t m, uint32_t log2_m,
 			       uint32_t *cw)
 {
-	uint32_t len = log2_m + 1;               /* codeword length in group 0 */
-	uint32_t cutoff = (0x2U << log2_m) - m;  /* members in group 0 */
+	uint32_t len = log2_m + 1;  /* codeword length in group 0 */
+	uint32_t const cutoff = (0x2U << log2_m) - m;  /* members in group 0 */
 
-	if (value < cutoff) { /* group 0 */
+	if (value < cutoff) {  /* group 0 */
 		*cw = value;
-	} else { /* other groups */
+	} else {  /* other groups */
 		uint32_t const reg_mask = 0x1FU;  /* mask for the right shift operand to prevent undefined behavior */
-		uint32_t g = (value-cutoff) / m;  /* group number of same cw length */
-		uint32_t r = (value-cutoff) - g * m; /* member in the group */
-		uint32_t gc = (1U << (g & reg_mask)) - 1; /* prepare the left side in unary */
-		uint32_t b = cutoff << 1;         /* form the base codeword */
+		uint32_t const g = (value-cutoff) / m;  /* group number of same cw length */
+		uint32_t const r = (value-cutoff) - g * m; /* member in the group */
+		uint32_t const gc = (1U << (g & reg_mask)) - 1; /* prepare the left side in unary */
+		uint32_t const b = cutoff << 1;         /* form the base codeword */
 
 		*cw = gc << ((len+1) & reg_mask);  /* composed codeword part 1 */
 		*cw += b + r;                      /* composed codeword part 2 */
@@ -280,7 +280,7 @@ static uint32_t golomb_encoder(uint32_t value, uint32_t m, uint32_t log2_m,
  */
 
 static uint32_t encode_normal(uint32_t value, uint32_t stream_len,
-			 const struct encoder_setup *setup)
+			      const struct encoder_setup *setup)
 {
 	uint32_t code_word, cw_len;
 
@@ -417,9 +417,9 @@ static uint32_t encode_value_multi(uint32_t data, uint32_t model, uint32_t strea
  */
 
 static uint32_t encode_value(uint32_t data, uint32_t model, uint32_t stream_len,
-			const struct encoder_setup *setup)
+			     const struct encoder_setup *setup)
 {
-	uint32_t mask = ~(0xFFFFFFFFU >> (32-setup->max_data_bits));
+	uint32_t const mask = ~(0xFFFFFFFFU >> (32-setup->max_data_bits));
 
 	/* lossy rounding of the data if lossy_par > 0 */
 	data = round_fwd(data, setup->lossy_par);
@@ -1475,76 +1475,6 @@ static int buffer_overlaps(const void *buf_a, size_t size_a,
 
 
 /**
- * @brief check if the ICU buffer parameters are invalid
- *
- * @param cfg	pointer to the compressor configuration to check
- *
- * @returns 0 if the buffer parameters are valid, otherwise invalid
- */
-
-static uint32_t check_compression_buffers(const struct cmp_cfg *cfg)
-{
-	size_t data_size;
-
-	RETURN_ERROR_IF(cfg == NULL , GENERIC, "");
-
-	RETURN_ERROR_IF(cfg->src == NULL , CHUNK_NULL, "");
-
-	data_size = size_of_a_sample(cfg->data_type) * cfg->samples;
-
-	if (cfg->samples == 0)
-		debug_print("Warning: The samples parameter is 0. No data are compressed. This behavior may not be intended.");
-
-	RETURN_ERROR_IF(buffer_overlaps(cfg->dst, cfg->stream_size, cfg->src, data_size), PAR_BUFFERS,
-		"The compressed data buffer and the data to compress buffer are overlapping.");
-
-	if (model_mode_is_used(cfg->cmp_mode)) {
-		RETURN_ERROR_IF(cfg->model_buf == NULL , PAR_NO_MODEL, "");
-
-		RETURN_ERROR_IF(buffer_overlaps(cfg->model_buf, data_size, cfg->src, data_size), PAR_BUFFERS,
-				"The model buffer and the data to compress buffer are overlapping.");
-		RETURN_ERROR_IF(buffer_overlaps(cfg->model_buf, data_size, cfg->dst, cfg->stream_size), PAR_BUFFERS,
-				"The model buffer and the compressed data buffer are overlapping.");
-
-		RETURN_ERROR_IF(buffer_overlaps(cfg->updated_model_buf, data_size, cfg->src, data_size), PAR_BUFFERS,
-				"The updated model buffer and the data to compress buffer are overlapping.");
-		RETURN_ERROR_IF(buffer_overlaps(cfg->updated_model_buf, data_size, cfg->dst, cfg->stream_size), PAR_BUFFERS,
-				"The updated model buffer and the compressed data buffer are overlapping.");
-	}
-
-	return CMP_ERROR(NO_ERROR);
-}
-
-
-/**
- * @brief checks if the ICU compression configuration is valid
- *
- * @param cfg	pointer to the cmp_cfg structure to be validated
- *
- * @returns an error code if any of the configuration parameters are invalid,
- *	otherwise returns CMP_ERROR_NO_ERROR on valid configuration
- */
-
-static uint32_t cmp_cfg_icu_is_invalid_error_code(const struct cmp_cfg *cfg)
-{
-
-	RETURN_ERROR_IF(cmp_cfg_gen_par_is_invalid(cfg) , PAR_GENERIC, "");
-
-	if (cmp_imagette_data_type_is_used(cfg->data_type)) {
-		RETURN_ERROR_IF(cmp_cfg_imagette_is_invalid(cfg), PAR_SPECIFIC, "");
-	} else if (cmp_fx_cob_data_type_is_used(cfg->data_type)) {
-		RETURN_ERROR_IF(cmp_cfg_fx_cob_is_invalid(cfg), PAR_SPECIFIC, "");
-	} else {
-		RETURN_ERROR_IF(cmp_cfg_aux_is_invalid(cfg), PAR_SPECIFIC, "");
-	}
-
-	FORWARD_IF_ERROR(check_compression_buffers(cfg), "");
-
-	return CMP_ERROR(NO_ERROR);
-}
-
-
-/**
  * @brief fill the last part of the bitstream with zeros
  *
  * @param cfg		pointer to the compression configuration structure
@@ -1600,14 +1530,6 @@ static uint32_t compress_data_internal(const struct cmp_cfg *cfg, uint32_t strea
 	RETURN_ERROR_IF(cfg == NULL, GENERIC, "");
 	RETURN_ERROR_IF(stream_len & 0x7, GENERIC, "The stream_len parameter must be a multiple of 8.");
 
-	if (raw_mode_is_used(cfg->cmp_mode) && cfg->dst) {
-		uint32_t raw_stream_size = (stream_len >> 3)
-			+ cfg->samples * (uint32_t)size_of_a_sample(cfg->data_type);
-
-		/* TODO: move this check to the memcpy */
-		RETURN_ERROR_IF(raw_stream_size > cfg->stream_size, SMALL_BUFFER, "");
-	}
-
 	if (cfg->samples == 0) /* nothing to compress we are done */
 		return stream_len;
 
@@ -1615,13 +1537,16 @@ static uint32_t compress_data_internal(const struct cmp_cfg *cfg, uint32_t strea
 		uint32_t raw_size = cfg->samples * (uint32_t)size_of_a_sample(cfg->data_type);
 
 		if (cfg->dst) {
-			uint8_t *p = (uint8_t *)cfg->dst + (stream_len >> 3);
+			uint32_t offset_bytes = stream_len >> 3;
+			uint8_t *p = (uint8_t *)cfg->dst + offset_bytes;
+			uint32_t new_stream_size = offset_bytes + raw_size;
 
+			RETURN_ERROR_IF(new_stream_size > cfg->stream_size, SMALL_BUFFER, "");
 			memcpy(p, cfg->src, raw_size);
 			RETURN_ERROR_IF(cpu_to_be_data_type(p, raw_size, cfg->data_type),
 					INT_DATA_TYPE_UNSUPPORTED, "");
 		}
-		bitsize += stream_len + raw_size*8; /* convert to bits */
+		bitsize += stream_len + raw_size * 8; /* convert to bits */
 	} else {
 		switch (cfg->data_type) {
 		case DATA_TYPE_IMAGETTE:
@@ -1671,6 +1596,7 @@ static uint32_t compress_data_internal(const struct cmp_cfg *cfg, uint32_t strea
 		case DATA_TYPE_SMEARING:
 			bitsize = compress_smearing(cfg, stream_len);
 			break;
+
 		case DATA_TYPE_F_FX:
 		case DATA_TYPE_F_FX_EFX:
 		case DATA_TYPE_F_FX_NCOB:
@@ -1687,6 +1613,80 @@ static uint32_t compress_data_internal(const struct cmp_cfg *cfg, uint32_t strea
 	bitsize = pad_bitstream(cfg, bitsize);
 
 	return bitsize;
+}
+
+
+/**
+ * @brief check if the ICU buffer parameters are invalid
+ *
+ * @param cfg	pointer to the compressor configuration to check
+ *
+ * @returns 0 if the buffer parameters are valid, otherwise invalid
+ */
+
+static uint32_t check_compression_buffers(const struct cmp_cfg *cfg)
+{
+	size_t data_size;
+
+	RETURN_ERROR_IF(cfg == NULL, GENERIC, "");
+
+	RETURN_ERROR_IF(cfg->src == NULL, CHUNK_NULL, "");
+
+	data_size = size_of_a_sample(cfg->data_type) * cfg->samples;
+
+	if (cfg->samples == 0)
+		debug_print("Warning: The samples parameter is 0. No data are compressed. This behavior may not be intended.");
+
+	RETURN_ERROR_IF(buffer_overlaps(cfg->dst, cfg->stream_size,
+					cfg->src, data_size), PAR_BUFFERS,
+		"The compressed data buffer and the data to compress buffer are overlapping.");
+
+	if (model_mode_is_used(cfg->cmp_mode)) {
+		RETURN_ERROR_IF(cfg->model_buf == NULL, PAR_NO_MODEL, "");
+
+		RETURN_ERROR_IF(buffer_overlaps(cfg->model_buf, data_size,
+						cfg->src, data_size), PAR_BUFFERS,
+				"The model buffer and the data to compress buffer are overlapping.");
+		RETURN_ERROR_IF(buffer_overlaps(cfg->model_buf, data_size,
+						cfg->dst, cfg->stream_size), PAR_BUFFERS,
+				"The model buffer and the compressed data buffer are overlapping.");
+
+		RETURN_ERROR_IF(buffer_overlaps(cfg->updated_model_buf, data_size,
+						cfg->src, data_size), PAR_BUFFERS,
+				"The updated model buffer and the data to compress buffer are overlapping.");
+		RETURN_ERROR_IF(buffer_overlaps(cfg->updated_model_buf, data_size,
+						cfg->dst, cfg->stream_size), PAR_BUFFERS,
+				"The updated model buffer and the compressed data buffer are overlapping.");
+	}
+
+	return CMP_ERROR(NO_ERROR);
+}
+
+
+/**
+ * @brief checks if the ICU compression configuration is valid
+ *
+ * @param cfg	pointer to the cmp_cfg structure to be validated
+ *
+ * @returns an error code if any of the configuration parameters are invalid,
+ *	otherwise returns CMP_ERROR_NO_ERROR on valid configuration
+ */
+
+static uint32_t cmp_cfg_icu_is_invalid_error_code(const struct cmp_cfg *cfg)
+{
+
+	RETURN_ERROR_IF(cmp_cfg_gen_par_is_invalid(cfg), PAR_GENERIC, "");
+
+	if (cmp_imagette_data_type_is_used(cfg->data_type))
+		RETURN_ERROR_IF(cmp_cfg_imagette_is_invalid(cfg), PAR_SPECIFIC, "");
+	else if (cmp_fx_cob_data_type_is_used(cfg->data_type))
+		RETURN_ERROR_IF(cmp_cfg_fx_cob_is_invalid(cfg), PAR_SPECIFIC, "");
+	else
+		RETURN_ERROR_IF(cmp_cfg_aux_is_invalid(cfg), PAR_SPECIFIC, "");
+
+	FORWARD_IF_ERROR(check_compression_buffers(cfg), "");
+
+	return CMP_ERROR(NO_ERROR);
 }
 
 
@@ -1755,10 +1755,10 @@ static uint32_t cmp_collection(const uint8_t *col,
 			       uint32_t *dst, uint32_t dst_capacity,
 			       struct cmp_cfg *cfg, uint32_t dst_size)
 {
-	uint32_t dst_size_begin = dst_size;
+	uint32_t const dst_size_begin = dst_size;
 	uint32_t dst_size_bits;
 	const struct collection_hdr *col_hdr = (const struct collection_hdr *)col;
-	uint16_t col_data_length = cmp_col_get_data_length(col_hdr);
+	uint16_t const col_data_length = cmp_col_get_data_length(col_hdr);
 	uint16_t sample_size;
 
 	/* sanity check of the collection header */
@@ -2053,8 +2053,10 @@ static enum chunk_type init_cmp_cfg_from_cmp_par(const struct collection_hdr *co
 		cfg->cmp_par_background_pixels_error = par->fc_background_outlier_pixels;
 		break;
 	case CHUNK_TYPE_UNKNOWN:
-	default: /* default case never reached because cmp_col_get_chunk_type
-		    returns CHUNK_TYPE_UNKNOWN if the type is unknown */
+	default: /*
+		  * default case never reached because cmp_col_get_chunk_type
+		  * returns CHUNK_TYPE_UNKNOWN if the type is unknown
+		  */
 		chunk_type = CHUNK_TYPE_UNKNOWN;
 		break;
 	}
@@ -2123,7 +2125,7 @@ uint32_t compress_chunk(const void *chunk, uint32_t chunk_size,
 			uint32_t *dst, uint32_t dst_capacity,
 			const struct cmp_par *cmp_par)
 {
-	uint64_t start_timestamp = get_timestamp();
+	uint64_t const start_timestamp = get_timestamp();
 	const struct collection_hdr *col = (const struct collection_hdr *)chunk;
 	enum chunk_type chunk_type;
 	struct cmp_cfg cfg;
@@ -2152,8 +2154,7 @@ uint32_t compress_chunk(const void *chunk, uint32_t chunk_size,
 	/* compress one collection after another */
 	for (read_bytes = 0;
 	     read_bytes <= chunk_size - COLLECTION_HDR_SIZE;
-	     read_bytes += cmp_col_get_size(col))
-	{
+	     read_bytes += cmp_col_get_size(col)) {
 		const uint8_t *col_model = NULL;
 		uint8_t *col_up_model = NULL;
 
@@ -2218,7 +2219,8 @@ uint32_t compress_chunk_cmp_size_bound(const void *chunk, size_t chunk_size)
 	/* count the number of collections in the chunk */
 	for (read_bytes = 0;
 	     read_bytes <= (int32_t)(chunk_size-COLLECTION_HDR_SIZE);
-	     read_bytes += cmp_col_get_size((const struct collection_hdr *)((const uint8_t *)chunk + read_bytes)))
+	     read_bytes += cmp_col_get_size((const struct collection_hdr *)
+					    ((const uint8_t *)chunk + read_bytes)))
 		num_col++;
 
 	RETURN_ERROR_IF((uint32_t)read_bytes != chunk_size, CHUNK_SIZE_INCONSISTENT, "");

@@ -287,7 +287,7 @@ static __inline uint32_t re_map_to_pos(uint32_t value_to_unmap)
 {
 	if (value_to_unmap & 0x1) { /* if uneven */
 		/* uint64_t to prevent overflow if value_to_unmap == 0xFFFFFFFF */
-		uint64_t tmp64 = value_to_unmap;
+		uint64_t const tmp64 = value_to_unmap;
 
 		return (uint32_t)(-((tmp64 + 1) / 2));
 	} else {
@@ -311,7 +311,7 @@ static int decode_value(const struct decoder_setup *setup, uint32_t *decoded_val
 			uint32_t model)
 {
 	/* decode the next value from the bitstream */
-	int err = setup->decode_method_f(setup, decoded_value);
+	int const err = setup->decode_method_f(setup, decoded_value);
 
 	/* map the unsigned decode value back to a signed value */
 	*decoded_value = re_map_to_pos(*decoded_value);
@@ -1836,7 +1836,7 @@ static uint32_t get_cmp_collection_size(const uint8_t *cmp_col)
 static int get_num_of_chunks(const struct cmp_entity *ent)
 {
 	const uint8_t *cmp_data_p = cmp_ent_get_data_buf_const(ent);
-	long cmp_data_size = cmp_ent_get_cmp_data_size(ent);
+	long const cmp_data_size = cmp_ent_get_cmp_data_size(ent);
 	int n = 0;
 	const uint8_t *p = cmp_data_p;
 	/* highest plausible address of compressed collection */
