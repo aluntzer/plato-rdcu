@@ -53,11 +53,10 @@ struct cmp_max_used_bits {
 	unsigned int f_ecob; /* f_ecob_x and f_ncob_y */
 	unsigned int l_exp_flags;
 	unsigned int l_fx;
-	unsigned int l_fx_variance;
+	unsigned int l_fx_cob_variance; /* l_fx_variance, l_cob_x_variance and l_cob_y_variance */
 	unsigned int l_efx;
 	unsigned int l_ncob; /* l_ncob_x and l_ncob_y */
 	unsigned int l_ecob; /* l_ecob_x and l_ncob_y */
-	unsigned int l_cob_variance; /* l_cob_x_variance and l_cob_y_variance */
 	unsigned int nc_imagette;
 	unsigned int saturated_imagette;
 	unsigned int nc_offset_mean;
@@ -94,11 +93,10 @@ static const struct cmp_max_used_bits MAX_USED_BITS = {
 	member_bit_size(struct f_fx_efx_ncob_ecob, ecob_x), /* f_ecob_x and f_ncob_y */
 	24, /* member_bit_size(struct l_fx_efx_ncob_ecob, exp_flags), /1* l_fx_exp_flags *1/ */
 	member_bit_size(struct l_fx_efx_ncob_ecob, fx), /* l_fx */
-	member_bit_size(struct l_fx_efx_ncob_ecob, fx_variance), /* l_fx_variance */
+	member_bit_size(struct l_fx_efx_ncob_ecob, fx_variance), /* l_fx_cob_variance */
 	member_bit_size(struct l_fx_efx_ncob_ecob, efx), /* l_efx */
 	member_bit_size(struct l_fx_efx_ncob_ecob, ncob_x), /* l_ncob_x and l_ncob_y */
 	member_bit_size(struct l_fx_efx_ncob_ecob, ecob_x), /* l_ecob_x and l_ncob_y */
-	member_bit_size(struct l_fx_efx_ncob_ecob, cob_x_variance), /* l_cob_x_variance and l_cob_y_variance */
 	sizeof(uint16_t)*8, /* nc_imagette */
 	sizeof(uint16_t)*8, /* saturated_imagette */
 	member_bit_size(struct offset, mean), /* nc_offset_mean */

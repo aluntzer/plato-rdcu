@@ -393,7 +393,7 @@ static size_t gen_l_fx_data(struct l_fx *data, uint32_t samples,
 		for (i = 0; i < samples; i++) {
 			data[i].exp_flags = gen_data_f(MAX_USED_BITS.l_exp_flags, extra);
 			data[i].fx = gen_data_f(MAX_USED_BITS.l_fx, extra);
-			data[i].fx_variance = gen_data_f(MAX_USED_BITS.l_fx_variance, extra);
+			data[i].fx_variance = gen_data_f(MAX_USED_BITS.l_fx_cob_variance, extra);
 		}
 	}
 	return sizeof(*data) * samples;
@@ -410,7 +410,7 @@ static size_t gen_l_fx_efx_data(struct l_fx_efx *data, uint32_t samples,
 			data[i].exp_flags = gen_data_f(MAX_USED_BITS.l_exp_flags, extra);
 			data[i].fx = gen_data_f(MAX_USED_BITS.l_fx, extra);
 			data[i].efx = gen_data_f(MAX_USED_BITS.l_efx, extra);
-			data[i].fx_variance = gen_data_f(MAX_USED_BITS.l_fx_variance, extra);
+			data[i].fx_variance = gen_data_f(MAX_USED_BITS.l_fx_cob_variance, extra);
 		}
 	}
 	return sizeof(*data) * samples;
@@ -428,9 +428,9 @@ static size_t gen_l_fx_ncob_data(struct l_fx_ncob *data, uint32_t samples,
 			data[i].fx = gen_data_f(MAX_USED_BITS.l_fx, extra);
 			data[i].ncob_x = gen_data_f(MAX_USED_BITS.l_ncob, extra);
 			data[i].ncob_y = gen_data_f(MAX_USED_BITS.l_ncob, extra);
-			data[i].fx_variance = gen_data_f(MAX_USED_BITS.l_fx_variance, extra);
-			data[i].cob_x_variance = gen_data_f(MAX_USED_BITS.l_cob_variance, extra);
-			data[i].cob_y_variance = gen_data_f(MAX_USED_BITS.l_cob_variance, extra);
+			data[i].fx_variance = gen_data_f(MAX_USED_BITS.l_fx_cob_variance, extra);
+			data[i].cob_x_variance = gen_data_f(MAX_USED_BITS.l_fx_cob_variance, extra);
+			data[i].cob_y_variance = gen_data_f(MAX_USED_BITS.l_fx_cob_variance, extra);
 		}
 	}
 	return sizeof(*data) * samples;
@@ -451,9 +451,9 @@ static size_t gen_l_fx_efx_ncob_ecob_data(struct l_fx_efx_ncob_ecob *data, uint3
 			data[i].efx = gen_data_f(MAX_USED_BITS.l_efx, extra);
 			data[i].ecob_x = gen_data_f(MAX_USED_BITS.l_ecob, extra);
 			data[i].ecob_y = gen_data_f(MAX_USED_BITS.l_ecob, extra);
-			data[i].fx_variance = gen_data_f(MAX_USED_BITS.l_fx_variance, extra);
-			data[i].cob_x_variance = gen_data_f(MAX_USED_BITS.l_cob_variance, extra);
-			data[i].cob_y_variance = gen_data_f(MAX_USED_BITS.l_cob_variance, extra);
+			data[i].fx_variance = gen_data_f(MAX_USED_BITS.l_fx_cob_variance, extra);
+			data[i].cob_x_variance = gen_data_f(MAX_USED_BITS.l_fx_cob_variance, extra);
+			data[i].cob_y_variance = gen_data_f(MAX_USED_BITS.l_fx_cob_variance, extra);
 		}
 	}
 	return sizeof(*data) * samples;

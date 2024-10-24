@@ -840,7 +840,7 @@ static int decompress_l_fx(const struct cmp_cfg *cfg, struct bit_decoder *dec)
 	configure_decoder_setup(&setup_fx, dec, cfg->cmp_mode, cfg->cmp_par_fx, cfg->spill_fx,
 				cfg->round, MAX_USED_BITS.l_fx);
 	configure_decoder_setup(&setup_fx_var, dec, cfg->cmp_mode, cfg->cmp_par_fx_cob_variance, cfg->spill_fx_cob_variance,
-				cfg->round, MAX_USED_BITS.l_fx_variance);
+				cfg->round, MAX_USED_BITS.l_fx_cob_variance);
 
 	for (i = 0; ; i++) {
 		err = decode_value(&setup_exp_flags, &decoded_value, model.exp_flags);
@@ -914,7 +914,7 @@ static int decompress_l_fx_efx(const struct cmp_cfg *cfg, struct bit_decoder *de
 	configure_decoder_setup(&setup_efx, dec, cfg->cmp_mode, cfg->cmp_par_efx, cfg->spill_efx,
 				cfg->round, MAX_USED_BITS.l_efx);
 	configure_decoder_setup(&setup_fx_var, dec, cfg->cmp_mode, cfg->cmp_par_fx_cob_variance, cfg->spill_fx_cob_variance,
-				cfg->round, MAX_USED_BITS.l_fx_variance);
+				cfg->round, MAX_USED_BITS.l_fx_cob_variance);
 
 	for (i = 0; ; i++) {
 		err = decode_value(&setup_exp_flags, &decoded_value, model.exp_flags);
@@ -996,9 +996,9 @@ static int decompress_l_fx_ncob(const struct cmp_cfg *cfg, struct bit_decoder *d
 	configure_decoder_setup(&setup_ncob, dec, cfg->cmp_mode, cfg->cmp_par_ncob, cfg->spill_ncob,
 				cfg->round, MAX_USED_BITS.l_ncob);
 	configure_decoder_setup(&setup_fx_var, dec, cfg->cmp_mode, cfg->cmp_par_fx_cob_variance, cfg->spill_fx_cob_variance,
-				cfg->round, MAX_USED_BITS.l_fx_variance);
+				cfg->round, MAX_USED_BITS.l_fx_cob_variance);
 	configure_decoder_setup(&setup_cob_var, dec, cfg->cmp_mode, cfg->cmp_par_fx_cob_variance, cfg->spill_fx_cob_variance,
-				cfg->round, MAX_USED_BITS.l_cob_variance);
+				cfg->round, MAX_USED_BITS.l_fx_cob_variance);
 
 	for (i = 0; ; i++) {
 		err = decode_value(&setup_exp_flags, &decoded_value, model.exp_flags);
@@ -1105,9 +1105,9 @@ static int decompress_l_fx_efx_ncob_ecob(const struct cmp_cfg *cfg, struct bit_d
 	configure_decoder_setup(&setup_ecob, dec, cfg->cmp_mode, cfg->cmp_par_ecob, cfg->spill_ecob,
 				cfg->round, MAX_USED_BITS.l_ecob);
 	configure_decoder_setup(&setup_fx_var, dec, cfg->cmp_mode, cfg->cmp_par_fx_cob_variance, cfg->spill_fx_cob_variance,
-				cfg->round, MAX_USED_BITS.l_fx_variance);
+				cfg->round, MAX_USED_BITS.l_fx_cob_variance);
 	configure_decoder_setup(&setup_cob_var, dec, cfg->cmp_mode, cfg->cmp_par_fx_cob_variance, cfg->spill_fx_cob_variance,
-				cfg->round, MAX_USED_BITS.l_cob_variance);
+				cfg->round, MAX_USED_BITS.l_fx_cob_variance);
 
 	for (i = 0; ; i++) {
 		err = decode_value(&setup_exp_flags, &decoded_value, model.exp_flags);

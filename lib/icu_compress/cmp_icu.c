@@ -889,7 +889,7 @@ static uint32_t compress_l_fx(const struct cmp_cfg *cfg, uint32_t stream_len)
 	configure_encoder_setup(&setup_fx, cfg->cmp_par_fx, cfg->spill_fx,
 				cfg->round, MAX_USED_BITS.l_fx, cfg);
 	configure_encoder_setup(&setup_fx_var, cfg->cmp_par_fx_cob_variance, cfg->spill_fx_cob_variance,
-				cfg->round, MAX_USED_BITS.l_fx_variance, cfg);
+				cfg->round, MAX_USED_BITS.l_fx_cob_variance, cfg);
 
 	for (i = 0;; i++) {
 		stream_len = encode_value(data_buf[i].exp_flags, model.exp_flags,
@@ -960,7 +960,7 @@ static uint32_t compress_l_fx_efx(const struct cmp_cfg *cfg, uint32_t stream_len
 	configure_encoder_setup(&setup_efx, cfg->cmp_par_efx, cfg->spill_efx,
 				cfg->round, MAX_USED_BITS.l_efx, cfg);
 	configure_encoder_setup(&setup_fx_var, cfg->cmp_par_fx_cob_variance, cfg->spill_fx_cob_variance,
-				cfg->round, MAX_USED_BITS.l_fx_variance, cfg);
+				cfg->round, MAX_USED_BITS.l_fx_cob_variance, cfg);
 
 	for (i = 0;; i++) {
 		stream_len = encode_value(data_buf[i].exp_flags, model.exp_flags,
@@ -1039,9 +1039,9 @@ static uint32_t compress_l_fx_ncob(const struct cmp_cfg *cfg, uint32_t stream_le
 				cfg->round, MAX_USED_BITS.l_ncob, cfg);
 	/* we use the cmp_par_fx_cob_variance parameter for fx and cob variance data */
 	configure_encoder_setup(&setup_fx_var, cfg->cmp_par_fx_cob_variance, cfg->spill_fx_cob_variance,
-				cfg->round, MAX_USED_BITS.l_fx_variance, cfg);
+				cfg->round, MAX_USED_BITS.l_fx_cob_variance, cfg);
 	configure_encoder_setup(&setup_cob_var, cfg->cmp_par_fx_cob_variance, cfg->spill_fx_cob_variance,
-				cfg->round, MAX_USED_BITS.l_cob_variance, cfg);
+				cfg->round, MAX_USED_BITS.l_fx_cob_variance, cfg);
 
 	for (i = 0;; i++) {
 		stream_len = encode_value(data_buf[i].exp_flags, model.exp_flags,
@@ -1142,9 +1142,9 @@ static uint32_t compress_l_fx_efx_ncob_ecob(const struct cmp_cfg *cfg, uint32_t 
 				cfg->round, MAX_USED_BITS.l_ecob, cfg);
 	/* we use compression parameters for both variance data fields */
 	configure_encoder_setup(&setup_fx_var, cfg->cmp_par_fx_cob_variance, cfg->spill_fx_cob_variance,
-				cfg->round, MAX_USED_BITS.l_fx_variance, cfg);
+				cfg->round, MAX_USED_BITS.l_fx_cob_variance, cfg);
 	configure_encoder_setup(&setup_cob_var, cfg->cmp_par_fx_cob_variance, cfg->spill_fx_cob_variance,
-				cfg->round, MAX_USED_BITS.l_cob_variance, cfg);
+				cfg->round, MAX_USED_BITS.l_fx_cob_variance, cfg);
 
 	for (i = 0;; i++) {
 		stream_len = encode_value(data_buf[i].exp_flags, model.exp_flags,
