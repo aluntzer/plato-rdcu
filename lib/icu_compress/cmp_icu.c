@@ -30,6 +30,7 @@
 #include "../common/cmp_entity.h"
 #include "../common/cmp_error.h"
 #include "../common/leon_inttypes.h"
+#include "cmp_chunk_type.h"
 
 #include "../cmp_icu.h"
 #include "../cmp_chunk.h"
@@ -1898,84 +1899,6 @@ static uint32_t cmp_ent_build_chunk_header(uint32_t *entity, uint32_t chunk_size
 		return GENERIC_HEADER_SIZE;
 	else
 		return NON_IMAGETTE_HEADER_SIZE;
-}
-
-
-/**
- * @brief types of chunks containing different types of collections
- *	according to DetailedBudgetWorking_2023-10-11
- */
-
-enum chunk_type {
-	CHUNK_TYPE_UNKNOWN,
-	CHUNK_TYPE_NCAM_IMAGETTE,
-	CHUNK_TYPE_SHORT_CADENCE,
-	CHUNK_TYPE_LONG_CADENCE,
-	CHUNK_TYPE_SAT_IMAGETTE,
-	CHUNK_TYPE_OFFSET_BACKGROUND, /* N-CAM */
-	CHUNK_TYPE_SMEARING,
-	CHUNK_TYPE_F_CHAIN
-};
-
-
-/**
- * @brief get the chunk_type of a collection
- * @details map a sub-service to a chunk service according to
- *	DetailedBudgetWorking_2023-10-11
- *
- * @param col	pointer to a collection header
- *
- * @returns chunk type of the collection, CHUNK_TYPE_UNKNOWN on
- *	failure
- */
-
-static enum chunk_type cmp_col_get_chunk_type(const struct collection_hdr *col)
-{
-	enum chunk_type chunk_type;
-
-	switch (cmp_col_get_subservice(col)) {
-	case SST_NCxx_S_SCIENCE_IMAGETTE:
-		chunk_type = CHUNK_TYPE_NCAM_IMAGETTE;
-		break;
-	case SST_NCxx_S_SCIENCE_SAT_IMAGETTE:
-		chunk_type = CHUNK_TYPE_SAT_IMAGETTE;
-		break;
-	case SST_NCxx_S_SCIENCE_OFFSET:
-	case SST_NCxx_S_SCIENCE_BACKGROUND:
-		chunk_type = CHUNK_TYPE_OFFSET_BACKGROUND;
-		break;
-	case SST_NCxx_S_SCIENCE_SMEARING:
-		chunk_type = CHUNK_TYPE_SMEARING;
-		break;
-	case SST_NCxx_S_SCIENCE_S_FX:
-	case SST_NCxx_S_SCIENCE_S_FX_EFX:
-	case SST_NCxx_S_SCIENCE_S_FX_NCOB:
-	case SST_NCxx_S_SCIENCE_S_FX_EFX_NCOB_ECOB:
-		chunk_type = CHUNK_TYPE_SHORT_CADENCE;
-		break;
-	case SST_NCxx_S_SCIENCE_L_FX:
-	case SST_NCxx_S_SCIENCE_L_FX_EFX:
-	case SST_NCxx_S_SCIENCE_L_FX_NCOB:
-	case SST_NCxx_S_SCIENCE_L_FX_EFX_NCOB_ECOB:
-		chunk_type = CHUNK_TYPE_LONG_CADENCE;
-		break;
-	case SST_FCx_S_SCIENCE_IMAGETTE:
-	case SST_FCx_S_SCIENCE_OFFSET_VALUES:
-	case SST_FCx_S_BACKGROUND_VALUES:
-		chunk_type = CHUNK_TYPE_F_CHAIN;
-		break;
-	case SST_NCxx_S_SCIENCE_F_FX:
-	case SST_NCxx_S_SCIENCE_F_FX_EFX:
-	case SST_NCxx_S_SCIENCE_F_FX_NCOB:
-	case SST_NCxx_S_SCIENCE_F_FX_EFX_NCOB_ECOB:
-		debug_print("Error: No chunk is defined for fast cadence subservices");
-		/* fall through */
-	default:
-		chunk_type = CHUNK_TYPE_UNKNOWN;
-		break;
-	}
-
-	return chunk_type;
 }
 
 
