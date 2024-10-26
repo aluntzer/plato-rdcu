@@ -19,6 +19,8 @@
 #ifndef DECMP_H
 #define DECMP_H
 
+#include <stdint.h>
+
 #include "common/cmp_entity.h"
 #include "common/cmp_support.h"
 

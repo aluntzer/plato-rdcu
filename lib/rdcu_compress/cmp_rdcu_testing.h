@@ -20,6 +20,8 @@
 #ifndef CMP_RDCU_TESTING_H
 #define CMP_RDCU_TESTING_H
 
+#include <stdint.h>
+
 #include "../common/cmp_support.h"
 
 int rdcu_start_compression(void);

@@ -21,6 +21,7 @@
 #include <unity.h>
 #include <cmp_rdcu_cfg.h>
 #include <rdcu_cmd.h>
+#include <cmp_cal_up_model.h>
 
 
 /**
@@ -247,6 +248,7 @@ void test_rdcu_cfg_buffers_model(void)
 	/* test a RAW mode buffer configuration */
 	error = rdcu_cfg_create(&rcfg, CMP_MODE_MODEL_MULTI, MAX_MODEL_VALUE,
 				CMP_LOSSLESS);
+	TEST_ASSERT_FALSE(error);
 
 	rdcu_data_adr = 0x0;
 	rdcu_model_adr = 0x8;

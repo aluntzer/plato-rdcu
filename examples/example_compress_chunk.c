@@ -149,7 +149,7 @@ static int demo_comperss_chunk_1d(void)
 	{	/* have a look at the compressed data */
 		uint32_t i;
 
-		printf("Here's the compressed data including the compression entity header (size %d):\n", cmp_size_bytes);
+		printf("Here's the compressed data including the compression entity header (size %u):\n", cmp_size_bytes);
 		for (i = 0; i < cmp_size_bytes; i++) {
 			const uint8_t *p = (uint8_t *)compressed_data; /* the compression entity is big-endian */
 			printf("%02X ", p[i]);
@@ -270,7 +270,7 @@ static int demo_comperss_chunk_model(void)
 	{	/* have a look at the compressed data */
 		uint32_t i;
 
-		printf("Here's the compressed data including the compression entity header (size %d):\n", cmp_size_bytes);
+		printf("Here's the compressed data including the compression entity header (size %u):\n", cmp_size_bytes);
 		for (i = 0; i < cmp_size_bytes; i++) {
 			const uint8_t *p = (uint8_t *)compressed_data; /* the compression entity is big-endian */
 			printf("%02X ", p[i]);

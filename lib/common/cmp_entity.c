@@ -32,10 +32,10 @@
 #  endif
 #endif
 
+#include "compiler.h"
 #include "byteorder.h"
 #include "cmp_debug.h"
 #include "cmp_support.h"
-#include "cmp_data_types.h"
 #include "cmp_entity.h"
 #include "leon_inttypes.h"
 
@@ -1971,7 +1971,7 @@ uint64_t cmp_ent_create_timestamp(const struct timespec *ts)
 		}
 		now = *ts;
 	} else {
-		clock_gettime(CLOCK_REALTIME, &now);
+		(void)clock_gettime(CLOCK_REALTIME, &now);
 	}
 
 	seconds = ((double)now.tv_sec + 1.0e-9 * (double)now.tv_nsec) -
@@ -2255,6 +2255,7 @@ static void cmp_ent_parese_specific_header(const struct cmp_entity *ent)
 	case DATA_TYPE_CHUNK:
 		cmp_ent_parese_non_imagette_header(ent);
 		break;
+	case DATA_TYPE_UNKNOWN:
 	default:
 		debug_print("For this data product type no parse functions is implemented!");
 		break;

@@ -25,6 +25,7 @@
 #include "../common/cmp_support.h"
 #include "../common/leon_inttypes.h"
 #include "../common/compiler.h"
+#include "../common/cmp_cal_up_model.h"
 #include "rdcu_cmd.h"
 #include "cmp_rdcu_cfg.h"
 

@@ -54,7 +54,7 @@
  * will cause a build error
  */
 
-#define ARRAY_SIZE(x) (sizeof(x)/sizeof(x[0]))
+#define ARRAY_SIZE(x) (sizeof(x)/sizeof((x)[0]))
 
 #define bitsizeof(x)  (CHAR_BIT * sizeof(x))
 

@@ -21,6 +21,7 @@
 #ifndef ICU_ASW
 #  include <stdio.h>
 #endif
+#include <stddef.h>
 #include <string.h>
 #include <stdarg.h>
 
@@ -44,8 +45,8 @@ static void cmp_debug_puts(const char *str)
 	/* asw_puts(str); */
 	(void)str;
 #else
-	fputs(str, stderr);
-	fputs("\n", stderr);
+	(void)fputs(str, stderr);
+	(void)fputs("\n", stderr);
 #endif
 }
 

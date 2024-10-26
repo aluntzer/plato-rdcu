@@ -19,6 +19,8 @@
 #ifndef CMP_RDCU_CFG_H
 #define CMP_RDCU_CFG_H
 
+#include <stdint.h>
+
 #include "../common/cmp_support.h"
 
 

@@ -22,11 +22,8 @@
 #include <stdint.h>
 #include <stddef.h>
 
-#include "cmp_cal_up_model.h"
 
 #define CMP_COLLECTION_FILD_SIZE 2
-
-
 
 
 #define CMP_LOSSLESS	0

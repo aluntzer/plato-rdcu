@@ -62,8 +62,10 @@
  */
 
 
+#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
+#include <alloca.h>
 
 #include "../common/byteorder.h"
 #include "../common/cmp_debug.h"

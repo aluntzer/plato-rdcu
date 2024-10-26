@@ -1993,7 +1993,7 @@ void test_compress_chunk_error_cases(void)
 	uint8_t updated_chunk_model[CHUNK_SIZE];
 	uint32_t dst[COMPRESS_CHUNK_BOUND(CHUNK_SIZE, 2)/sizeof(uint32_t)];
 	uint32_t dst_capacity = sizeof(dst);
-	struct cmp_par cmp_par;
+	struct cmp_par cmp_par = {0};
 	uint32_t cmp_size;
 	struct collection_hdr *col2;
 
@@ -2582,6 +2582,7 @@ void test_buffer_overlaps(void)
 	TEST_ASSERT_TRUE(overlap);
 
 	overlap = buffer_overlaps(&buf_a[0], 2, &buf_a[1], 2);
+	TEST_ASSERT_TRUE(overlap);
 	overlap = buffer_overlaps(&buf_a[1], 2, &buf_a[0], 2);
 	TEST_ASSERT_TRUE(overlap);
 }

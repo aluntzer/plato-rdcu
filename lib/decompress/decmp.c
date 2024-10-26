@@ -37,10 +37,11 @@
 #include "../common/cmp_debug.h"
 #include "../common/cmp_support.h"
 #include "../common/cmp_entity.h"
+#include "../common/cmp_cal_up_model.h"
 #include "../common/cmp_max_used_bits.h"
 
 
-#define CORRUPTION_DETECTED -1
+#define CORRUPTION_DETECTED (-1)
 
 
 MAYBE_UNUSED static const char *please_check_str =
@@ -1596,6 +1597,7 @@ static int decompressed_data_internal(const struct cmp_cfg *cfg, enum decmp_type
 		case DATA_TYPE_F_FX_EFX:
 		case DATA_TYPE_F_FX_NCOB:
 		case DATA_TYPE_F_FX_EFX_NCOB_ECOB:
+		case DATA_TYPE_CHUNK:
 		case DATA_TYPE_UNKNOWN:
 		default:
 			err = -1;

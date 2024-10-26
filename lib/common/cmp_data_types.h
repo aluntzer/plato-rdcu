@@ -34,6 +34,7 @@
 #ifndef CMP_DATA_TYPE_H
 #define CMP_DATA_TYPE_H
 
+#include <stddef.h>
 #include <stdint.h>
 
 #include "compiler.h"

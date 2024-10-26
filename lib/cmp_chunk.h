@@ -20,6 +20,9 @@
 #ifndef CMP_CHUNK_H
 #define CMP_CHUNK_H
 
+#include <stddef.h>
+#include <stdint.h>
+
 #include "common/cmp_support.h"
 #include "common/cmp_entity.h"
 #include "common/cmp_error_list.h"

@@ -17,6 +17,7 @@
  * @see FPGA Requirement Specification PLATO-IWF-PL-RS-005 Issue 0.7
  */
 
+#include <stdint.h>
 
 #include "rmap.h"
 #include "rdcu_cmd.h"

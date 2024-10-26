@@ -27,6 +27,7 @@
 #include <unity.h>
 #include "../test_common/test_common.h"
 #include "../test_common/chunk_round_trip.h"
+#include "cmp_support.h"
 
 #include <cmp_icu.h>
 #include <cmp_chunk.h>
@@ -37,6 +38,7 @@
 #include <byteorder.h>
 #include <cmp_error.h>
 #include <cmp_max_used_bits.h>
+#include <cmp_cal_up_model.h>
 
 #if defined __has_include
 #  if __has_include(<time.h>)
@@ -580,6 +582,8 @@ size_t generate_random_collection(struct collection_hdr *col, enum cmp_data_type
 		size += gen_fc_background_data(science_data, samples,
 					       gen_data_f, extra);
 		break;
+	case DATA_TYPE_CHUNK:
+	case DATA_TYPE_UNKNOWN:
 	default:
 		TEST_FAIL();
 	}
@@ -940,7 +944,7 @@ void test_random_collection_round_trip(void)
 	enum cmp_data_type data_type;
 	enum cmp_mode cmp_mode;
 	enum { MAX_DATA_TO_COMPRESS_SIZE = UINT16_MAX};
-	uint32_t cmp_data_capacity = COMPRESS_CHUNK_BOUND(MAX_DATA_TO_COMPRESS_SIZE, 1);
+	uint32_t cmp_data_capacity = COMPRESS_CHUNK_BOUND(MAX_DATA_TO_COMPRESS_SIZE, 1U);
 	int run;
 #ifdef __sparc__
 	void *data          = (void *)0x63000000;
@@ -994,7 +998,7 @@ void test_random_collection_round_trip(void)
 				struct cmp_par par;
 				uint32_t cmp_size, cmp_size2;
 
-				cmp_data_capacity = COMPRESS_CHUNK_BOUND(MAX_DATA_TO_COMPRESS_SIZE, 1);
+				cmp_data_capacity = COMPRESS_CHUNK_BOUND(MAX_DATA_TO_COMPRESS_SIZE, 1U);
 
 				generate_random_cmp_par(&par);
 				par.cmp_mode = cmp_mode;
@@ -1411,7 +1415,7 @@ void test_cmp_decmp_chunk_raw(void)
 		dst_capacity = (uint32_t)cmp_size;
 		dst = malloc(dst_capacity); TEST_ASSERT_NOT_NULL(dst);
 		cmp_size = compress_chunk(chunk, chunk_size, NULL, NULL, dst, dst_capacity, &par);
-		TEST_ASSERT_EQUAL_INT(cmp_size_exp, dst_capacity);
+		TEST_ASSERT_EQUAL_INT(cmp_size_exp, cmp_size);
 	}
 
 	/* check results */
@@ -1495,7 +1499,7 @@ void test_cmp_decmp_chunk_worst_case(void)
 		uint16_t s;
 		uint8_t *p, i;
 
-		chunk = malloc(chunk_size); TEST_ASSERT_NOT_NULL(chunk);
+		chunk = calloc(1, chunk_size); TEST_ASSERT_NOT_NULL(chunk);
 		generate_random_collection_hdr(chunk, DATA_TYPE_S_FX, 2);
 		p = chunk;
 		p += COLLECTION_HDR_SIZE;

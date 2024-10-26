@@ -17,11 +17,14 @@
  * @see Data Compression User Manual PLATO-UVIE-PL-UM-0001
  */
 
+#include <stdint.h>
+
 #include "compiler.h"
 
 #include "cmp_support.h"
 #include "cmp_debug.h"
 #include "leon_inttypes.h"
+#include "cmp_cal_up_model.h"
 
 
 /**
@@ -325,12 +328,12 @@ uint32_t cmp_icu_max_spill(unsigned int cmp_par)
 	/* the ICU compressor can generate code words with a length of maximal 32 bits. */
 	unsigned int const max_cw_bits = 32;
 	unsigned int const cutoff = (0x2U << (ilog_2(cmp_par) & 0x1FU)) - cmp_par;
-	unsigned int const max_n_sym_offset = max_cw_bits/2 - 1;
+	unsigned int const max_n_sym_offset = (max_cw_bits/2) - 1;
 
 	if (!cmp_par || cmp_par > MAX_NON_IMA_GOLOMB_PAR)
 		return 0;
 
-	return (max_cw_bits-1-ilog_2(cmp_par))*cmp_par + cutoff
+	return ((max_cw_bits-1-ilog_2(cmp_par))*cmp_par) + cutoff
 		- max_n_sym_offset - 1;
 }
 

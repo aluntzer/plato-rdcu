@@ -27,6 +27,7 @@
  */
 
 
+#include <stddef.h>
 #include <stdint.h>
 
 #include "../common/cmp_debug.h"

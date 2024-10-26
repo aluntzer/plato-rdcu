@@ -40,14 +40,14 @@
 
 void test_bitstream(void)
 {
-	uint8_t i, data[12];
+	uint8_t data[12];
 	struct bit_decoder dec;
-	size_t ret;
+	size_t i, ret;
 	int status;
 	uint32_t read_bits;
 
 	for (i = 0; i < sizeof(data); ++i)
-		data[i] = i;
+		data[i] = (uint8_t)i;
 
 	ret = bit_init_decoder(&dec, data, sizeof(data));
 	TEST_ASSERT_EQUAL_size_t(sizeof(data), ret);
@@ -856,7 +856,7 @@ void test_multi_refill_needed(void)
 {
 	uint32_t decoded_value = ~0U;
 	uint8_t cmp_data[] = {0x7F, 0xFF, 0xFF, 0xFF, 0x7F, 0xFF, 0xFF, 0xF7, 0xFF, 0xFF, 0xFF, 0xFF, 0x00};
-	uint32_t cmp_data2[2];
+	uint32_t cmp_data2[2] = {0};
 	struct bit_decoder dec = {0};
 	struct decoder_setup setup = {0};
 	uint32_t spillover = 16;
@@ -1061,7 +1061,7 @@ void test_decompress_imagette_chunk_raw(void)
 	uint8_t *decompressed_data;
 	struct cmp_entity *ent;
 	uint32_t ent_size;
-	uint32_t chunk_size = 2*(COLLECTION_HDR_SIZE + sizeof(data));
+	uint32_t const chunk_size = 2*(COLLECTION_HDR_SIZE + sizeof(data));
 	uint8_t *chunk = calloc(1, chunk_size); TEST_ASSERT_TRUE(chunk);
 
 	for (i = 0; i < 2; i++) {

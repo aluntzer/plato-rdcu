@@ -23,12 +23,15 @@
 #include <limits.h>
 
 #include "../common/byteorder.h"
+#include "../common/compiler.h"
 #include "../common/cmp_debug.h"
 #include "../common/cmp_data_types.h"
 #include "../common/cmp_support.h"
+#include "../common/cmp_cal_up_model.h"
 #include "../common/cmp_max_used_bits.h"
 #include "../common/cmp_entity.h"
 #include "../common/cmp_error.h"
+#include "../common/cmp_error_list.h"
 #include "../common/leon_inttypes.h"
 #include "cmp_chunk_type.h"
 
@@ -1602,6 +1605,7 @@ static uint32_t compress_data_internal(const struct cmp_cfg *cfg, uint32_t strea
 		case DATA_TYPE_F_FX_EFX:
 		case DATA_TYPE_F_FX_NCOB:
 		case DATA_TYPE_F_FX_EFX_NCOB_ECOB:
+		case DATA_TYPE_CHUNK:
 		case DATA_TYPE_UNKNOWN:
 		default:
 			RETURN_ERROR(INT_DATA_TYPE_UNSUPPORTED, "");
