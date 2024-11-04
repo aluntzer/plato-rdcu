@@ -17,22 +17,22 @@ int main(int argc, char *argv[])
 	for (i = 1; i < argc; i++) {
 		if (strstr(argv[i], "ref_short_cadence_1_cmp")) {
 			fp = fopen(argv[i], "wb");
-			if(!fp)
+			if (!fp)
 				return 1;
 			s = fwrite(ref_short_cadence_1_cmp, 1, ref_short_cadence_1_cmp_len, fp);
 			fclose(fp);
-			if (s!=ref_short_cadence_1_cmp_len)
+			if (s != ref_short_cadence_1_cmp_len)
 				return 1;
 		} else if (strstr(argv[i], "ref_short_cadence_2_cmp")) {
 			fp = fopen(argv[i], "wb");
-			if(!fp)
+			if (!fp)
 				return 1;
 			s = fwrite(ref_short_cadence_2_cmp, 1, ref_short_cadence_2_cmp_len, fp);
 			fclose(fp);
-			if (s!=ref_short_cadence_2_cmp_len)
+			if (s != ref_short_cadence_2_cmp_len)
 				return 1;
 		} else {
-			fprintf(stderr,"Unknown test data\n");
+			fprintf(stderr, "Unknown test data\n");
 			return 1;
 		}
 	}

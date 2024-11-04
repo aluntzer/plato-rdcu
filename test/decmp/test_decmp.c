@@ -974,12 +974,12 @@ void test_cmp_decmp_rdcu_raw(void)
 	cmp_size = compress_like_rdcu(&rcfg, &info);
 	TEST_ASSERT_EQUAL_UINT(sizeof(data)*CHAR_BIT, cmp_size);
 
-	s = cmp_ent_create(NULL, DATA_TYPE_IMAGETTE , rcfg.cmp_mode == CMP_MODE_RAW,
+	s = cmp_ent_create(NULL, DATA_TYPE_IMAGETTE, rcfg.cmp_mode == CMP_MODE_RAW,
 			   cmp_bit_to_byte(cmp_size));
 	TEST_ASSERT_TRUE(s);
 	ent = malloc(s);
 	TEST_ASSERT_TRUE(ent);
-	s = cmp_ent_create(ent, DATA_TYPE_IMAGETTE , rcfg.cmp_mode == CMP_MODE_RAW,
+	s = cmp_ent_create(ent, DATA_TYPE_IMAGETTE, rcfg.cmp_mode == CMP_MODE_RAW,
 			   cmp_bit_to_byte(cmp_size));
 	TEST_ASSERT_TRUE(s);
 	TEST_ASSERT_FALSE(cmp_ent_write_rdcu_cmp_pars(ent, &info, NULL));

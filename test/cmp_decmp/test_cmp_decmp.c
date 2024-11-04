@@ -69,6 +69,7 @@ void setUp(void)
 	if (!n) {
 		uint32_t high = seed >> 32;
 		uint32_t low = seed & 0xFFFFFFFF;
+
 		n = 1;
 		cmp_rand_seed(seed);
 		printf("seed: 0x%08"PRIx32"%08"PRIx32"\n", high, low);
@@ -132,14 +133,15 @@ static uint32_t gen_geometric_data(uint32_t n_bits, void *extra)
  * @returns random number following a uniform distribution, masked with n_bits
  */
 
-static uint32_t gen_uniform_data(uint32_t n_bits, void* unused UNUSED)
+static uint32_t gen_uniform_data(uint32_t n_bits, void *unused UNUSED)
 {
 	return cmp_rand_nbits(n_bits);
 }
 
 
 static size_t gen_ima_data(uint16_t *data, enum cmp_data_type data_type,
-			   uint32_t samples, uint32_t (*gen_data_f)(uint32_t, void*),
+			   uint32_t samples,
+			   uint32_t (*gen_data_f)(uint32_t max_data_bits, void *extra),
 			   void *extra)
 {
 	uint32_t i;
@@ -818,7 +820,7 @@ void test_random_round_trip_like_rdcu_compression(void)
 	int run;
 
 	for (run = 0; run < 2; run++) {
-		uint32_t (*gen_data_f)(uint32_t, void*);
+		uint32_t (*gen_data_f)(uint32_t max_data_bits, void *extra);
 		void *extra;
 		double p = 0.01;
 		size_t size;
@@ -964,7 +966,7 @@ void test_random_collection_round_trip(void)
 	TEST_ASSERT_NOT_NULL(cmp_data);
 
 	for (run = 0; run < 2; run++) {
-		uint32_t (*gen_data_f)(uint32_t, void*);
+		uint32_t (*gen_data_f)(uint32_t max_data_bits, void *extra);
 		void *extra;
 		double p = 0.01;
 
@@ -1463,6 +1465,7 @@ void test_cmp_decmp_chunk_raw(void)
 	{
 		void *decompressed_data = NULL;
 		int decmp_size = decompress_cmp_entiy((void *)dst, NULL, NULL, decompressed_data);
+
 		TEST_ASSERT_EQUAL_size_t(chunk_size, decmp_size);
 
 		decompressed_data = malloc((size_t)decmp_size); TEST_ASSERT_NOT_NULL(decompressed_data);

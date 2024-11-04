@@ -1579,6 +1579,7 @@ void test_compress_data_internal_error_cases(void)
 
 	uint16_t data[2] = {0, 0};
 	uint32_t dst[3] = {0};
+
 	cfg.data_type = DATA_TYPE_IMAGETTE;
 	cfg.src = data;
 	cfg.samples = 2;
@@ -1774,6 +1775,7 @@ void test_compress_chunk_raw_two_col(void)
 			(uint8_t *)cmp_ent_get_data_buf(ent) + 2*COLLECTION_HDR_SIZE +
 			DATA_SIZE_1);
 		int i;
+
 		TEST_ASSERT_EQUAL_UINT(CHUNK_SIZE, cmp_ent_get_cmp_data_size(ent));
 		TEST_ASSERT_EQUAL_UINT(CHUNK_SIZE, cmp_ent_get_original_size(ent));
 		TEST_ASSERT_EQUAL_UINT(cmp_par.cmp_mode, cmp_ent_get_cmp_mode(ent));
@@ -1887,7 +1889,7 @@ void test_compress_chunk_aux(void)
 				  dst_capacity, &cmp_par);
 	TEST_ASSERT_EQUAL_INT(CMP_ERROR_PAR_SPECIFIC, cmp_get_error_code(cmp_size));
 
-	cmp_par.nc_background_outlier_pixels = MAX_CHUNK_CMP_PAR+1;
+	cmp_par.nc_background_outlier_pixels = MAX_CHUNK_CMP_PAR + 1;
 	cmp_size = compress_chunk(chunk, CHUNK_SIZE, NULL, NULL, dst,
 				  dst_capacity, &cmp_par);
 	TEST_ASSERT_EQUAL_INT(CMP_ERROR_PAR_SPECIFIC, cmp_get_error_code(cmp_size));
@@ -1901,7 +1903,7 @@ void test_compress_chunk_aux(void)
 
 	/* wrong model value */
 	cmp_par.cmp_mode = CMP_MODE_MODEL_ZERO;
-	cmp_par.model_value = MAX_MODEL_VALUE +1 ;
+	cmp_par.model_value = MAX_MODEL_VALUE + 1;
 	cmp_size = compress_chunk(chunk, CHUNK_SIZE, NULL, NULL, dst,
 				  dst_capacity, &cmp_par);
 	TEST_ASSERT_EQUAL_INT(CMP_ERROR_PAR_GENERIC, cmp_get_error_code(cmp_size));
@@ -2001,6 +2003,7 @@ void test_compress_chunk_error_cases(void)
 		struct collection_hdr *col1 = (struct collection_hdr *)chunk;
 		struct s_fx *data1 = (struct s_fx *)col1->entry;
 		struct s_fx_efx_ncob_ecob *data2;
+
 		memset(col1, 0, COLLECTION_HDR_SIZE);
 		TEST_ASSERT_FALSE(cmp_col_set_subservice(col1, SST_NCxx_S_SCIENCE_S_FX));
 		TEST_ASSERT_FALSE(cmp_col_set_data_length(col1, DATA_SIZE_1));
@@ -2117,7 +2120,7 @@ void test_compress_chunk_error_cases(void)
 
 	/* chunk buffer and dst are the same */
 	cmp_size = compress_chunk(chunk, CHUNK_SIZE, chunk_model,
-				  updated_chunk_model, (void*)chunk, dst_capacity,
+				  updated_chunk_model, (void *)chunk, dst_capacity,
 				  &cmp_par);
 	TEST_ASSERT_EQUAL_INT(CMP_ERROR_PAR_BUFFERS, cmp_get_error_code(cmp_size));
 
@@ -2166,6 +2169,7 @@ void test_compress_chunk_error_cases(void)
 	cmp_par.lossy_par = 0x1;
 	{
 		size_t i;
+
 		for (i = 0; i < ARRAY_SIZE(dst); i++)
 			TEST_ASSERT_EQUAL_HEX(0xFFFFFFFF, dst[i]);
 	}
@@ -2314,7 +2318,7 @@ void test_COMPRESS_CHUNK_BOUND(void)
 		chunk_size);
 	TEST_ASSERT_EQUAL(bound_exp, bound);
 
-	chunk_size = 42*COLLECTION_HDR_SIZE ;
+	chunk_size = 42*COLLECTION_HDR_SIZE;
 	num_col = 42;
 	bound = COMPRESS_CHUNK_BOUND(chunk_size, num_col);
 	bound_exp = ROUND_UP_TO_4(NON_IMAGETTE_HEADER_SIZE + 42*CMP_COLLECTION_FILD_SIZE +
@@ -2366,7 +2370,7 @@ void test_compress_chunk_cmp_size_bound(void)
 	uint32_t chunk_size;
 	uint32_t bound, bound_exp;
 	struct collection_hdr *col2 = (struct collection_hdr *)
-		(chunk+COLLECTION_HDR_SIZE +CHUNK_SIZE_1);
+		(chunk+COLLECTION_HDR_SIZE + CHUNK_SIZE_1);
 
 	TEST_ASSERT_FALSE(cmp_col_set_data_length((struct collection_hdr *)chunk, 0));
 

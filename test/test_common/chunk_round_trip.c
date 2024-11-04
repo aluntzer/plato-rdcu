@@ -41,14 +41,15 @@
  * @returns a pointer to the allocated memory, or NULL if allocation fails
  */
 
-static void* TEST_malloc(size_t size)
+static void *TEST_malloc(size_t size)
 {
-    if (size > 0) {
-        void* const mem = malloc(size);
-        TEST_ASSERT(mem);
-        return mem;
-    }
-    return NULL;
+	if (size > 0) {
+		void *mem = malloc(size);
+
+		TEST_ASSERT(mem);
+		return mem;
+	}
+	return NULL;
 }
 
 
@@ -113,16 +114,16 @@ uint32_t chunk_round_trip(const void *chunk, uint32_t chunk_size,
 	if (!cmp_is_error(cmp_size)) { /* secound run wich dst = NULL */
 		uint32_t cmp_size2;
 		/* reset model if in-place update was used */
-		if (chunk_model && updated_chunk_model == chunk_model) {
+		if (chunk_model && updated_chunk_model == chunk_model)
 			memcpy(updated_chunk_model, model_cpy, chunk_size);
-		}
+
 		cmp_size2 = compress_chunk(chunk, chunk_size, chunk_model, updated_chunk_model,
 					   NULL, dst_capacity, cmp_par);
-		if (cmp_get_error_code(cmp_size) == CMP_ERROR_SMALL_BUFFER) {
+		if (cmp_get_error_code(cmp_size) == CMP_ERROR_SMALL_BUFFER)
 			TEST_ASSERT(!cmp_is_error(cmp_size));
-		} else {
+		else
 			TEST_ASSERT(cmp_size == cmp_size2);
-		}
+
 	}
 
 

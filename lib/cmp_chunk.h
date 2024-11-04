@@ -222,7 +222,7 @@ unsigned int cmp_is_error(uint32_t code);
  * @returns a pointer to a string literal that describes the error code.
  */
 
-const char* cmp_get_error_name(uint32_t code);
+const char *cmp_get_error_name(uint32_t code);
 
 
 /**
@@ -244,7 +244,7 @@ enum cmp_error cmp_get_error_code(uint32_t code);
  * @returns a pointer to a string literal that describes the error code.
  */
 
-const char* cmp_get_error_string(enum cmp_error code);
+const char *cmp_get_error_string(enum cmp_error code);
 
 
 #endif /* CMP_CHUNK_H */

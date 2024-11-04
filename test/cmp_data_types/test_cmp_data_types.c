@@ -141,9 +141,9 @@ void test_cmp_col_get_and_set(void)
 	err = cmp_col_set_data_length(NULL, 0x0A0B);
 	TEST_ASSERT_TRUE(err);
 
-	for (i = 0; i < sizeof(struct collection_hdr); i++) {
+	for (i = 0; i < sizeof(struct collection_hdr); i++)
 		TEST_ASSERT_EQUAL_HEX8(i, u8_p[i]);
-	}
+
 	free(col);
 }
 
@@ -710,7 +710,7 @@ void test_cmp_input_big_to_cpu_endianness_error_cases(void)
 		error = cmp_input_big_to_cpu_endianness(data_ap, sizeof(data_ap), data_type);
 		TEST_ASSERT_EQUAL(00, error);
 		for (i = 0; i < sizeof(data_ap); i++)
-			TEST_ASSERT_EQUAL(i, ((uint8_t*)data_ap)[i] );
+			TEST_ASSERT_EQUAL(i, ((uint8_t *)data_ap)[i]);
 
 		data_type = DATA_TYPE_SAT_IMAGETTE_ADAPTIVE;
 		data_ap[0] = 0x0001;
@@ -718,7 +718,7 @@ void test_cmp_input_big_to_cpu_endianness_error_cases(void)
 		error = cmp_input_big_to_cpu_endianness(data_ap, sizeof(data_ap), data_type);
 		TEST_ASSERT_EQUAL(00, error);
 		for (i = 0; i < sizeof(data_ap); i++)
-			TEST_ASSERT_EQUAL(i, ((uint8_t*)data_ap)[i] );
+			TEST_ASSERT_EQUAL(i, ((uint8_t *)data_ap)[i]);
 
 		data_type = DATA_TYPE_F_CAM_IMAGETTE_ADAPTIVE;
 		data_ap[0] = 0x0001;
@@ -726,7 +726,7 @@ void test_cmp_input_big_to_cpu_endianness_error_cases(void)
 		error = cmp_input_big_to_cpu_endianness(data_ap, sizeof(data_ap), data_type);
 		TEST_ASSERT_EQUAL(00, error);
 		for (i = 0; i < sizeof(data_ap); i++)
-			TEST_ASSERT_EQUAL(i, ((uint8_t*)data_ap)[i] );
+			TEST_ASSERT_EQUAL(i, ((uint8_t *)data_ap)[i]);
 	}
 
 }
