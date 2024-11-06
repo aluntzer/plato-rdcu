@@ -1678,8 +1678,7 @@ static int cmp_ent_read_header(const struct cmp_entity *ent, struct cmp_cfg *cfg
 			debug_print("Error: The compressed data size in the compression header is smaller than a collection header.");
 			return -1;
 		}
-		if (org_size < COLLECTION_HDR_SIZE ||
-		    (org_size < (COLLECTION_HDR_SIZE + CMP_COLLECTION_FILD_SIZE) && cfg->cmp_mode != CMP_MODE_RAW)) {
+		if (org_size < COLLECTION_HDR_SIZE) {
 			debug_print("Error: The original decompressed data size in the compression header is smaller than the minimum size.");
 			return -1;
 		}
