@@ -111,19 +111,17 @@ uint32_t chunk_round_trip(const void *chunk, uint32_t chunk_size,
 	cmp_size = compress_chunk(chunk, chunk_size, chunk_model, updated_chunk_model,
 				  dst, dst_capacity, cmp_par);
 
-	if (!cmp_is_error(cmp_size)) { /* secound run wich dst = NULL */
+	if (!cmp_is_error(cmp_size)) { /* second run with dst = NULL */
 		uint32_t cmp_size2;
+
 		/* reset model if in-place update was used */
 		if (chunk_model && updated_chunk_model == chunk_model)
 			memcpy(updated_chunk_model, model_cpy, chunk_size);
 
 		cmp_size2 = compress_chunk(chunk, chunk_size, chunk_model, updated_chunk_model,
 					   NULL, dst_capacity, cmp_par);
-		if (cmp_get_error_code(cmp_size) == CMP_ERROR_SMALL_BUFFER)
-			TEST_ASSERT(!cmp_is_error(cmp_size));
-		else
+		if (cmp_get_error_code(cmp_size) != CMP_ERROR_SMALL_BUFFER)
 			TEST_ASSERT(cmp_size == cmp_size2);
-
 	}
 
 
