@@ -209,7 +209,7 @@ static uint32_t put_n_bits32(uint32_t value, unsigned int n_bits, uint32_t bit_o
  *			for better performance
  * @param cw		address where the code word is stored
  *
- * @warning no check of the validity of the input parameters!
+ * @warning there is no check of the validity of the input parameters!
  * @returns the length of the formed code word in bits; the code word is invalid
  *	if the return value is greater than 32
  */
@@ -243,7 +243,7 @@ static uint32_t rice_encoder(uint32_t value, uint32_t m, uint32_t log2_m,
  * @param log2_m	is ilog_2(m) calculate outside function for better performance
  * @param cw		address where the code word is stored
  *
- * @warning no check of the validity of the input parameters!
+ * @warning there is no check of the validity of the input parameters!
  * @returns the length of the formed code word in bits; the code word is invalid
  *	if the return value is greater than 32
  */

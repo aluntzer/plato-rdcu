@@ -1451,7 +1451,7 @@ void test_compress_imagette_error_cases(void)
 	TEST_ASSERT_TRUE(cmp_is_error(cmp_size));
 	TEST_ASSERT_EQUAL_INT(CMP_ERROR_PAR_SPECIFIC, cmp_get_error_code(cmp_size));
 
-	/* test golomb_par  to hight */
+	/* test golomb_par to high */
 	rcfg.cmp_mode = CMP_MODE_DIFF_ZERO;
 	rcfg.input_buf = data;
 	rcfg.samples = 2;
@@ -1464,7 +1464,7 @@ void test_compress_imagette_error_cases(void)
 	TEST_ASSERT_TRUE(cmp_is_error(cmp_size));
 	TEST_ASSERT_EQUAL_INT(CMP_ERROR_PAR_SPECIFIC, cmp_get_error_code(cmp_size));
 
-	/* round to hight */
+	/* round to high */
 	rcfg.cmp_mode = CMP_MODE_DIFF_ZERO;
 	rcfg.input_buf = data;
 	rcfg.samples = 2;
@@ -1478,7 +1478,7 @@ void test_compress_imagette_error_cases(void)
 	TEST_ASSERT_TRUE(cmp_is_error(cmp_size));
 	TEST_ASSERT_EQUAL_INT(CMP_ERROR_PAR_GENERIC, cmp_get_error_code(cmp_size));
 
-	/* model_value to hight */
+	/* model_value to high */
 	rcfg.cmp_mode = CMP_MODE_MODEL_ZERO;
 	rcfg.input_buf = data;
 	rcfg.samples = 2;
