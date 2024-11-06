@@ -68,19 +68,12 @@ static uint32_t version_identifier;
 
 
 /**
- * @brief pointer to a code word generation function
- */
-
-typedef uint32_t (*generate_cw_f_pt)(uint32_t value, uint32_t encoder_par1,
-				     uint32_t encoder_par2, uint32_t *cw);
-
-
-/**
  * @brief structure to hold a setup to encode a value
  */
 
 struct encoder_setup {
-	generate_cw_f_pt generate_cw_f; /**< function pointer to a code word encoder */
+	uint32_t (*generate_cw_f)(uint32_t value, uint32_t encoder_par1,
+				  uint32_t encoder_par2, uint32_t *cw); /**< function pointer to a code word encoder */
 	uint32_t (*encode_method_f)(uint32_t data, uint32_t model, uint32_t stream_len,
 				    const struct encoder_setup *setup); /**< pointer to the encoding function */
 	uint32_t *bitstream_adr; /**< start address of the compressed data bitstream */
