@@ -1696,18 +1696,53 @@ static uint32_t cmp_cfg_icu_is_invalid_error_code(const struct cmp_cfg *cfg)
 
 
 /**
+ * @brief calculate the optimal spill threshold value for zero escape mechanism
+ *
+ * @param golomb_par	Golomb parameter
+ * @param max_data_bits	maximum number of used data bits
+ *
+ * @returns the highest optimal spill threshold value for a given Golomb
+ *	parameter, when the zero escape mechanism is used or 0 if the
+ *	Golomb parameter is not valid
+ */
+
+static uint32_t cmp_best_zero_spill(uint32_t golomb_par, uint32_t max_data_bits)
+{
+	uint32_t const max_spill = cmp_icu_max_spill(golomb_par);
+	uint32_t cutoff;
+	uint32_t spill;
+
+	if (golomb_par < MIN_NON_IMA_GOLOMB_PAR)
+		return 0;
+	if (golomb_par > MAX_NON_IMA_GOLOMB_PAR)
+		return 0;
+
+	cutoff = (0x2U << ilog_2(golomb_par)) - golomb_par;
+	spill = max_data_bits * golomb_par + cutoff;
+	if (spill > max_spill)
+		spill = max_spill;
+
+	return spill;
+}
+
+
+/**
  * @brief estimate a "good" spillover threshold parameter
  *
  * @param golomb_par	Golomb parameter
+ * @param cmp_mode	compression mode
+ * @param max_data_bits	maximum number of used data bits
  *
- * @returns a spill over threshold parameter
- * TODO: tune this calculation for multi escape symbol mechanism
+ * @returns a spillover threshold parameter or 0 if the Golomb parameter is not
+ *	valid
  */
 
-static uint32_t cmp_guess_good_spill(uint32_t golomb_par)
+static uint32_t cmp_get_spill(uint32_t golomb_par, enum cmp_mode cmp_mode,
+			      uint32_t max_data_bits)
 {
-	if (!golomb_par)
-		return 0;
+	if (zero_escape_mech_is_used(cmp_mode))
+		return cmp_best_zero_spill(golomb_par, max_data_bits);
+
 	return cmp_icu_max_spill(golomb_par);
 }
 
@@ -1935,49 +1970,102 @@ static enum chunk_type init_cmp_cfg_from_cmp_par(const struct collection_hdr *co
 	switch (chunk_type) {
 	case CHUNK_TYPE_NCAM_IMAGETTE:
 		cfg->cmp_par_imagette = par->nc_imagette;
+		cfg->spill_imagette = cmp_get_spill(cfg->cmp_par_imagette, cfg->cmp_mode,
+						    MAX_USED_BITS.nc_imagette);
 		break;
 	case CHUNK_TYPE_SAT_IMAGETTE:
 		cfg->cmp_par_imagette = par->saturated_imagette;
+		cfg->spill_imagette = cmp_get_spill(cfg->cmp_par_imagette, cfg->cmp_mode,
+						    MAX_USED_BITS.saturated_imagette);
 		break;
 	case CHUNK_TYPE_SHORT_CADENCE:
 		cfg->cmp_par_exp_flags = par->s_exp_flags;
+		cfg->spill_exp_flags = cmp_get_spill(cfg->cmp_par_exp_flags, cfg->cmp_mode,
+						     MAX_USED_BITS.s_exp_flags);
 		cfg->cmp_par_fx = par->s_fx;
+		cfg->spill_fx = cmp_get_spill(cfg->cmp_par_fx, cfg->cmp_mode,
+					      MAX_USED_BITS.s_fx);
 		cfg->cmp_par_ncob = par->s_ncob;
+		cfg->spill_ncob = cmp_get_spill(cfg->cmp_par_ncob, cfg->cmp_mode,
+						MAX_USED_BITS.s_ncob);
 		cfg->cmp_par_efx = par->s_efx;
+		cfg->spill_efx = cmp_get_spill(cfg->cmp_par_efx, cfg->cmp_mode,
+					       MAX_USED_BITS.s_efx);
 		cfg->cmp_par_ecob = par->s_ecob;
+		cfg->spill_ecob = cmp_get_spill(cfg->cmp_par_ecob, cfg->cmp_mode,
+						MAX_USED_BITS.s_ecob);
 		break;
 	case CHUNK_TYPE_LONG_CADENCE:
 		cfg->cmp_par_exp_flags = par->l_exp_flags;
+		cfg->spill_exp_flags = cmp_get_spill(cfg->cmp_par_exp_flags, cfg->cmp_mode,
+						     MAX_USED_BITS.l_exp_flags);
 		cfg->cmp_par_fx = par->l_fx;
+		cfg->spill_fx = cmp_get_spill(cfg->cmp_par_fx, cfg->cmp_mode,
+					      MAX_USED_BITS.l_fx);
 		cfg->cmp_par_ncob = par->l_ncob;
+		cfg->spill_ncob = cmp_get_spill(cfg->cmp_par_ncob, cfg->cmp_mode,
+						MAX_USED_BITS.l_ncob);
 		cfg->cmp_par_efx = par->l_efx;
+		cfg->spill_efx = cmp_get_spill(cfg->cmp_par_efx, cfg->cmp_mode,
+					       MAX_USED_BITS.l_efx);
 		cfg->cmp_par_ecob = par->l_ecob;
+		cfg->spill_ecob = cmp_get_spill(cfg->cmp_par_ecob, cfg->cmp_mode,
+						MAX_USED_BITS.l_ecob);
 		cfg->cmp_par_fx_cob_variance = par->l_fx_cob_variance;
+		cfg->spill_fx_cob_variance = cmp_get_spill(cfg->cmp_par_fx_cob_variance,
+							   cfg->cmp_mode, MAX_USED_BITS.l_fx_cob_variance);
 		break;
 	case CHUNK_TYPE_OFFSET_BACKGROUND:
 		cfg->cmp_par_offset_mean = par->nc_offset_mean;
+		cfg->spill_offset_mean = cmp_get_spill(cfg->cmp_par_offset_mean,
+						cfg->cmp_mode, MAX_USED_BITS.nc_offset_mean);
 		cfg->cmp_par_offset_variance = par->nc_offset_variance;
-
+		cfg->spill_offset_variance = cmp_get_spill(cfg->cmp_par_offset_variance,
+						cfg->cmp_mode, MAX_USED_BITS.nc_offset_variance);
 		cfg->cmp_par_background_mean = par->nc_background_mean;
+		cfg->spill_background_mean = cmp_get_spill(cfg->cmp_par_background_mean,
+						cfg->cmp_mode, MAX_USED_BITS.nc_background_mean);
 		cfg->cmp_par_background_variance = par->nc_background_variance;
+		cfg->spill_background_variance = cmp_get_spill(cfg->cmp_par_background_variance,
+						cfg->cmp_mode, MAX_USED_BITS.nc_background_variance);
 		cfg->cmp_par_background_pixels_error = par->nc_background_outlier_pixels;
+		cfg->spill_background_pixels_error = cmp_get_spill(cfg->cmp_par_background_pixels_error,
+						cfg->cmp_mode, MAX_USED_BITS.nc_background_outlier_pixels);
 		break;
 
 	case CHUNK_TYPE_SMEARING:
 		cfg->cmp_par_smearing_mean = par->smearing_mean;
+		cfg->spill_smearing_mean = cmp_get_spill(cfg->cmp_par_smearing_mean,
+						cfg->cmp_mode, MAX_USED_BITS.smearing_mean);
 		cfg->cmp_par_smearing_variance = par->smearing_variance_mean;
+		cfg->spill_smearing_variance = cmp_get_spill(cfg->cmp_par_smearing_variance,
+						cfg->cmp_mode, MAX_USED_BITS.smearing_variance_mean);
 		cfg->cmp_par_smearing_pixels_error = par->smearing_outlier_pixels;
+		cfg->spill_smearing_pixels_error = cmp_get_spill(cfg->cmp_par_smearing_pixels_error,
+						cfg->cmp_mode, MAX_USED_BITS.smearing_outlier_pixels);
 		break;
 
 	case CHUNK_TYPE_F_CHAIN:
 		cfg->cmp_par_imagette = par->fc_imagette;
+		cfg->spill_imagette = cmp_get_spill(cfg->cmp_par_imagette,
+						cfg->cmp_mode, MAX_USED_BITS.fc_imagette);
 
 		cfg->cmp_par_offset_mean = par->fc_offset_mean;
+		cfg->spill_offset_mean = cmp_get_spill(cfg->cmp_par_offset_mean,
+						cfg->cmp_mode, MAX_USED_BITS.fc_offset_mean);
 		cfg->cmp_par_offset_variance = par->fc_offset_variance;
+		cfg->spill_offset_variance = cmp_get_spill(cfg->cmp_par_offset_variance,
+						cfg->cmp_mode, MAX_USED_BITS.fc_offset_variance);
 
 		cfg->cmp_par_background_mean = par->fc_background_mean;
+		cfg->spill_background_mean = cmp_get_spill(cfg->cmp_par_background_mean,
+						cfg->cmp_mode, MAX_USED_BITS.fc_background_mean);
 		cfg->cmp_par_background_variance = par->fc_background_variance;
+		cfg->spill_background_variance = cmp_get_spill(cfg->cmp_par_background_variance,
+						cfg->cmp_mode, MAX_USED_BITS.fc_background_variance);
 		cfg->cmp_par_background_pixels_error = par->fc_background_outlier_pixels;
+		cfg->spill_background_pixels_error = cmp_get_spill(cfg->cmp_par_background_pixels_error,
+						cfg->cmp_mode, MAX_USED_BITS.fc_background_outlier_pixels);
 		break;
 	case CHUNK_TYPE_UNKNOWN:
 	default: /*
@@ -1987,13 +2075,6 @@ static enum chunk_type init_cmp_cfg_from_cmp_par(const struct collection_hdr *co
 		chunk_type = CHUNK_TYPE_UNKNOWN;
 		break;
 	}
-
-	cfg->spill_par_1 = cmp_guess_good_spill(cfg->cmp_par_1);
-	cfg->spill_par_2 = cmp_guess_good_spill(cfg->cmp_par_2);
-	cfg->spill_par_3 = cmp_guess_good_spill(cfg->cmp_par_3);
-	cfg->spill_par_4 = cmp_guess_good_spill(cfg->cmp_par_4);
-	cfg->spill_par_5 = cmp_guess_good_spill(cfg->cmp_par_5);
-	cfg->spill_par_6 = cmp_guess_good_spill(cfg->cmp_par_6);
 
 	return chunk_type;
 }
