@@ -1693,10 +1693,8 @@ static int cmp_ent_read_header(const struct cmp_entity *ent, struct cmp_cfg *cfg
 
 	cfg->src = cmp_ent_get_data_buf_const(ent);
 
-	if (cmp_ent_get_reserved(ent)) {
-		debug_print("Error: The reserved field in the compressed header should be zero. Compressed data may be corrupted.");
-		return -1;
-	}
+	if (cmp_ent_get_reserved(ent))
+		debug_print("Warning: The reserved field in the compressed header should be zero.");
 
 	if (cfg->cmp_mode == CMP_MODE_RAW) {
 		if (cmp_ent_get_original_size(ent) != cmp_ent_get_cmp_data_size(ent)) {
