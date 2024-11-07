@@ -2,13 +2,8 @@
 
 /*=======Automagically Detected Files To Include=====*/
 #include "unity.h"
-#include <stdint.h>
-#include <cmp_rdcu_cfg.h>
-#include <rdcu_cmd.h>
 
 /*=======External Functions This Runner Calls=====*/
-extern void setUp(void);
-extern void tearDown(void);
 extern void test_rdcu_cfg_create(void);
 extern void test_rdcu_cfg_buffers_raw_diff(void);
 extern void test_rdcu_cfg_buffers_model(void);
@@ -35,7 +30,6 @@ void setUp(void) {}
 void tearDown(void) {}
 
 /*=======Test Reset Options=====*/
-void resetTest(void);
 void resetTest(void)
 {
   tearDown();
@@ -44,7 +38,6 @@ void resetTest(void)
   CMock_Init();
   setUp();
 }
-void verifyTest(void);
 void verifyTest(void)
 {
   CMock_Verify();
@@ -82,12 +75,12 @@ static void run_test(UnityTestFunction func, const char* name, UNITY_LINE_TYPE l
 int main(void)
 {
   UnityBegin("../test/cmp_rdcu_cfg/test_cmp_rdcu_cfg.c");
-  run_test(test_rdcu_cfg_create, "test_rdcu_cfg_create", 30);
-  run_test(test_rdcu_cfg_buffers_raw_diff, "test_rdcu_cfg_buffers_raw_diff", 143);
-  run_test(test_rdcu_cfg_buffers_model, "test_rdcu_cfg_buffers_model", 272);
-  run_test(test_rdcu_cfg_imagette, "test_rdcu_cfg_imagette", 426);
-  run_test(test_rdcu_cfg_imagette_default, "test_rdcu_cfg_imagette_default", 653);
-  run_test(test_rdcu_cmp_cfg_is_invalid, "test_rdcu_cmp_cfg_is_invalid", 696);
+  run_test(test_rdcu_cfg_create, "test_rdcu_cfg_create", 31);
+  run_test(test_rdcu_cfg_buffers_raw_diff, "test_rdcu_cfg_buffers_raw_diff", 106);
+  run_test(test_rdcu_cfg_buffers_model, "test_rdcu_cfg_buffers_model", 237);
+  run_test(test_rdcu_cfg_imagette, "test_rdcu_cfg_imagette", 392);
+  run_test(test_rdcu_cfg_imagette_default, "test_rdcu_cfg_imagette_default", 622);
+  run_test(test_rdcu_cmp_cfg_is_invalid, "test_rdcu_cmp_cfg_is_invalid", 665);
 
   return UnityEnd();
 }

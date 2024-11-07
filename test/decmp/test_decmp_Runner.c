@@ -2,30 +2,21 @@
 
 /*=======Automagically Detected Files To Include=====*/
 #include "unity.h"
-#include "compiler.h"
-#include "cmp_entity.h"
-#include <string.h>
-#include <stdlib.h>
 
 /*=======External Functions This Runner Calls=====*/
-extern void setUp(void);
-extern void tearDown(void);
-extern void test_count_leading_ones(void);
+extern void test_bitstream(void);
+extern void test_unary_decoder(void);
 extern void test_rice_decoder(void);
 extern void test_golomb_decoder(void);
 extern void test_select_decoder(void);
-extern void test_get_n_bits32(void);
-extern void test_decode_normal(void);
 extern void test_decode_zero(void);
+extern void test_zero_refill_needed(void);
 extern void test_decode_multi(void);
+extern void test_multi_refill_needed(void);
 extern void test_re_map_to_pos(void);
-extern void test_cmp_decmp_n_imagette_raw(void);
+extern void test_cmp_decmp_rdcu_raw(void);
 extern void test_decompress_imagette_model(void);
-extern void test_cmp_decmp_s_fx_diff(void);
-extern void test_s_fx_diff(void);
-extern void test_s_fx_model(void);
-extern void test_cmp_ent_write_cmp_pars(void);
-extern void test_cmp_ent_read_header_error_cases(void);
+extern void test_decompress_imagette_chunk_raw(void);
 extern void test_decompression_error_cases(void);
 
 
@@ -47,7 +38,6 @@ void setUp(void) {}
 void tearDown(void) {}
 
 /*=======Test Reset Options=====*/
-void resetTest(void);
 void resetTest(void)
 {
   tearDown();
@@ -56,7 +46,6 @@ void resetTest(void)
   CMock_Init();
   setUp();
 }
-void verifyTest(void);
 void verifyTest(void)
 {
   CMock_Verify();
@@ -93,24 +82,21 @@ static void run_test(UnityTestFunction func, const char* name, UNITY_LINE_TYPE l
 /*=======MAIN=====*/
 int main(void)
 {
-  UnityBegin("../test/cmp_icu/test_decmp.c");
-  run_test(test_count_leading_ones, "test_count_leading_ones", 37);
-  run_test(test_rice_decoder, "test_rice_decoder", 80);
-  run_test(test_golomb_decoder, "test_golomb_decoder", 197);
-  run_test(test_select_decoder, "test_select_decoder", 385);
-  run_test(test_get_n_bits32, "test_get_n_bits32", 419);
-  run_test(test_decode_normal, "test_decode_normal", 631);
-  run_test(test_decode_zero, "test_decode_zero", 690);
-  run_test(test_decode_multi, "test_decode_multi", 727);
-  run_test(test_re_map_to_pos, "test_re_map_to_pos", 831);
-  run_test(test_cmp_decmp_n_imagette_raw, "test_cmp_decmp_n_imagette_raw", 930);
-  run_test(test_decompress_imagette_model, "test_decompress_imagette_model", 977);
-  run_test(test_cmp_decmp_s_fx_diff, "test_cmp_decmp_s_fx_diff", 1018);
-  run_test(test_s_fx_diff, "test_s_fx_diff", 1088);
-  run_test(test_s_fx_model, "test_s_fx_model", 1128);
-  run_test(test_cmp_ent_write_cmp_pars, "test_cmp_ent_write_cmp_pars", 1204);
-  run_test(test_cmp_ent_read_header_error_cases, "test_cmp_ent_read_header_error_cases", 1741);
-  run_test(test_decompression_error_cases, "test_decompression_error_cases", 1805);
+  UnityBegin("../test/decmp/test_decmp.c");
+  run_test(test_bitstream, "test_bitstream", 41);
+  run_test(test_unary_decoder, "test_unary_decoder", 130);
+  run_test(test_rice_decoder, "test_rice_decoder", 228);
+  run_test(test_golomb_decoder, "test_golomb_decoder", 395);
+  run_test(test_select_decoder, "test_select_decoder", 617);
+  run_test(test_decode_zero, "test_decode_zero", 651);
+  run_test(test_zero_refill_needed, "test_zero_refill_needed", 723);
+  run_test(test_decode_multi, "test_decode_multi", 751);
+  run_test(test_multi_refill_needed, "test_multi_refill_needed", 855);
+  run_test(test_re_map_to_pos, "test_re_map_to_pos", 901);
+  run_test(test_cmp_decmp_rdcu_raw, "test_cmp_decmp_rdcu_raw", 953);
+  run_test(test_decompress_imagette_model, "test_decompress_imagette_model", 1010);
+  run_test(test_decompress_imagette_chunk_raw, "test_decompress_imagette_chunk_raw", 1056);
+  run_test(test_decompression_error_cases, "test_decompression_error_cases", 1102);
 
   return UnityEnd();
 }

@@ -2,16 +2,15 @@
 
 /*=======Automagically Detected Files To Include=====*/
 #include "unity.h"
-#include <stdint.h>
-#include <cmp_data_types.h>
 
 /*=======External Functions This Runner Calls=====*/
-extern void setUp(void);
-extern void tearDown(void);
+extern void test_cmp_col_get_subservice(void);
+extern void test_cmp_col_get_and_set(void);
+extern void test_convert_subservice_functions(void);
 extern void test_size_of_a_sample(void);
-extern void test_cmp_cal_size_of_data(void);
-extern void test_cmp_input_size_to_samples(void);
 extern void test_cmp_input_big_to_cpu_endianness(void);
+extern void test_be_to_cpu_chunk(void);
+extern void test_be_to_cpu_chunk_error_cases(void);
 extern void test_cmp_input_big_to_cpu_endianness_error_cases(void);
 
 
@@ -33,7 +32,6 @@ void setUp(void) {}
 void tearDown(void) {}
 
 /*=======Test Reset Options=====*/
-void resetTest(void);
 void resetTest(void)
 {
   tearDown();
@@ -42,7 +40,6 @@ void resetTest(void)
   CMock_Init();
   setUp();
 }
-void verifyTest(void);
 void verifyTest(void)
 {
   CMock_Verify();
@@ -80,11 +77,14 @@ static void run_test(UnityTestFunction func, const char* name, UNITY_LINE_TYPE l
 int main(void)
 {
   UnityBegin("../test/cmp_data_types/test_cmp_data_types.c");
-  run_test(test_size_of_a_sample, "test_size_of_a_sample", 30);
-  run_test(test_cmp_cal_size_of_data, "test_cmp_cal_size_of_data", 70);
-  run_test(test_cmp_input_size_to_samples, "test_cmp_input_size_to_samples", 104);
-  run_test(test_cmp_input_big_to_cpu_endianness, "test_cmp_input_big_to_cpu_endianness", 170);
-  run_test(test_cmp_input_big_to_cpu_endianness_error_cases, "test_cmp_input_big_to_cpu_endianness_error_cases", 497);
+  run_test(test_cmp_col_get_subservice, "test_cmp_col_get_subservice", 32);
+  run_test(test_cmp_col_get_and_set, "test_cmp_col_get_and_set", 44);
+  run_test(test_convert_subservice_functions, "test_convert_subservice_functions", 155);
+  run_test(test_size_of_a_sample, "test_size_of_a_sample", 173);
+  run_test(test_cmp_input_big_to_cpu_endianness, "test_cmp_input_big_to_cpu_endianness", 237);
+  run_test(test_be_to_cpu_chunk, "test_be_to_cpu_chunk", 283);
+  run_test(test_be_to_cpu_chunk_error_cases, "test_be_to_cpu_chunk_error_cases", 620);
+  run_test(test_cmp_input_big_to_cpu_endianness_error_cases, "test_cmp_input_big_to_cpu_endianness_error_cases", 675);
 
   return UnityEnd();
 }

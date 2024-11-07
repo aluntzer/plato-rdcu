@@ -2,12 +2,8 @@
 
 /*=======Automagically Detected Files To Include=====*/
 #include "unity.h"
-#include <string.h>
-#include <cmp_max_used_bits_list.h>
 
 /*=======External Functions This Runner Calls=====*/
-extern void setUp(void);
-extern void tearDown(void);
 extern void test_cmp_max_used_bits_list(void);
 
 
@@ -29,7 +25,6 @@ void setUp(void) {}
 void tearDown(void) {}
 
 /*=======Test Reset Options=====*/
-void resetTest(void);
 void resetTest(void)
 {
   tearDown();
@@ -38,7 +33,6 @@ void resetTest(void)
   CMock_Init();
   setUp();
 }
-void verifyTest(void);
 void verifyTest(void)
 {
   CMock_Verify();
@@ -76,7 +70,7 @@ static void run_test(UnityTestFunction func, const char* name, UNITY_LINE_TYPE l
 int main(void)
 {
   UnityBegin("../test/cmp_max_used_bits/test_cmp_max_used_bits_list.c");
-  run_test(test_cmp_max_used_bits_list, "test_cmp_max_used_bits_list", 63);
+  run_test(test_cmp_max_used_bits_list, "test_cmp_max_used_bits_list", 68);
 
   return UnityEnd();
 }

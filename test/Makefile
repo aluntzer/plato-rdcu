@@ -20,14 +20,14 @@ LIB = $(LIB_DIR)/libcmp.a
 vpath %.c $(TEST_SUB_DIRS) $(UNITY_DIR)
 
 UNITY_OBJS = unity.o
-TEST_COMMON_OBJ = test_common.o pcg_basic.o
+TEST_COMMON_OBJ = test_common.o pcg_basic.o chunk_round_trip.o
 
 CPPFLAGS  += -I$(LIB_DIR) -I$(LIB_DIR)/common -I$(LIB_DIR)/icu_compress \
              -I$(LIB_DIR)/rdcu_compress -I$(LIB_DIR)/decompress -I$(UNITY_DIR)
 
 .PHONY: all
 all: test_cmp_data_types_Runner test_cmp_entity_Runner test_cmp_decmp_Runner \
-     test_cmp_icu_Runner test_cmp_max_used_bits_list_Runner test_cmp_rdcu_cfg_Runner \
+     test_cmp_icu_Runner test_cmp_rdcu_cfg_Runner \
      test_decmp_Runner
 
 # define silent mode as default (verbose mode with V=1 or VERBOSE=1)
@@ -36,10 +36,9 @@ $(V)$(VERBOSE).SILENT:
 
 .PHONY: test
 test: test_cmp_data_types test_cmp_entity test_cmp_decmp test_cmp_icu \
-      test_cmp_max_used_bits_list test_cmp_rdcu_cfg test_decmp
+      test_cmp_rdcu_cfg test_decmp
 
 
-.PHONY: $(LIB) # must be run every time
 $(LIB) :
 	CC=$(CC) MOREFLAGS="$(MOREFLAGS)" $(MAKE) -C $(LIB_DIR) libcmp.a
 
@@ -70,10 +69,6 @@ test_cmp_decmp_Runner: test_cmp_decmp.o $(UNITY_OBJS) $(TEST_COMMON_OBJ) $(LIB)
 .PHONY: test_cmp_icu
 test_cmp_icu: test_cmp_icu.txt
 test_cmp_icu_Runner: test_cmp_icu.o $(UNITY_OBJS) $(TEST_COMMON_OBJ) $(LIB)
-
-.PHONY: test_cmp_max_used_bits_list
-test_cmp_max_used_bits_list: test_cmp_max_used_bits_list.txt
-test_cmp_max_used_bits_list_Runner: test_cmp_max_used_bits_list.o $(UNITY_OBJS) $(LIB)
 
 .PHONY: test_cmp_rdcu_cfg
 test_cmp_rdcu_cfg: test_cmp_rdcu_cfg.txt
