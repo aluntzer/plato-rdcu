@@ -431,6 +431,21 @@ void test_cmp_ent_data_type(void)
 	int raw_mode_flag, raw_mode_flag_read;
 	uint8_t *entity_p = (uint8_t *)&ent;
 
+	/* test raw_mode */
+	raw_mode_flag = 1;
+	data_type = DATA_TYPE_F_CAM_IMAGETTE_ADAPTIVE;
+	error = cmp_ent_set_data_type(&ent, data_type, raw_mode_flag);
+	TEST_ASSERT_FALSE(error);
+
+	data_type_read = cmp_ent_get_data_type(&ent);
+	TEST_ASSERT_EQUAL_HEX32(data_type, data_type_read);
+	raw_mode_flag_read = cmp_ent_get_data_type_raw_bit(&ent);
+	TEST_ASSERT_EQUAL(raw_mode_flag, raw_mode_flag_read);
+
+	/* check the right position in the header */
+	TEST_ASSERT_EQUAL_HEX(0x80, entity_p[22]);
+	TEST_ASSERT_EQUAL_HEX(21, entity_p[23]);
+
 	/* test non raw_mode */
 	raw_mode_flag = 0;
 	data_type = DATA_TYPE_F_CAM_IMAGETTE_ADAPTIVE;
@@ -446,20 +461,6 @@ void test_cmp_ent_data_type(void)
 	TEST_ASSERT_EQUAL_HEX(0, entity_p[22]);
 	TEST_ASSERT_EQUAL_HEX(21, entity_p[23]);
 
-	/* test raw_mode */
-	raw_mode_flag = 1;
-	data_type = DATA_TYPE_F_CAM_IMAGETTE_ADAPTIVE;
-	error = cmp_ent_set_data_type(&ent, data_type, raw_mode_flag);
-	TEST_ASSERT_FALSE(error);
-
-	data_type_read = cmp_ent_get_data_type(&ent);
-	TEST_ASSERT_EQUAL_HEX32(data_type, data_type_read);
-	raw_mode_flag_read = cmp_ent_get_data_type_raw_bit(&ent);
-	TEST_ASSERT_EQUAL(raw_mode_flag, raw_mode_flag_read);
-
-	/* check the right position in the header */
-	TEST_ASSERT_EQUAL_HEX(0x80, entity_p[22]);
-	TEST_ASSERT_EQUAL_HEX(21, entity_p[23]);
 
 	/* error cases */
 	raw_mode_flag = 0;
@@ -1860,10 +1861,10 @@ void test_cmp_ent_build(void)
 	cmp_size_bits = 2;
 	size = cmp_ent_build(NULL, version_id, start_time, end_time, model_id,
 			     model_counter, &cfg, cmp_size_bits);
-	TEST_ASSERT_EQUAL_UINT(IMAGETTE_ADAPTIVE_HEADER_SIZE+4, size);
+	TEST_ASSERT_EQUAL_UINT(IMAGETTE_ADAPTIVE_HEADER_SIZE+cmp_bit_to_byte((unsigned int)cmp_size_bits), size);
 	size = cmp_ent_build(ent, version_id, start_time, end_time, model_id,
 			     model_counter, &cfg, cmp_size_bits);
-	TEST_ASSERT_EQUAL_UINT(IMAGETTE_ADAPTIVE_HEADER_SIZE+4, size);
+	TEST_ASSERT_EQUAL_UINT(IMAGETTE_ADAPTIVE_HEADER_SIZE+cmp_bit_to_byte((unsigned int)cmp_size_bits), size);
 
 	/** error cases **/
 	/* cfg = NULL */

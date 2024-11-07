@@ -18,9 +18,135 @@
 
 
 #include <stdint.h>
+#include <string.h>
+#include <stdlib.h>
 
 #include <unity.h>
 #include <cmp_data_types.h>
+
+
+/**
+ * @test cmp_collection_get_subservie
+ */
+
+void test_cmp_col_get_subservice(void)
+{
+	struct collection_hdr col;
+
+	memset(&col, 0, sizeof(struct collection_hdr));
+	memset(&col.collection_id, 0x7E, 1); /* set all bit of the subservice field */
+
+	TEST_ASSERT_EQUAL(0x3F, cmp_col_get_subservice(&col));
+	cmp_col_set_subservice(&col, 0x35);
+	TEST_ASSERT_EQUAL(0x35, cmp_col_get_subservice(&col));
+}
+
+void test_cmp_col_get_and_set(void)
+{
+	int err;
+	size_t i;
+	struct collection_hdr *col = malloc(sizeof(struct collection_hdr));
+	uint8_t *u8_p = (uint8_t *)col;
+	uint64_t timestamp;
+	uint16_t configuration_id, collection_id, collection_length;
+	uint8_t pkt_type, subservice, ccd_id, sequence_num;
+
+	TEST_ASSERT_TRUE(col);
+
+	memset(col, 0, sizeof(struct collection_hdr));
+
+	err = cmp_col_set_timestamp(col, 0x000102030405);
+	TEST_ASSERT_FALSE(err);
+	timestamp = cmp_col_get_timestamp(col);
+	TEST_ASSERT_EQUAL(0x000102030405, timestamp);
+	/* error cases */
+	err = cmp_col_set_timestamp(NULL, 0x000102030405);
+	TEST_ASSERT_TRUE(err);
+	err = cmp_col_set_timestamp(col, 0x1000000000000);
+	TEST_ASSERT_TRUE(err);
+
+	err = cmp_col_set_configuration_id(col, 0x0607);
+	TEST_ASSERT_FALSE(err);
+	configuration_id = cmp_col_get_configuration_id(col);
+	TEST_ASSERT_EQUAL_HEX16(0x0607, configuration_id);
+	/* error cases */
+	err = cmp_col_set_configuration_id(NULL, 0x0607);
+	TEST_ASSERT_TRUE(err);
+
+
+	err = cmp_col_set_pkt_type(col, 1);
+	TEST_ASSERT_FALSE(err);
+	pkt_type = cmp_col_get_pkt_type(col);
+	TEST_ASSERT_EQUAL_HEX16(pkt_type, pkt_type);
+	TEST_ASSERT_EQUAL_HEX16(0x8000, cmp_col_get_col_id(col));
+	/* error cases */
+	err = cmp_col_set_pkt_type(col, 2);
+	TEST_ASSERT_TRUE(err);
+	err = cmp_col_set_pkt_type(NULL, 1);
+	TEST_ASSERT_TRUE(err);
+	err = cmp_col_set_pkt_type(col, 0);
+	TEST_ASSERT_FALSE(err);
+
+	err = cmp_col_set_subservice(col, 0x3F);
+	TEST_ASSERT_FALSE(err);
+	subservice = cmp_col_get_subservice(col);
+	TEST_ASSERT_EQUAL_HEX16(subservice, subservice);
+	TEST_ASSERT_EQUAL_HEX16(0x7E00, cmp_col_get_col_id(col));
+	/* error cases */
+	err = cmp_col_set_subservice(col, 0x40);
+	TEST_ASSERT_TRUE(err);
+	err = cmp_col_set_subservice(NULL, 0x3F);
+	TEST_ASSERT_TRUE(err);
+	err = cmp_col_set_subservice(col, 0);
+	TEST_ASSERT_FALSE(err);
+
+	err = cmp_col_set_ccd_id(col, 0x3);
+	TEST_ASSERT_FALSE(err);
+	ccd_id = cmp_col_get_ccd_id(col);
+	TEST_ASSERT_EQUAL_HEX16(ccd_id, ccd_id);
+	TEST_ASSERT_EQUAL_HEX16(0x0180, cmp_col_get_col_id(col));
+	/* error cases */
+	err = cmp_col_set_ccd_id(col, 0x4);
+	TEST_ASSERT_TRUE(err);
+	err = cmp_col_set_ccd_id(NULL, 0x3);
+	TEST_ASSERT_TRUE(err);
+	err = cmp_col_set_ccd_id(col, 0);
+	TEST_ASSERT_FALSE(err);
+
+	err = cmp_col_set_sequence_num(col, 0x7F);
+	TEST_ASSERT_FALSE(err);
+	sequence_num = cmp_col_get_sequence_num(col);
+	TEST_ASSERT_EQUAL_HEX16(0x7F, sequence_num);
+	TEST_ASSERT_EQUAL_HEX16(0x007F, cmp_col_get_col_id(col));
+	/* error cases */
+	err = cmp_col_set_sequence_num(col, 0x80);
+	TEST_ASSERT_TRUE(err);
+	err = cmp_col_set_sequence_num(NULL, 0x7F);
+	TEST_ASSERT_TRUE(err);
+
+
+	err = cmp_col_set_col_id(col, 0x0809);
+	TEST_ASSERT_FALSE(err);
+	collection_id = cmp_col_get_col_id(col);
+	TEST_ASSERT_EQUAL_HEX16(0x0809, collection_id);
+	/* error cases */
+	err = cmp_col_set_col_id(NULL, 0x0809);
+	TEST_ASSERT_TRUE(err);
+
+	err = cmp_col_set_data_length(col, 0x0A0B);
+	TEST_ASSERT_FALSE(err);
+	collection_length = cmp_col_get_data_length(col);
+	TEST_ASSERT_EQUAL_HEX16(0x0A0B, collection_length);
+	/* error cases */
+	err = cmp_col_set_data_length(NULL, 0x0A0B);
+	TEST_ASSERT_TRUE(err);
+
+	for (i = 0; i < sizeof(struct collection_hdr); i++) {
+		TEST_ASSERT_EQUAL_HEX8(i, u8_p[i]);
+	}
+	free(col);
+
+}
 
 
 /**
@@ -78,10 +204,10 @@ void test_cmp_cal_size_of_data(void)
 	TEST_ASSERT_EQUAL_UINT(32 * sizeof(uint16_t), s);
 
 	s = cmp_cal_size_of_data(1, DATA_TYPE_F_FX);
-	TEST_ASSERT_EQUAL_UINT(sizeof(struct f_fx)+MULTI_ENTRY_HDR_SIZE, s);
+	TEST_ASSERT_EQUAL_UINT(sizeof(struct f_fx)+COLLECTION_HDR_SIZE, s);
 
 	s = cmp_cal_size_of_data(4, DATA_TYPE_F_FX);
-	TEST_ASSERT_EQUAL_UINT(4*sizeof(struct f_fx)+MULTI_ENTRY_HDR_SIZE, s);
+	TEST_ASSERT_EQUAL_UINT(4*sizeof(struct f_fx)+COLLECTION_HDR_SIZE, s);
 
 	/* error cases */
 	s = cmp_cal_size_of_data(33, DATA_TYPE_UNKNOWN);
@@ -133,12 +259,12 @@ void test_cmp_input_size_to_samples(void)
 
 	/* error cases */
 	data_type = DATA_TYPE_S_FX_NCOB;
-	size = MULTI_ENTRY_HDR_SIZE - 1;
+	size = COLLECTION_HDR_SIZE - 1;
 	samples_get = cmp_input_size_to_samples(size, data_type);
 	TEST_ASSERT_EQUAL(-1, samples_get);
 	data_type = DATA_TYPE_S_FX_NCOB;
 
-	size = MULTI_ENTRY_HDR_SIZE + 4*sizeof(struct s_fx_ncob) - 1;
+	size = COLLECTION_HDR_SIZE + 4*sizeof(struct s_fx_ncob) - 1;
 	samples_get = cmp_input_size_to_samples(size, data_type);
 	TEST_ASSERT_EQUAL(-1, samples_get);
 }
@@ -150,16 +276,16 @@ static void check_endianness(void* data, size_t size, enum cmp_data_type data_ty
 	uint8_t *p_8 = data;
 	size_t i;
 
-	TEST_ASSERT_TRUE(size > MULTI_ENTRY_HDR_SIZE);
+	TEST_ASSERT_TRUE(size > COLLECTION_HDR_SIZE);
 
 	error = cmp_input_big_to_cpu_endianness(data, (uint32_t)size, data_type);
 	TEST_ASSERT_FALSE(error);
 
-	for (i = 0; i < MULTI_ENTRY_HDR_SIZE; i++)
+	for (i = 0; i < COLLECTION_HDR_SIZE; i++)
 		TEST_ASSERT_EQUAL(0, p_8[i]);
 
-	for (i = 0; i < size-MULTI_ENTRY_HDR_SIZE; i++)
-		TEST_ASSERT_EQUAL((uint8_t)i, p_8[MULTI_ENTRY_HDR_SIZE+i]);
+	for (i = 0; i < size-COLLECTION_HDR_SIZE; i++)
+		TEST_ASSERT_EQUAL((uint8_t)i, p_8[COLLECTION_HDR_SIZE+i]);
 }
 
 
@@ -184,7 +310,7 @@ void test_cmp_input_big_to_cpu_endianness(void)
 	}
 	{
 		struct {
-			uint8_t hdr[MULTI_ENTRY_HDR_SIZE];
+			uint8_t hdr[COLLECTION_HDR_SIZE];
 			struct offset entry[2];
 		} __attribute__((packed)) data = {0};
 
@@ -208,7 +334,7 @@ void test_cmp_input_big_to_cpu_endianness(void)
 	}
 	{
 		struct {
-			uint8_t hdr[MULTI_ENTRY_HDR_SIZE];
+			uint8_t hdr[COLLECTION_HDR_SIZE];
 			struct background entry[2];
 		} __attribute__((packed)) data = {0};
 
@@ -236,7 +362,7 @@ void test_cmp_input_big_to_cpu_endianness(void)
 	}
 	{
 		struct {
-			uint8_t hdr[MULTI_ENTRY_HDR_SIZE];
+			uint8_t hdr[COLLECTION_HDR_SIZE];
 			struct smearing entry[2];
 		} __attribute__((packed)) data = {0};
 
@@ -253,7 +379,7 @@ void test_cmp_input_big_to_cpu_endianness(void)
 	}
 	{
 		struct {
-			uint8_t hdr[MULTI_ENTRY_HDR_SIZE];
+			uint8_t hdr[COLLECTION_HDR_SIZE];
 			struct s_fx entry[2];
 		} __attribute__((packed)) data = {0};
 
@@ -268,7 +394,7 @@ void test_cmp_input_big_to_cpu_endianness(void)
 	}
 	{
 		struct {
-			uint8_t hdr[MULTI_ENTRY_HDR_SIZE];
+			uint8_t hdr[COLLECTION_HDR_SIZE];
 			struct s_fx_efx entry[2];
 		} __attribute__((packed)) data = {0};
 
@@ -285,7 +411,7 @@ void test_cmp_input_big_to_cpu_endianness(void)
 	}
 	{
 		struct {
-			uint8_t hdr[MULTI_ENTRY_HDR_SIZE];
+			uint8_t hdr[COLLECTION_HDR_SIZE];
 			struct s_fx_ncob entry[2];
 		} __attribute__((packed)) data = {0};
 
@@ -304,7 +430,7 @@ void test_cmp_input_big_to_cpu_endianness(void)
 	}
 	{
 		struct {
-			uint8_t hdr[MULTI_ENTRY_HDR_SIZE];
+			uint8_t hdr[COLLECTION_HDR_SIZE];
 			struct s_fx_efx_ncob_ecob entry[2];
 		} __attribute__((packed)) data = {0};
 
@@ -329,7 +455,7 @@ void test_cmp_input_big_to_cpu_endianness(void)
 	}
 	{
 		struct {
-			uint8_t hdr[MULTI_ENTRY_HDR_SIZE];
+			uint8_t hdr[COLLECTION_HDR_SIZE];
 			struct f_fx entry[2];
 		} __attribute__((packed)) data = {0};
 
@@ -342,7 +468,7 @@ void test_cmp_input_big_to_cpu_endianness(void)
 	}
 	{
 		struct {
-			uint8_t hdr[MULTI_ENTRY_HDR_SIZE];
+			uint8_t hdr[COLLECTION_HDR_SIZE];
 			struct f_fx_efx entry[2];
 		} __attribute__((packed)) data = {0};
 
@@ -357,7 +483,7 @@ void test_cmp_input_big_to_cpu_endianness(void)
 	}
 	{
 		struct {
-			uint8_t hdr[MULTI_ENTRY_HDR_SIZE];
+			uint8_t hdr[COLLECTION_HDR_SIZE];
 			struct f_fx_ncob entry[2];
 		} __attribute__((packed)) data = {0};
 
@@ -374,7 +500,7 @@ void test_cmp_input_big_to_cpu_endianness(void)
 	}
 	{
 		struct {
-			uint8_t hdr[MULTI_ENTRY_HDR_SIZE];
+			uint8_t hdr[COLLECTION_HDR_SIZE];
 			struct f_fx_efx_ncob_ecob entry[2];
 		} __attribute__((packed)) data = {0};
 
@@ -397,7 +523,7 @@ void test_cmp_input_big_to_cpu_endianness(void)
 	}
 	{
 		struct {
-			uint8_t hdr[MULTI_ENTRY_HDR_SIZE];
+			uint8_t hdr[COLLECTION_HDR_SIZE];
 			struct l_fx entry[2];
 		} __attribute__((packed)) data = {0};
 
@@ -414,7 +540,7 @@ void test_cmp_input_big_to_cpu_endianness(void)
 	}
 	{
 		struct {
-			uint8_t hdr[MULTI_ENTRY_HDR_SIZE];
+			uint8_t hdr[COLLECTION_HDR_SIZE];
 			struct l_fx_efx entry[2];
 		} __attribute__((packed)) data = {0};
 
@@ -433,7 +559,7 @@ void test_cmp_input_big_to_cpu_endianness(void)
 	}
 	{
 		struct {
-			uint8_t hdr[MULTI_ENTRY_HDR_SIZE];
+			uint8_t hdr[COLLECTION_HDR_SIZE];
 			struct l_fx_ncob entry[2];
 		} __attribute__((packed)) data = {0};
 
@@ -458,7 +584,7 @@ void test_cmp_input_big_to_cpu_endianness(void)
 	}
 	{
 		struct {
-			uint8_t hdr[MULTI_ENTRY_HDR_SIZE];
+			uint8_t hdr[COLLECTION_HDR_SIZE];
 			struct l_fx_efx_ncob_ecob entry[2];
 		} __attribute__((packed)) data = {0};
 

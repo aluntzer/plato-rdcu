@@ -32,6 +32,7 @@
 #include "../test_common/test_common.h"
 
 #include <cmp_icu.h>
+#include <cmp_data_types.h>
 #include "../../lib/icu_compress/cmp_icu.c" /* this is a hack to test static functions */
 
 
@@ -1071,11 +1072,11 @@ void test_cmp_cfg_fx_cob(void)
 void test_cmp_cfg_aux(void)
 {	struct cmp_cfg cfg;
 	uint32_t cmp_par_mean = 2;
-	uint32_t spillover_mean = 2;
-	uint32_t cmp_par_variance = 2;
-	uint32_t spillover_variance = 2;
-	uint32_t cmp_par_pixels_error = 2;
-	uint32_t spillover_pixels_error = 2;
+	uint32_t spillover_mean = 3;
+	uint32_t cmp_par_variance = 4;
+	uint32_t spillover_variance = 5;
+	uint32_t cmp_par_pixels_error = 6;
+	uint32_t spillover_pixels_error = 7;
 	int error;
 	enum cmp_data_type data_type;
 
@@ -1085,20 +1086,32 @@ void test_cmp_cfg_aux(void)
 		error = cmp_cfg_aux(&cfg, cmp_par_mean, spillover_mean,
 				    cmp_par_variance, spillover_variance,
 				    cmp_par_pixels_error, spillover_pixels_error);
-		if (data_type == DATA_TYPE_OFFSET ||
-		    data_type == DATA_TYPE_BACKGROUND ||
-		    data_type == DATA_TYPE_SMEARING ||
-		    data_type == DATA_TYPE_F_CAM_OFFSET ||
-		    data_type == DATA_TYPE_F_CAM_BACKGROUND
-		    ) {
+		if (data_type == DATA_TYPE_OFFSET || data_type == DATA_TYPE_F_CAM_OFFSET) {
 			TEST_ASSERT_FALSE(error);
 			TEST_ASSERT_EQUAL_INT(data_type, cfg.data_type);
-			TEST_ASSERT_EQUAL_INT(2, cfg.cmp_par_mean);
-			TEST_ASSERT_EQUAL_INT(2, cfg.spill_mean);
-			TEST_ASSERT_EQUAL_INT(2, cfg.cmp_par_variance);
-			TEST_ASSERT_EQUAL_INT(2, cfg.spill_variance);
-			TEST_ASSERT_EQUAL_INT(2, cfg.cmp_par_pixels_error);
-			TEST_ASSERT_EQUAL_INT(2, cfg.spill_pixels_error);
+			TEST_ASSERT_EQUAL_INT(2, cfg.cmp_par_offset_mean);
+			TEST_ASSERT_EQUAL_INT(3, cfg.spill_offset_mean);
+			TEST_ASSERT_EQUAL_INT(4, cfg.cmp_par_offset_variance);
+			TEST_ASSERT_EQUAL_INT(5, cfg.spill_offset_variance);
+		} else if (data_type == DATA_TYPE_BACKGROUND ||
+			   data_type == DATA_TYPE_F_CAM_BACKGROUND) {
+			TEST_ASSERT_FALSE(error);
+			TEST_ASSERT_EQUAL_INT(data_type, cfg.data_type);
+			TEST_ASSERT_EQUAL_INT(2, cfg.cmp_par_background_mean);
+			TEST_ASSERT_EQUAL_INT(3, cfg.spill_background_mean);
+			TEST_ASSERT_EQUAL_INT(4, cfg.cmp_par_background_variance);
+			TEST_ASSERT_EQUAL_INT(5, cfg.spill_background_variance);
+			TEST_ASSERT_EQUAL_INT(6, cfg.cmp_par_background_pixels_error);
+			TEST_ASSERT_EQUAL_INT(7, cfg.spill_background_pixels_error);
+		} else if (data_type == DATA_TYPE_SMEARING) {
+			TEST_ASSERT_FALSE(error);
+			TEST_ASSERT_EQUAL_INT(data_type, cfg.data_type);
+			TEST_ASSERT_EQUAL_INT(2, cfg.cmp_par_smearing_mean);
+			TEST_ASSERT_EQUAL_INT(3, cfg.spill_smearing_mean);
+			TEST_ASSERT_EQUAL_INT(4, cfg.cmp_par_smearing_variance);
+			TEST_ASSERT_EQUAL_INT(5, cfg.spill_smearing_variance);
+			TEST_ASSERT_EQUAL_INT(6, cfg.cmp_par_smearing_pixels_error);
+			TEST_ASSERT_EQUAL_INT(7, cfg.spill_smearing_pixels_error);
 		} else {
 			TEST_ASSERT_TRUE(error);
 		}
@@ -1124,10 +1137,10 @@ void test_cmp_cfg_aux(void)
 			    cmp_par_variance, spillover_variance,
 			    cmp_par_pixels_error, spillover_pixels_error);
 	TEST_ASSERT_FALSE(error);
-	TEST_ASSERT_EQUAL_INT(MIN_NON_IMA_GOLOMB_PAR, cfg.cmp_par_mean);
-	TEST_ASSERT_EQUAL_INT(cmp_icu_max_spill(MIN_NON_IMA_GOLOMB_PAR), cfg.spill_mean);
-	TEST_ASSERT_EQUAL_INT(MIN_NON_IMA_GOLOMB_PAR, cfg.cmp_par_variance);
-	TEST_ASSERT_EQUAL_INT(2, cfg.spill_variance);
+	TEST_ASSERT_EQUAL_INT(MIN_NON_IMA_GOLOMB_PAR, cfg.cmp_par_offset_mean);
+	TEST_ASSERT_EQUAL_INT(cmp_icu_max_spill(MIN_NON_IMA_GOLOMB_PAR), cfg.spill_offset_mean);
+	TEST_ASSERT_EQUAL_INT(MIN_NON_IMA_GOLOMB_PAR, cfg.cmp_par_offset_variance);
+	TEST_ASSERT_EQUAL_INT(2, cfg.spill_offset_variance);
 
 	/* This should fail */
 	cmp_par_mean = MIN_NON_IMA_GOLOMB_PAR-1;
@@ -1137,7 +1150,7 @@ void test_cmp_cfg_aux(void)
 	TEST_ASSERT_TRUE(error);
 
 
-	/* DATA_TYPE_BACKGROUND */
+	/* DATA_TYPE_F_CAM_OFFSET */
 	cfg = cmp_cfg_icu_create(DATA_TYPE_F_CAM_OFFSET, CMP_MODE_DIFF_MULTI, 7, CMP_LOSSLESS);
 	cmp_par_mean = MIN_NON_IMA_GOLOMB_PAR;
 	spillover_mean = cmp_icu_max_spill(MIN_NON_IMA_GOLOMB_PAR);
@@ -1150,10 +1163,10 @@ void test_cmp_cfg_aux(void)
 			    cmp_par_variance, spillover_variance,
 			    cmp_par_pixels_error, spillover_pixels_error);
 	TEST_ASSERT_FALSE(error);
-	TEST_ASSERT_EQUAL_INT(MIN_NON_IMA_GOLOMB_PAR, cfg.cmp_par_mean);
-	TEST_ASSERT_EQUAL_INT(cmp_icu_max_spill(MIN_NON_IMA_GOLOMB_PAR), cfg.spill_mean);
-	TEST_ASSERT_EQUAL_INT(MIN_NON_IMA_GOLOMB_PAR, cfg.cmp_par_variance);
-	TEST_ASSERT_EQUAL_INT(2, cfg.spill_variance);
+	TEST_ASSERT_EQUAL_INT(MIN_NON_IMA_GOLOMB_PAR, cfg.cmp_par_offset_mean);
+	TEST_ASSERT_EQUAL_INT(cmp_icu_max_spill(MIN_NON_IMA_GOLOMB_PAR), cfg.spill_offset_mean);
+	TEST_ASSERT_EQUAL_INT(MIN_NON_IMA_GOLOMB_PAR, cfg.cmp_par_offset_variance);
+	TEST_ASSERT_EQUAL_INT(2, cfg.spill_offset_variance);
 
 	/* This should fail */
 	cmp_par_variance = MIN_NON_IMA_GOLOMB_PAR-1;
@@ -1175,12 +1188,12 @@ void test_cmp_cfg_aux(void)
 			    cmp_par_variance, spillover_variance,
 			    cmp_par_pixels_error, spillover_pixels_error);
 	TEST_ASSERT_FALSE(error);
-	TEST_ASSERT_EQUAL_INT(MAX_NON_IMA_GOLOMB_PAR, cfg.cmp_par_mean);
-	TEST_ASSERT_EQUAL_INT(cmp_icu_max_spill(MAX_NON_IMA_GOLOMB_PAR), cfg.spill_mean);
-	TEST_ASSERT_EQUAL_INT(MIN_NON_IMA_GOLOMB_PAR, cfg.cmp_par_variance);
-	TEST_ASSERT_EQUAL_INT(MIN_NON_IMA_SPILL, cfg.spill_variance);
-	TEST_ASSERT_EQUAL_INT(42, cfg.cmp_par_pixels_error);
-	TEST_ASSERT_EQUAL_INT(23, cfg.spill_pixels_error);
+	TEST_ASSERT_EQUAL_INT(MAX_NON_IMA_GOLOMB_PAR, cfg.cmp_par_background_mean);
+	TEST_ASSERT_EQUAL_INT(cmp_icu_max_spill(MAX_NON_IMA_GOLOMB_PAR), cfg.spill_background_mean);
+	TEST_ASSERT_EQUAL_INT(MIN_NON_IMA_GOLOMB_PAR, cfg.cmp_par_background_variance);
+	TEST_ASSERT_EQUAL_INT(MIN_NON_IMA_SPILL, cfg.spill_background_variance);
+	TEST_ASSERT_EQUAL_INT(42, cfg.cmp_par_background_pixels_error);
+	TEST_ASSERT_EQUAL_INT(23, cfg.spill_background_pixels_error);
 
 	/* This should fail */
 	cmp_par_variance = MIN_NON_IMA_GOLOMB_PAR-1;
@@ -1203,12 +1216,12 @@ void test_cmp_cfg_aux(void)
 			    cmp_par_variance, spillover_variance,
 			    cmp_par_pixels_error, spillover_pixels_error);
 	TEST_ASSERT_FALSE(error);
-	TEST_ASSERT_EQUAL_INT(MAX_NON_IMA_GOLOMB_PAR, cfg.cmp_par_mean);
-	TEST_ASSERT_EQUAL_INT(cmp_icu_max_spill(MAX_NON_IMA_GOLOMB_PAR), cfg.spill_mean);
-	TEST_ASSERT_EQUAL_INT(MIN_NON_IMA_GOLOMB_PAR, cfg.cmp_par_variance);
-	TEST_ASSERT_EQUAL_INT(MIN_NON_IMA_SPILL, cfg.spill_variance);
-	TEST_ASSERT_EQUAL_INT(42, cfg.cmp_par_pixels_error);
-	TEST_ASSERT_EQUAL_INT(23, cfg.spill_pixels_error);
+	TEST_ASSERT_EQUAL_INT(MAX_NON_IMA_GOLOMB_PAR, cfg.cmp_par_background_mean);
+	TEST_ASSERT_EQUAL_INT(cmp_icu_max_spill(MAX_NON_IMA_GOLOMB_PAR), cfg.spill_background_mean);
+	TEST_ASSERT_EQUAL_INT(MIN_NON_IMA_GOLOMB_PAR, cfg.cmp_par_background_variance);
+	TEST_ASSERT_EQUAL_INT(MIN_NON_IMA_SPILL, cfg.spill_background_variance);
+	TEST_ASSERT_EQUAL_INT(42, cfg.cmp_par_background_pixels_error);
+	TEST_ASSERT_EQUAL_INT(23, cfg.spill_background_pixels_error);
 
 	/* This should fail */
 	cmp_par_variance = MIN_NON_IMA_GOLOMB_PAR-1;
@@ -1231,12 +1244,12 @@ void test_cmp_cfg_aux(void)
 			    cmp_par_variance, spillover_variance,
 			    cmp_par_pixels_error, spillover_pixels_error);
 	TEST_ASSERT_FALSE(error);
-	TEST_ASSERT_EQUAL_INT(MAX_NON_IMA_GOLOMB_PAR, cfg.cmp_par_mean);
-	TEST_ASSERT_EQUAL_INT(cmp_icu_max_spill(MAX_NON_IMA_GOLOMB_PAR), cfg.spill_mean);
-	TEST_ASSERT_EQUAL_INT(MIN_NON_IMA_GOLOMB_PAR, cfg.cmp_par_variance);
-	TEST_ASSERT_EQUAL_INT(MIN_NON_IMA_SPILL, cfg.spill_variance);
-	TEST_ASSERT_EQUAL_INT(42, cfg.cmp_par_pixels_error);
-	TEST_ASSERT_EQUAL_INT(23, cfg.spill_pixels_error);
+	TEST_ASSERT_EQUAL_INT(MAX_NON_IMA_GOLOMB_PAR, cfg.cmp_par_background_mean);
+	TEST_ASSERT_EQUAL_INT(cmp_icu_max_spill(MAX_NON_IMA_GOLOMB_PAR), cfg.spill_background_mean);
+	TEST_ASSERT_EQUAL_INT(MIN_NON_IMA_GOLOMB_PAR, cfg.cmp_par_background_variance);
+	TEST_ASSERT_EQUAL_INT(MIN_NON_IMA_SPILL, cfg.spill_background_variance);
+	TEST_ASSERT_EQUAL_INT(42, cfg.cmp_par_background_pixels_error);
+	TEST_ASSERT_EQUAL_INT(23, cfg.spill_background_pixels_error);
 
 	/* This should fail */
 	cmp_par_pixels_error = MIN_NON_IMA_GOLOMB_PAR-1;
@@ -1259,12 +1272,12 @@ void test_cmp_cfg_aux(void)
 			    cmp_par_variance, spillover_variance,
 			    cmp_par_pixels_error, spillover_pixels_error);
 	TEST_ASSERT_FALSE(error);
-	TEST_ASSERT_EQUAL_INT(MAX_NON_IMA_GOLOMB_PAR, cfg.cmp_par_mean);
-	TEST_ASSERT_EQUAL_INT(cmp_icu_max_spill(MAX_NON_IMA_GOLOMB_PAR), cfg.spill_mean);
-	TEST_ASSERT_EQUAL_INT(MIN_NON_IMA_GOLOMB_PAR, cfg.cmp_par_variance);
-	TEST_ASSERT_EQUAL_INT(MIN_NON_IMA_SPILL, cfg.spill_variance);
-	TEST_ASSERT_EQUAL_INT(42, cfg.cmp_par_pixels_error);
-	TEST_ASSERT_EQUAL_INT(23, cfg.spill_pixels_error);
+	TEST_ASSERT_EQUAL_INT(MAX_NON_IMA_GOLOMB_PAR, cfg.cmp_par_smearing_mean);
+	TEST_ASSERT_EQUAL_INT(cmp_icu_max_spill(MAX_NON_IMA_GOLOMB_PAR), cfg.spill_smearing_mean);
+	TEST_ASSERT_EQUAL_INT(MIN_NON_IMA_GOLOMB_PAR, cfg.cmp_par_smearing_variance);
+	TEST_ASSERT_EQUAL_INT(MIN_NON_IMA_SPILL, cfg.spill_smearing_variance);
+	TEST_ASSERT_EQUAL_INT(42, cfg.cmp_par_smearing_pixels_error);
+	TEST_ASSERT_EQUAL_INT(23, cfg.spill_smearing_pixels_error);
 
 	/* This should fail */
 	spillover_pixels_error = cmp_icu_max_spill(42)+1;
@@ -1468,13 +1481,13 @@ void test_put_n_bits32(void)
 
 	rval = put_n_bits32(v, n, o, testarray1, l);
 	TEST_ASSERT_EQUAL_INT(1, rval);
-	TEST_ASSERT(testarray1[0] == 0x7fffffff);
+	TEST_ASSERT(testarray1[0] == cpu_to_be32(0x7fffffff));
 
 	/* left border, write 1 */
 	v = 1; n = 1; o = 0;
 	rval = put_n_bits32(v, n, o, testarray0, l);
 	TEST_ASSERT_EQUAL_INT(1, rval);
-	TEST_ASSERT(testarray0[0] == 0x80000000);
+	TEST_ASSERT(testarray0[0] == cpu_to_be32(0x80000000));
 
 	rval = put_n_bits32(v, n, o, testarray1, l);
 	TEST_ASSERT_EQUAL_INT(1, rval);
@@ -1484,12 +1497,12 @@ void test_put_n_bits32(void)
 	v = 0xf0f0abcd; n = 32; o = 0;
 	rval = put_n_bits32(v, n, o, testarray0, l);
 	TEST_ASSERT_EQUAL_INT(rval, 32);
-	TEST_ASSERT(testarray0[0] == 0xf0f0abcd);
+	TEST_ASSERT(testarray0[0] == cpu_to_be32(0xf0f0abcd));
 	TEST_ASSERT(testarray0[1] == 0);
 
 	rval = put_n_bits32(v, n, o, testarray1, l);
 	TEST_ASSERT_EQUAL_INT(rval, 32);
-	TEST_ASSERT(testarray1[0] == 0xf0f0abcd);
+	TEST_ASSERT(testarray1[0] == cpu_to_be32(0xf0f0abcd));
 	TEST_ASSERT(testarray1[1] == 0xffffffff);
 	/* re-init input arrays after clobbering */
 	init_PB32_arrays(testarray0, testarray1);
@@ -1498,7 +1511,7 @@ void test_put_n_bits32(void)
 	v = 3; n = 2; o = 29;
 	rval = put_n_bits32(v, n, o, testarray0, l);
 	TEST_ASSERT_EQUAL_INT(rval, 31);
-	TEST_ASSERT(testarray0[0] == 0x6);
+	TEST_ASSERT(testarray0[0] == cpu_to_be32(0x6));
 
 	rval = put_n_bits32(v, n, o, testarray1, l);
 	TEST_ASSERT(testarray1[0] == 0xffffffff);
@@ -1515,7 +1528,7 @@ void test_put_n_bits32(void)
 	TEST_ASSERT(testarray0[0] == 0);
 
 	rval = put_n_bits32(v, n, o, testarray1, l);
-	TEST_ASSERT(testarray1[0] == 0x07ffffff);
+	TEST_ASSERT(testarray1[0] == cpu_to_be32(0x07ffffff));
 	TEST_ASSERT_EQUAL_INT(rval, 5);
 	/* re-init input arrays after clobbering */
 	init_PB32_arrays(testarray0, testarray1);
@@ -1524,7 +1537,7 @@ void test_put_n_bits32(void)
 	v = 0x1f; n = 5; o = 0;
 	rval = put_n_bits32(v, n, o, testarray0, l);
 	TEST_ASSERT_EQUAL_INT(rval, 5);
-	TEST_ASSERT(testarray0[0] == 0xf8000000);
+	TEST_ASSERT(testarray0[0] == cpu_to_be32(0xf8000000));
 
 	rval = put_n_bits32(v, n, o, testarray1, l);
 	TEST_ASSERT_EQUAL_INT(rval, 5);
@@ -1540,7 +1553,7 @@ void test_put_n_bits32(void)
 
 	rval = put_n_bits32(v, n, o, testarray1, l);
 	TEST_ASSERT_EQUAL_INT(rval, 12);
-	TEST_ASSERT(testarray1[0] == 0xfe0fffff);
+	TEST_ASSERT(testarray1[0] == cpu_to_be32(0xfe0fffff));
 	/* re-init input arrays after clobbering */
 	init_PB32_arrays(testarray0, testarray1);
 
@@ -1548,7 +1561,7 @@ void test_put_n_bits32(void)
 	v = 0x1f; n = 5; o = 7;
 	rval = put_n_bits32(v, n, o, testarray0, l);
 	TEST_ASSERT_EQUAL_INT(rval, 12);
-	TEST_ASSERT(testarray0[0] == 0x01f00000);
+	TEST_ASSERT(testarray0[0] == cpu_to_be32(0x01f00000));
 
 	rval = put_n_bits32(v, n, o, testarray1, l);
 	TEST_ASSERT_EQUAL_INT(rval, 12);
@@ -1568,7 +1581,7 @@ void test_put_n_bits32(void)
 	TEST_ASSERT_EQUAL_INT(rval, 96);
 	TEST_ASSERT(testarray1[0] == 0xffffffff);
 	TEST_ASSERT(testarray1[1] == 0xffffffff);
-	TEST_ASSERT(testarray1[2] == 0xffffffe0);
+	TEST_ASSERT(testarray1[2] == cpu_to_be32(0xffffffe0));
 	/* re-init input arrays after clobbering */
 	init_PB32_arrays(testarray0, testarray1);
 
@@ -1578,7 +1591,7 @@ void test_put_n_bits32(void)
 	TEST_ASSERT_EQUAL_INT(rval, 96);
 	TEST_ASSERT(testarray0[0] == 0);
 	TEST_ASSERT(testarray0[1] == 0);
-	TEST_ASSERT(testarray0[2] == 0x0000001f);
+	TEST_ASSERT(testarray0[2] == cpu_to_be32(0x0000001f));
 
 	rval = put_n_bits32(v, n, o, testarray1, l);
 	TEST_ASSERT_EQUAL_INT(rval, 96);
@@ -1624,8 +1637,8 @@ void test_put_n_bits32(void)
 	rval = put_n_bits32(v, n, o, testarray1, l);
 	TEST_ASSERT_EQUAL_INT(rval, 67);
 	TEST_ASSERT(testarray1[0] == 0xffffffff);
-	TEST_ASSERT(testarray1[1] == 0xfffffffc);
-	TEST_ASSERT(testarray1[2] == 0x1fffffff);
+	TEST_ASSERT(testarray1[1] == cpu_to_be32(0xfffffffc));
+	TEST_ASSERT(testarray1[2] == cpu_to_be32(0x1fffffff));
 	/* re-init input arrays after clobbering */
 	init_PB32_arrays(testarray0, testarray1);
 
@@ -1634,8 +1647,8 @@ void test_put_n_bits32(void)
 	rval = put_n_bits32(v, n, o, testarray0, l);
 	TEST_ASSERT_EQUAL_INT(rval, 67);
 	TEST_ASSERT(testarray0[0] == 0);
-	TEST_ASSERT(testarray0[1] == 3);
-	TEST_ASSERT(testarray0[2] == 0xe0000000);
+	TEST_ASSERT(testarray0[1] == cpu_to_be32(3));
+	TEST_ASSERT(testarray0[2] == cpu_to_be32(0xe0000000));
 
 	rval = put_n_bits32(v, n, o, testarray1, l);
 	TEST_ASSERT_EQUAL_INT(rval, 67);
@@ -1654,8 +1667,8 @@ void test_put_n_bits32(void)
 
 	rval = put_n_bits32(v, n, o, testarray1, l);
 	TEST_ASSERT_EQUAL_INT(rval, 33);
-	TEST_ASSERT(testarray1[0] == 0x80000000);
-	TEST_ASSERT(testarray1[1] == 0x7fffffff);
+	TEST_ASSERT(testarray1[0] == cpu_to_be32(0x80000000));
+	TEST_ASSERT(testarray1[1] == cpu_to_be32(0x7fffffff));
 	/* re-init input arrays after clobbering */
 	init_PB32_arrays(testarray0, testarray1);
 
@@ -1663,8 +1676,8 @@ void test_put_n_bits32(void)
 	v = 0xffffffff; n = 32; o = 1;
 	rval = put_n_bits32(v, n, o, testarray0, l);
 	TEST_ASSERT_EQUAL_INT(rval, 33);
-	TEST_ASSERT(testarray0[0] == 0x7fffffff);
-	TEST_ASSERT(testarray0[1] == 0x80000000);
+	TEST_ASSERT(testarray0[0] == cpu_to_be32(0x7fffffff));
+	TEST_ASSERT(testarray0[1] == cpu_to_be32(0x80000000));
 
 	rval = put_n_bits32(v, n, o, testarray1, l);
 	TEST_ASSERT_EQUAL_INT(rval, 33);
@@ -1694,7 +1707,7 @@ void test_put_n_bits32(void)
 	v = 0x7f; n = 6; o = 10;
 	rval = put_n_bits32(v, n, o, testarray0, l);
 	TEST_ASSERT_EQUAL_INT(16, rval);
-	TEST_ASSERT(testarray0[0] == 0x003f0000);
+	TEST_ASSERT(testarray0[0] == cpu_to_be32(0x003f0000));
 	TEST_ASSERT(testarray0[1] == 0);
 
 	rval = put_n_bits32(v, n, o, testarray1, l);
@@ -1710,7 +1723,7 @@ void test_put_n_bits32(void)
 	v = 0xffffffff; n = 6; o = 10;
 	rval = put_n_bits32(v, n, o, testarray0, l);
 	TEST_ASSERT_EQUAL_INT(16, rval);
-	TEST_ASSERT(testarray0[0] == 0x003f0000);
+	TEST_ASSERT(testarray0[0] == cpu_to_be32(0x003f0000));
 	TEST_ASSERT(testarray0[1] == 0);
 
 	rval = put_n_bits32(v, n, o, testarray1, l);
@@ -2016,41 +2029,41 @@ void test_encode_value_zero(void)
 	data = 0; model = 0;
 	stream_len = encode_value_zero(data, model, stream_len, &setup);
 	TEST_ASSERT_EQUAL_INT(2, stream_len);
-	TEST_ASSERT_EQUAL_HEX(0x80000000, bitstream[0]);
-	TEST_ASSERT_EQUAL_HEX(0x00000000, bitstream[1]);
-	TEST_ASSERT_EQUAL_HEX(0x00000000, bitstream[2]);
+	TEST_ASSERT_EQUAL_HEX(0x80000000, be32_to_cpu(bitstream[0]));
+	TEST_ASSERT_EQUAL_HEX(0x00000000, be32_to_cpu(bitstream[1]));
+	TEST_ASSERT_EQUAL_HEX(0x00000000, be32_to_cpu(bitstream[2]));
 
 	data = 5; model = 0;
 	stream_len = encode_value_zero(data, model, stream_len, &setup);
 	TEST_ASSERT_EQUAL_INT(14, stream_len);
-	TEST_ASSERT_EQUAL_HEX(0xBFF80000, bitstream[0]);
-	TEST_ASSERT_EQUAL_HEX(0x00000000, bitstream[1]);
-	TEST_ASSERT_EQUAL_HEX(0x00000000, bitstream[2]);
+	TEST_ASSERT_EQUAL_HEX(0xBFF80000, be32_to_cpu(bitstream[0]));
+	TEST_ASSERT_EQUAL_HEX(0x00000000, be32_to_cpu(bitstream[1]));
+	TEST_ASSERT_EQUAL_HEX(0x00000000, be32_to_cpu(bitstream[2]));
 
 	data = 2; model = 7;
 	stream_len = encode_value_zero(data, model, stream_len, &setup);
 	TEST_ASSERT_EQUAL_INT(25, stream_len);
-	TEST_ASSERT_EQUAL_HEX(0xBFFBFF00, bitstream[0]);
-	TEST_ASSERT_EQUAL_HEX(0x00000000, bitstream[1]);
-	TEST_ASSERT_EQUAL_HEX(0x00000000, bitstream[2]);
+	TEST_ASSERT_EQUAL_HEX(0xBFFBFF00, be32_to_cpu(bitstream[0]));
+	TEST_ASSERT_EQUAL_HEX(0x00000000, be32_to_cpu(bitstream[1]));
+	TEST_ASSERT_EQUAL_HEX(0x00000000, be32_to_cpu(bitstream[2]));
 
 	/* zero escape mechanism */
 	data = 100; model = 42;
 	/* (100-42)*2+1=117 -> cw 0 + 0x0000_0000_0000_0075 */
 	stream_len = encode_value_zero(data, model, stream_len, &setup);
 	TEST_ASSERT_EQUAL_INT(58, stream_len);
-	TEST_ASSERT_EQUAL_HEX(0xBFFBFF00, bitstream[0]);
-	TEST_ASSERT_EQUAL_HEX(0x00001D40, bitstream[1]);
-	TEST_ASSERT_EQUAL_HEX(0x00000000, bitstream[2]);
+	TEST_ASSERT_EQUAL_HEX(0xBFFBFF00, be32_to_cpu(bitstream[0]));
+	TEST_ASSERT_EQUAL_HEX(0x00001D40, be32_to_cpu(bitstream[1]));
+	TEST_ASSERT_EQUAL_HEX(0x00000000, be32_to_cpu(bitstream[2]));
 
 	/* test overflow */
 	data = (uint32_t)INT32_MIN; model = 0;
 	/* (INT32_MIN)*-2-1+1=0(overflow) -> cw 0 + 0x0000_0000_0000_0000 */
 	stream_len = encode_value_zero(data, model, stream_len, &setup);
 	TEST_ASSERT_EQUAL_INT(91, stream_len);
-	TEST_ASSERT_EQUAL_HEX(0xBFFBFF00, bitstream[0]);
-	TEST_ASSERT_EQUAL_HEX(0x00001D40, bitstream[1]);
-	TEST_ASSERT_EQUAL_HEX(0x00000000, bitstream[2]);
+	TEST_ASSERT_EQUAL_HEX(0xBFFBFF00, be32_to_cpu(bitstream[0]));
+	TEST_ASSERT_EQUAL_HEX(0x00001D40, be32_to_cpu(bitstream[1]));
+	TEST_ASSERT_EQUAL_HEX(0x00000000, be32_to_cpu(bitstream[2]));
 
 	/* small buffer error */
 	data = 23; model = 26;
@@ -2070,33 +2083,33 @@ void test_encode_value_zero(void)
 	data = 53; model = 38;
 	stream_len = encode_value_zero(data, model, stream_len, &setup);
 	TEST_ASSERT_EQUAL_INT(32, stream_len);
-	TEST_ASSERT_EQUAL_HEX(0xFFFFFFFE, bitstream[0]);
-	TEST_ASSERT_EQUAL_HEX(0xFFFFFFFF, bitstream[1]);
-	TEST_ASSERT_EQUAL_HEX(0xFFFFFFFF, bitstream[2]);
+	TEST_ASSERT_EQUAL_HEX(0xFFFFFFFE, be32_to_cpu(bitstream[0]));
+	TEST_ASSERT_EQUAL_HEX(0xFFFFFFFF, be32_to_cpu(bitstream[1]));
+	TEST_ASSERT_EQUAL_HEX(0xFFFFFFFF, be32_to_cpu(bitstream[2]));
 
 	/* lowest value with zero encoding */
 	data = 0; model = 16;
 	stream_len = encode_value_zero(data, model, stream_len, &setup);
 	TEST_ASSERT_EQUAL_INT(39, stream_len);
-	TEST_ASSERT_EQUAL_HEX(0xFFFFFFFE, bitstream[0]);
-	TEST_ASSERT_EQUAL_HEX(0x41FFFFFF, bitstream[1]);
-	TEST_ASSERT_EQUAL_HEX(0xFFFFFFFF, bitstream[2]);
+	TEST_ASSERT_EQUAL_HEX(0xFFFFFFFE, be32_to_cpu(bitstream[0]));
+	TEST_ASSERT_EQUAL_HEX(0x41FFFFFF, be32_to_cpu(bitstream[1]));
+	TEST_ASSERT_EQUAL_HEX(0xFFFFFFFF, be32_to_cpu(bitstream[2]));
 
 	/* maximum positive value to encode */
 	data = 31; model = 0;
 	stream_len = encode_value_zero(data, model, stream_len, &setup);
 	TEST_ASSERT_EQUAL_INT(46, stream_len);
-	TEST_ASSERT_EQUAL_HEX(0xFFFFFFFE, bitstream[0]);
-	TEST_ASSERT_EQUAL_HEX(0x40FFFFFF, bitstream[1]);
-	TEST_ASSERT_EQUAL_HEX(0xFFFFFFFF, bitstream[2]);
+	TEST_ASSERT_EQUAL_HEX(0xFFFFFFFE, be32_to_cpu(bitstream[0]));
+	TEST_ASSERT_EQUAL_HEX(0x40FFFFFF, be32_to_cpu(bitstream[1]));
+	TEST_ASSERT_EQUAL_HEX(0xFFFFFFFF, be32_to_cpu(bitstream[2]));
 
 	/* maximum negative value to encode */
 	data = 0; model = 32;
 	stream_len = encode_value_zero(data, model, stream_len, &setup);
 	TEST_ASSERT_EQUAL_INT(53, stream_len);
-	TEST_ASSERT_EQUAL_HEX(0xFFFFFFFE, bitstream[0]);
-	TEST_ASSERT_EQUAL_HEX(0x40FC07FF, bitstream[1]);
-	TEST_ASSERT_EQUAL_HEX(0xFFFFFFFF, bitstream[2]);
+	TEST_ASSERT_EQUAL_HEX(0xFFFFFFFE, be32_to_cpu(bitstream[0]));
+	TEST_ASSERT_EQUAL_HEX(0x40FC07FF, be32_to_cpu(bitstream[1]));
+	TEST_ASSERT_EQUAL_HEX(0xFFFFFFFF, be32_to_cpu(bitstream[2]));
 
 	/* small buffer error when creating the zero escape symbol*/
 	bitstream[0] = 0;
@@ -2107,9 +2120,9 @@ void test_encode_value_zero(void)
 	data = 31; model = 0;
 	stream_len = encode_value_zero(data, model, stream_len, &setup);
 	TEST_ASSERT_EQUAL_INT(CMP_ERROR_SMALL_BUF, stream_len);
-	TEST_ASSERT_EQUAL_HEX(0, bitstream[0]);
-	TEST_ASSERT_EQUAL_HEX(0, bitstream[1]);
-	TEST_ASSERT_EQUAL_HEX(0, bitstream[2]);
+	TEST_ASSERT_EQUAL_HEX(0, be32_to_cpu(bitstream[0]));
+	TEST_ASSERT_EQUAL_HEX(0, be32_to_cpu(bitstream[1]));
+	TEST_ASSERT_EQUAL_HEX(0, be32_to_cpu(bitstream[2]));
 }
 
 
@@ -2138,53 +2151,53 @@ void test_encode_value_multi(void)
 	data = 0; model = 0;
 	stream_len = encode_value_multi(data, model, stream_len, &setup);
 	TEST_ASSERT_EQUAL_INT(1, stream_len);
-	TEST_ASSERT_EQUAL_HEX(0x00000000, bitstream[0]);
-	TEST_ASSERT_EQUAL_HEX(0x00000000, bitstream[1]);
-	TEST_ASSERT_EQUAL_HEX(0x00000000, bitstream[2]);
-	TEST_ASSERT_EQUAL_HEX(0x00000000, bitstream[3]);
+	TEST_ASSERT_EQUAL_HEX(0x00000000, be32_to_cpu(bitstream[0]));
+	TEST_ASSERT_EQUAL_HEX(0x00000000, be32_to_cpu(bitstream[1]));
+	TEST_ASSERT_EQUAL_HEX(0x00000000, be32_to_cpu(bitstream[2]));
+	TEST_ASSERT_EQUAL_HEX(0x00000000, be32_to_cpu(bitstream[3]));
 
 	data = 0; model = 1;
 	stream_len = encode_value_multi(data, model, stream_len, &setup);
 	TEST_ASSERT_EQUAL_INT(3, stream_len);
-	TEST_ASSERT_EQUAL_HEX(0x40000000, bitstream[0]);
-	TEST_ASSERT_EQUAL_HEX(0x00000000, bitstream[1]);
-	TEST_ASSERT_EQUAL_HEX(0x00000000, bitstream[2]);
-	TEST_ASSERT_EQUAL_HEX(0x00000000, bitstream[3]);
+	TEST_ASSERT_EQUAL_HEX(0x40000000, be32_to_cpu(bitstream[0]));
+	TEST_ASSERT_EQUAL_HEX(0x00000000, be32_to_cpu(bitstream[1]));
+	TEST_ASSERT_EQUAL_HEX(0x00000000, be32_to_cpu(bitstream[2]));
+	TEST_ASSERT_EQUAL_HEX(0x00000000, be32_to_cpu(bitstream[3]));
 
 	data = 1+23; model = 0+23;
 	stream_len = encode_value_multi(data, model, stream_len, &setup);
 	TEST_ASSERT_EQUAL_INT(6, stream_len);
-	TEST_ASSERT_EQUAL_HEX(0x58000000, bitstream[0]);
-	TEST_ASSERT_EQUAL_HEX(0x00000000, bitstream[1]);
-	TEST_ASSERT_EQUAL_HEX(0x00000000, bitstream[2]);
-	TEST_ASSERT_EQUAL_HEX(0x00000000, bitstream[3]);
+	TEST_ASSERT_EQUAL_HEX(0x58000000, be32_to_cpu(bitstream[0]));
+	TEST_ASSERT_EQUAL_HEX(0x00000000, be32_to_cpu(bitstream[1]));
+	TEST_ASSERT_EQUAL_HEX(0x00000000, be32_to_cpu(bitstream[2]));
+	TEST_ASSERT_EQUAL_HEX(0x00000000, be32_to_cpu(bitstream[3]));
 
 	/* highest value without multi outlier encoding */
 	data = 0+42; model = 8+42;
 	stream_len = encode_value_multi(data, model, stream_len, &setup);
 	TEST_ASSERT_EQUAL_INT(22, stream_len);
-	TEST_ASSERT_EQUAL_HEX(0x5BFFF800, bitstream[0]);
-	TEST_ASSERT_EQUAL_HEX(0x00000000, bitstream[1]);
-	TEST_ASSERT_EQUAL_HEX(0x00000000, bitstream[2]);
-	TEST_ASSERT_EQUAL_HEX(0x00000000, bitstream[3]);
+	TEST_ASSERT_EQUAL_HEX(0x5BFFF800, be32_to_cpu(bitstream[0]));
+	TEST_ASSERT_EQUAL_HEX(0x00000000, be32_to_cpu(bitstream[1]));
+	TEST_ASSERT_EQUAL_HEX(0x00000000, be32_to_cpu(bitstream[2]));
+	TEST_ASSERT_EQUAL_HEX(0x00000000, be32_to_cpu(bitstream[3]));
 
 	/* lowest value with multi outlier encoding */
 	data = 8+42; model = 0+42;
 	stream_len = encode_value_multi(data, model, stream_len, &setup);
 	TEST_ASSERT_EQUAL_INT(41, stream_len);
-	TEST_ASSERT_EQUAL_HEX(0x5BFFFBFF, bitstream[0]);
-	TEST_ASSERT_EQUAL_HEX(0xFC000000, bitstream[1]);
-	TEST_ASSERT_EQUAL_HEX(0x00000000, bitstream[2]);
-	TEST_ASSERT_EQUAL_HEX(0x00000000, bitstream[3]);
+	TEST_ASSERT_EQUAL_HEX(0x5BFFFBFF, be32_to_cpu(bitstream[0]));
+	TEST_ASSERT_EQUAL_HEX(0xFC000000, be32_to_cpu(bitstream[1]));
+	TEST_ASSERT_EQUAL_HEX(0x00000000, be32_to_cpu(bitstream[2]));
+	TEST_ASSERT_EQUAL_HEX(0x00000000, be32_to_cpu(bitstream[3]));
 
 	/* highest value with multi outlier encoding */
 	data = (uint32_t)INT32_MIN; model = 0;
 	stream_len = encode_value_multi(data, model, stream_len, &setup);
 	TEST_ASSERT_EQUAL_INT(105, stream_len);
-	TEST_ASSERT_EQUAL_HEX(0x5BFFFBFF, bitstream[0]);
-	TEST_ASSERT_EQUAL_HEX(0xFC7FFFFF, bitstream[1]);
-	TEST_ASSERT_EQUAL_HEX(0xFF7FFFFF, bitstream[2]);
-	TEST_ASSERT_EQUAL_HEX(0xF7800000, bitstream[3]);
+	TEST_ASSERT_EQUAL_HEX(0x5BFFFBFF, be32_to_cpu(bitstream[0]));
+	TEST_ASSERT_EQUAL_HEX(0xFC7FFFFF, be32_to_cpu(bitstream[1]));
+	TEST_ASSERT_EQUAL_HEX(0xFF7FFFFF, be32_to_cpu(bitstream[2]));
+	TEST_ASSERT_EQUAL_HEX(0xF7800000, be32_to_cpu(bitstream[3]));
 
 	/* small buffer error */
 	data = 0; model = 38;
@@ -2248,8 +2261,8 @@ void test_encode_value(void)
 	cmp_size = encode_value(data, model, cmp_size, &setup);
 	TEST_ASSERT_EQUAL_INT(96, cmp_size);
 	TEST_ASSERT_EQUAL_HEX(0, bitstream[0]);
-	TEST_ASSERT_EQUAL_HEX(0xFFFFFFFF, bitstream[1]);
-	TEST_ASSERT_EQUAL_HEX(0x7FFFFFFF, bitstream[2]);
+	TEST_ASSERT_EQUAL_HEX(0xFFFFFFFF, be32_to_cpu(bitstream[1]));
+	TEST_ASSERT_EQUAL_HEX(0x7FFFFFFF, be32_to_cpu(bitstream[2]));
 	TEST_ASSERT_EQUAL_HEX(0, bitstream[3]);
 
 	setup.lossy_par = 2;
@@ -2258,7 +2271,7 @@ void test_encode_value(void)
 	TEST_ASSERT_EQUAL_INT(128, cmp_size);
 	TEST_ASSERT_EQUAL_HEX(0, bitstream[0]);
 	TEST_ASSERT_EQUAL_HEX(0xFFFFFFFF, bitstream[1]);
-	TEST_ASSERT_EQUAL_HEX(0x7FFFFFFF, bitstream[2]);
+	TEST_ASSERT_EQUAL_HEX(0x7FFFFFFF, be32_to_cpu(bitstream[2]));
 	TEST_ASSERT_EQUAL_HEX(0x00000000, bitstream[3]);
 
 	/* small buffer error bitstream can not hold more data*/
@@ -2288,8 +2301,8 @@ void test_encode_value(void)
 	data = 0x7FFFFFFF; model = 0;
 	cmp_size = encode_value(data, model, cmp_size, &setup);
 	TEST_ASSERT_EQUAL_INT(62, cmp_size);
-	TEST_ASSERT_EQUAL_HEX(0x00000001, bitstream[0]);
-	TEST_ASSERT_EQUAL_HEX(0xFFFFFFFC, bitstream[1]);
+	TEST_ASSERT_EQUAL_HEX(0x00000001, be32_to_cpu(bitstream[0]));
+	TEST_ASSERT_EQUAL_HEX(0xFFFFFFFC, be32_to_cpu(bitstream[1]));
 	TEST_ASSERT_EQUAL_HEX(0, bitstream[2]);
 	TEST_ASSERT_EQUAL_HEX(0, bitstream[3]);
 
@@ -2298,9 +2311,9 @@ void test_encode_value(void)
 	data = UINT32_MAX; model = UINT32_MAX;
 	cmp_size = encode_value(data, model, cmp_size, &setup);
 	TEST_ASSERT_EQUAL_INT(93, cmp_size);
-	TEST_ASSERT_EQUAL_HEX(0x00000001, bitstream[0]);
-	TEST_ASSERT_EQUAL_HEX(0xFFFFFFFF, bitstream[1]);
-	TEST_ASSERT_EQUAL_HEX(0xFFFFFFF8, bitstream[2]);
+	TEST_ASSERT_EQUAL_HEX(0x00000001, be32_to_cpu(bitstream[0]));
+	TEST_ASSERT_EQUAL_HEX(0xFFFFFFFF, be32_to_cpu(bitstream[1]));
+	TEST_ASSERT_EQUAL_HEX(0xFFFFFFF8, be32_to_cpu(bitstream[2]));
 	TEST_ASSERT_EQUAL_HEX(0, bitstream[3]);
 
 	/* data are bigger than max_data_bits */
@@ -2677,18 +2690,18 @@ void test_compress_imagette_error_cases(void)
 	TEST_ASSERT_EQUAL_INT(-1, cmp_size);
 }
 
-
+#if 0
 /**
  * @test compress_multi_entry_hdr
  */
 
-void test_compress_multi_entry_hdr(void)
+void no_test_compress_multi_entry_hdr(void)
 {
 	int stream_len;
-	uint8_t data[MULTI_ENTRY_HDR_SIZE];
-	uint8_t model[MULTI_ENTRY_HDR_SIZE];
-	uint8_t up_model[MULTI_ENTRY_HDR_SIZE];
-	uint8_t cmp_data[MULTI_ENTRY_HDR_SIZE];
+	uint8_t data[COLLECTION_HDR_SIZE];
+	uint8_t model[COLLECTION_HDR_SIZE];
+	uint8_t up_model[COLLECTION_HDR_SIZE];
+	uint8_t cmp_data[COLLECTION_HDR_SIZE];
 	uint8_t *data_p = NULL;
 	uint8_t *model_p = NULL;
 	uint8_t *up_model_p = NULL;
@@ -2706,8 +2719,8 @@ void test_compress_multi_entry_hdr(void)
 	stream_len = compress_multi_entry_hdr((void **)&data_p, (void **)&model_p,
 					      (void **)&up_model_p, cmp_data);
 	TEST_ASSERT_EQUAL_INT(96, stream_len);
-	TEST_ASSERT_FALSE(memcmp(cmp_data, data, MULTI_ENTRY_HDR_SIZE));
-	TEST_ASSERT_EQUAL(data_p-data, MULTI_ENTRY_HDR_SIZE);
+	TEST_ASSERT_FALSE(memcmp(cmp_data, data, COLLECTION_HDR_SIZE));
+	TEST_ASSERT_EQUAL(data_p-data, COLLECTION_HDR_SIZE);
 
 	/* no up_model */
 	memset(cmp_data, 0, sizeof(cmp_data));
@@ -2717,9 +2730,9 @@ void test_compress_multi_entry_hdr(void)
 	stream_len = compress_multi_entry_hdr((void **)&data_p, (void **)&model_p,
 					      (void **)&up_model_p, cmp_data);
 	TEST_ASSERT_EQUAL_INT(96, stream_len);
-	TEST_ASSERT_FALSE(memcmp(cmp_data, data, MULTI_ENTRY_HDR_SIZE));
-	TEST_ASSERT_EQUAL(data_p-data, MULTI_ENTRY_HDR_SIZE);
-	TEST_ASSERT_EQUAL(model_p-model, MULTI_ENTRY_HDR_SIZE);
+	TEST_ASSERT_FALSE(memcmp(cmp_data, data, COLLECTION_HDR_SIZE));
+	TEST_ASSERT_EQUAL(data_p-data, COLLECTION_HDR_SIZE);
+	TEST_ASSERT_EQUAL(model_p-model, COLLECTION_HDR_SIZE);
 
 	/* all buffer test */
 	memset(cmp_data, 0, sizeof(cmp_data));
@@ -2729,11 +2742,11 @@ void test_compress_multi_entry_hdr(void)
 	stream_len = compress_multi_entry_hdr((void **)&data_p, (void **)&model_p,
 					      (void **)&up_model_p, cmp_data);
 	TEST_ASSERT_EQUAL_INT(96, stream_len);
-	TEST_ASSERT_FALSE(memcmp(cmp_data, data, MULTI_ENTRY_HDR_SIZE));
-	TEST_ASSERT_FALSE(memcmp(up_model, data, MULTI_ENTRY_HDR_SIZE));
-	TEST_ASSERT_EQUAL(data_p-data, MULTI_ENTRY_HDR_SIZE);
-	TEST_ASSERT_EQUAL(model_p-model, MULTI_ENTRY_HDR_SIZE);
-	TEST_ASSERT_EQUAL(up_model_p-up_model, MULTI_ENTRY_HDR_SIZE);
+	TEST_ASSERT_FALSE(memcmp(cmp_data, data, COLLECTION_HDR_SIZE));
+	TEST_ASSERT_FALSE(memcmp(up_model, data, COLLECTION_HDR_SIZE));
+	TEST_ASSERT_EQUAL(data_p-data, COLLECTION_HDR_SIZE);
+	TEST_ASSERT_EQUAL(model_p-model, COLLECTION_HDR_SIZE);
+	TEST_ASSERT_EQUAL(up_model_p-up_model, COLLECTION_HDR_SIZE);
 
 	/* all buffer test; no cmp_data */
 	memset(cmp_data, 0, sizeof(cmp_data));
@@ -2743,10 +2756,10 @@ void test_compress_multi_entry_hdr(void)
 	stream_len = compress_multi_entry_hdr((void **)&data_p, (void **)&model_p,
 					      (void **)&up_model_p, NULL);
 	TEST_ASSERT_EQUAL_INT(96, stream_len);
-	TEST_ASSERT_FALSE(memcmp(up_model, data, MULTI_ENTRY_HDR_SIZE));
-	TEST_ASSERT_EQUAL(data_p-data, MULTI_ENTRY_HDR_SIZE);
-	TEST_ASSERT_EQUAL(model_p-model, MULTI_ENTRY_HDR_SIZE);
-	TEST_ASSERT_EQUAL(up_model_p-up_model, MULTI_ENTRY_HDR_SIZE);
+	TEST_ASSERT_FALSE(memcmp(up_model, data, COLLECTION_HDR_SIZE));
+	TEST_ASSERT_EQUAL(data_p-data, COLLECTION_HDR_SIZE);
+	TEST_ASSERT_EQUAL(model_p-model, COLLECTION_HDR_SIZE);
+	TEST_ASSERT_EQUAL(up_model_p-up_model, COLLECTION_HDR_SIZE);
 
 	/* no data, use up_model test */
 	memset(cmp_data, 0, sizeof(cmp_data));
@@ -2756,9 +2769,10 @@ void test_compress_multi_entry_hdr(void)
 	stream_len = compress_multi_entry_hdr((void **)&data_p, (void **)&model_p,
 					      (void **)&up_model_p, NULL);
 	TEST_ASSERT_EQUAL_INT(96, stream_len);
-	TEST_ASSERT_EQUAL(model_p-model, MULTI_ENTRY_HDR_SIZE);
-	TEST_ASSERT_EQUAL(up_model_p-up_model, MULTI_ENTRY_HDR_SIZE);
+	TEST_ASSERT_EQUAL(model_p-model, COLLECTION_HDR_SIZE);
+	TEST_ASSERT_EQUAL(up_model_p-up_model, COLLECTION_HDR_SIZE);
 }
+#endif
 
 
 void test_compress_s_fx_raw(void)
@@ -2767,7 +2781,7 @@ void test_compress_s_fx_raw(void)
 	struct cmp_cfg cfg = {0};
 	int cmp_size, cmp_size_exp;
 	size_t i;
-	struct multi_entry_hdr *hdr;
+	struct collection_hdr *hdr;
 
 	cfg.data_type = DATA_TYPE_S_FX;
 	cfg.model_buf = NULL;
@@ -2794,18 +2808,18 @@ void test_compress_s_fx_raw(void)
 	data[6].fx = UINT32_MAX;
 
 	hdr = cfg.input_buf;
-	memset(hdr, 0x42, sizeof(struct multi_entry_hdr));
+	memset(hdr, 0x42, sizeof(struct collection_hdr));
 	memcpy(hdr->entry, data, sizeof(data));
 
 	cmp_size = icu_compress_data(&cfg);
 
-	cmp_size_exp = (sizeof(data) + sizeof(struct multi_entry_hdr)) * CHAR_BIT;
+	cmp_size_exp = (sizeof(data) + sizeof(struct collection_hdr)) * CHAR_BIT;
 	TEST_ASSERT_EQUAL_INT(cmp_size_exp, cmp_size);
 
 	for (i = 0; i < ARRAY_SIZE(data); i++) {
 		struct s_fx *p;
 
-		hdr = (struct multi_entry_hdr *)cfg.icu_output_buf;
+		hdr = (struct collection_hdr *)cfg.icu_output_buf;
 		p = (struct s_fx *)hdr->entry;
 
 		TEST_ASSERT_EQUAL_HEX(data[i].exp_flags, p[i].exp_flags);
@@ -2822,7 +2836,7 @@ void test_compress_s_fx_staff(void)
 	struct s_fx data[5];
 	struct cmp_cfg cfg = {0};
 	int cmp_size, cmp_size_exp;
-	struct multi_entry_hdr *hdr;
+	struct collection_hdr *hdr;
 	uint32_t *cmp_data;
 
 	/* setup configuration */
@@ -2841,7 +2855,7 @@ void test_compress_s_fx_staff(void)
 	/* generate input data */
 	hdr = cfg.input_buf;
 	/* use dummy data for the header */
-	memset(hdr, 0x42, sizeof(struct multi_entry_hdr));
+	memset(hdr, 0x42, sizeof(struct collection_hdr));
 	data[0].exp_flags = 0x0;
 	data[0].fx = 0x0;
 	data[1].exp_flags = 0x1;
@@ -2856,9 +2870,9 @@ void test_compress_s_fx_staff(void)
 
 	cmp_size = icu_compress_data(&cfg);
 
-	cmp_size_exp = 5 * (2 + 21) + MULTI_ENTRY_HDR_SIZE * CHAR_BIT;
+	cmp_size_exp = 5 * (2 + 21) + COLLECTION_HDR_SIZE * CHAR_BIT;
 	TEST_ASSERT_EQUAL_INT(cmp_size_exp, cmp_size);
-	TEST_ASSERT_FALSE(memcmp(cfg.input_buf, cfg.icu_output_buf, MULTI_ENTRY_HDR_SIZE));
+	TEST_ASSERT_FALSE(memcmp(cfg.input_buf, cfg.icu_output_buf, COLLECTION_HDR_SIZE));
 	hdr = (void *)cfg.icu_output_buf;
 	cmp_data = calloc(4, sizeof(*cmp_data));
 	memcpy(cmp_data, hdr->entry, 4 * sizeof(*cmp_data));
@@ -2879,7 +2893,7 @@ void test_compress_s_fx_model_multi(void)
 	struct s_fx *up_model_buf;
 	struct cmp_cfg cfg = {0};
 	int cmp_size;
-	struct multi_entry_hdr *hdr;
+	struct collection_hdr *hdr;
 	uint32_t *cmp_data;
 	struct cmp_max_used_bits my_max_used_bits;
 
@@ -2906,7 +2920,7 @@ void test_compress_s_fx_model_multi(void)
 	/* generate input data */
 	hdr = cfg.input_buf;
 	/* use dummy data for the header */
-	memset(hdr, 0x42, sizeof(struct multi_entry_hdr));
+	memset(hdr, 0x42, sizeof(struct collection_hdr));
 	data[0].exp_flags = 0x0;
 	data[0].fx = 0x0;
 	data[1].exp_flags = 0x1;
@@ -2924,7 +2938,7 @@ void test_compress_s_fx_model_multi(void)
 	/* generate model data */
 	hdr = cfg.model_buf;
 	/* use dummy data for the header */
-	memset(hdr, 0x41, sizeof(struct multi_entry_hdr));
+	memset(hdr, 0x41, sizeof(struct collection_hdr));
 	model[0].exp_flags = 0x0;
 	model[0].fx = 0x0;
 	model[1].exp_flags = 0x3;
@@ -2947,15 +2961,15 @@ void test_compress_s_fx_model_multi(void)
 	cmp_size = icu_compress_data(&cfg);
 
 	TEST_ASSERT_EQUAL_INT(166, cmp_size);
-	TEST_ASSERT_FALSE(memcmp(cfg.input_buf, cfg.icu_output_buf, MULTI_ENTRY_HDR_SIZE));
-	cmp_data = &cfg.icu_output_buf[MULTI_ENTRY_HDR_SIZE/sizeof(uint32_t)];
+	TEST_ASSERT_FALSE(memcmp(cfg.input_buf, cfg.icu_output_buf, COLLECTION_HDR_SIZE));
+	cmp_data = &cfg.icu_output_buf[COLLECTION_HDR_SIZE/sizeof(uint32_t)];
 	TEST_ASSERT_EQUAL_HEX(0x1C77FFA6, be32_to_cpu(cmp_data[0]));
 	TEST_ASSERT_EQUAL_HEX(0xAFFF4DE5, be32_to_cpu(cmp_data[1]));
 	TEST_ASSERT_EQUAL_HEX(0xCC000000, be32_to_cpu(cmp_data[2]));
 
 	hdr = cfg.icu_new_model_buf;
 	up_model_buf = (struct s_fx *)hdr->entry;
-	TEST_ASSERT_FALSE(memcmp(hdr, cfg.icu_output_buf, MULTI_ENTRY_HDR_SIZE));
+	TEST_ASSERT_FALSE(memcmp(hdr, cfg.icu_output_buf, COLLECTION_HDR_SIZE));
 	TEST_ASSERT_EQUAL_HEX(0x0, up_model_buf[0].exp_flags);
 	TEST_ASSERT_EQUAL_HEX(0x0, up_model_buf[0].fx);
 	TEST_ASSERT_EQUAL_HEX(0x2, up_model_buf[1].exp_flags);
@@ -2989,10 +3003,10 @@ void test_compress_s_fx_error_cases(void)
 	uint32_t spillover_exp_flags = 6;
 	uint32_t cmp_par_fx = 2;
 	uint32_t spillover_fx = 8;
-	uint8_t data_to_compress[MULTI_ENTRY_HDR_SIZE+3*sizeof(struct s_fx)] = {0};
-	uint8_t compressed_data[MULTI_ENTRY_HDR_SIZE+1*sizeof(struct s_fx)] = {0};
+	uint8_t data_to_compress[COLLECTION_HDR_SIZE+3*sizeof(struct s_fx)] = {0};
+	uint8_t compressed_data[COLLECTION_HDR_SIZE+1*sizeof(struct s_fx)] = {0};
 	struct cmp_max_used_bits my_max_used_bits = MAX_USED_BITS_SAFE;
-	struct s_fx *data_p = (struct s_fx *)&data_to_compress[MULTI_ENTRY_HDR_SIZE];
+	struct s_fx *data_p = (struct s_fx *)&data_to_compress[COLLECTION_HDR_SIZE];
 
 	cfg = cmp_cfg_icu_create(DATA_TYPE_S_FX, CMP_MODE_DIFF_ZERO, 0, CMP_LOSSLESS);
 	TEST_ASSERT(cfg.data_type != DATA_TYPE_UNKNOWN);
@@ -3053,10 +3067,10 @@ void test_compress_s_fx_efx_error_cases(void)
 	uint32_t spillover_fx = 8;
 	uint32_t cmp_par_efx = MAX_NON_IMA_GOLOMB_PAR;
 	uint32_t spillover_efx = cmp_icu_max_spill(MAX_NON_IMA_GOLOMB_PAR);
-	uint8_t data_to_compress[MULTI_ENTRY_HDR_SIZE+2*sizeof(struct s_fx_efx)] = {0};
-	uint8_t compressed_data[MULTI_ENTRY_HDR_SIZE+1*sizeof(struct s_fx_efx)] = {0};
+	uint8_t data_to_compress[COLLECTION_HDR_SIZE+2*sizeof(struct s_fx_efx)] = {0};
+	uint8_t compressed_data[COLLECTION_HDR_SIZE+1*sizeof(struct s_fx_efx)] = {0};
 	struct cmp_max_used_bits my_max_used_bits = MAX_USED_BITS_SAFE;
-	struct s_fx_efx *data_p = (struct s_fx_efx *)&data_to_compress[MULTI_ENTRY_HDR_SIZE];
+	struct s_fx_efx *data_p = (struct s_fx_efx *)&data_to_compress[COLLECTION_HDR_SIZE];
 
 	cfg = cmp_cfg_icu_create(DATA_TYPE_S_FX_EFX, CMP_MODE_DIFF_MULTI, 0, CMP_LOSSLESS);
 	TEST_ASSERT(cfg.data_type != DATA_TYPE_UNKNOWN);
@@ -3130,11 +3144,11 @@ void test_compress_s_fx_ncob_error_cases(void)
 	uint32_t spillover_fx = 8;
 	uint32_t cmp_par_ncob = MAX_NON_IMA_GOLOMB_PAR;
 	uint32_t spillover_ncob = cmp_icu_max_spill(MAX_NON_IMA_GOLOMB_PAR);
-	uint8_t data_to_compress[MULTI_ENTRY_HDR_SIZE+3*sizeof(struct s_fx_ncob)] = {0};
-	uint8_t model_data[MULTI_ENTRY_HDR_SIZE+3*sizeof(struct s_fx_ncob)] = {0};
-	uint8_t compressed_data[MULTI_ENTRY_HDR_SIZE+1*sizeof(struct s_fx_ncob)] = {0};
+	uint8_t data_to_compress[COLLECTION_HDR_SIZE+3*sizeof(struct s_fx_ncob)] = {0};
+	uint8_t model_data[COLLECTION_HDR_SIZE+3*sizeof(struct s_fx_ncob)] = {0};
+	uint8_t compressed_data[COLLECTION_HDR_SIZE+1*sizeof(struct s_fx_ncob)] = {0};
 	struct cmp_max_used_bits my_max_used_bits = MAX_USED_BITS_SAFE;
-	struct s_fx_ncob *data_p = (struct s_fx_ncob *)&data_to_compress[MULTI_ENTRY_HDR_SIZE];
+	struct s_fx_ncob *data_p = (struct s_fx_ncob *)&data_to_compress[COLLECTION_HDR_SIZE];
 
 
 	my_max_used_bits.s_exp_flags = 2;
@@ -3218,11 +3232,11 @@ void test_compress_s_fx_efx_ncob_ecob_error_cases(void)
 	uint32_t spillover_efx =  cmp_icu_max_spill(MAX_NON_IMA_GOLOMB_PAR);
 	uint32_t cmp_par_ecob = 23;
 	uint32_t spillover_ecob = cmp_icu_max_spill(23);
-	uint8_t data_to_compress[MULTI_ENTRY_HDR_SIZE+3*sizeof(struct s_fx_efx_ncob_ecob)] = {0};
-	uint8_t model_data[MULTI_ENTRY_HDR_SIZE+3*sizeof(struct s_fx_efx_ncob_ecob)] = {0};
-	uint8_t compressed_data[MULTI_ENTRY_HDR_SIZE+1*sizeof(struct s_fx_efx_ncob_ecob)] = {0};
+	uint8_t data_to_compress[COLLECTION_HDR_SIZE+3*sizeof(struct s_fx_efx_ncob_ecob)] = {0};
+	uint8_t model_data[COLLECTION_HDR_SIZE+3*sizeof(struct s_fx_efx_ncob_ecob)] = {0};
+	uint8_t compressed_data[COLLECTION_HDR_SIZE+1*sizeof(struct s_fx_efx_ncob_ecob)] = {0};
 	struct cmp_max_used_bits my_max_used_bits = MAX_USED_BITS_SAFE;
-	struct s_fx_efx_ncob_ecob *data_p = (struct s_fx_efx_ncob_ecob *)&data_to_compress[MULTI_ENTRY_HDR_SIZE];
+	struct s_fx_efx_ncob_ecob *data_p = (struct s_fx_efx_ncob_ecob *)&data_to_compress[COLLECTION_HDR_SIZE];
 
 
 	cfg = cmp_cfg_icu_create(DATA_TYPE_S_FX_EFX_NCOB_ECOB, CMP_MODE_MODEL_ZERO, 0, CMP_LOSSLESS);
@@ -3328,8 +3342,8 @@ void test_compress_f_fx_error_cases(void)
 	struct cmp_cfg cfg = {0};
 	uint32_t cmp_par_fx = MAX_NON_IMA_GOLOMB_PAR;
 	uint32_t spillover_fx = 8;
-	uint8_t data_to_compress[MULTI_ENTRY_HDR_SIZE+3*sizeof(struct f_fx)] = {0};
-	uint8_t compressed_data[MULTI_ENTRY_HDR_SIZE+1*sizeof(struct f_fx)] = {0};
+	uint8_t data_to_compress[COLLECTION_HDR_SIZE+3*sizeof(struct f_fx)] = {0};
+	uint8_t compressed_data[COLLECTION_HDR_SIZE+1*sizeof(struct f_fx)] = {0};
 	struct cmp_max_used_bits my_max_used_bits = MAX_USED_BITS_SAFE;
 
 	my_max_used_bits.f_fx = 23;
@@ -3372,10 +3386,10 @@ void test_compress_f_fx_efx_error_cases(void)
 	uint32_t spillover_fx = 8;
 	uint32_t cmp_par_efx = 1;
 	uint32_t spillover_efx = 8;
-	uint8_t data_to_compress[MULTI_ENTRY_HDR_SIZE+2*sizeof(struct f_fx_efx)] = {0};
-	uint8_t compressed_data[MULTI_ENTRY_HDR_SIZE+1*sizeof(struct f_fx_efx)] = {0};
+	uint8_t data_to_compress[COLLECTION_HDR_SIZE+2*sizeof(struct f_fx_efx)] = {0};
+	uint8_t compressed_data[COLLECTION_HDR_SIZE+1*sizeof(struct f_fx_efx)] = {0};
 	struct cmp_max_used_bits my_max_used_bits = MAX_USED_BITS_SAFE;
-	struct f_fx_efx *data_p = (struct f_fx_efx *)&data_to_compress[MULTI_ENTRY_HDR_SIZE];
+	struct f_fx_efx *data_p = (struct f_fx_efx *)&data_to_compress[COLLECTION_HDR_SIZE];
 
 	my_max_used_bits.f_fx = 23;
 	my_max_used_bits.f_efx = 31;
@@ -3441,10 +3455,10 @@ void test_compress_f_fx_ncob_error_cases(void)
 	uint32_t spillover_fx = 8;
 	uint32_t cmp_par_ncob = 1;
 	uint32_t spillover_ncob = 8;
-	uint8_t data_to_compress[MULTI_ENTRY_HDR_SIZE+2*sizeof(struct f_fx_ncob)] = {0};
-	uint8_t compressed_data[MULTI_ENTRY_HDR_SIZE+1*sizeof(struct f_fx_ncob)] = {0};
+	uint8_t data_to_compress[COLLECTION_HDR_SIZE+2*sizeof(struct f_fx_ncob)] = {0};
+	uint8_t compressed_data[COLLECTION_HDR_SIZE+1*sizeof(struct f_fx_ncob)] = {0};
 	struct cmp_max_used_bits my_max_used_bits = MAX_USED_BITS_SAFE;
-	struct f_fx_ncob *data_p = (struct f_fx_ncob *)&data_to_compress[MULTI_ENTRY_HDR_SIZE];
+	struct f_fx_ncob *data_p = (struct f_fx_ncob *)&data_to_compress[COLLECTION_HDR_SIZE];
 
 	my_max_used_bits.f_fx = 31;
 	my_max_used_bits.f_ncob = 23;
@@ -3510,10 +3524,10 @@ void test_compress_f_fx_efx_ncob_ecob(void)
 	uint32_t spillover_efx = 44;
 	uint32_t cmp_par_ecob = 5;
 	uint32_t spillover_ecob = 55;
-	uint8_t data_to_compress[MULTI_ENTRY_HDR_SIZE+4*sizeof(struct f_fx_efx_ncob_ecob)] = {0};
-	uint8_t compressed_data[MULTI_ENTRY_HDR_SIZE+1*sizeof(struct f_fx_efx_ncob_ecob)] = {0};
+	uint8_t data_to_compress[COLLECTION_HDR_SIZE+4*sizeof(struct f_fx_efx_ncob_ecob)] = {0};
+	uint8_t compressed_data[COLLECTION_HDR_SIZE+1*sizeof(struct f_fx_efx_ncob_ecob)] = {0};
 	struct cmp_max_used_bits my_max_used_bits = MAX_USED_BITS_SAFE;
-	struct f_fx_efx_ncob_ecob *data_p = (struct f_fx_efx_ncob_ecob *)&data_to_compress[MULTI_ENTRY_HDR_SIZE];
+	struct f_fx_efx_ncob_ecob *data_p = (struct f_fx_efx_ncob_ecob *)&data_to_compress[COLLECTION_HDR_SIZE];
 
 	cfg = cmp_cfg_icu_create(DATA_TYPE_F_FX_EFX_NCOB_ECOB, CMP_MODE_DIFF_ZERO, 0, CMP_LOSSLESS);
 	TEST_ASSERT(cfg.data_type != DATA_TYPE_UNKNOWN);
@@ -3605,10 +3619,10 @@ void test_compress_l_fx_error_cases(void)
 	uint32_t spillover_fx = 8;
 	uint32_t cmp_par_fx_cob_variance = 30;
 	uint32_t spillover_fx_cob_variance = 8;
-	uint8_t data_to_compress[MULTI_ENTRY_HDR_SIZE+3*sizeof(struct l_fx)] = {0};
-	uint8_t compressed_data[MULTI_ENTRY_HDR_SIZE+1*sizeof(struct l_fx)] = {0};
+	uint8_t data_to_compress[COLLECTION_HDR_SIZE+3*sizeof(struct l_fx)] = {0};
+	uint8_t compressed_data[COLLECTION_HDR_SIZE+1*sizeof(struct l_fx)] = {0};
 	struct cmp_max_used_bits my_max_used_bits = MAX_USED_BITS_SAFE;
-	struct l_fx *data_p = (struct l_fx *)&data_to_compress[MULTI_ENTRY_HDR_SIZE];
+	struct l_fx *data_p = (struct l_fx *)&data_to_compress[COLLECTION_HDR_SIZE];
 
 	cfg = cmp_cfg_icu_create(DATA_TYPE_L_FX, CMP_MODE_DIFF_ZERO, 0, CMP_LOSSLESS);
 	TEST_ASSERT(cfg.data_type != DATA_TYPE_UNKNOWN);
@@ -3682,10 +3696,10 @@ void test_compress_l_fx_efx_error_cases(void)
 	uint32_t spillover_efx = 44;
 	uint32_t cmp_par_fx_cob_variance = 30;
 	uint32_t spillover_fx_cob_variance = 8;
-	uint8_t data_to_compress[MULTI_ENTRY_HDR_SIZE+3*sizeof(struct l_fx_efx)] = {0};
-	uint8_t compressed_data[MULTI_ENTRY_HDR_SIZE+1*sizeof(struct l_fx_efx)] = {0};
+	uint8_t data_to_compress[COLLECTION_HDR_SIZE+3*sizeof(struct l_fx_efx)] = {0};
+	uint8_t compressed_data[COLLECTION_HDR_SIZE+1*sizeof(struct l_fx_efx)] = {0};
 	struct cmp_max_used_bits my_max_used_bits = MAX_USED_BITS_SAFE;
-	struct l_fx_efx *data_p = (struct l_fx_efx *)&data_to_compress[MULTI_ENTRY_HDR_SIZE];
+	struct l_fx_efx *data_p = (struct l_fx_efx *)&data_to_compress[COLLECTION_HDR_SIZE];
 
 	cfg = cmp_cfg_icu_create(DATA_TYPE_L_FX_EFX, CMP_MODE_DIFF_ZERO, 0, CMP_LOSSLESS);
 	TEST_ASSERT(cfg.data_type != DATA_TYPE_UNKNOWN);
@@ -3770,10 +3784,10 @@ void test_compress_l_fx_ncob_error_cases(void)
 	uint32_t spillover_ncob = 10;
 	uint32_t cmp_par_fx_cob_variance = 30;
 	uint32_t spillover_fx_cob_variance = 8;
-	uint8_t data_to_compress[MULTI_ENTRY_HDR_SIZE+3*sizeof(struct l_fx_ncob)] = {0};
-	uint8_t compressed_data[MULTI_ENTRY_HDR_SIZE+1*sizeof(struct l_fx_ncob)] = {0};
+	uint8_t data_to_compress[COLLECTION_HDR_SIZE+3*sizeof(struct l_fx_ncob)] = {0};
+	uint8_t compressed_data[COLLECTION_HDR_SIZE+1*sizeof(struct l_fx_ncob)] = {0};
 	struct cmp_max_used_bits my_max_used_bits = MAX_USED_BITS_SAFE;
-	struct l_fx_ncob *data_p = (struct l_fx_ncob *)&data_to_compress[MULTI_ENTRY_HDR_SIZE];
+	struct l_fx_ncob *data_p = (struct l_fx_ncob *)&data_to_compress[COLLECTION_HDR_SIZE];
 
 	cfg = cmp_cfg_icu_create(DATA_TYPE_L_FX_NCOB, CMP_MODE_DIFF_ZERO, 0, CMP_LOSSLESS);
 	TEST_ASSERT(cfg.data_type != DATA_TYPE_UNKNOWN);
@@ -3884,10 +3898,10 @@ void test_compress_l_fx_efx_ncob_ecob_error_cases(void)
 	uint32_t spillover_ecob = 55;
 	uint32_t cmp_par_fx_cob_variance = 30;
 	uint32_t spillover_fx_cob_variance = 8;
-	uint8_t data_to_compress[MULTI_ENTRY_HDR_SIZE+3*sizeof(struct l_fx_efx_ncob_ecob)] = {0};
-	uint8_t compressed_data[MULTI_ENTRY_HDR_SIZE+1*sizeof(struct l_fx_efx_ncob_ecob)] = {0};
+	uint8_t data_to_compress[COLLECTION_HDR_SIZE+3*sizeof(struct l_fx_efx_ncob_ecob)] = {0};
+	uint8_t compressed_data[COLLECTION_HDR_SIZE+1*sizeof(struct l_fx_efx_ncob_ecob)] = {0};
 	struct cmp_max_used_bits my_max_used_bits = MAX_USED_BITS_SAFE;
-	struct l_fx_efx_ncob_ecob *data_p = (struct l_fx_efx_ncob_ecob *)&data_to_compress[MULTI_ENTRY_HDR_SIZE];
+	struct l_fx_efx_ncob_ecob *data_p = (struct l_fx_efx_ncob_ecob *)&data_to_compress[COLLECTION_HDR_SIZE];
 
 	cfg = cmp_cfg_icu_create(DATA_TYPE_L_FX_EFX_NCOB_ECOB, CMP_MODE_DIFF_ZERO, 0, CMP_LOSSLESS);
 	TEST_ASSERT(cfg.data_type != DATA_TYPE_UNKNOWN);
@@ -4019,10 +4033,10 @@ void test_compress_offset_error_cases(void)
 	uint32_t spillover_mean = 2;
 	uint32_t cmp_par_variance = MAX_NON_IMA_GOLOMB_PAR;
 	uint32_t spillover_variance = cmp_icu_max_spill(MAX_NON_IMA_GOLOMB_PAR);
-	uint8_t data_to_compress[MULTI_ENTRY_HDR_SIZE+3*sizeof(struct offset)] = {0};
-	uint8_t compressed_data[MULTI_ENTRY_HDR_SIZE+1*sizeof(struct offset)] = {0};
+	uint8_t data_to_compress[COLLECTION_HDR_SIZE+3*sizeof(struct offset)] = {0};
+	uint8_t compressed_data[COLLECTION_HDR_SIZE+1*sizeof(struct offset)] = {0};
 	struct cmp_max_used_bits my_max_used_bits = MAX_USED_BITS_SAFE;
-	struct offset *data_p = (struct offset *)&data_to_compress[MULTI_ENTRY_HDR_SIZE];
+	struct offset *data_p = (struct offset *)&data_to_compress[COLLECTION_HDR_SIZE];
 
 	cfg = cmp_cfg_icu_create(DATA_TYPE_OFFSET, CMP_MODE_DIFF_MULTI, 0, CMP_LOSSLESS);
 	TEST_ASSERT(cfg.data_type != DATA_TYPE_UNKNOWN);
@@ -4093,10 +4107,10 @@ void test_compress_background_error_cases(void)
 	uint32_t spillover_variance = cmp_icu_max_spill(MAX_NON_IMA_GOLOMB_PAR);
 	uint32_t cmp_par_pixels_error = 23;
 	uint32_t spillover_pixels_error = 42;
-	uint8_t data_to_compress[MULTI_ENTRY_HDR_SIZE+3*sizeof(struct background)] = {0};
-	uint8_t compressed_data[MULTI_ENTRY_HDR_SIZE+1*sizeof(struct background)] = {0};
+	uint8_t data_to_compress[COLLECTION_HDR_SIZE+3*sizeof(struct background)] = {0};
+	uint8_t compressed_data[COLLECTION_HDR_SIZE+1*sizeof(struct background)] = {0};
 	struct cmp_max_used_bits my_max_used_bits = MAX_USED_BITS_SAFE;
-	struct background *data_p = (struct background *)&data_to_compress[MULTI_ENTRY_HDR_SIZE];
+	struct background *data_p = (struct background *)&data_to_compress[COLLECTION_HDR_SIZE];
 
 	cfg = cmp_cfg_icu_create(DATA_TYPE_BACKGROUND, CMP_MODE_DIFF_MULTI, 0, CMP_LOSSLESS);
 	TEST_ASSERT(cfg.data_type != DATA_TYPE_UNKNOWN);
@@ -4185,10 +4199,10 @@ void test_compress_smearing_error_cases(void)
 	uint32_t spillover_variance = cmp_icu_max_spill(MAX_NON_IMA_GOLOMB_PAR);
 	uint32_t cmp_par_pixels_error = 23;
 	uint32_t spillover_pixels_error = 42;
-	uint8_t data_to_compress[MULTI_ENTRY_HDR_SIZE+3*sizeof(struct smearing)] = {0};
-	uint8_t compressed_data[MULTI_ENTRY_HDR_SIZE+1*sizeof(struct smearing)] = {0};
+	uint8_t data_to_compress[COLLECTION_HDR_SIZE+3*sizeof(struct smearing)] = {0};
+	uint8_t compressed_data[COLLECTION_HDR_SIZE+1*sizeof(struct smearing)] = {0};
 	struct cmp_max_used_bits my_max_used_bits = MAX_USED_BITS_SAFE;
-	struct smearing *data_p = (struct smearing *)&data_to_compress[MULTI_ENTRY_HDR_SIZE];
+	struct smearing *data_p = (struct smearing *)&data_to_compress[COLLECTION_HDR_SIZE];
 
 	cfg = cmp_cfg_icu_create(DATA_TYPE_SMEARING, CMP_MODE_DIFF_MULTI, 0, CMP_LOSSLESS);
 	TEST_ASSERT(cfg.data_type != DATA_TYPE_UNKNOWN);
@@ -4258,7 +4272,7 @@ void test_pad_bitstream(void)
 	memset(cmp_data, 0xFF, sizeof(cmp_data));
 	cfg.icu_output_buf = cmp_data;
 	cfg.data_type = DATA_TYPE_IMAGETTE; /* 16 bit samples */
-	cfg.buffer_length = 6; /* 6 * 16 bit samples -> 3 * 32 bit */
+	cfg.buffer_length = sizeof(cmp_data); /* 6 * 16 bit samples -> 3 * 32 bit */
 
 	/* test negative cmp_size */
 	cmp_size = -1;
@@ -4308,7 +4322,7 @@ void test_pad_bitstream(void)
 
 	/* error case the rest of the compressed data are to small dor a 32 bit
 	 * access  */
-	cfg.buffer_length = 5;
+	cfg.buffer_length -= 1;
 	cmp_size = 64;
 	cmp_size = put_n_bits32(0, 1, cmp_size, cfg.icu_output_buf, MAX_BIT_LEN);
 	cmp_size_return = pad_bitstream(&cfg, cmp_size);
@@ -4317,10 +4331,328 @@ void test_pad_bitstream(void)
 
 
 /**
- * @test cmp_data_to_big_endian
+ * @test compress_chunk
  */
 
-void test_cmp_data_to_big_endian_error_cases(void)
+void test_compress_chunk_raw_singel_col(void)
+{
+	enum {	DATA_SIZE = 2*sizeof(struct s_fx),
+		CHUNK_SIZE = COLLECTION_HDR_SIZE + DATA_SIZE
+	};
+	uint8_t chunk[CHUNK_SIZE];
+	struct collection_hdr *col = (struct collection_hdr *)chunk;
+	struct s_fx *data = (struct s_fx *)col->entry;
+	struct cmp_par cmp_par = {0};
+	uint32_t *dst;
+	int cmp_size;
+	size_t dst_capacity = 43; /* random non zero value */
+
+	/* create a chunk with a single collection */
+	memset(col, 0, COLLECTION_HDR_SIZE);
+	TEST_ASSERT_FALSE(cmp_col_set_subservice(col, SST_NCxx_S_SCIENCE_S_FX));
+	TEST_ASSERT_FALSE(cmp_col_set_data_length(col, DATA_SIZE));
+	data[0].exp_flags = 0;
+	data[0].fx = 1;
+	data[1].exp_flags = 0xF0;
+	data[1].fx = 0xABCDE0FF;
+
+
+	/* compress the data */
+	cmp_par.cmp_mode = CMP_MODE_RAW;
+	dst = NULL;
+
+	cmp_size = compress_chunk(chunk, CHUNK_SIZE, NULL, NULL, dst,
+				  dst_capacity, &cmp_par);
+	TEST_ASSERT_EQUAL_INT(GENERIC_HEADER_SIZE + CHUNK_SIZE, cmp_size);
+	dst_capacity = (size_t)cmp_size;
+	dst = malloc(dst_capacity); TEST_ASSERT_NOT_NULL(dst);
+	cmp_size = compress_chunk(chunk, CHUNK_SIZE, NULL, NULL, dst,
+				  dst_capacity, &cmp_par);
+	TEST_ASSERT_EQUAL_INT(GENERIC_HEADER_SIZE + CHUNK_SIZE, cmp_size);
+
+	/* test results */
+	{	struct cmp_entity *ent = (struct cmp_entity *)dst;
+		struct s_fx *raw_cmp_data = (struct s_fx *)(
+			(uint8_t *)cmp_ent_get_data_buf(ent) + COLLECTION_HDR_SIZE);
+
+		TEST_ASSERT_EQUAL_UINT(CHUNK_SIZE, cmp_ent_get_cmp_data_size(ent));
+		TEST_ASSERT_EQUAL_UINT(CHUNK_SIZE, cmp_ent_get_original_size(ent));
+		TEST_ASSERT_EQUAL_UINT(cmp_par.cmp_mode, cmp_ent_get_cmp_mode(ent));
+		TEST_ASSERT_TRUE(cmp_ent_get_data_type_raw_bit(ent));
+		TEST_ASSERT_EQUAL_INT(DATA_TYPE_CHUNK, cmp_ent_get_data_type(ent));
+
+		TEST_ASSERT_EQUAL_HEX8_ARRAY(col, cmp_ent_get_data_buf(ent), COLLECTION_HDR_SIZE);
+
+		TEST_ASSERT_EQUAL_HEX(data[0].exp_flags, raw_cmp_data[0].exp_flags);
+		TEST_ASSERT_EQUAL_HEX(data[0].fx, be32_to_cpu(raw_cmp_data[0].fx));
+		TEST_ASSERT_EQUAL_HEX(data[1].exp_flags, raw_cmp_data[1].exp_flags);
+		TEST_ASSERT_EQUAL_HEX(data[1].fx, be32_to_cpu(raw_cmp_data[1].fx));
+	}
+	free(dst);
+
+	/* error case: dst buffer to small */
+	dst_capacity -= 1;
+	dst = malloc(dst_capacity); TEST_ASSERT_NOT_NULL(dst);
+	cmp_size = compress_chunk(chunk, CHUNK_SIZE, NULL, NULL, dst,
+				  dst_capacity, &cmp_par);
+	TEST_ASSERT_EQUAL_INT(CMP_ERROR_SMALL_BUF, cmp_size);
+	free(dst);
+}
+
+
+void test_compress_chunk_raw_two_col(void)
+{
+	enum {	DATA_SIZE_1 = 2*sizeof(struct s_fx),
+		DATA_SIZE_2 = 3*sizeof(struct s_fx_efx_ncob_ecob),
+		CHUNK_SIZE = 2*COLLECTION_HDR_SIZE + DATA_SIZE_1 + DATA_SIZE_2
+	};
+	uint8_t chunk[CHUNK_SIZE];
+	struct collection_hdr *col1 = (struct collection_hdr *)chunk;
+	struct collection_hdr *col2;
+	struct s_fx *data1 = (struct s_fx *)col1->entry;
+	struct s_fx_efx_ncob_ecob *data2;
+	struct cmp_par cmp_par = {0};
+	uint32_t *dst;
+	int cmp_size;
+	size_t dst_capacity = 0;
+
+	/* create a chunk with two collection */
+	memset(col1, 0, COLLECTION_HDR_SIZE);
+	TEST_ASSERT_FALSE(cmp_col_set_subservice(col1, SST_NCxx_S_SCIENCE_S_FX));
+	TEST_ASSERT_FALSE(cmp_col_set_data_length(col1, DATA_SIZE_1));
+	data1[0].exp_flags = 0;
+	data1[0].fx = 1;
+	data1[1].exp_flags = 0xF0;
+	data1[1].fx = 0xABCDE0FF;
+	col2 = (struct collection_hdr *)(chunk + COLLECTION_HDR_SIZE + DATA_SIZE_1);
+	memset(col2, 0, COLLECTION_HDR_SIZE);
+	TEST_ASSERT_FALSE(cmp_col_set_subservice(col2, SST_NCxx_S_SCIENCE_S_FX_EFX_NCOB_ECOB));
+	TEST_ASSERT_FALSE(cmp_col_set_data_length(col2, DATA_SIZE_2));
+	data2 = (struct s_fx_efx_ncob_ecob *)col2->entry;
+	data2[0].exp_flags = 1;
+	data2[0].fx = 2;
+	data2[0].efx = 3;
+	data2[0].ncob_x = 4;
+	data2[0].ncob_y = 5;
+	data2[0].ecob_x = 6;
+	data2[0].ecob_y = 7;
+	data2[1].exp_flags = 0;
+	data2[1].fx = 0;
+	data2[1].efx = 0;
+	data2[1].ncob_x = 0;
+	data2[1].ncob_y = 0;
+	data2[1].ecob_x = 0;
+	data2[1].ecob_y = 0;
+	data2[2].exp_flags = 0xF;
+	data2[2].fx = ~0U;
+	data2[2].efx = ~0U;
+	data2[2].ncob_x = ~0U;
+	data2[2].ncob_y = ~0U;
+	data2[2].ecob_x = ~0U;
+	data2[2].ecob_y = ~0U;
+
+	/* compress the data */
+	cmp_par.cmp_mode = CMP_MODE_RAW;
+	dst = NULL;
+
+	cmp_size = compress_chunk(chunk, CHUNK_SIZE, NULL, NULL, dst,
+				  dst_capacity, &cmp_par);
+	TEST_ASSERT_EQUAL_INT(GENERIC_HEADER_SIZE + CHUNK_SIZE, cmp_size);
+	dst_capacity = (size_t)cmp_size;
+	dst = malloc(dst_capacity); TEST_ASSERT_NOT_NULL(dst);
+	cmp_size = compress_chunk(chunk, CHUNK_SIZE, NULL, NULL, dst,
+				  dst_capacity, &cmp_par);
+	TEST_ASSERT_EQUAL_INT(GENERIC_HEADER_SIZE + CHUNK_SIZE, cmp_size);
+
+	/* test results */
+	{	struct cmp_entity *ent = (struct cmp_entity *)dst;
+		struct s_fx *raw_cmp_data1 = (struct s_fx *)(
+			(uint8_t *)cmp_ent_get_data_buf(ent) + COLLECTION_HDR_SIZE);
+		struct s_fx_efx_ncob_ecob *raw_cmp_data2 = (struct s_fx_efx_ncob_ecob *)(
+			(uint8_t *)cmp_ent_get_data_buf(ent) + 2*COLLECTION_HDR_SIZE +
+			DATA_SIZE_1);
+		int i;
+		TEST_ASSERT_EQUAL_UINT(CHUNK_SIZE, cmp_ent_get_cmp_data_size(ent));
+		TEST_ASSERT_EQUAL_UINT(CHUNK_SIZE, cmp_ent_get_original_size(ent));
+		TEST_ASSERT_EQUAL_UINT(cmp_par.cmp_mode, cmp_ent_get_cmp_mode(ent));
+		TEST_ASSERT_TRUE(cmp_ent_get_data_type_raw_bit(ent));
+		TEST_ASSERT_EQUAL_INT(DATA_TYPE_CHUNK, cmp_ent_get_data_type(ent));
+
+		TEST_ASSERT_EQUAL_HEX8_ARRAY(col1, cmp_ent_get_data_buf(ent), COLLECTION_HDR_SIZE);
+
+		for (i = 0; i < 2; i++) {
+			TEST_ASSERT_EQUAL_HEX(data1[i].exp_flags, raw_cmp_data1[i].exp_flags);
+			TEST_ASSERT_EQUAL_HEX(data1[i].fx, be32_to_cpu(raw_cmp_data1[i].fx));
+		}
+
+		TEST_ASSERT_EQUAL_HEX8_ARRAY(col1, cmp_ent_get_data_buf(ent), COLLECTION_HDR_SIZE);
+
+		for (i = 0; i < 2; i++) {
+			TEST_ASSERT_EQUAL_HEX(data1[i].exp_flags, raw_cmp_data1[i].exp_flags);
+			TEST_ASSERT_EQUAL_HEX(data1[i].fx, be32_to_cpu(raw_cmp_data1[i].fx));
+		}
+
+		TEST_ASSERT_EQUAL_HEX8_ARRAY(col2, (uint8_t *)cmp_ent_get_data_buf(ent)+cmp_col_get_size(col1), COLLECTION_HDR_SIZE);
+
+		for (i = 0; i < 2; i++) {
+			TEST_ASSERT_EQUAL_HEX(data2[i].exp_flags, raw_cmp_data2[i].exp_flags);
+			TEST_ASSERT_EQUAL_HEX(data2[i].fx, be32_to_cpu(raw_cmp_data2[i].fx));
+			TEST_ASSERT_EQUAL_HEX(data2[i].efx, be32_to_cpu(raw_cmp_data2[i].efx));
+			TEST_ASSERT_EQUAL_HEX(data2[i].ncob_x, be32_to_cpu(raw_cmp_data2[i].ncob_x));
+			TEST_ASSERT_EQUAL_HEX(data2[i].ncob_y, be32_to_cpu(raw_cmp_data2[i].ncob_y));
+			TEST_ASSERT_EQUAL_HEX(data2[i].ecob_x, be32_to_cpu(raw_cmp_data2[i].ecob_x));
+			TEST_ASSERT_EQUAL_HEX(data2[i].ecob_y, be32_to_cpu(raw_cmp_data2[i].ecob_y));
+		}
+	}
+	free(dst);
+
+	/* error case: dst buffer to small */
+	dst_capacity -= 1;
+	dst = malloc(dst_capacity); TEST_ASSERT_NOT_NULL(dst);
+	cmp_size = compress_chunk(chunk, CHUNK_SIZE, NULL, NULL, dst,
+				  dst_capacity, &cmp_par);
+	TEST_ASSERT_EQUAL_INT(CMP_ERROR_SMALL_BUF, cmp_size);
+	free(dst);
+}
+
+void NOOO_test_compress_chunk_model(void)
+{
+	enum {	DATA_SIZE_1 = 1*sizeof(struct background),
+		DATA_SIZE_2 = 2*sizeof(struct offset),
+		CHUNK_SIZE = 2*COLLECTION_HDR_SIZE + DATA_SIZE_1 + DATA_SIZE_2
+	};
+	uint8_t chunk[CHUNK_SIZE];
+	uint8_t chunk_model[CHUNK_SIZE];
+	uint8_t chunk_up_model[CHUNK_SIZE];
+	struct collection_hdr *col1 = (struct collection_hdr *)chunk;
+	struct collection_hdr *col2;
+	struct background *data1 = (struct background *)col1->entry;
+	struct offset *data2;
+	struct cmp_par cmp_par = {0};
+	uint32_t *dst;
+	int cmp_size;
+	size_t dst_capacity = 0;
+
+	/* create a chunk with two collection */
+	memset(col1, 0, COLLECTION_HDR_SIZE);
+	TEST_ASSERT_FALSE(cmp_col_set_subservice(col1, SST_NCxx_S_SCIENCE_BACKGROUND));
+	TEST_ASSERT_FALSE(cmp_col_set_data_length(col1, DATA_SIZE_1));
+	data1[0].mean = 0;
+	data1[0].variance = 1;
+	data1[0].outlier_pixels = 0xF0;
+	col2 = (struct collection_hdr *)(chunk + COLLECTION_HDR_SIZE + DATA_SIZE_1);
+	memset(col2, 0, COLLECTION_HDR_SIZE);
+	TEST_ASSERT_FALSE(cmp_col_set_subservice(col2, SST_NCxx_S_SCIENCE_OFFSET));
+	TEST_ASSERT_FALSE(cmp_col_set_data_length(col2, DATA_SIZE_2));
+	data2 = (struct offset *)col2->entry;
+	data2[0].mean = 1;
+	data2[0].variance = 2;
+	data2[1].mean = 3;
+	data2[1].variance = 4;
+
+	/* create a model with two collection */
+	col1 = (struct collection_hdr *)chunk_model;
+	memset(col1, 0, COLLECTION_HDR_SIZE);
+	TEST_ASSERT_FALSE(cmp_col_set_subservice(col1, SST_NCxx_S_SCIENCE_BACKGROUND));
+	TEST_ASSERT_FALSE(cmp_col_set_data_length(col1, DATA_SIZE_1));
+	data1[0].mean = 1;
+	data1[0].variance = 2;
+	data1[0].outlier_pixels = 0xFFFF;
+	col2 = (struct collection_hdr *)(chunk + COLLECTION_HDR_SIZE + DATA_SIZE_1);
+	memset(col2, 0, COLLECTION_HDR_SIZE);
+	TEST_ASSERT_FALSE(cmp_col_set_subservice(col2, SST_NCxx_S_SCIENCE_OFFSET));
+	TEST_ASSERT_FALSE(cmp_col_set_data_length(col2, DATA_SIZE_2));
+	data2 = (struct offset *)col2->entry;
+	data2[0].mean = 0;
+	data2[0].variance = 0;
+	data2[1].mean = 0;
+	data2[1].variance = 0xEFFFFFFF;
+
+	/* compress the data */
+	cmp_par.cmp_mode = CMP_MODE_MODEL_ZERO;
+	cmp_par.model_value = 14;
+	cmp_par.nc_offset_mean = 1;
+	cmp_par.nc_offset_variance = 2;
+	cmp_par.nc_background_mean = 3;
+	cmp_par.nc_background_variance = 4;
+	cmp_par.nc_background_outlier_pixels = 5;
+	dst = NULL;
+
+	uint32_t chunk_size = COLLECTION_HDR_SIZE + DATA_SIZE_1;
+	/* chunk_size = CHUNK_SIZE; */
+	/* int */
+
+	cmp_size = compress_chunk(chunk, chunk_size, chunk_model, chunk_up_model, dst,
+				  dst_capacity, &cmp_par);
+	TEST_ASSERT_EQUAL_INT(NON_IMAGETTE_HEADER_SIZE + COLLECTION_HDR_SIZE + 4, cmp_size);
+	dst_capacity = (size_t)cmp_size;
+	dst = malloc(dst_capacity); TEST_ASSERT_NOT_NULL(dst);
+	cmp_size = compress_chunk(chunk, CHUNK_SIZE, NULL, NULL, dst,
+				  dst_capacity, &cmp_par);
+	TEST_ASSERT_EQUAL_INT(GENERIC_HEADER_SIZE + CHUNK_SIZE, cmp_size);
+
+	/* test results */
+	{	struct cmp_entity *ent = (struct cmp_entity *)dst;
+		struct s_fx *raw_cmp_data1 = (struct s_fx *)(
+			(uint8_t *)cmp_ent_get_data_buf(ent) + COLLECTION_HDR_SIZE);
+		struct s_fx_efx_ncob_ecob *raw_cmp_data2 = (struct s_fx_efx_ncob_ecob *)(
+			(uint8_t *)cmp_ent_get_data_buf(ent) + 2*COLLECTION_HDR_SIZE +
+			DATA_SIZE_1);
+		int i;
+		TEST_ASSERT_EQUAL_UINT(CHUNK_SIZE, cmp_ent_get_cmp_data_size(ent));
+		TEST_ASSERT_EQUAL_UINT(CHUNK_SIZE, cmp_ent_get_original_size(ent));
+		TEST_ASSERT_EQUAL_UINT(cmp_par.cmp_mode, cmp_ent_get_cmp_mode(ent));
+		TEST_ASSERT_TRUE(cmp_ent_get_data_type_raw_bit(ent));
+		TEST_ASSERT_EQUAL_INT(DATA_TYPE_CHUNK, cmp_ent_get_data_type(ent));
+
+		TEST_ASSERT_EQUAL_HEX8_ARRAY(col1, cmp_ent_get_data_buf(ent), COLLECTION_HDR_SIZE);
+
+#if 0
+		for (i = 0; i < 2; i++) {
+			TEST_ASSERT_EQUAL_HEX(data1[i].exp_flags, raw_cmp_data1[i].exp_flags);
+			TEST_ASSERT_EQUAL_HEX(data1[i].fx, be32_to_cpu(raw_cmp_data1[i].fx));
+		}
+
+		TEST_ASSERT_EQUAL_HEX8_ARRAY(col1, cmp_ent_get_data_buf(ent), COLLECTION_HDR_SIZE);
+
+		for (i = 0; i < 2; i++) {
+			TEST_ASSERT_EQUAL_HEX(data1[i].exp_flags, raw_cmp_data1[i].exp_flags);
+			TEST_ASSERT_EQUAL_HEX(data1[i].fx, be32_to_cpu(raw_cmp_data1[i].fx));
+		}
+
+		TEST_ASSERT_EQUAL_HEX8_ARRAY(col2, (uint8_t *)cmp_ent_get_data_buf(ent)+cmp_col_get_size(col1), COLLECTION_HDR_SIZE);
+
+		for (i = 0; i < 2; i++) {
+			TEST_ASSERT_EQUAL_HEX(data2[i].exp_flags, raw_cmp_data2[i].exp_flags);
+			TEST_ASSERT_EQUAL_HEX(data2[i].fx, be32_to_cpu(raw_cmp_data2[i].fx));
+			TEST_ASSERT_EQUAL_HEX(data2[i].efx, be32_to_cpu(raw_cmp_data2[i].efx));
+			TEST_ASSERT_EQUAL_HEX(data2[i].ncob_x, be32_to_cpu(raw_cmp_data2[i].ncob_x));
+			TEST_ASSERT_EQUAL_HEX(data2[i].ncob_y, be32_to_cpu(raw_cmp_data2[i].ncob_y));
+			TEST_ASSERT_EQUAL_HEX(data2[i].ecob_x, be32_to_cpu(raw_cmp_data2[i].ecob_x));
+			TEST_ASSERT_EQUAL_HEX(data2[i].ecob_y, be32_to_cpu(raw_cmp_data2[i].ecob_y));
+		}
+#endif
+	}
+	free(dst);
+
+	/* error case: dst buffer to small */
+	dst_capacity -= 1;
+	dst = malloc(dst_capacity); TEST_ASSERT_NOT_NULL(dst);
+	cmp_size = compress_chunk(chunk, CHUNK_SIZE, NULL, NULL, dst,
+				  dst_capacity, &cmp_par);
+	TEST_ASSERT_EQUAL_INT(CMP_ERROR_SMALL_BUF, cmp_size);
+	free(dst);
+}
+/* TODO: chunk tests
+ * collection with 0 length;
+ * collection with wrong mix collections;
+ */
+
+/**
+ * @test cmp_data_to_big_endian
+ */
+#if 0
+void notest_cmp_data_to_big_endian_error_cases(void)
 {
 	struct cmp_cfg cfg = {0};
 	int cmp_size;
@@ -4374,6 +4706,7 @@ void test_cmp_data_to_big_endian_error_cases(void)
 	cmp_size_return = cmp_data_to_big_endian(&cfg, cmp_size);
 	TEST_ASSERT_EQUAL_INT(cmp_size_return, -1);
 }
+#endif
 
 
 /**

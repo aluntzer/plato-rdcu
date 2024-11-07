@@ -63,7 +63,7 @@ void* malloc(size_t size)
 void test_cmp_max_used_bits_list(void)
 {
 	struct cmp_max_used_bits i_32, i_34, i_35, i_36, i_255, i_0;
-	struct cmp_max_used_bits *p;
+	const struct cmp_max_used_bits *p;
 	int return_val;
 
 	/* set up max_used_bits item */

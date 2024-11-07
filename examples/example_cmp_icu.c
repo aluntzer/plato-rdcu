@@ -14,7 +14,7 @@
  * more details.
  *
  * @brief demonstration of the use of the software compressor and the
- *	compression unit library
+ *	compression entity library
  */
 
 
@@ -34,12 +34,13 @@
 /* The start_time, end_time, model_id and counter have to be managed by the ASW
  * here we use arbitrary values for demonstration */
 #define START_TIME 0
-#define END_TIME 0
+#define END_TIME 0x23
 #define MODEL_ID 42
 #define MODEL_COUNTER 1
 
 
-static int demo_icu_compression(void) {
+static int demo_icu_compression(void)
+{
 	struct cmp_cfg example_cfg;
 	struct cmp_entity *cmp_entity = NULL;
 	uint32_t i, cmp_buf_size, entity_buf_size, entity_size;
