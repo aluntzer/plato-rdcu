@@ -109,7 +109,7 @@ struct collection_hdr {
 } __attribute__((packed));
 compile_time_assert(sizeof(struct collection_hdr) == COLLECTION_HDR_SIZE, N_DPU_ICU_COLLECTION_HDR_SIZE_IS_NOT_CORRECT);
 compile_time_assert(sizeof(struct collection_hdr) % sizeof(uint32_t) == 0, N_DPU_ICU_COLLECTION_HDR_NOT_4_BYTE_ALLIED);
-/* TODO: compile_time_assert(sizeof(struct collection_hdr.collection_id) == sizeof(union collection_id), N_DPU_ICU_COLLECTION_COLLECTION_ID_DO_NOT_MATCH); */
+compile_time_assert(sizeof(((struct collection_hdr *)0)->collection_id) == sizeof(union collection_id), N_DPU_ICU_COLLECTION_COLLECTION_ID_DO_NOT_MATCH);
 
 
 /**
