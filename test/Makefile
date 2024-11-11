@@ -3,11 +3,13 @@ CPPFLAGS  := -DDEBUGLEVEL=$(DEBUGLEVEL)
 DEBUGFLAGS= -Wall -Wextra -pedantic -Wcast-qual -Wshadow \
             -Wstrict-aliasing=1 -Wdeclaration-after-statement \
             -Wstrict-prototypes -Wpointer-arith \
-            -Wvla -Wformat=2 -Winit-self -Wfloat-equal -Wwrite-strings \
-            #-Wcast-align -Wredundant-decls -Wmissing-prototypes -Wundef -Wswitch-enum
+            -Wformat=2 -Winit-self -Wfloat-equal -Wwrite-strings \
+            -Wno-missing-field-initializers -Wno-missing-braces \
+            -Wcast-align -Wredundant-decls
 CFLAGS   += -std=gnu99 $(DEBUGFLAGS) $(MOREFLAGS)
 LDFLAGS  += $(MOREFLAGS)
 FLAGS     = $(CPPFLAGS) $(CFLAGS) $(LDFLAGS)
+LDLIBS=-lm
 
 
 ROOT_DIR  := ./..
@@ -45,13 +47,13 @@ $(LIB) :
 
 %.txt: %_Runner
 	./$< > $@ 2>&1 || echo "\n\n===== TEST FAILD ====="
-	@echo "-----------------------\n$@\n-----------------------"
-	@echo "-----------------------\nIGNORES:\n-----------------------"
-	@echo "`grep -s IGNORE $@`"
-	@echo "-----------------------\nFAILURES:\n-----------------------"
-	@echo "`grep -s FAIL $@`"
-	@echo "-----------------------\nPASSES:\n-----------------------"
-	@echo "`grep -s PASS $@`"
+	@echo -e "-----------------------\n$@\n-----------------------"
+	@echo -e "-----------------------\nIGNORES:\n-----------------------"
+	@echo -e "`grep -s IGNORE $@`"
+	@echo -e "-----------------------\nFAILURES:\n-----------------------"
+	@echo -e "`grep -s FAIL $@`"
+	@echo -e "-----------------------\nPASSES:\n-----------------------"
+	@echo -e "`grep -s PASS $@`"
 
 
 .PHONY: test_cmp_data_types

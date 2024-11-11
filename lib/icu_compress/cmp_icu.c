@@ -2280,8 +2280,10 @@ uint32_t compress_chunk_set_model_id_and_counter(void *dst, uint32_t dst_size,
 
 uint32_t compress_like_rdcu(const struct rdcu_cfg *rcfg, struct cmp_info *info)
 {
-	struct cmp_cfg cfg = {0};
+	struct cmp_cfg cfg;
 	uint32_t cmp_size_bit;
+
+	memset(&cfg, 0, sizeof(cfg));
 
 	if (info)
 		memset(info, 0, sizeof(*info));

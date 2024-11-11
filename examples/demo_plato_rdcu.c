@@ -155,9 +155,9 @@ void event_report(enum error_class c, enum error_severity s, uint32_t err)
 
 static int32_t rmap_tx(const void *hdr,  uint32_t hdr_size,
 		       const uint8_t non_crc_bytes,
-		       const void *data, uint32_t data_size)
+		       const void *data_tx, uint32_t data_size)
 {
-	return grspw2_add_pkt(&spw_cfg.spw, hdr, hdr_size, non_crc_bytes, data, data_size);
+	return grspw2_add_pkt(&spw_cfg.spw, hdr, hdr_size, non_crc_bytes, data_tx, data_size);
 }
 
 

@@ -20,11 +20,13 @@
 #include <stdlib.h>
 #include <leon_inttypes.h>
 
-#if defined __has_include
-#  if __has_include(<time.h>)
-#    include <time.h>
-#    include <unistd.h>
-#    define HAS_TIME_H 1
+#ifndef ICU_ASW
+#  if defined __has_include
+#    if __has_include(<time.h>)
+#      include <time.h>
+#      include <unistd.h>
+#      define HAS_TIME_H 1
+#    endif
 #  endif
 #endif
 
@@ -2429,6 +2431,7 @@ void test_compress_chunk_cmp_size_bound(void)
 	TEST_ASSERT_TRUE(cmp_is_error(bound));
 	TEST_ASSERT_EQUAL_INT(CMP_ERROR_CHUNK_SIZE_INCONSISTENT, cmp_get_error_code(bound));
 
+#ifndef __sparc__
 	{ /* containing only zero data size collections */
 		size_t i;
 		uint8_t *chunk_big;
@@ -2436,6 +2439,7 @@ void test_compress_chunk_cmp_size_bound(void)
 			- NON_IMAGETTE_HEADER_SIZE - CMP_COLLECTION_FILD_SIZE;
 
 		chunk_big = malloc(max_chunk_size);
+		TEST_ASSERT_NOT_NULL(chunk_big);
 		for (i = 0; i < max_chunk_size-COLLECTION_HDR_SIZE; i = i+COLLECTION_HDR_SIZE)
 			TEST_ASSERT_FALSE(cmp_col_set_data_length((struct collection_hdr *)&chunk_big[i], 0));
 
@@ -2443,6 +2447,7 @@ void test_compress_chunk_cmp_size_bound(void)
 		TEST_ASSERT_EQUAL_INT(CMP_ERROR_CHUNK_TOO_LARGE, cmp_get_error_code(bound));
 		free(chunk_big);
 	}
+#endif
 }
 
 

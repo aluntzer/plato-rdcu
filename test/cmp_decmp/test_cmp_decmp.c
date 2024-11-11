@@ -23,6 +23,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <math.h>
 
 #include <unity.h>
 #include "../test_common/test_common.h"
@@ -40,11 +41,13 @@
 #include <cmp_max_used_bits.h>
 #include <cmp_cal_up_model.h>
 
-#if defined __has_include
-#  if __has_include(<time.h>)
-#    include <time.h>
-#    include <unistd.h>
-#    define HAS_TIME_H 1
+#ifndef ICU_ASW
+#  if defined __has_include
+#    if __has_include(<time.h>) && !defined(__sparc__)
+#      include <time.h>
+#      include <unistd.h>
+#      define HAS_TIME_H 1
+#    endif
 #  endif
 #endif
 
