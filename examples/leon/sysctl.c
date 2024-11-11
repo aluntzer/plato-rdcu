@@ -311,7 +311,7 @@
 #include <string.h>
 #include <errno.h>
 
-#include "../lib/common/list.h"
+#include "list.h"
 
 #include "sysctl.h"
 

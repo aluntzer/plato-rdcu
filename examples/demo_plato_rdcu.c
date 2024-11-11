@@ -27,6 +27,7 @@
 
 
 #include "leon/errors.h"
+#include "leon/list.h"
 #include "leon/irq.h"
 #include "leon/irq_dispatch.h"
 #include "leon/io.h"
@@ -41,8 +42,8 @@
 #include "../lib/rdcu_compress/rdcu_cmd.h"
 #include "../lib/rdcu_compress/rdcu_ctrl.h"
 #include "../lib/rdcu_compress/rdcu_rmap.h"
+#include "../lib/rdcu_compress/cmp_rdcu_cfg.h"
 
-#include "../lib/common/list.h"
 #include "../lib/common/cmp_support.h"
 #include "../lib/common/cmp_entity.h"
 #include "../lib/common/cmp_data_types.h"
@@ -682,6 +683,74 @@ static uint64_t grtimer_uptime_to_timestamp(struct grtimer_uptime time)
 }
 
 
+static uint32_t cmp_ent_build(struct cmp_entity *ent, enum cmp_data_type data_type, uint32_t version_id,
+			      uint64_t start_time, uint64_t end_time, uint16_t model_id,
+			      uint8_t model_counter, const struct rdcu_cfg *rcfg, int cmp_size_bits)
+{
+	uint32_t cmp_size_bytes = cmp_bit_to_byte((unsigned int)cmp_size_bits);
+	uint32_t hdr_size;
+
+	if (!rcfg)
+		return 0;
+
+	if (cmp_size_bits < 0)
+		return 0;
+
+	if (!cmp_ent_create(ent, data_type, rcfg->cmp_mode == CMP_MODE_RAW,
+			    cmp_size_bytes))
+		return 0;
+
+	if (ent) {
+		cmp_ent_set_version_id(ent, version_id);
+		if (cmp_ent_set_start_timestamp(ent, start_time))
+			return 0;
+		if (cmp_ent_set_end_timestamp(ent, end_time))
+			return 0;
+		cmp_ent_set_model_id(ent, model_id);
+		cmp_ent_set_model_counter(ent, model_counter);
+
+		if (cmp_ent_set_cmp_mode(ent, rcfg->cmp_mode))
+			return 0;
+		if (cmp_ent_set_model_value(ent, rcfg->model_value))
+			return 0;
+		cmp_ent_set_reserved(ent, 0);
+		if (cmp_ent_set_lossy_cmp_par(ent, rcfg->round))
+			return 0;
+
+		if (!rcfg->cmp_mode == CMP_MODE_RAW) {/* no specific header is used for raw data we are done */
+			switch (cmp_ent_get_data_type(ent)) {
+			case DATA_TYPE_IMAGETTE_ADAPTIVE:
+			case DATA_TYPE_SAT_IMAGETTE_ADAPTIVE:
+			case DATA_TYPE_F_CAM_IMAGETTE_ADAPTIVE:
+				if (cmp_ent_set_ima_ap1_spill(ent, rcfg->ap1_spill))
+					return -1;
+				if (cmp_ent_set_ima_ap1_golomb_par(ent, rcfg->ap1_golomb_par))
+					return -1;
+				if (cmp_ent_set_ima_ap2_spill(ent, rcfg->ap2_spill))
+					return -1;
+				if (cmp_ent_set_ima_ap2_golomb_par(ent, rcfg->ap2_golomb_par))
+					return -1;
+				/* fall through */
+			case DATA_TYPE_IMAGETTE:
+			case DATA_TYPE_SAT_IMAGETTE:
+			case DATA_TYPE_F_CAM_IMAGETTE:
+				if (cmp_ent_set_ima_spill(ent, rcfg->spill))
+					return -1;
+				if (cmp_ent_set_ima_golomb_par(ent, rcfg->golomb_par))
+					return -1;
+				break;
+			default:
+				return 0;
+			}
+		}
+	}
+
+	hdr_size = cmp_ent_cal_hdr_size(data_type, rcfg->cmp_mode == CMP_MODE_RAW);
+
+	return hdr_size + cmp_size_bytes;
+}
+
+
 /**
  * @brief demonstrate a compression using the cmp_rdcu library
  */
@@ -691,7 +760,7 @@ static void rdcu_compression_cmp_lib_demo(void)
 	int cnt = 0;
 
 	/* declare configuration and information structure */
-	struct cmp_cfg example_cfg;
+	struct rdcu_cfg example_cfg;
 	struct cmp_status example_status;
 	struct cmp_info example_info;
 
@@ -705,11 +774,9 @@ static void rdcu_compression_cmp_lib_demo(void)
 	grtimer_longcount_get_uptime(rtu, &start_time);
 
 	/* set up compressor configuration */
-	example_cfg = rdcu_cfg_create(DATA_TYPE_IMAGETTE_ADAPTIVE,
-				      CMP_DEF_IMA_MODEL_CMP_MODE,
-				      CMP_DEF_IMA_MODEL_MODEL_VALUE,
-				      CMP_DEF_IMA_MODEL_LOSSY_PAR);
-	if (example_cfg.data_type == DATA_TYPE_UNKNOWN) {
+	if (rdcu_cfg_create(&example_cfg, CMP_DEF_IMA_MODEL_CMP_MODE,
+			    CMP_DEF_IMA_MODEL_MODEL_VALUE,
+			    CMP_DEF_IMA_MODEL_LOSSY_PAR)) {
 		printf("Error occur during rdcu_cfg_create()\n");
 		return;
 	}
@@ -810,7 +877,7 @@ static void rdcu_compression_cmp_lib_demo(void)
 		uint32_t i, s;
 
 		/* get the size of the compression entity */
-		cmp_ent_size = cmp_ent_build(NULL, CMP_ASW_VERSION_ID,
+		cmp_ent_size = cmp_ent_build(NULL, DATA_TYPE_IMAGETTE_ADAPTIVE, CMP_ASW_VERSION_ID,
 					     grtimer_uptime_to_timestamp(start_time),
 					     grtimer_uptime_to_timestamp(end_time),
 					     model_id, model_counter, &example_cfg,
@@ -828,7 +895,7 @@ static void rdcu_compression_cmp_lib_demo(void)
 		}
 
 		/* now let us build the compression entity */
-		cmp_ent_size = cmp_ent_build(cmp_ent, CMP_ASW_VERSION_ID,
+		cmp_ent_size = cmp_ent_build(cmp_ent,DATA_TYPE_IMAGETTE_ADAPTIVE, CMP_ASW_VERSION_ID,
 					     grtimer_uptime_to_timestamp(start_time),
 					     grtimer_uptime_to_timestamp(end_time),
 					     model_id, model_counter, &example_cfg,
@@ -875,8 +942,7 @@ static void rdcu_compression_cmp_lib_demo(void)
 	/* read updated model to some buffer and print */
 	if (1) {
 		uint32_t i;
-		uint32_t s = cmp_cal_size_of_data(example_info.samples_used,
-						  DATA_TYPE_IMAGETTE_ADAPTIVE);
+		uint32_t s = example_info.samples_used * sizeof(uint16_t);
 		uint8_t *mymodel = malloc(s);
 
 		if (!mymodel) {
@@ -900,155 +966,6 @@ static void rdcu_compression_cmp_lib_demo(void)
 		free(mymodel);
 	}
 
-}
-
-
-/**
- * @brief demonstrate a compression using the cmp_icu library
- */
-
-static void icu_compression_cmp_lib_demo(void)
-{
-/* The start_time, end_time, model_id and counter have to be managed by the ASW
- * here we use arbitrary values for demonstration */
-#define START_TIME 0
-#define END_TIME 0
-#define MODEL_ID 42
-#define MODEL_COUNTER 1
-
-#define NO_CMP_MODE_RAW_USED 0
-
-	struct cmp_max_used_bits max_used_bits;
-	enum cmp_data_type example_data_type = CMP_DEF_IMA_MODEL_DATA_TYPE;
-	struct cmp_cfg example_cfg;
-	uint16_t *updated_model;
-	void *ent_cmp_data;
-	struct cmp_entity *cmp_entity;
-	int cmp_size_bits;
-	uint32_t s, i, cmp_buf_size, entity_size;
-
-	printf("\n\nDemonstrate a software compression on the ICU\n"
-	       "=============================================\n");
-
-	/* create a compression configuration with default values */
-	example_cfg = cmp_cfg_icu_create(example_data_type, CMP_DEF_IMA_MODEL_CMP_MODE,
-					 CMP_DEF_IMA_MODEL_MODEL_VALUE, CMP_DEF_IMA_MODEL_LOSSY_PAR);
-	if (example_cfg.data_type == DATA_TYPE_UNKNOWN) {
-		printf("Error occurred during cmp_cfg_icu_create()\n");
-		return;
-	}
-
-	/* configure imagette specific compression parameters with default values */
-	if (cmp_cfg_icu_imagette(&example_cfg, CMP_DEF_IMA_MODEL_GOLOMB_PAR,
-				 CMP_DEF_IMA_MODEL_SPILL_PAR)) {
-		printf("Error occurred during cmp_cfg_icu_imagette()\n");
-		return;
-	}
-
-	/* change the max_used_bit parameter for N-CAM imagette data */
-	max_used_bits = MAX_USED_BITS_SAFE;
-	max_used_bits.version = 142;
-	max_used_bits.nc_imagette = 16; /* an imagette value uses a maximum of 16 bits */
-	cmp_cfg_icu_max_used_bits(&example_cfg, &max_used_bits);
-
-	/* allocate memory for the updated model */
-	updated_model = malloc(cmp_cal_size_of_data(NUMSAMPLES, example_data_type));
-	if (!updated_model) {
-		printf("malloc failed!\n");
-		return;
-	}
-
-	/* calculate the size of the buffer for the compressed data in bytes */
-	cmp_buf_size = cmp_cal_size_of_data(COMPRDATALEN, example_data_type);
-	if (!cmp_buf_size) {
-		printf("Error occurred during cmp_cal_size_of_data()\n");
-		return;
-	}
-
-	/* create a compression entity */
-	entity_size = cmp_ent_create(NULL, example_data_type,
-				     NO_CMP_MODE_RAW_USED, cmp_buf_size);
-	if (!entity_size) {
-		printf("Error occurred during cmp_ent_create()\n");
-		return;
-	}
-	/* allocated memory for the compression entity */
-	cmp_entity = malloc(entity_size);
-	if (!cmp_entity) {
-		printf("malloc failed!\n");
-		return;
-	}
-	entity_size = cmp_ent_create(cmp_entity, example_data_type,
-				     NO_CMP_MODE_RAW_USED, cmp_buf_size);
-	if (!entity_size) {
-		printf("Error occurred during cmp_ent_create()\n");
-		return;
-	}
-
-	/* Configure the buffer related settings. We put the compressed data directly into
-	 * the compression entity. In this way we do not need to copy the compressed data
-	 * into the compression entity */
-	ent_cmp_data = cmp_ent_get_data_buf(cmp_entity);
-	if (!ent_cmp_data) {
-		printf("Error occurred during cmp_ent_get_data_buf()\n");
-		return;
-	}
-	cmp_buf_size = cmp_cfg_icu_buffers(&example_cfg, data, NUMSAMPLES,
-					    model, updated_model,
-					    ent_cmp_data, COMPRDATALEN);
-	if (!cmp_buf_size) {
-		printf("Error occurred during cmp_cfg_icu_buffers()\n");
-		return;
-	}
-
-	/* now we compress the data on the ICU */
-	cmp_size_bits = icu_compress_data(&example_cfg);
-	if (cmp_size_bits < 0) {
-		printf("Error occurred during icu_compress_data()\n");
-		if (cmp_size_bits == CMP_ERROR_SMALL_BUF)
-			printf("The compressed data buffer is too small to hold the whole compressed data!\n");
-		if (cmp_size_bits == CMP_ERROR_HIGH_VALUE)
-			printf("A data or model value is bigger than the max_used_bits parameter allows (set with the cmp_set_max_used_bits() function)!\n");
-
-		free(updated_model);
-		free(cmp_entity);
-		return;
-	}
-
-	/* now we set all the parameters in the compression entity header */
-	entity_size = cmp_ent_build(cmp_entity, CMP_ASW_VERSION_ID, START_TIME, END_TIME,
-				    MODEL_ID, MODEL_COUNTER, &example_cfg, cmp_size_bits);
-	if (!entity_size) {
-		printf("Error occurred during cmp_ent_build()\n");
-		return;
-	}
-
-	printf("Here's the compressed entity (size %lu):\n"
-       "=========================================\n", entity_size);
-	for (i = 0; i < entity_size; i++) {
-		uint8_t *p = (uint8_t *)cmp_entity; /* the compression entity is big-endian */
-		printf("%02X ", p[i]);
-		if (i && !((i+1) % 40))
-			printf("\n");
-	}
-	printf("\n");
-
-	s = cmp_cal_size_of_data(NUMSAMPLES, example_data_type);
-
-	printf("\n\nHere's the updated model (size %lu):\n"
-	       "================================\n", s);
-
-	for (i = 0; i < s; i++) {
-		uint8_t *p = (uint8_t *)updated_model; /* this cast only works on big-endian machines */
-
-		printf("%02X ", p[i]);
-		if (i && !((i+1) % 40))
-			printf("\n");
-	}
-	printf("\n");
-
-	free(updated_model);
-	free(cmp_entity);
 }
 
 
@@ -1125,9 +1042,6 @@ static void rdcu_demo(void)
 	/* now do some compression work using the cmp_rdcu library and put the
 	 * result in a compression entity*/
 	rdcu_compression_cmp_lib_demo();
-
-	/* now use the software compression to compress the data */
-	icu_compression_cmp_lib_demo();
 }
 
 
