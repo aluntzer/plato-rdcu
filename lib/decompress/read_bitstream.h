@@ -260,7 +260,7 @@ static __inline uint64_t bit_read_bits(struct bit_decoder *dec, unsigned int nb_
 
 
 /**
- * @brief same as bit_read_bits32() but only returns 32 bit
+ * @brief same as bit_read_bits32() but only returns maximum 32 bit
  * @warning do not read more bits than the local register has unconsumed bits.
  *	If you do this, the bit_refill function will return the BIT_OVERFLOW
  *	status the next time the register is refilled.
@@ -268,7 +268,7 @@ static __inline uint64_t bit_read_bits(struct bit_decoder *dec, unsigned int nb_
  * @param dec		pointer to a bit_decoder context
  * @param nb_bits	number of bits to read; only works if 1 <= nb_bits <= 32
  *
- * @returns extracted 32 bit value
+ * @returns extracted maximum 32 bit value
  */
 
 static __inline uint32_t bit_read_bits32(struct bit_decoder *dec, unsigned int nb_bits)

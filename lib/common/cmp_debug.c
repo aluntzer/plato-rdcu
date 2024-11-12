@@ -21,6 +21,7 @@
 #ifndef ICU_ASW
 #  include <stdio.h>
 #endif
+#include <stddef.h>
 #include <string.h>
 #include <stdarg.h>
 
@@ -44,8 +45,8 @@ static void cmp_debug_puts(const char *str)
 	/* asw_puts(str); */
 	(void)str;
 #else
-	fputs(str, stderr);
-	fputs("\n", stderr);
+	(void)fputs(str, stderr);
+	(void)fputs("\n", stderr);
 #endif
 }
 
@@ -87,4 +88,7 @@ void cmp_debug_print_impl(const char *fmt, ...)
 	cmp_debug_puts(print_buffer);
 }
 
+#else
+/* prevent warning: ISO C requires a translation unit to contain at least one declaration [-Wempty-translation-unit] */
+extern int make_iso_compilers_happy;
 #endif /* (DEBUGLEVEL > 0) */

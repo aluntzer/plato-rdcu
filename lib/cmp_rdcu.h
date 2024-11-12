@@ -39,7 +39,7 @@
 #define INVALID_ADDRESS_ERR_BIT	9 /* The bus master has received the “invalid address” status */
 
 
-int rdcu_compress_data(const struct cmp_cfg *cfg);
+int rdcu_compress_data(const struct rdcu_cfg *rcfg);
 
 int rdcu_read_cmp_status(struct cmp_status *status);
 

@@ -74,7 +74,7 @@ const char* cmp_get_error_string(enum cmp_error code)
 		return "No error detected";
 	case CMP_ERROR_GENERIC:
 		return "Error (generic)";
-	case CMP_ERROR_SMALL_BUF_:
+	case CMP_ERROR_SMALL_BUFFER:
 		return "Destination buffer is too small to hold the whole compressed data";
 	case CMP_ERROR_DATA_VALUE_TOO_LARGE:
 		return "Data value is larger than expected";
@@ -86,6 +86,10 @@ const char* cmp_get_error_string(enum cmp_error code)
 		return "Specific compression parameters or combination is unsupported";
 	case CMP_ERROR_PAR_BUFFERS:
 		return "Buffer related parameter is not valid";
+	case CMP_ERROR_PAR_NULL:
+		return "Pointer to the compression parameters structure is NULL";
+	case CMP_ERROR_PAR_NO_MODEL:
+		return "Model need for model mode compression";
 
 	case CMP_ERROR_CHUNK_NULL:
 		return "Pointer to the chunk is NULL. No data, no compression";

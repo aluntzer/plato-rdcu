@@ -34,6 +34,7 @@
 #ifndef CMP_DATA_TYPE_H
 #define CMP_DATA_TYPE_H
 
+#include <stddef.h>
 #include <stdint.h>
 
 #include "compiler.h"
@@ -41,7 +42,7 @@
 
 
 /* subservice types for service 212 */
-#define SST_NCxx_S_SCIENCE_IMAGETTE		3 /* N-Camera image data */
+#define SST_NCxx_S_SCIENCE_IMAGETTE		3 /* N-Camera imagette data */
 #define SST_NCxx_S_SCIENCE_SAT_IMAGETTE		4 /* Extended imagettes for saturated star extra pixels */
 #define SST_NCxx_S_SCIENCE_OFFSET		5 /* Offset values Mean of the pixels of offset windows */
 #define SST_NCxx_S_SCIENCE_BACKGROUND		6 /* Background values Mean of the pixels of background windows */
@@ -108,7 +109,7 @@ struct collection_hdr {
 } __attribute__((packed));
 compile_time_assert(sizeof(struct collection_hdr) == COLLECTION_HDR_SIZE, N_DPU_ICU_COLLECTION_HDR_SIZE_IS_NOT_CORRECT);
 compile_time_assert(sizeof(struct collection_hdr) % sizeof(uint32_t) == 0, N_DPU_ICU_COLLECTION_HDR_NOT_4_BYTE_ALLIED);
-/* TODO: compile_time_assert(sizeof(struct collection_hdr.collection_id) == sizeof(union collection_id), N_DPU_ICU_COLLECTION_COLLECTION_ID_DO_NOT_MATCH); */
+compile_time_assert(sizeof(((struct collection_hdr *)0)->collection_id) == sizeof(union collection_id), N_DPU_ICU_COLLECTION_COLLECTION_ID_DO_NOT_MATCH);
 
 
 /**
@@ -327,8 +328,6 @@ enum cmp_data_type convert_subservice_to_cmp_data_type(uint8_t subservice);
 uint8_t convert_cmp_data_type_to_subservice(enum cmp_data_type data_type);
 
 size_t size_of_a_sample(enum cmp_data_type data_type);
-uint32_t cmp_cal_size_of_data(uint32_t samples, enum cmp_data_type data_type);
-int32_t cmp_input_size_to_samples(uint32_t size, enum cmp_data_type data_type);
 
 
 /* endianness functions */

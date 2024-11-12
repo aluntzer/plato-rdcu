@@ -21,6 +21,9 @@
 #define VSNPRINTF_H
 
 #if (DEBUGLEVEL > 0)
+#include <stdarg.h>
+#include <stddef.h>
+
 int my_vsnprintf(char* buffer, size_t count, const char* format, va_list va);
 #endif
 

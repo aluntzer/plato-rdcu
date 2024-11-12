@@ -24,7 +24,7 @@
  * and set() RMAP calls, they operate on the local copy and the user issues
  * sync() calls.
  *
- * To monitor the syncronisation status, we maintaining a transaction log
+ * To monitor the synchronisation status, we maintaining a transaction log
  * tracking the submitted command set. Response packets could be processed
  * by interrupt (or thread), but in this variant, we process the return packets
  * when the user calls rdcu_ctrl_sync_status()
@@ -62,8 +62,10 @@
  */
 
 
+#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
+#include <alloca.h>
 
 #include "../common/byteorder.h"
 #include "../common/cmp_debug.h"

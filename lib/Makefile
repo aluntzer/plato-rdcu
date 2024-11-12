@@ -6,8 +6,8 @@ DEBUGLEVEL ?= 3 #default build is with debug info
 CPPFLAGS += -DDEBUGLEVEL=$(DEBUGLEVEL)
 DEBUGFLAGS= -Wall -Wextra -Wcast-qual -Wshadow -Wdeclaration-after-statement \
             -Wstrict-prototypes -Wpointer-arith -Wformat=2 -Winit-self \
-            -Wfloat-equal -Wwrite-strings \
-            # -Wstrict-aliasing=1 -Wcast-align -Wredundant-decls -Wmissing-prototypes -Wundef -Wswitch-enum
+            -Wfloat-equal -Wwrite-strings -Wstrict-aliasing=1 -Wcast-align \
+            -Wredundant-decls -Wmissing-prototypes
 CFLAGS   += -Icommon -std=gnu99 $(DEBUGFLAGS) $(MOREFLAGS)
 LDFLAGS  += $(MOREFLAGS)
 FLAGS     = $(CPPFLAGS) $(CFLAGS) $(LDFLAGS)

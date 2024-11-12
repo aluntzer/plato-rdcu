@@ -2,20 +2,8 @@
 
 /*=======Automagically Detected Files To Include=====*/
 #include "unity.h"
-#include "../test_common/test_common.h"
-#include <stdlib.h>
-#include <leon_inttypes.h>
-#include <cmp_icu.h>
 
 /*=======External Functions This Runner Calls=====*/
-extern void setUp(void);
-extern void tearDown(void);
-extern void test_cmp_cfg_icu_create(void);
-extern void test_cmp_cfg_icu_buffers(void);
-extern void test_cmp_cfg_icu_max_used_bits(void);
-extern void test_cmp_cfg_icu_imagette(void);
-extern void test_cmp_cfg_fx_cob(void);
-extern void test_cmp_cfg_aux(void);
 extern void test_map_to_pos(void);
 extern void test_put_n_bits32(void);
 extern void test_rice_encoder(void);
@@ -25,34 +13,24 @@ extern void test_encode_value_multi(void);
 extern void test_encode_value(void);
 extern void test_compress_imagette_diff(void);
 extern void test_compress_imagette_model(void);
-extern void test_compress_imagette_stuff(void);
 extern void test_compress_imagette_raw(void);
 extern void test_compress_imagette_error_cases(void);
-extern void test_compress_multi_entry_hdr(void);
-extern void test_compress_s_fx_raw(void);
-extern void test_compress_s_fx_staff(void);
-extern void test_compress_s_fx_model_multi(void);
-extern void test_compress_s_fx_error_cases(void);
-extern void test_compress_s_fx_efx_error_cases(void);
-extern void test_compress_s_fx_ncob_error_cases(void);
-extern void test_compress_s_fx_efx_ncob_ecob_error_cases(void);
-extern void test_compress_f_fx_error_cases(void);
-extern void test_compress_f_fx_efx_error_cases(void);
-extern void test_compress_f_fx_ncob_error_cases(void);
-extern void test_compress_f_fx_efx_ncob_ecob(void);
-extern void test_compress_l_fx_error_cases(void);
-extern void test_compress_l_fx_efx_error_cases(void);
-extern void test_compress_l_fx_ncob_error_cases(void);
-extern void test_compress_l_fx_efx_ncob_ecob_error_cases(void);
-extern void test_compress_offset_error_cases(void);
-extern void test_compress_background_error_cases(void);
-extern void test_compress_smearing_error_cases(void);
 extern void test_pad_bitstream(void);
-extern void test_cmp_data_to_big_endian_error_cases(void);
-extern void test_icu_compress_data_error_cases(void);
+extern void test_compress_data_internal_error_cases(void);
+extern void test_compress_chunk_raw_singel_col(void);
+extern void test_compress_chunk_raw_two_col(void);
+extern void test_compress_chunk_aux(void);
+extern void test_collection_zero_data_length(void);
+extern void test_compress_chunk_error_cases(void);
 extern void test_zero_escape_mech_is_used(void);
+extern void test_COMPRESS_CHUNK_BOUND(void);
+extern void test_compress_chunk_cmp_size_bound(void);
+extern void test_compress_chunk_set_model_id_and_counter(void);
 extern void test_support_function_call_NULL(void);
+extern void test_missing_cmp_cfg_fx_cob_get_need_pars(void);
 extern void test_print_cmp_info(void);
+extern void test_buffer_overlaps(void);
+extern void test_cmp_get_error_string(void);
 
 
 /*=======Mock Management=====*/
@@ -70,7 +48,6 @@ static void CMock_Destroy(void)
 void tearDown(void) {}
 
 /*=======Test Reset Options=====*/
-void resetTest(void);
 void resetTest(void)
 {
   tearDown();
@@ -79,7 +56,6 @@ void resetTest(void)
   CMock_Init();
   setUp();
 }
-void verifyTest(void);
 void verifyTest(void)
 {
   CMock_Verify();
@@ -117,49 +93,33 @@ static void run_test(UnityTestFunction func, const char* name, UNITY_LINE_TYPE l
 int main(void)
 {
   UnityBegin("../test/cmp_icu/test_cmp_icu.c");
-  run_test(test_cmp_cfg_icu_create, "test_cmp_cfg_icu_create", 65);
-  run_test(test_cmp_cfg_icu_buffers, "test_cmp_cfg_icu_buffers", 193);
-  run_test(test_cmp_cfg_icu_max_used_bits, "test_cmp_cfg_icu_max_used_bits", 455);
-  run_test(test_cmp_cfg_icu_imagette, "test_cmp_cfg_icu_imagette", 483);
-  run_test(test_cmp_cfg_fx_cob, "test_cmp_cfg_fx_cob", 611);
-  run_test(test_cmp_cfg_aux, "test_cmp_cfg_aux", 1071);
-  run_test(test_map_to_pos, "test_map_to_pos", 1282);
-  run_test(test_put_n_bits32, "test_put_n_bits32", 1386);
-  run_test(test_rice_encoder, "test_rice_encoder", 1785);
-  run_test(test_golomb_encoder, "test_golomb_encoder", 1854);
-  run_test(test_encode_value_zero, "test_encode_value_zero", 1998);
-  run_test(test_encode_value_multi, "test_encode_value_multi", 2120);
-  run_test(test_encode_value, "test_encode_value", 2212);
-  run_test(test_compress_imagette_diff, "test_compress_imagette_diff", 2325);
-  run_test(test_compress_imagette_model, "test_compress_imagette_model", 2364);
-  run_test(test_compress_imagette_stuff, "test_compress_imagette_stuff", 2415);
-  run_test(test_compress_imagette_raw, "test_compress_imagette_raw", 2459);
-  run_test(test_compress_imagette_error_cases, "test_compress_imagette_error_cases", 2533);
-  run_test(test_compress_multi_entry_hdr, "test_compress_multi_entry_hdr", 2685);
-  run_test(test_compress_s_fx_raw, "test_compress_s_fx_raw", 2764);
-  run_test(test_compress_s_fx_staff, "test_compress_s_fx_staff", 2820);
-  run_test(test_compress_s_fx_model_multi, "test_compress_s_fx_model_multi", 2876);
-  run_test(test_compress_s_fx_error_cases, "test_compress_s_fx_error_cases", 2983);
-  run_test(test_compress_s_fx_efx_error_cases, "test_compress_s_fx_efx_error_cases", 3045);
-  run_test(test_compress_s_fx_ncob_error_cases, "test_compress_s_fx_ncob_error_cases", 3122);
-  run_test(test_compress_s_fx_efx_ncob_ecob_error_cases, "test_compress_s_fx_efx_ncob_ecob_error_cases", 3206);
-  run_test(test_compress_f_fx_error_cases, "test_compress_f_fx_error_cases", 3324);
-  run_test(test_compress_f_fx_efx_error_cases, "test_compress_f_fx_efx_error_cases", 3366);
-  run_test(test_compress_f_fx_ncob_error_cases, "test_compress_f_fx_ncob_error_cases", 3435);
-  run_test(test_compress_f_fx_efx_ncob_ecob, "test_compress_f_fx_efx_ncob_ecob", 3500);
-  run_test(test_compress_l_fx_error_cases, "test_compress_l_fx_error_cases", 3597);
-  run_test(test_compress_l_fx_efx_error_cases, "test_compress_l_fx_efx_error_cases", 3672);
-  run_test(test_compress_l_fx_ncob_error_cases, "test_compress_l_fx_ncob_error_cases", 3760);
-  run_test(test_compress_l_fx_efx_ncob_ecob_error_cases, "test_compress_l_fx_efx_ncob_ecob_error_cases", 3870);
-  run_test(test_compress_offset_error_cases, "test_compress_offset_error_cases", 4013);
-  run_test(test_compress_background_error_cases, "test_compress_background_error_cases", 4085);
-  run_test(test_compress_smearing_error_cases, "test_compress_smearing_error_cases", 4177);
-  run_test(test_pad_bitstream, "test_pad_bitstream", 4250);
-  run_test(test_cmp_data_to_big_endian_error_cases, "test_cmp_data_to_big_endian_error_cases", 4323);
-  run_test(test_icu_compress_data_error_cases, "test_icu_compress_data_error_cases", 4383);
-  run_test(test_zero_escape_mech_is_used, "test_zero_escape_mech_is_used", 4403);
-  run_test(test_support_function_call_NULL, "test_support_function_call_NULL", 4419);
-  run_test(test_print_cmp_info, "test_print_cmp_info", 4438);
+  run_test(test_map_to_pos, "test_map_to_pos", 73);
+  run_test(test_put_n_bits32, "test_put_n_bits32", 177);
+  run_test(test_rice_encoder, "test_rice_encoder", 583);
+  run_test(test_golomb_encoder, "test_golomb_encoder", 652);
+  run_test(test_encode_value_zero, "test_encode_value_zero", 796);
+  run_test(test_encode_value_multi, "test_encode_value_multi", 920);
+  run_test(test_encode_value, "test_encode_value", 1036);
+  run_test(test_compress_imagette_diff, "test_compress_imagette_diff", 1149);
+  run_test(test_compress_imagette_model, "test_compress_imagette_model", 1257);
+  run_test(test_compress_imagette_raw, "test_compress_imagette_raw", 1311);
+  run_test(test_compress_imagette_error_cases, "test_compress_imagette_error_cases", 1384);
+  run_test(test_pad_bitstream, "test_pad_bitstream", 1502);
+  run_test(test_compress_data_internal_error_cases, "test_compress_data_internal_error_cases", 1575);
+  run_test(test_compress_chunk_raw_singel_col, "test_compress_chunk_raw_singel_col", 1636);
+  run_test(test_compress_chunk_raw_two_col, "test_compress_chunk_raw_two_col", 1706);
+  run_test(test_compress_chunk_aux, "test_compress_chunk_aux", 1827);
+  run_test(test_collection_zero_data_length, "test_collection_zero_data_length", 1918);
+  run_test(test_compress_chunk_error_cases, "test_compress_chunk_error_cases", 1987);
+  run_test(test_zero_escape_mech_is_used, "test_zero_escape_mech_is_used", 2229);
+  run_test(test_COMPRESS_CHUNK_BOUND, "test_COMPRESS_CHUNK_BOUND", 2250);
+  run_test(test_compress_chunk_cmp_size_bound, "test_compress_chunk_cmp_size_bound", 2363);
+  run_test(test_compress_chunk_set_model_id_and_counter, "test_compress_chunk_set_model_id_and_counter", 2453);
+  run_test(test_support_function_call_NULL, "test_support_function_call_NULL", 2495);
+  run_test(test_missing_cmp_cfg_fx_cob_get_need_pars, "test_missing_cmp_cfg_fx_cob_get_need_pars", 2523);
+  run_test(test_print_cmp_info, "test_print_cmp_info", 2543);
+  run_test(test_buffer_overlaps, "test_buffer_overlaps", 2569);
+  run_test(test_cmp_get_error_string, "test_cmp_get_error_string", 2599);
 
   return UnityEnd();
 }

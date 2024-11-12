@@ -33,20 +33,21 @@
 
 #define PRINT_BUFFER_SIZE 256
 
-__extension__
 #if (DEBUGLEVEL > 0)
+__extension__
 #  define debug_print(...) cmp_debug_print_impl(__VA_ARGS__)
 void cmp_debug_print_impl(const char *fmt, ...);
 #else
+__extension__
 #  define debug_print(...) do {} while (0)
 #endif
 
+__extension__
 #define debug_print_level(level, ...)			\
 	do {						\
-		if (level <= DEBUGLEVEL)		\
+		if ((level) <= DEBUGLEVEL)		\
 			debug_print(__VA_ARGS__);	\
 	} while (0)
-
 
 
 #endif /* CMP_DEBUG_H */

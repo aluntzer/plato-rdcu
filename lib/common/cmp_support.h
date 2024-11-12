@@ -22,19 +22,9 @@
 #include <stdint.h>
 #include <stddef.h>
 
-#include "cmp_max_used_bits.h"
-#include "cmp_cal_up_model.h"
 
 #define CMP_COLLECTION_FILD_SIZE 2
 
-
-/* return code if the bitstream buffer is too small to store the whole bitstream */
-#define CMP_ERROR_SMALL_BUF -2
-
-/* return code if the value or the model is bigger than the max_used_bits
- * parameter allows
- */
-#define CMP_ERROR_HIGH_VALUE -3
 
 #define CMP_LOSSLESS	0
 #define CMP_PAR_UNUNSED	0
@@ -49,11 +39,10 @@
 
 /* valid compression parameter ranges for ICU non-imagette compression */
 #define MIN_NON_IMA_GOLOMB_PAR	1U
-#define MAX_NON_IMA_GOLOMB_PAR	UINT16_MAX /* the compression entity dos not allow larger values */
+#define MAX_NON_IMA_GOLOMB_PAR	UINT16_MAX /* the compression entity does not allow larger values */
 #define MIN_NON_IMA_SPILL	2U
 /* for maximum spill value look at cmp_icu_max_spill function */
 #define MAX_ICU_ROUND		3U
-#define MAX_STUFF_CMP_PAR	32U
 
 
 /* default imagette RDCU compression parameters for model compression */
@@ -96,12 +85,6 @@
 /* imagette sample to byte conversion factor; one imagette samples has 16 bits (2 bytes) */
 #define IMA_SAM2BYT  2
 
-/**
- * @brief options for configuration check functions
- */
-
-enum check_opt {ICU_CHECK, RDCU_CHECK};
-
 
 /**
  * @brief defined compression data product types
@@ -137,84 +120,70 @@ enum cmp_data_type {
 
 
 /**
- * @brief defined compression mode
+ * @brief compression modes
+ * This enum defines the various compression modes available
  */
 
 enum cmp_mode {
-	CMP_MODE_RAW,
-	CMP_MODE_MODEL_ZERO,
-	CMP_MODE_DIFF_ZERO,
-	CMP_MODE_MODEL_MULTI,
-	CMP_MODE_DIFF_MULTI,
-	CMP_MODE_STUFF
+	CMP_MODE_RAW,         /**< raw compression mode */
+	CMP_MODE_MODEL_ZERO,  /**< model compression mode with zero escape symbol mechanism */
+	CMP_MODE_DIFF_ZERO,   /**< 1-D differential compression mode with zero escape symbol mechanism */
+	CMP_MODE_MODEL_MULTI, /**< model compression mode with multi escape symbol mechanism */
+	CMP_MODE_DIFF_MULTI   /**< 1-D differential multi compression mode with multi escape symbol mechanism*/
 };
 
 
 /**
- * @brief The cmp_cfg structure can contain the complete configuration of the HW as
- *	well as the SW compressor.
- * @note the icu_output_buf will not be used for HW compression
- * @note the rdcu_***_adr parameters are ignored for SW compression
+ * @brief The cmp_cfg structure can contain the complete configuration for a SW
+ *	(de)compression
  */
 
 __extension__
 struct cmp_cfg {
-	void *input_buf;            /**< Pointer to the data to compress buffer */
-	void *model_buf;            /**< Pointer to the model buffer */
-	void *icu_new_model_buf;    /**< Pointer to the updated model buffer (not used for RDCU compression )*/
-	uint32_t *icu_output_buf;   /**< Pointer to the compressed data buffer (not used for RDCU compression) */
-	uint32_t samples;           /**< Number of samples to compress, length of the data and model buffer
-				     * (including the multi entity header by non-imagette data)
-				     */
-	uint32_t buffer_length;     /**< Length of the compressed data buffer in number of samples */
-	uint32_t rdcu_data_adr;     /**< RDCU data to compress start address, the first data address in the RDCU SRAM; HW only */
-	uint32_t rdcu_model_adr;    /**< RDCU model start address, the first model address in the RDCU SRAM */
-	uint32_t rdcu_new_model_adr;/**< RDCU updated model start address, the address in the RDCU SRAM where the updated model is stored */
-	uint32_t rdcu_buffer_adr;   /**< RDCU compressed data start address, the first output data address in the RDCU SRAM */
-	enum cmp_data_type data_type; /**< Compression Data Product Types */
-	enum cmp_mode cmp_mode;     /**< 0: raw mode
-				     * 1: model mode with zero escape symbol mechanism
-				     * 2: 1d differencing mode without input model with zero escape symbol mechanism
-				     * 3: model mode with multi escape symbol mechanism
-				     * 4: 1d differencing mode without input model multi escape symbol mechanism
-				     */
-	uint32_t model_value;       /**< Model weighting parameter */
-	uint32_t round;             /**< lossy compression parameter */
+	const void *src;              /**< Pointer to the source data buffer (data to be compressed for compression; compressed data for decompression) */
+	void *dst;                    /**< Pointer to the destination buffer (compressed data for compression; decompressed data for decompression) */
+	const void *model_buf;        /**< Pointer to the model buffer */
+	void *updated_model_buf;      /**< Pointer to the updated model buffer */
+	uint32_t samples;             /**< Number of samples in a collection, length of the data and model buffers */
+	uint32_t stream_size;         /**< Length of the compressed data buffer in number of samples */
+	enum cmp_data_type data_type; /**< Compression Data Product Type */
+	enum cmp_mode cmp_mode;       /**< 0: raw mode
+				       * 1: model mode with zero escape symbol mechanism
+				       * 2: 1d differencing mode without input model with zero escape symbol mechanism
+				       * 3: model mode with multi escape symbol mechanism
+				       * 4: 1d differencing mode without input model multi escape symbol mechanism
+				       */
+	uint32_t model_value;         /**< Model weighting parameter */
+	uint32_t round;               /**< lossy compression parameter */
 	union {
 		uint32_t cmp_par_1;
-		uint32_t golomb_par;        /* TODO: remove this */      /**< Golomb parameter for imagette data compression */
 		uint32_t cmp_par_imagette;  /**< Golomb parameter for imagette data compression */
 		uint32_t cmp_par_exp_flags; /**< Compression parameter for exposure flags compression */
 	};
 	union {
 		uint32_t spill_par_1;
-		uint32_t spill;             /* TODO: remove this */           /**< Spillover threshold parameter for imagette data compression */
 		uint32_t spill_imagette;    /**< Spillover threshold parameter for imagette data compression */
 		uint32_t spill_exp_flags;   /**< Spillover threshold parameter for exposure flags compression */
 	};
 
 	union {
 		uint32_t cmp_par_2;
-		uint32_t ap1_golomb_par;      /**< Adaptive 2 spillover threshold for imagette data; HW only */
 		uint32_t cmp_par_fx;          /**< Compression parameter for normal flux compression */
 		uint32_t cmp_par_offset_mean; /**< Compression parameter for auxiliary science mean compression */
 	};
 	union {
 		uint32_t spill_par_2;
-		uint32_t ap1_spill;         /**< Adaptive 2 Golomb parameter; HW only */
 		uint32_t spill_fx;          /**< Spillover threshold parameter for normal flux compression */
 		uint32_t spill_offset_mean; /**< Spillover threshold parameter for auxiliary science mean compression */
 	};
 
 	union {
 		uint32_t cmp_par_3;
-		uint32_t ap2_golomb_par;           /**< Adaptive 2 spillover threshold for imagette data; HW only */
 		uint32_t cmp_par_ncob;             /**< Compression parameter for normal center of brightness compression */
 		uint32_t cmp_par_offset_variance;  /**< Compression parameter for auxiliary science variance compression */
 	};
 	union {
 		uint32_t spill_par_3;
-		uint32_t ap2_spill;                 /**< Adaptive 2 Golomb parameter; HW only */
 		uint32_t spill_ncob;                /**< Spillover threshold parameter for normal center of brightness compression */
 		uint32_t spill_offset_variance;     /**< Spillover threshold parameter for auxiliary science variance compression */
 	};
@@ -234,13 +203,13 @@ struct cmp_cfg {
 
 	union {
 		uint32_t cmp_par_5;
-		uint32_t cmp_par_ecob;                /**< Compression parameter for executed center of brightness compression */
+		uint32_t cmp_par_ecob;                /**< Compression parameter for extended center of brightness compression */
 		uint32_t cmp_par_background_variance; /**< Compression parameter for auxiliary science variance compression */
 		uint32_t cmp_par_smearing_variance;   /**< Compression parameter for auxiliary science variance compression */
 	};
 	union {
 		uint32_t spill_par_5;
-		uint32_t spill_ecob;                 /**< Spillover threshold parameter for executed center of brightness compression */
+		uint32_t spill_ecob;                 /**< Spillover threshold parameter for extended center of brightness compression */
 		uint32_t spill_background_variance;  /**< Spillover threshold parameter for auxiliary science variance compression */
 		uint32_t spill_smearing_variance;    /**< Spillover threshold parameter for auxiliary science variance compression */
 	};
@@ -257,7 +226,34 @@ struct cmp_cfg {
 		uint32_t spill_background_pixels_error; /**< Spillover threshold parameter for auxiliary science outlier pixels number compression */
 		uint32_t spill_smearing_pixels_error;   /**< Spillover threshold parameter for auxiliary science outlier pixels number compression */
 	};
-	const struct cmp_max_used_bits *max_used_bits;  /**< the maximum length of the different data products types in bits */
+};
+
+
+/**
+ * @brief RDCU configuration structure, can contain the information of the
+ *	RDCU configuration registers
+ */
+
+struct rdcu_cfg {
+	uint16_t *input_buf;         /**< Pointer to the data to compress buffer */
+	uint16_t *model_buf;         /**< Pointer to the model buffer */
+	uint16_t *icu_new_model_buf; /**< Pointer to the updated model buffer */
+	uint32_t *icu_output_buf;    /**< Pointer to the compressed data buffer */
+	uint32_t samples;            /**< Number of 16-bit samples to compress, length of the data and model buffer */
+	uint32_t buffer_length;      /**< Length of the compressed data buffer in number of samples */
+	uint32_t rdcu_data_adr;      /**< RDCU data to compress start address, the first data address in the RDCU SRAM; HW only */
+	uint32_t rdcu_model_adr;     /**< RDCU model start address, the first model address in the RDCU SRAM; HW only */
+	uint32_t rdcu_new_model_adr; /**< RDCU updated model start address, the address in the RDCU SRAM where the updated model is stored; HW only */
+	uint32_t rdcu_buffer_adr;    /**< RDCU compressed data start address, the first output data address in the RDCU SRAM; HW only */
+	enum cmp_mode cmp_mode;      /**< compression mode */
+	uint32_t model_value;        /**< Model weighting parameter */
+	uint32_t round;              /**< lossy compression parameter */
+	uint32_t golomb_par;         /**< Golomb parameter for imagette data compression */
+	uint32_t spill;              /**< Spillover threshold parameter for imagette data compression */
+	uint32_t ap1_golomb_par;     /**< Adaptive 2 spillover threshold for imagette data; HW only */
+	uint32_t ap1_spill;          /**< Adaptive 2 Golomb parameter; HW only */
+	uint32_t ap2_golomb_par;     /**< Adaptive 2 spillover threshold for imagette data; HW only */
+	uint32_t ap2_spill;          /**< Adaptive 2 Golomb parameter; HW only */
 };
 
 
@@ -277,7 +273,7 @@ struct cmp_status {
 
 
 /**
- * @brief The cmp_info structure contain the information and metadata of an
+ * @brief The cmp_info structure contains the information and metadata of an
  *	executed RDCU compression.
  */
 
@@ -285,7 +281,7 @@ struct cmp_info {
 	uint32_t cmp_mode_used;       /**< Compression mode used */
 	uint32_t spill_used;          /**< Spillover threshold used */
 	uint32_t golomb_par_used;     /**< Golomb parameter used */
-	uint32_t samples_used;        /**< Number of samples (16 bit value) to be stored */
+	uint32_t samples_used;        /**< Number of samples (16-bit value) to be stored */
 	uint32_t cmp_size;            /**< Compressed data size; measured in bits */
 	uint32_t ap1_cmp_size;        /**< Adaptive compressed data size 1; measured in bits */
 	uint32_t ap2_cmp_size;        /**< Adaptive compressed data size 2; measured in bits */
@@ -325,15 +321,10 @@ struct fx_cob_par {
 
 int is_a_pow_of_2(unsigned int v);
 unsigned int ilog_2(uint32_t x);
-
 unsigned int cmp_bit_to_byte(unsigned int cmp_size_bit);
-unsigned int cmp_bit_to_4byte(unsigned int cmp_size_bit);
 
-int cmp_cfg_icu_is_invalid(const struct cmp_cfg *cfg);
-int cmp_cfg_gen_par_is_invalid(const struct cmp_cfg *cfg, enum check_opt opt);
-int cmp_cfg_icu_buffers_is_invalid(const struct cmp_cfg *cfg);
-int cmp_cfg_icu_max_used_bits_out_of_limit(const struct cmp_max_used_bits *max_used_bits);
-int cmp_cfg_imagette_is_invalid(const struct cmp_cfg *cfg, enum check_opt opt);
+int cmp_cfg_gen_par_is_invalid(const struct cmp_cfg *cfg);
+int cmp_cfg_imagette_is_invalid(const struct cmp_cfg *cfg);
 int cmp_cfg_fx_cob_is_invalid(const struct cmp_cfg *cfg);
 int cmp_cfg_aux_is_invalid(const struct cmp_cfg *cfg);
 uint32_t cmp_ima_max_spill(unsigned int golomb_par);
@@ -350,7 +341,6 @@ int cmp_aux_data_type_is_used(enum cmp_data_type data_type);
 int cmp_mode_is_supported(enum cmp_mode cmp_mode);
 int model_mode_is_used(enum cmp_mode cmp_mode);
 int raw_mode_is_used(enum cmp_mode cmp_mode);
-int rdcu_supported_cmp_mode_is_used(enum cmp_mode cmp_mode);
 int zero_escape_mech_is_used(enum cmp_mode cmp_mode);
 int multi_escape_mech_is_used(enum cmp_mode cmp_mode);
 

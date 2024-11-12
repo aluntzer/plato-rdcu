@@ -20,10 +20,18 @@
 #ifndef CMP_CHUNK_H
 #define CMP_CHUNK_H
 
+#include <stddef.h>
+#include <stdint.h>
+
 #include "common/cmp_support.h"
 #include "common/cmp_entity.h"
 #include "common/cmp_error_list.h"
 
+/* valid specific compression parameter ranges for chunk compression
+ * (every parameter except cmp_mode, model_value, lossy_par)
+ */
+#define MIN_CHUNK_CMP_PAR	1U
+#define MAX_CHUNK_CMP_PAR	UINT16_MAX /* the compression entity does not allow larger values */
 
 #define ROUND_UP_TO_4(x) ((((x)+3)/4)*4)
 
@@ -61,44 +69,49 @@
 )
 
 
+/**
+ * @struct cmp_par
+ * @brief structure containing all the compression parameters needed for chunk compression
+ */
+
 struct cmp_par {
 	enum cmp_mode cmp_mode;		/**< compression mode parameter */
 	uint32_t model_value;		/**< model weighting parameter */
 	uint32_t lossy_par;		/**< lossy compression parameter */
 
-	uint32_t nc_imagette;		/**< compression parameter for imagette data compression */
+	uint32_t nc_imagette;		/**< compression parameter for imagette compression */
 
-	uint32_t s_exp_flags;		/**< compression parameter for exposure flags compression */
-	uint32_t s_fx;			/**< compression parameter for normal flux compression */
-	uint32_t s_ncob;		/**< compression parameter for normal center of brightness compression */
-	uint32_t s_efx;			/**< compression parameter for extended flux compression */
-	uint32_t s_ecob;		/**< compression parameter for executed center of brightness compression */
+	uint32_t s_exp_flags;		/**< compression parameter for short cadence exposure flags data */
+	uint32_t s_fx;			/**< compression parameter for short cadence normal flux data */
+	uint32_t s_ncob;		/**< compression parameter for short cadence normal center of brightness data */
+	uint32_t s_efx;			/**< compression parameter for short cadence extended flux data  */
+	uint32_t s_ecob;		/**< compression parameter for short cadence extended center of brightness data */
 
-	uint32_t l_exp_flags;		/**< compression parameter for exposure flags compression */
-	uint32_t l_fx;			/**< compression parameter for normal flux compression */
-	uint32_t l_ncob;		/**< compression parameter for normal center of brightness compression */
-	uint32_t l_efx;			/**< compression parameter for extended flux compression */
-	uint32_t l_ecob;		/**< compression parameter for executed center of brightness compression */
-	uint32_t l_fx_cob_variance;	/**< compression parameter for flux/COB variance compression */
+	uint32_t l_exp_flags;		/**< compression parameter for long cadence exposure flags data */
+	uint32_t l_fx;			/**< compression parameter for long cadence normal flux data */
+	uint32_t l_ncob;		/**< compression parameter for long cadence normal center of brightness data */
+	uint32_t l_efx;			/**< compression parameter for long cadence extended flux data using extended mask */
+	uint32_t l_ecob;		/**< compression parameter for long cadence extended center of brightness data */
+	uint32_t l_fx_cob_variance;	/**< compression parameter for long cadence flux/COB variance data */
 
-	uint32_t saturated_imagette;	/**< compression parameter for saturated  imagette data compression */
+	uint32_t saturated_imagette;	/**< compression parameter for saturated imagette data */
 
-	uint32_t nc_offset_mean;
-	uint32_t nc_offset_variance;
-	uint32_t nc_background_mean;
-	uint32_t nc_background_variance;
-	uint32_t nc_background_outlier_pixels;
+	uint32_t nc_offset_mean;		/**< compression parameter for normal camera offset mean data */
+	uint32_t nc_offset_variance;		/**< compression parameter for normal camera offset variance data */
+	uint32_t nc_background_mean;		/**< compression parameter for normal camera background mean data */
+	uint32_t nc_background_variance;	/**< compression parameter for normal camera background variance data */
+	uint32_t nc_background_outlier_pixels;	/**< compression parameter for normal camera background outlier pixels data */
 
-	uint32_t smearing_mean;
-	uint32_t smearing_variance_mean;
-	uint32_t smearing_outlier_pixels;
+	uint32_t smearing_mean;			/**< compression parameter for smearing mean data */
+	uint32_t smearing_variance_mean;	/**< compression parameter for smearing variance mean data */
+	uint32_t smearing_outlier_pixels;	/**< compression parameter for smearing outlier pixels data */
 
-	uint32_t fc_imagette;
-	uint32_t fc_offset_mean;
-	uint32_t fc_offset_variance;
-	uint32_t fc_background_mean;
-	uint32_t fc_background_variance;
-	uint32_t fc_background_outlier_pixels;
+	uint32_t fc_imagette;			/**< compression parameter for fast camera imagette data */
+	uint32_t fc_offset_mean;		/**< compression parameter for fast camera offset mean data */
+	uint32_t fc_offset_variance;		/**< compression parameter for fast camera offset variance data */
+	uint32_t fc_background_mean;		/**< compression parameter for fast camera background mean data */
+	uint32_t fc_background_variance;	/**< compression parameter for fast camera background variance data */
+	uint32_t fc_background_outlier_pixels;	/**< compression parameter for fast camera background outlier pixels data */
 };
 
 
@@ -134,7 +147,7 @@ uint32_t compress_chunk_cmp_size_bound(const void *chunk, size_t chunk_size);
  * @param version_id		application software version identifier
  */
 
-void compress_chunk_init(uint64_t(return_timestamp)(void), uint32_t version_id);
+void compress_chunk_init(uint64_t (*return_timestamp)(void), uint32_t version_id);
 
 
 /**
@@ -153,19 +166,20 @@ void compress_chunk_init(uint64_t(return_timestamp)(void), uint32_t version_id);
  * @param dst			destination pointer to the compressed data
  *				buffer; has to be 4-byte aligned; can be NULL to
  *				only get the compressed data size
- * @param dst_capacity		capacity of the dst buffer;  it's recommended to
+ * @param dst_capacity		capacity of the dst buffer; it's recommended to
  *				provide a dst_capacity >=
  *				compress_chunk_cmp_size_bound(chunk, chunk_size)
  *				as it eliminates one potential failure scenario:
  *				not enough space in the dst buffer to write the
  *				compressed data; size is internally rounded down
  *				to a multiple of 4
+ * @param cmp_par		pointer to a compression parameters struct
  * @returns the byte size of the compressed data or an error code if it
  *	fails (which can be tested with cmp_is_error())
  */
 
-uint32_t compress_chunk(void *chunk, uint32_t chunk_size,
-			void *chunk_model, void *updated_chunk_model,
+uint32_t compress_chunk(const void *chunk, uint32_t chunk_size,
+			const void *chunk_model, void *updated_chunk_model,
 			uint32_t *dst, uint32_t dst_capacity,
 			const struct cmp_par *cmp_par);
 
@@ -208,7 +222,7 @@ unsigned int cmp_is_error(uint32_t code);
  * @returns a pointer to a string literal that describes the error code.
  */
 
-const char* cmp_get_error_name(uint32_t code);
+const char *cmp_get_error_name(uint32_t code);
 
 
 /**
@@ -230,7 +244,7 @@ enum cmp_error cmp_get_error_code(uint32_t code);
  * @returns a pointer to a string literal that describes the error code.
  */
 
-const char* cmp_get_error_string(enum cmp_error code);
+const char *cmp_get_error_string(enum cmp_error code);
 
 
 #endif /* CMP_CHUNK_H */

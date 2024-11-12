@@ -76,7 +76,7 @@ static uint32_t (*rmap_rx)(uint8_t *pkt);
  * @returns the size of the command data buffer or 0 on error
  */
 
-int gr718b_gen_cmd(uint16_t trans_id, uint8_t *cmd,
+static int gr718b_gen_cmd(uint16_t trans_id, uint8_t *cmd,
 		   uint8_t rmap_cmd_type,
 		   uint32_t addr, uint32_t size)
 {

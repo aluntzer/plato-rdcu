@@ -2,7 +2,7 @@
 #define SYSOBJ_H
 
 #include <sys/types.h>
-#include "../lib/common/list.h"
+#include "list.h"
 
 #ifdef offsetof
 #undef offsetof

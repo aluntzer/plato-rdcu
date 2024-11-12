@@ -1,7 +1,6 @@
 /**
- * @file   cmp_icu.h
- * @author Dominik Loidolt (dominik.loidolt@univie.ac.at)
- * @date   2020
+ * @file chunk_round_trip.h
+ * @date 2024
  *
  * @copyright GPLv2
  * This program is free software; you can redistribute it and/or modify it
@@ -13,17 +12,23 @@
  * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
  * more details.
  *
- * @brief software compression library
- * @see Data Compression User Manual PLATO-UVIE-PL-UM-0001
+ * @brief chunk compression/decompression
  */
 
-#ifndef CMP_ICU_H
-#define CMP_ICU_H
+
+#ifndef CHUNK_ROUND_TRIP_H
+#define CHUNK_ROUND_TRIP_H
 
 #include <stdint.h>
+#include "../../lib/cmp_chunk.h"
 
-#include "common/cmp_support.h"
 
-uint32_t compress_like_rdcu(const struct rdcu_cfg *rcfg, struct cmp_info *info);
+uint32_t chunk_round_trip(const void *chunk, uint32_t chunk_size,
+			  const void *chunk_model, void *updated_chunk_model,
+			  uint32_t *dst, uint32_t dst_capacity,
+			  const struct cmp_par *cmp_par, int use_decmp_buf,
+			  int use_decmp_up_model);
 
-#endif /* CMP_ICU_H */
+
+#endif /* CHUNK_ROUND_TRIP_H */
+

@@ -48,7 +48,7 @@
 #include <string.h>
 
 #include "irq_dispatch.h"
-#include "../lib/common/list.h"
+#include "list.h"
 #include "irq.h"
 #include "spinlock.h"
 #include "leon_reg.h"

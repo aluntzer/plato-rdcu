@@ -75,7 +75,6 @@ struct imagette_header {
 	union{
 		struct {
 			uint8_t spare1;
-			uint8_t ima_cmp_dat[];		/**< compressed data for imagette specific header */
 		} __attribute__((packed));
 		struct {
 			uint16_t ap1_spill_used;	/**< Adaptive Spillover threshold used 1 */
@@ -84,7 +83,6 @@ struct imagette_header {
 			uint8_t  ap2_golomb_par_used;	/**< Adaptive Golomb parameter used 2 */
 			uint8_t  spare2;
 			uint16_t spare3;
-			uint8_t  ap_ima_cmp_data[];	/**< compressed data for adaptive imagette specific header */
 		} __attribute__((packed));
 	};
 } __attribute__((packed));
@@ -110,7 +108,6 @@ struct non_imagette_header {
 	uint32_t spill_6_used:24;	/**< spillover threshold 6 used */
 	uint16_t cmp_par_6_used;	/**< compression parameter 6 used */
 	uint16_t spare;
-	uint8_t  cmp_data[];
 } __attribute__((packed));
 compile_time_assert(sizeof(struct non_imagette_header) == SPECIFIC_NON_IMAGETTE_HEADER_SIZE, NON_IMAGETTE_HEADER_T_SIZE_IS_NOT_CORRECT);
 
@@ -137,7 +134,7 @@ struct cmp_entity {
 	uint8_t  model_value_used;		/**< used Model Updating Weighing Value */
 	uint16_t model_id;			/**< Model ID */
 	uint8_t  model_counter;			/**< Model Counter */
-	uint8_t  max_used_bits_version;
+	uint8_t  reserved;
 	uint16_t lossy_cmp_par_used;		/**< used Lossy Compression Parameters */
 	union {	/* specific Compression Entity Header for the different Data Product Types */
 		struct imagette_header ima;
@@ -155,24 +152,12 @@ compile_time_assert(sizeof(struct cmp_entity) == NON_IMAGETTE_HEADER_SIZE, CMP_E
 uint32_t cmp_ent_create(struct cmp_entity *ent, enum cmp_data_type data_type,
 			int raw_mode_flag, uint32_t cmp_size_byte);
 
-/* create a compression entity and set the header fields */
-uint32_t cmp_ent_build(struct cmp_entity *ent, uint32_t version_id,
-		       uint64_t start_time, uint64_t end_time, uint16_t model_id,
-		       uint8_t model_counter, const struct cmp_cfg *cfg, int cmp_size_bits);
-
-/*
- * write the compression parameters from a compression configuration into the
- * compression entity header
- */
-int cmp_ent_write_cmp_pars(struct cmp_entity *ent, const struct cmp_cfg *cfg,
-			   int cmp_size_bits);
-
 /*
  * write the parameters from the RDCU decompression information structure in the
  * compression entity header
  */
 int cmp_ent_write_rdcu_cmp_pars(struct cmp_entity *ent, const struct cmp_info *info,
-				const struct cmp_cfg *cfg);
+				const struct rdcu_cfg *rcfg);
 
 
 /* set functions for generic compression entity header */
@@ -195,7 +180,7 @@ int cmp_ent_set_cmp_mode(struct cmp_entity *ent, enum cmp_mode cmp_mode_used);
 int cmp_ent_set_model_value(struct cmp_entity *ent, uint32_t model_value_used);
 int cmp_ent_set_model_id(struct cmp_entity *ent, uint32_t model_id);
 int cmp_ent_set_model_counter(struct cmp_entity *ent, uint32_t model_counter);
-int cmp_ent_set_max_used_bits_version(struct cmp_entity *ent, uint8_t max_used_bits_version);
+int cmp_ent_set_reserved(struct cmp_entity *ent, uint8_t reserved);
 int cmp_ent_set_lossy_cmp_par(struct cmp_entity *ent, uint32_t lossy_cmp_par_used);
 
 
@@ -259,7 +244,7 @@ uint8_t cmp_ent_get_model_value(const struct cmp_entity *ent);
 
 uint16_t cmp_ent_get_model_id(const struct cmp_entity *ent);
 uint8_t cmp_ent_get_model_counter(const struct cmp_entity *ent);
-uint8_t cmp_ent_get_max_used_bits_version(const struct cmp_entity *ent);
+uint8_t cmp_ent_get_reserved(const struct cmp_entity *ent);
 uint16_t cmp_ent_get_lossy_cmp_par(const struct cmp_entity *ent);
 
 
@@ -304,6 +289,7 @@ uint16_t cmp_ent_get_non_ima_cmp_par6(const struct cmp_entity *ent);
 
 /* get function for the compressed data buffer in the entity */
 void *cmp_ent_get_data_buf(struct cmp_entity *ent);
+const void *cmp_ent_get_data_buf_const(const struct cmp_entity *ent);
 uint32_t cmp_ent_get_cmp_data_size(const struct cmp_entity *ent);
 int32_t cmp_ent_get_cmp_data(struct cmp_entity *ent, uint32_t *data_buf,
 			     uint32_t data_buf_size);

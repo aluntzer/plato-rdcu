@@ -1034,7 +1034,6 @@ int rdcu_set_adaptive_1_golomb_param(uint32_t gpar)
 }
 
 
-
 /**
  * @brief set adaptive 2 spillover threshold for encoding outliers
  * @see RDCU-FRS-FN-0802
@@ -1820,7 +1819,6 @@ int rdcu_sync_rmap_pckt_err_cntrs(void)
 	return rdcu_sync(rdcu_read_cmd_rmap_pckt_err_cntrs,
 			 &rdcu->rmap_pckt_err_cntrs, 0);
 }
-
 
 
 /**

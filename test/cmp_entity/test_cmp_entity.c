@@ -19,10 +19,13 @@
 
 #include <stdlib.h>
 #include <string.h>
-#if defined __has_include
-#  if __has_include(<time.h>)
-#    include <time.h>
-#    define HAS_TIME_H 1
+
+#ifndef ICU_ASW
+#  if defined __has_include
+#    if __has_include(<time.h>)
+#      include <time.h>
+#      define HAS_TIME_H 1
+#    endif
 #  endif
 #endif
 
@@ -98,7 +101,7 @@ void test_ent_version_id(void)
 	struct cmp_entity ent = {0};
 	uint32_t version_id;
 	uint32_t version_id_read;
-	uint8_t *entity_p = (uint8_t *)&ent;
+	const uint8_t *entity_p = (const uint8_t *)&ent;
 
 	version_id = 0x12345678;
 	error = cmp_ent_set_version_id(&ent, version_id);
@@ -132,7 +135,7 @@ void test_ent_size(void)
 	struct cmp_entity ent = {0};
 	uint32_t size;
 	uint32_t size_read;
-	uint8_t *entity_p = (uint8_t *)&ent;
+	const uint8_t *entity_p = (const uint8_t *)&ent;
 
 	size = 0x123456;
 	error = cmp_ent_set_size(&ent, size);
@@ -168,7 +171,7 @@ void test_ent_original_size(void)
 	struct cmp_entity ent = {0};
 	uint32_t original_size;
 	uint32_t original_size_read;
-	uint8_t *entity_p = (uint8_t *)&ent;
+	const uint8_t *entity_p = (const uint8_t *)&ent;
 
 	original_size = 0x123456;
 	error = cmp_ent_set_original_size(&ent, original_size);
@@ -206,7 +209,7 @@ void test_ent_start_timestamp(void)
 	uint64_t start_timestamp_read;
 	uint32_t coarse_start_timestamp_read;
 	uint16_t fine_start_timestamp_read;
-	uint8_t *entity_p = (uint8_t *)&ent;
+	const uint8_t *entity_p = (const uint8_t *)&ent;
 
 	start_timestamp = 0x123456789ABCULL;
 	error = cmp_ent_set_start_timestamp(&ent, start_timestamp);
@@ -250,7 +253,7 @@ void test_ent_coarse_start_time(void)
 	struct cmp_entity ent = {0};
 	uint32_t coarse_start_time;
 	uint32_t coarse_start_time_read;
-	uint8_t *entity_p = (uint8_t *)&ent;
+	const uint8_t *entity_p = (const uint8_t *)&ent;
 
 	coarse_start_time = 0x12345678;
 	error = cmp_ent_set_coarse_start_time(&ent, coarse_start_time);
@@ -284,7 +287,7 @@ void test_ent_fine_start_time(void)
 	struct cmp_entity ent = {0};
 	uint16_t fine_start_time;
 	uint16_t fine_start_time_read;
-	uint8_t *entity_p = (uint8_t *)&ent;
+	const uint8_t *entity_p = (const uint8_t *)&ent;
 
 	fine_start_time = 0x1234;
 	error = cmp_ent_set_fine_start_time(&ent, fine_start_time);
@@ -318,7 +321,7 @@ void test_ent_end_timestamp(void)
 	uint64_t end_timestamp_read;
 	uint32_t coarse_end_timestamp_read;
 	uint16_t fine_end_timestamp_read;
-	uint8_t *entity_p = (uint8_t *)&ent;
+	const uint8_t *entity_p = (const uint8_t *)&ent;
 
 	end_timestamp	= 0x123456789ABCULL;
 	error = cmp_ent_set_end_timestamp(&ent, end_timestamp);
@@ -362,7 +365,7 @@ void test_ent_coarse_end_time(void)
 	struct cmp_entity ent = {0};
 	uint32_t coarse_end_time;
 	uint32_t coarse_end_time_read;
-	uint8_t *entity_p = (uint8_t *)&ent;
+	const uint8_t *entity_p = (const uint8_t *)&ent;
 
 	coarse_end_time = 0x12345678;
 	error = cmp_ent_set_coarse_end_time(&ent, coarse_end_time);
@@ -396,7 +399,7 @@ void test_ent_fine_end_time(void)
 	struct cmp_entity ent = {0};
 	uint16_t fine_end_time;
 	uint16_t fine_end_time_read;
-	uint8_t *entity_p = (uint8_t *)&ent;
+	const uint8_t *entity_p = (const uint8_t *)&ent;
 
 	fine_end_time = 0x1234;
 	error = cmp_ent_set_fine_end_time(&ent, fine_end_time);
@@ -429,22 +432,7 @@ void test_cmp_ent_data_type(void)
 	struct cmp_entity ent = {0};
 	enum cmp_data_type data_type, data_type_read;
 	int raw_mode_flag, raw_mode_flag_read;
-	uint8_t *entity_p = (uint8_t *)&ent;
-
-	/* test non raw_mode */
-	raw_mode_flag = 0;
-	data_type = DATA_TYPE_F_CAM_IMAGETTE_ADAPTIVE;
-	error = cmp_ent_set_data_type(&ent, data_type, raw_mode_flag);
-	TEST_ASSERT_FALSE(error);
-
-	data_type_read = cmp_ent_get_data_type(&ent);
-	TEST_ASSERT_EQUAL_HEX32(data_type, data_type_read);
-	raw_mode_flag_read = cmp_ent_get_data_type_raw_bit(&ent);
-	TEST_ASSERT_EQUAL(raw_mode_flag, raw_mode_flag_read);
-
-	/* check the right position in the header */
-	TEST_ASSERT_EQUAL_HEX(0, entity_p[22]);
-	TEST_ASSERT_EQUAL_HEX(21, entity_p[23]);
+	const uint8_t *entity_p = (const uint8_t *)&ent;
 
 	/* test raw_mode */
 	raw_mode_flag = 1;
@@ -461,9 +449,25 @@ void test_cmp_ent_data_type(void)
 	TEST_ASSERT_EQUAL_HEX(0x80, entity_p[22]);
 	TEST_ASSERT_EQUAL_HEX(21, entity_p[23]);
 
+	/* test non raw_mode */
+	raw_mode_flag = 0;
+	data_type = DATA_TYPE_F_CAM_IMAGETTE_ADAPTIVE;
+	error = cmp_ent_set_data_type(&ent, data_type, raw_mode_flag);
+	TEST_ASSERT_FALSE(error);
+
+	data_type_read = cmp_ent_get_data_type(&ent);
+	TEST_ASSERT_EQUAL_HEX32(data_type, data_type_read);
+	raw_mode_flag_read = cmp_ent_get_data_type_raw_bit(&ent);
+	TEST_ASSERT_EQUAL(raw_mode_flag, raw_mode_flag_read);
+
+	/* check the right position in the header */
+	TEST_ASSERT_EQUAL_HEX(0, entity_p[22]);
+	TEST_ASSERT_EQUAL_HEX(21, entity_p[23]);
+
+
 	/* error cases */
 	raw_mode_flag = 0;
-	data_type = 0x8000;
+	data_type = (enum cmp_data_type)0x8000;
 	error = cmp_ent_set_data_type(&ent, data_type, raw_mode_flag);
 	TEST_ASSERT_TRUE(error);
 	error = cmp_ent_set_data_type(NULL, data_type, raw_mode_flag);
@@ -485,9 +489,9 @@ void test_ent_cmp_mode(void)
 	int error;
 	struct cmp_entity ent = {0};
 	enum cmp_mode cmp_mode, cmp_mode_read;
-	uint8_t *entity_p = (uint8_t *)&ent;
+	const uint8_t *entity_p = (const uint8_t *)&ent;
 
-	cmp_mode = 0x12;
+	cmp_mode = (enum cmp_mode)0x12;
 	error = cmp_ent_set_cmp_mode(&ent, cmp_mode);
 	TEST_ASSERT_FALSE(error);
 
@@ -498,7 +502,7 @@ void test_ent_cmp_mode(void)
 	TEST_ASSERT_EQUAL_HEX(0x12, entity_p[24]);
 
 	/* error cases */
-	cmp_mode = 0x100;
+	cmp_mode = (enum cmp_mode)0x100;
 	error = cmp_ent_set_cmp_mode(&ent, cmp_mode);
 	TEST_ASSERT_TRUE(error);
 	error = cmp_ent_set_cmp_mode(NULL, cmp_mode);
@@ -518,7 +522,7 @@ void test_ent_model_value(void)
 	int error;
 	struct cmp_entity ent = {0};
 	uint32_t model_value, model_value_read;
-	uint8_t *entity_p = (uint8_t *)&ent;
+	const uint8_t *entity_p = (const uint8_t *)&ent;
 
 	model_value = 0x12;
 	error = cmp_ent_set_model_value(&ent, model_value);
@@ -551,7 +555,7 @@ void test_ent_model_id(void)
 	int error;
 	struct cmp_entity ent = {0};
 	uint32_t model_id, model_id_read;
-	uint8_t *entity_p = (uint8_t *)&ent;
+	const uint8_t *entity_p = (const uint8_t *)&ent;
 
 	model_id = 0x1234;
 	error = cmp_ent_set_model_id(&ent, model_id);
@@ -585,7 +589,7 @@ void test_ent_model_counter(void)
 	int error;
 	struct cmp_entity ent = {0};
 	uint32_t model_counter, model_counter_read;
-	uint8_t *entity_p = (uint8_t *)&ent;
+	const uint8_t *entity_p = (const uint8_t *)&ent;
 
 	model_counter = 0x12;
 	error = cmp_ent_set_model_counter(&ent, model_counter);
@@ -609,32 +613,32 @@ void test_ent_model_counter(void)
 
 
 /**
- * @test cmp_ent_set_max_used_bits_version
- * @test cmp_ent_get_max_used_bits_version
+ * @test cmp_ent_set_reserved
+ * @test cmp_ent_get_reserved
  */
 
-void test_ent_max_used_bits_version(void)
+void test_ent_reserved(void)
 {
 	int error;
 	struct cmp_entity ent = {0};
-	uint8_t max_used_bits_version, max_used_bits_version_read;
-	uint8_t *entity_p = (uint8_t *)&ent;
+	uint8_t reserved, reserved_read;
+	const uint8_t *entity_p = (const uint8_t *)&ent;
 
-	max_used_bits_version = 0x12;
-	error = cmp_ent_set_max_used_bits_version(&ent, max_used_bits_version);
+	reserved = 0x12;
+	error = cmp_ent_set_reserved(&ent, reserved);
 	TEST_ASSERT_FALSE(error);
 
-	max_used_bits_version_read = cmp_ent_get_max_used_bits_version(&ent);
-	TEST_ASSERT_EQUAL_UINT32(max_used_bits_version, max_used_bits_version_read);
+	reserved_read = cmp_ent_get_reserved(&ent);
+	TEST_ASSERT_EQUAL_UINT32(reserved, reserved_read);
 
 	/* check the right position in the header */
 	TEST_ASSERT_EQUAL_HEX(0x12, entity_p[29]);
 
 	/* error cases */
-	error = cmp_ent_set_max_used_bits_version(NULL, max_used_bits_version);
+	error = cmp_ent_set_reserved(NULL, reserved);
 	TEST_ASSERT_TRUE(error);
-	max_used_bits_version_read = cmp_ent_get_max_used_bits_version(NULL);
-	TEST_ASSERT_EQUAL_UINT32(0, max_used_bits_version_read);
+	reserved_read = cmp_ent_get_reserved(NULL);
+	TEST_ASSERT_EQUAL_UINT32(0, reserved_read);
 }
 
 
@@ -648,7 +652,7 @@ void test_ent_lossy_cmp_par(void)
 	int error;
 	struct cmp_entity ent = {0};
 	uint32_t lossy_cmp_par, lossy_cmp_par_read;
-	uint8_t *entity_p = (uint8_t *)&ent;
+	const uint8_t *entity_p = (const uint8_t *)&ent;
 
 	lossy_cmp_par = 0x1234;
 	error = cmp_ent_set_lossy_cmp_par(&ent, lossy_cmp_par);
@@ -682,7 +686,7 @@ void test_ent_ima_spill(void)
 	int error;
 	struct cmp_entity ent = {0};
 	uint32_t ima_spill, ima_spill_read;
-	uint8_t *entity_p = (uint8_t *)&ent;
+	const uint8_t *entity_p = (const uint8_t *)&ent;
 
 	ima_spill = 0x1234;
 	error = cmp_ent_set_ima_spill(&ent, ima_spill);
@@ -716,7 +720,7 @@ void test_ent_ima_golomb_par(void)
 	int error;
 	struct cmp_entity ent = {0};
 	uint32_t ima_golomb_par, ima_golomb_par_read;
-	uint8_t *entity_p = (uint8_t *)&ent;
+	const uint8_t *entity_p = (const uint8_t *)&ent;
 
 	ima_golomb_par = 0x12;
 	error = cmp_ent_set_ima_golomb_par(&ent, ima_golomb_par);
@@ -749,7 +753,7 @@ void test_ent_ima_ap1_spill(void)
 	int error;
 	struct cmp_entity ent = {0};
 	uint32_t ima_ap1_spill, ima_ap1_spill_read;
-	uint8_t *entity_p = (uint8_t *)&ent;
+	const uint8_t *entity_p = (const uint8_t *)&ent;
 
 	ima_ap1_spill = 0x1234;
 	error = cmp_ent_set_ima_ap1_spill(&ent, ima_ap1_spill);
@@ -783,7 +787,7 @@ void test_ent_ima_ap1_golomb_par(void)
 	int error;
 	struct cmp_entity ent = {0};
 	uint32_t ima_ap1_golomb_par, ima_ap1_golomb_par_read;
-	uint8_t *entity_p = (uint8_t *)&ent;
+	const uint8_t *entity_p = (const uint8_t *)&ent;
 
 	ima_ap1_golomb_par = 0x12;
 	error = cmp_ent_set_ima_ap1_golomb_par(&ent, ima_ap1_golomb_par);
@@ -816,7 +820,7 @@ void test_ent_ima_ap2_spill(void)
 	int error;
 	struct cmp_entity ent = {0};
 	uint32_t ima_ap2_spill, ima_ap2_spill_read;
-	uint8_t *entity_p = (uint8_t *)&ent;
+	const uint8_t *entity_p = (const uint8_t *)&ent;
 
 	ima_ap2_spill = 0x1234;
 	error = cmp_ent_set_ima_ap2_spill(&ent, ima_ap2_spill);
@@ -850,7 +854,7 @@ void test_ent_ima_ap2_golomb_par(void)
 	int error;
 	struct cmp_entity ent = {0};
 	uint32_t ima_ap2_golomb_par, ima_ap2_golomb_par_read;
-	uint8_t *entity_p = (uint8_t *)&ent;
+	const uint8_t *entity_p = (const uint8_t *)&ent;
 
 	ima_ap2_golomb_par = 0x12;
 	error = cmp_ent_set_ima_ap2_golomb_par(&ent, ima_ap2_golomb_par);
@@ -883,7 +887,7 @@ void test_ent_non_ima_spill1(void)
 	int error;
 	struct cmp_entity ent = {0};
 	uint32_t non_ima_spill1, non_ima_spill1_read;
-	uint8_t *entity_p = (uint8_t *)&ent;
+	const uint8_t *entity_p = (const uint8_t *)&ent;
 
 	non_ima_spill1 = 0x123456;
 	error = cmp_ent_set_non_ima_spill1(&ent, non_ima_spill1);
@@ -918,7 +922,7 @@ void test_ent_non_ima_cmp_par1(void)
 	int error;
 	struct cmp_entity ent = {0};
 	uint32_t non_ima_cmp_par1, non_ima_cmp_par1_read;
-	uint8_t *entity_p = (uint8_t *)&ent;
+	const uint8_t *entity_p = (const uint8_t *)&ent;
 
 	non_ima_cmp_par1 = 0x1234;
 	error = cmp_ent_set_non_ima_cmp_par1(&ent, non_ima_cmp_par1);
@@ -952,7 +956,7 @@ void test_ent_non_ima_spill2(void)
 	int error;
 	struct cmp_entity ent = {0};
 	uint32_t non_ima_spill2, non_ima_spill2_read;
-	uint8_t *entity_p = (uint8_t *)&ent;
+	const uint8_t *entity_p = (const uint8_t *)&ent;
 
 	non_ima_spill2 = 0x123456;
 	error = cmp_ent_set_non_ima_spill2(&ent, non_ima_spill2);
@@ -987,7 +991,7 @@ void test_ent_non_ima_cmp_par2(void)
 	int error;
 	struct cmp_entity ent = {0};
 	uint32_t non_ima_cmp_par2, non_ima_cmp_par2_read;
-	uint8_t *entity_p = (uint8_t *)&ent;
+	const uint8_t *entity_p = (const uint8_t *)&ent;
 
 	non_ima_cmp_par2 = 0x1234;
 	error = cmp_ent_set_non_ima_cmp_par2(&ent, non_ima_cmp_par2);
@@ -1021,7 +1025,7 @@ void test_ent_non_ima_spill3(void)
 	int error;
 	struct cmp_entity ent = {0};
 	uint32_t non_ima_spill3, non_ima_spill3_read;
-	uint8_t *entity_p = (uint8_t *)&ent;
+	const uint8_t *entity_p = (const uint8_t *)&ent;
 
 	non_ima_spill3 = 0x123456;
 	error = cmp_ent_set_non_ima_spill3(&ent, non_ima_spill3);
@@ -1056,7 +1060,7 @@ void test_ent_non_ima_cmp_par3(void)
 	int error;
 	struct cmp_entity ent = {0};
 	uint32_t non_ima_cmp_par3, non_ima_cmp_par3_read;
-	uint8_t *entity_p = (uint8_t *)&ent;
+	const uint8_t *entity_p = (const uint8_t *)&ent;
 
 	non_ima_cmp_par3 = 0x1234;
 	error = cmp_ent_set_non_ima_cmp_par3(&ent, non_ima_cmp_par3);
@@ -1090,7 +1094,7 @@ void test_ent_non_ima_spill4(void)
 	int error;
 	struct cmp_entity ent = {0};
 	uint32_t non_ima_spill4, non_ima_spill4_read;
-	uint8_t *entity_p = (uint8_t *)&ent;
+	const uint8_t *entity_p = (const uint8_t *)&ent;
 
 	non_ima_spill4 = 0x123456;
 	error = cmp_ent_set_non_ima_spill4(&ent, non_ima_spill4);
@@ -1125,7 +1129,7 @@ void test_ent_non_ima_cmp_par4(void)
 	int error;
 	struct cmp_entity ent = {0};
 	uint32_t non_ima_cmp_par4, non_ima_cmp_par4_read;
-	uint8_t *entity_p = (uint8_t *)&ent;
+	const uint8_t *entity_p = (const uint8_t *)&ent;
 
 	non_ima_cmp_par4 = 0x1234;
 	error = cmp_ent_set_non_ima_cmp_par4(&ent, non_ima_cmp_par4);
@@ -1159,7 +1163,7 @@ void test_ent_non_ima_spill5(void)
 	int error;
 	struct cmp_entity ent = {0};
 	uint32_t non_ima_spill5, non_ima_spill5_read;
-	uint8_t *entity_p = (uint8_t *)&ent;
+	const uint8_t *entity_p = (const uint8_t *)&ent;
 
 	non_ima_spill5 = 0x123456;
 	error = cmp_ent_set_non_ima_spill5(&ent, non_ima_spill5);
@@ -1194,7 +1198,7 @@ void test_ent_non_ima_cmp_par5(void)
 	int error;
 	struct cmp_entity ent = {0};
 	uint32_t non_ima_cmp_par5, non_ima_cmp_par5_read;
-	uint8_t *entity_p = (uint8_t *)&ent;
+	const uint8_t *entity_p = (const uint8_t *)&ent;
 
 	non_ima_cmp_par5 = 0x1234;
 	error = cmp_ent_set_non_ima_cmp_par5(&ent, non_ima_cmp_par5);
@@ -1228,7 +1232,7 @@ void test_ent_non_ima_spill6(void)
 	int error;
 	struct cmp_entity ent = {0};
 	uint32_t non_ima_spill6, non_ima_spill6_read;
-	uint8_t *entity_p = (uint8_t *)&ent;
+	const uint8_t *entity_p = (const uint8_t *)&ent;
 
 	non_ima_spill6 = 0x123456;
 	error = cmp_ent_set_non_ima_spill6(&ent, non_ima_spill6);
@@ -1263,7 +1267,7 @@ void test_ent_non_ima_cmp_par6(void)
 	int error;
 	struct cmp_entity ent = {0};
 	uint32_t non_ima_cmp_par6, non_ima_cmp_par6_read;
-	uint8_t *entity_p = (uint8_t *)&ent;
+	const uint8_t *entity_p = (const uint8_t *)&ent;
 
 	non_ima_cmp_par6 = 0x1234;
 	error = cmp_ent_set_non_ima_cmp_par6(&ent, non_ima_cmp_par6);
@@ -1295,7 +1299,7 @@ void test_cmp_ent_get_data_buf(void)
 {
 	enum cmp_data_type data_type;
 	struct cmp_entity ent = {0};
-	char *adr;
+	const char *adr;
 	uint32_t s, hdr_size;
 	int error;
 
@@ -1314,7 +1318,7 @@ void test_cmp_ent_get_data_buf(void)
 
 	/* RAW mode test */
 	for (data_type = DATA_TYPE_IMAGETTE;
-	     data_type <= DATA_TYPE_F_CAM_BACKGROUND;
+	     data_type <= DATA_TYPE_CHUNK;
 	     data_type++) {
 		s = cmp_ent_create(&ent, data_type, 1, 0);
 		TEST_ASSERT_NOT_EQUAL_INT(0, s);
@@ -1333,8 +1337,68 @@ void test_cmp_ent_get_data_buf(void)
 	/* compression data type not supported test */
 	error = cmp_ent_set_data_type(&ent, DATA_TYPE_UNKNOWN, 0);
 	TEST_ASSERT_FALSE(error);
-
 	adr = cmp_ent_get_data_buf(&ent);
+	TEST_ASSERT_NULL(adr);
+
+	error = cmp_ent_set_data_type(&ent, (enum cmp_data_type)234, 1);
+	TEST_ASSERT_FALSE(error);
+	adr = cmp_ent_get_data_buf(&ent);
+	TEST_ASSERT_NULL(adr);
+}
+
+
+/**
+ * @test cmp_ent_get_data_buf_const
+ */
+
+void test_cmp_ent_get_data_buf_const(void)
+{
+	enum cmp_data_type data_type;
+	struct cmp_entity ent = {0};
+	const char *adr;
+	uint32_t s, hdr_size;
+	int error;
+
+	for (data_type = DATA_TYPE_IMAGETTE;
+	     data_type <= DATA_TYPE_F_CAM_BACKGROUND;
+	     data_type++) {
+		s = cmp_ent_create(&ent, data_type, 0, 0);
+		TEST_ASSERT_NOT_EQUAL_INT(0, s);
+
+		adr = cmp_ent_get_data_buf_const(&ent);
+		TEST_ASSERT_NOT_NULL(adr);
+
+		hdr_size = cmp_ent_cal_hdr_size(data_type, 0);
+		TEST_ASSERT_EQUAL_INT(hdr_size, adr-(char *)&ent);
+	}
+
+	/* RAW mode test */
+	for (data_type = DATA_TYPE_IMAGETTE;
+	     data_type <= DATA_TYPE_CHUNK;
+	     data_type++) {
+		s = cmp_ent_create(&ent, data_type, 1, 0);
+		TEST_ASSERT_NOT_EQUAL_INT(0, s);
+
+		adr = cmp_ent_get_data_buf_const(&ent);
+		TEST_ASSERT_NOT_NULL(adr);
+
+		hdr_size = cmp_ent_cal_hdr_size(data_type, 1);
+		TEST_ASSERT_EQUAL_INT(hdr_size, adr-(char *)&ent);
+	}
+
+	/* ent = NULL test */
+	adr = cmp_ent_get_data_buf_const(NULL);
+	TEST_ASSERT_NULL(adr);
+
+	/* compression data type not supported test */
+	error = cmp_ent_set_data_type(&ent, DATA_TYPE_UNKNOWN, 0);
+	TEST_ASSERT_FALSE(error);
+	adr = cmp_ent_get_data_buf_const(&ent);
+	TEST_ASSERT_NULL(adr);
+
+	error = cmp_ent_set_data_type(&ent, (enum cmp_data_type)234, 1);
+	TEST_ASSERT_FALSE(error);
+	adr = cmp_ent_get_data_buf_const(&ent);
 	TEST_ASSERT_NULL(adr);
 }
 
@@ -1431,7 +1495,7 @@ void test_cmp_ent_write_rdcu_cmp_pars(void)
 	uint32_t size;
 	struct cmp_entity *ent;
 	struct cmp_info info;
-	struct cmp_cfg cfg;
+	struct rdcu_cfg rcfg;
 
 	info.cmp_mode_used = CMP_MODE_DIFF_ZERO;
 	info.spill_used = 42;
@@ -1456,10 +1520,10 @@ void test_cmp_ent_write_rdcu_cmp_pars(void)
 	TEST_ASSERT_EQUAL_INT(0, cmp_ent_get_data_type_raw_bit(ent));
 	TEST_ASSERT_EQUAL_INT(12, cmp_ent_get_cmp_data_size(ent));
 
-	TEST_ASSERT_EQUAL_INT(cmp_cal_size_of_data(info.samples_used, DATA_TYPE_IMAGETTE), cmp_ent_get_original_size(ent));
+	TEST_ASSERT_EQUAL_INT(info.samples_used * sizeof(uint16_t), cmp_ent_get_original_size(ent));
 	TEST_ASSERT_EQUAL_INT(info.cmp_mode_used, cmp_ent_get_cmp_mode(ent));
 	TEST_ASSERT_EQUAL_INT(info.model_value_used, cmp_ent_get_model_value(ent));
-	TEST_ASSERT_EQUAL_INT(0, cmp_ent_get_max_used_bits_version(ent));
+	TEST_ASSERT_EQUAL_INT(0, cmp_ent_get_reserved(ent));
 	TEST_ASSERT_EQUAL_INT(info.round_used, cmp_ent_get_lossy_cmp_par(ent));
 
 	TEST_ASSERT_EQUAL_INT(info.spill_used, cmp_ent_get_ima_spill(ent));
@@ -1483,20 +1547,20 @@ void test_cmp_ent_write_rdcu_cmp_pars(void)
 	TEST_ASSERT_EQUAL_INT(1, cmp_ent_get_data_type_raw_bit(ent));
 	TEST_ASSERT_EQUAL_INT(12, cmp_ent_get_cmp_data_size(ent));
 
-	TEST_ASSERT_EQUAL_INT(cmp_cal_size_of_data(info.samples_used, DATA_TYPE_IMAGETTE), cmp_ent_get_original_size(ent));
+	TEST_ASSERT_EQUAL_INT(info.samples_used * sizeof(uint16_t), cmp_ent_get_original_size(ent));
 	TEST_ASSERT_EQUAL_INT(info.cmp_mode_used, cmp_ent_get_cmp_mode(ent));
 	TEST_ASSERT_EQUAL_INT(info.model_value_used, cmp_ent_get_model_value(ent));
-	TEST_ASSERT_EQUAL_INT(0, cmp_ent_get_max_used_bits_version(ent));
+	TEST_ASSERT_EQUAL_INT(0, cmp_ent_get_reserved(ent));
 	TEST_ASSERT_EQUAL_INT(info.round_used, cmp_ent_get_lossy_cmp_par(ent));
 
 	free(ent);
 
 	/* adaptive configuration */
 	info.cmp_mode_used = CMP_MODE_MODEL_MULTI;
-	cfg.ap1_golomb_par = 0xFF;
-	cfg.ap1_spill = 1;
-	cfg.ap2_golomb_par = 0x32;
-	cfg.ap2_spill = 201;
+	rcfg.ap1_golomb_par = 0xFF;
+	rcfg.ap1_spill = 1;
+	rcfg.ap2_golomb_par = 0x32;
+	rcfg.ap2_spill = 201;
 
 	/* create a adaptive imagette compression entity */
 	size = cmp_ent_create(NULL, DATA_TYPE_IMAGETTE_ADAPTIVE, info.cmp_mode_used == CMP_MODE_RAW, 12);
@@ -1505,35 +1569,35 @@ void test_cmp_ent_write_rdcu_cmp_pars(void)
 	size = cmp_ent_create(ent, DATA_TYPE_IMAGETTE_ADAPTIVE, info.cmp_mode_used == CMP_MODE_RAW, 12);
 	TEST_ASSERT_NOT_EQUAL_INT(0, size);
 
-	error = cmp_ent_write_rdcu_cmp_pars(ent, &info, &cfg);
+	error = cmp_ent_write_rdcu_cmp_pars(ent, &info, &rcfg);
 	TEST_ASSERT_FALSE(error);
 
 	TEST_ASSERT_EQUAL_INT(DATA_TYPE_IMAGETTE_ADAPTIVE, cmp_ent_get_data_type(ent));
 	TEST_ASSERT_EQUAL_INT(0, cmp_ent_get_data_type_raw_bit(ent));
 	TEST_ASSERT_EQUAL_INT(12, cmp_ent_get_cmp_data_size(ent));
 
-	TEST_ASSERT_EQUAL_INT(cmp_cal_size_of_data(info.samples_used, DATA_TYPE_IMAGETTE_ADAPTIVE), cmp_ent_get_original_size(ent));
+	TEST_ASSERT_EQUAL_INT(info.samples_used * sizeof(uint16_t), cmp_ent_get_original_size(ent));
 	TEST_ASSERT_EQUAL_INT(info.cmp_mode_used, cmp_ent_get_cmp_mode(ent));
 	TEST_ASSERT_EQUAL_INT(info.model_value_used, cmp_ent_get_model_value(ent));
-	TEST_ASSERT_EQUAL_INT(0, cmp_ent_get_max_used_bits_version(ent));
+	TEST_ASSERT_EQUAL_INT(0, cmp_ent_get_reserved(ent));
 	TEST_ASSERT_EQUAL_INT(info.round_used, cmp_ent_get_lossy_cmp_par(ent));
 
 	TEST_ASSERT_EQUAL_INT(info.spill_used, cmp_ent_get_ima_spill(ent));
 	TEST_ASSERT_EQUAL_INT(info.golomb_par_used, cmp_ent_get_ima_golomb_par(ent));
-	TEST_ASSERT_EQUAL_INT(cfg.ap1_spill, cmp_ent_get_ima_ap1_spill(ent));
-	TEST_ASSERT_EQUAL_INT(cfg.ap1_golomb_par, cmp_ent_get_ima_ap1_golomb_par(ent));
-	TEST_ASSERT_EQUAL_INT(cfg.ap2_spill, cmp_ent_get_ima_ap2_spill(ent));
-	TEST_ASSERT_EQUAL_INT(cfg.ap2_golomb_par, cmp_ent_get_ima_ap2_golomb_par(ent));
+	TEST_ASSERT_EQUAL_INT(rcfg.ap1_spill, cmp_ent_get_ima_ap1_spill(ent));
+	TEST_ASSERT_EQUAL_INT(rcfg.ap1_golomb_par, cmp_ent_get_ima_ap1_golomb_par(ent));
+	TEST_ASSERT_EQUAL_INT(rcfg.ap2_spill, cmp_ent_get_ima_ap2_spill(ent));
+	TEST_ASSERT_EQUAL_INT(rcfg.ap2_golomb_par, cmp_ent_get_ima_ap2_golomb_par(ent));
 
 
 	/** error cases **/
 
 	/* ent = NULL */
-	error = cmp_ent_write_rdcu_cmp_pars(NULL, &info, &cfg);
+	error = cmp_ent_write_rdcu_cmp_pars(NULL, &info, &rcfg);
 	TEST_ASSERT_TRUE(error);
 
 	/* info = NULL */
-	error = cmp_ent_write_rdcu_cmp_pars(ent, NULL, &cfg);
+	error = cmp_ent_write_rdcu_cmp_pars(ent, NULL, &rcfg);
 	TEST_ASSERT_TRUE(error);
 
 	/* cfg = NULL and adaptive data type */
@@ -1542,35 +1606,35 @@ void test_cmp_ent_write_rdcu_cmp_pars(void)
 
 	/* compressed data are to big for the compression entity */
 	info.cmp_size = 12*8 + 1;
-	error = cmp_ent_write_rdcu_cmp_pars(ent, &info, &cfg);
+	error = cmp_ent_write_rdcu_cmp_pars(ent, &info, &rcfg);
 	TEST_ASSERT_TRUE(error);
 	info.cmp_size = 1;
 
 	/* wrong data_type */
 	cmp_ent_set_data_type(ent, DATA_TYPE_S_FX, 0);
-	error = cmp_ent_write_rdcu_cmp_pars(ent, &info, &cfg);
+	error = cmp_ent_write_rdcu_cmp_pars(ent, &info, &rcfg);
 	TEST_ASSERT_TRUE(error);
 	cmp_ent_set_data_type(ent, DATA_TYPE_F_CAM_IMAGETTE_ADAPTIVE, 0);
 	/* this should work */
-	error = cmp_ent_write_rdcu_cmp_pars(ent, &info, &cfg);
+	error = cmp_ent_write_rdcu_cmp_pars(ent, &info, &rcfg);
 	TEST_ASSERT_FALSE(error);
 
 	/* original_size to high */
 	info.samples_used = 0x800000;
-	error = cmp_ent_write_rdcu_cmp_pars(ent, &info, &cfg);
+	error = cmp_ent_write_rdcu_cmp_pars(ent, &info, &rcfg);
 	TEST_ASSERT_TRUE(error);
 	info.samples_used = 0x7FFFFF;
 	/* this should work */
-	error = cmp_ent_write_rdcu_cmp_pars(ent, &info, &cfg);
+	error = cmp_ent_write_rdcu_cmp_pars(ent, &info, &rcfg);
 	TEST_ASSERT_FALSE(error);
 
 	/* cmp_mode to high */
 	info.cmp_mode_used = 0x100;
-	error = cmp_ent_write_rdcu_cmp_pars(ent, &info, &cfg);
+	error = cmp_ent_write_rdcu_cmp_pars(ent, &info, &rcfg);
 	TEST_ASSERT_TRUE(error);
 	info.cmp_mode_used = 0xFF;
 	/* this should work */
-	error = cmp_ent_write_rdcu_cmp_pars(ent, &info, &cfg);
+	error = cmp_ent_write_rdcu_cmp_pars(ent, &info, &rcfg);
 	TEST_ASSERT_FALSE(error);
 
 	TEST_ASSERT_EQUAL_INT(1, sizeof(info.model_value_used));
@@ -1597,79 +1661,79 @@ void test_cmp_ent_write_rdcu_cmp_pars(void)
 
 	/* spill to high */
 	info.spill_used = 0x10000;
-	error = cmp_ent_write_rdcu_cmp_pars(ent, &info, &cfg);
+	error = cmp_ent_write_rdcu_cmp_pars(ent, &info, &rcfg);
 	TEST_ASSERT_TRUE(error);
 	info.spill_used = 0xFFFF;
 	/* this should work */
-	error = cmp_ent_write_rdcu_cmp_pars(ent, &info, &cfg);
+	error = cmp_ent_write_rdcu_cmp_pars(ent, &info, &rcfg);
 	TEST_ASSERT_FALSE(error);
 
 	/* golomb_par to high */
 	info.golomb_par_used = 0x100;
-	error = cmp_ent_write_rdcu_cmp_pars(ent, &info, &cfg);
+	error = cmp_ent_write_rdcu_cmp_pars(ent, &info, &rcfg);
 	TEST_ASSERT_TRUE(error);
 	info.golomb_par_used = 0xFF;
 	/* this should work */
-	error = cmp_ent_write_rdcu_cmp_pars(ent, &info, &cfg);
+	error = cmp_ent_write_rdcu_cmp_pars(ent, &info, &rcfg);
 	TEST_ASSERT_FALSE(error);
 
 	/* adaptive 1 spill to high */
-	cfg.ap1_spill = 0x10000;
-	error = cmp_ent_write_rdcu_cmp_pars(ent, &info, &cfg);
+	rcfg.ap1_spill = 0x10000;
+	error = cmp_ent_write_rdcu_cmp_pars(ent, &info, &rcfg);
 	TEST_ASSERT_TRUE(error);
-	cfg.ap1_spill = 0xFFFF;
+	rcfg.ap1_spill = 0xFFFF;
 	/* this should work */
-	error = cmp_ent_write_rdcu_cmp_pars(ent, &info, &cfg);
+	error = cmp_ent_write_rdcu_cmp_pars(ent, &info, &rcfg);
 	TEST_ASSERT_FALSE(error);
 
 	/* adaptive 1  golomb_par to high */
-	cfg.ap1_golomb_par = 0x100;
-	error = cmp_ent_write_rdcu_cmp_pars(ent, &info, &cfg);
+	rcfg.ap1_golomb_par = 0x100;
+	error = cmp_ent_write_rdcu_cmp_pars(ent, &info, &rcfg);
 	TEST_ASSERT_TRUE(error);
-	cfg.ap1_golomb_par = 0xFF;
+	rcfg.ap1_golomb_par = 0xFF;
 	/* this should work */
-	error = cmp_ent_write_rdcu_cmp_pars(ent, &info, &cfg);
+	error = cmp_ent_write_rdcu_cmp_pars(ent, &info, &rcfg);
 	TEST_ASSERT_FALSE(error);
 
 	/* adaptive 2 spill to high */
-	cfg.ap2_spill = 0x10000;
-	error = cmp_ent_write_rdcu_cmp_pars(ent, &info, &cfg);
+	rcfg.ap2_spill = 0x10000;
+	error = cmp_ent_write_rdcu_cmp_pars(ent, &info, &rcfg);
 	TEST_ASSERT_TRUE(error);
-	cfg.ap2_spill = 0xFFFF;
+	rcfg.ap2_spill = 0xFFFF;
 	/* this should work */
-	error = cmp_ent_write_rdcu_cmp_pars(ent, &info, &cfg);
+	error = cmp_ent_write_rdcu_cmp_pars(ent, &info, &rcfg);
 	TEST_ASSERT_FALSE(error);
 
 	/* adaptive 2  golomb_par to high */
-	cfg.ap2_golomb_par = 0x100;
-	error = cmp_ent_write_rdcu_cmp_pars(ent, &info, &cfg);
+	rcfg.ap2_golomb_par = 0x100;
+	error = cmp_ent_write_rdcu_cmp_pars(ent, &info, &rcfg);
 	TEST_ASSERT_TRUE(error);
-	cfg.ap2_golomb_par = 0xFF;
+	rcfg.ap2_golomb_par = 0xFF;
 	/* this should work */
-	error = cmp_ent_write_rdcu_cmp_pars(ent, &info, &cfg);
+	error = cmp_ent_write_rdcu_cmp_pars(ent, &info, &rcfg);
 	TEST_ASSERT_FALSE(error);
 
 	/* The entity's raw data bit is not set, but the configuration contains raw data */
 	info.cmp_mode_used = CMP_MODE_RAW;
-	error = cmp_ent_write_rdcu_cmp_pars(ent, &info, &cfg);
+	error = cmp_ent_write_rdcu_cmp_pars(ent, &info, &rcfg);
 	TEST_ASSERT_TRUE(error);
 	info.cmp_mode_used = CMP_MODE_MODEL_MULTI;
 	/* this should work */
-	error = cmp_ent_write_rdcu_cmp_pars(ent, &info, &cfg);
+	error = cmp_ent_write_rdcu_cmp_pars(ent, &info, &rcfg);
 	TEST_ASSERT_FALSE(error);
 
 	/* The entity's raw data bit is set, but the configuration contains no raw data */
 	cmp_ent_set_data_type(ent, DATA_TYPE_IMAGETTE_ADAPTIVE, 1); /* set raw bit */
-	error = cmp_ent_write_rdcu_cmp_pars(ent, &info, &cfg);
+	error = cmp_ent_write_rdcu_cmp_pars(ent, &info, &rcfg);
 	TEST_ASSERT_TRUE(error);
 	cmp_ent_set_data_type(ent, DATA_TYPE_F_CAM_IMAGETTE_ADAPTIVE, 0);
 	/* this should work */
-	error = cmp_ent_write_rdcu_cmp_pars(ent, &info, &cfg);
+	error = cmp_ent_write_rdcu_cmp_pars(ent, &info, &rcfg);
 	TEST_ASSERT_FALSE(error);
 
 	/* compression error set */
 	info.cmp_err = 1;
-	error = cmp_ent_write_rdcu_cmp_pars(ent, &info, &cfg);
+	error = cmp_ent_write_rdcu_cmp_pars(ent, &info, &rcfg);
 	TEST_ASSERT_TRUE(error);
 	info.cmp_err = 0;
 
@@ -1707,7 +1771,7 @@ void test_cmp_ent_create(void)
 	TEST_ASSERT_EQUAL_INT(0, cmp_ent_get_original_size(ent));
 	TEST_ASSERT_EQUAL_INT(0, cmp_ent_get_cmp_mode(ent));
 	TEST_ASSERT_EQUAL_INT(0, cmp_ent_get_model_value(ent));
-	TEST_ASSERT_EQUAL_INT(0, cmp_ent_get_max_used_bits_version(ent));
+	TEST_ASSERT_EQUAL_INT(0, cmp_ent_get_reserved(ent));
 	TEST_ASSERT_EQUAL_INT(0, cmp_ent_get_lossy_cmp_par(ent));
 
 	TEST_ASSERT_EQUAL_INT(0, cmp_ent_get_ima_spill(ent));
@@ -1731,7 +1795,7 @@ void test_cmp_ent_create(void)
 	TEST_ASSERT_EQUAL_INT(0, cmp_ent_get_original_size(ent));
 	TEST_ASSERT_EQUAL_INT(0, cmp_ent_get_cmp_mode(ent));
 	TEST_ASSERT_EQUAL_INT(0, cmp_ent_get_model_value(ent));
-	TEST_ASSERT_EQUAL_INT(0, cmp_ent_get_max_used_bits_version(ent));
+	TEST_ASSERT_EQUAL_INT(0, cmp_ent_get_reserved(ent));
 	TEST_ASSERT_EQUAL_INT(0, cmp_ent_get_lossy_cmp_par(ent));
 
 	TEST_ASSERT_EQUAL_INT(0, cmp_ent_get_ima_spill(ent));
@@ -1755,7 +1819,7 @@ void test_cmp_ent_create(void)
 	TEST_ASSERT_EQUAL_INT(0, cmp_ent_get_original_size(ent));
 	TEST_ASSERT_EQUAL_INT(0, cmp_ent_get_cmp_mode(ent));
 	TEST_ASSERT_EQUAL_INT(0, cmp_ent_get_model_value(ent));
-	TEST_ASSERT_EQUAL_INT(0, cmp_ent_get_max_used_bits_version(ent));
+	TEST_ASSERT_EQUAL_INT(0, cmp_ent_get_reserved(ent));
 	TEST_ASSERT_EQUAL_INT(0, cmp_ent_get_lossy_cmp_par(ent));
 	free(ent);
 
@@ -1766,7 +1830,7 @@ void test_cmp_ent_create(void)
 	cmp_size_byte = 100;
 	size = cmp_ent_create(NULL, data_type, raw_mode_flag, cmp_size_byte);
 	TEST_ASSERT_EQUAL_UINT32(0, size);
-	data_type = 0xFFF;
+	data_type = (enum cmp_data_type)0xFFF; /* undefined data type */
 	raw_mode_flag = 1;
 	cmp_size_byte = 100;
 	size = cmp_ent_create(NULL, data_type, raw_mode_flag, cmp_size_byte);
@@ -1785,148 +1849,6 @@ void test_cmp_ent_create(void)
 	cmp_size_byte = CMP_ENTITY_MAX_SIZE - NON_IMAGETTE_HEADER_SIZE;
 	size = cmp_ent_create(NULL, data_type, raw_mode_flag, cmp_size_byte);
 	TEST_ASSERT_EQUAL_UINT32(NON_IMAGETTE_HEADER_SIZE + cmp_size_byte, size);
-}
-
-
-/**
- * @test cmp_ent_build
- */
-
-void test_cmp_ent_build(void)
-{
-	size_t size;
-	struct cmp_entity *ent;
-	uint32_t version_id;
-	uint64_t start_time, end_time;
-	uint16_t model_id;
-	uint8_t model_counter;
-	struct cmp_cfg cfg;
-	int cmp_size_bits;
-	struct cmp_max_used_bits max_used_bits = {0};
-
-	/* set up max used bit version */
-	max_used_bits.version = 42;
-	cfg.max_used_bits = &max_used_bits;
-
-	version_id = 42;
-	start_time = 100;
-	end_time = 200;
-	model_id = 12;
-	model_counter = 23;
-	cfg.data_type = DATA_TYPE_F_CAM_IMAGETTE_ADAPTIVE;
-	cfg.cmp_mode = CMP_MODE_MODEL_MULTI;
-	cfg.model_value = 11;
-	cfg.round = 2;
-	cfg.samples = 9;
-	cfg.spill = MIN_IMA_SPILL;
-	cfg.golomb_par = MAX_IMA_GOLOMB_PAR;
-	cfg.ap1_spill = 555;
-	cfg.ap1_golomb_par = 14;
-	cfg.ap2_spill = 333;
-	cfg.ap2_golomb_par = 43;
-	cmp_size_bits = 60*8;
-
-	size = cmp_ent_build(NULL, version_id, start_time, end_time, model_id,
-			     model_counter, &cfg, cmp_size_bits);
-	TEST_ASSERT_EQUAL_UINT(IMAGETTE_ADAPTIVE_HEADER_SIZE+60, size);
-	ent = malloc(size); TEST_ASSERT_NOT_NULL(ent);
-	size = cmp_ent_build(ent, version_id, start_time, end_time, model_id,
-			     model_counter, &cfg, cmp_size_bits);
-	TEST_ASSERT_EQUAL_UINT(IMAGETTE_ADAPTIVE_HEADER_SIZE+60, size);
-
-	TEST_ASSERT_EQUAL_INT(version_id, cmp_ent_get_version_id(ent));
-	TEST_ASSERT_EQUAL_INT(60, cmp_ent_get_cmp_data_size(ent));
-	TEST_ASSERT_EQUAL_INT(cmp_cal_size_of_data(cfg.samples, cfg.data_type), cmp_ent_get_original_size(ent));
-	TEST_ASSERT_EQUAL_INT(start_time, cmp_ent_get_start_timestamp(ent));
-	TEST_ASSERT_EQUAL_INT(end_time, cmp_ent_get_end_timestamp(ent));
-	TEST_ASSERT_EQUAL_INT(0, cmp_ent_get_data_type_raw_bit(ent));
-	TEST_ASSERT_EQUAL_INT(cfg.data_type, cmp_ent_get_data_type(ent));
-
-	TEST_ASSERT_EQUAL_INT(cfg.cmp_mode, cmp_ent_get_cmp_mode(ent));
-	TEST_ASSERT_EQUAL_INT(cfg.model_value, cmp_ent_get_model_value(ent));
-	TEST_ASSERT_EQUAL_INT(model_id, cmp_ent_get_model_id(ent));
-	TEST_ASSERT_EQUAL_INT(model_counter, cmp_ent_get_model_counter(ent));
-	TEST_ASSERT_EQUAL_INT(max_used_bits.version, cmp_ent_get_max_used_bits_version(ent));
-	TEST_ASSERT_EQUAL_INT(cfg.round, cmp_ent_get_lossy_cmp_par(ent));
-
-	TEST_ASSERT_EQUAL_INT(cfg.spill, cmp_ent_get_ima_spill(ent));
-	TEST_ASSERT_EQUAL_INT(cfg.golomb_par, cmp_ent_get_ima_golomb_par(ent));
-	TEST_ASSERT_EQUAL_INT(cfg.ap1_spill, cmp_ent_get_ima_ap1_spill(ent));
-	TEST_ASSERT_EQUAL_INT(cfg.ap1_golomb_par, cmp_ent_get_ima_ap1_golomb_par(ent));
-	TEST_ASSERT_EQUAL_INT(cfg.ap2_spill, cmp_ent_get_ima_ap2_spill(ent));
-	TEST_ASSERT_EQUAL_INT(cfg.ap2_golomb_par, cmp_ent_get_ima_ap2_golomb_par(ent));
-
-	/* entity size is smaller than */
-	cmp_size_bits = 2;
-	size = cmp_ent_build(NULL, version_id, start_time, end_time, model_id,
-			     model_counter, &cfg, cmp_size_bits);
-	TEST_ASSERT_EQUAL_UINT(IMAGETTE_ADAPTIVE_HEADER_SIZE+4, size);
-	size = cmp_ent_build(ent, version_id, start_time, end_time, model_id,
-			     model_counter, &cfg, cmp_size_bits);
-	TEST_ASSERT_EQUAL_UINT(IMAGETTE_ADAPTIVE_HEADER_SIZE+4, size);
-
-	/** error cases **/
-	/* cfg = NULL */
-	size = cmp_ent_build(NULL, version_id, start_time, end_time, model_id,
-			     model_counter, NULL, cmp_size_bits);
-	TEST_ASSERT_EQUAL_UINT(0, size);
-
-	/* cmp_size_bits negative */
-	cmp_size_bits = -1;
-	size = cmp_ent_build(NULL, version_id, start_time, end_time, model_id,
-			     model_counter, &cfg, cmp_size_bits);
-	TEST_ASSERT_EQUAL_UINT(0, size);
-	cmp_size_bits = 60*8;
-
-	/* unknown data type */
-	cfg.data_type = DATA_TYPE_UNKNOWN;
-	size = cmp_ent_build(NULL, version_id, start_time, end_time, model_id,
-			     model_counter, &cfg, cmp_size_bits);
-	TEST_ASSERT_EQUAL_UINT(0, size);
-	cfg.data_type = DATA_TYPE_F_CAM_IMAGETTE_ADAPTIVE;
-
-#if 0
-	/* version id to high */
-	version_id = 0x100000000;
-	size = cmp_ent_build(NULL, version_id, start_time, end_time, model_id,
-			     model_counter, &cfg, cmp_size_bits);
-	TEST_ASSERT_EQUAL_UINT(0, size);
-#endif
-
-	/* start_time to high */
-	start_time = 0x1000000000000ULL;
-	size = cmp_ent_build(ent, version_id, start_time, end_time, model_id,
-			     model_counter, &cfg, cmp_size_bits);
-	TEST_ASSERT_EQUAL_UINT(0, size);
-	/* this should work */
-	start_time = 0xFFFFFFFFFFFFULL;
-	size = cmp_ent_build(ent, version_id, start_time, end_time, model_id,
-			     model_counter, &cfg, cmp_size_bits);
-	TEST_ASSERT_EQUAL_UINT(IMAGETTE_ADAPTIVE_HEADER_SIZE+60, size);
-
-	/* end_time to high */
-	end_time = 0x1000000000000ULL;
-	size = cmp_ent_build(ent, version_id, start_time, end_time, model_id,
-			     model_counter, &cfg, cmp_size_bits);
-	TEST_ASSERT_EQUAL_UINT(0, size);
-	/* this should work */
-	end_time = 0xFFFFFFFFFFFFULL;
-	size = cmp_ent_build(ent, version_id, start_time, end_time, model_id,
-			     model_counter, &cfg, cmp_size_bits);
-	TEST_ASSERT_EQUAL_UINT(IMAGETTE_ADAPTIVE_HEADER_SIZE+60, size);
-
-	/* golomb_par to high */
-	cfg.golomb_par = 0x100;
-	size = cmp_ent_build(ent, version_id, start_time, end_time, model_id,
-			     model_counter, &cfg, cmp_size_bits);
-	TEST_ASSERT_EQUAL_UINT(0, size);
-	/* this should work */
-	cfg.golomb_par = 0xFF;
-	size = cmp_ent_build(ent, version_id, start_time, end_time, model_id,
-			     model_counter, &cfg, cmp_size_bits);
-	TEST_ASSERT_EQUAL_UINT(IMAGETTE_ADAPTIVE_HEADER_SIZE+60, size);
-
-	free(ent);
 }
 
 
@@ -1980,43 +1902,55 @@ void test_cmp_ent_print(void)
 {
 	size_t size;
 	struct cmp_entity *ent;
-	uint32_t version_id;
-	uint64_t start_time, end_time;
-	uint16_t model_id;
-	uint8_t model_counter;
-	struct cmp_cfg cfg;
-	int cmp_size_bits;
-	struct cmp_max_used_bits max_used_bits = {0};
 
-	/* set up max used bit version */
-	max_used_bits.version = 42;
-	cfg.max_used_bits = &max_used_bits;
+	uint32_t version_id = 42;
+	uint64_t start_timestamp = 100;
+	uint64_t end_timestamp = 200;
+	uint16_t model_id = 12;
+	uint8_t model_counter = 23;
+	uint32_t data_type = DATA_TYPE_F_CAM_IMAGETTE_ADAPTIVE;
+	uint32_t cmp_mode = CMP_MODE_MODEL_MULTI;
+	uint32_t model_value_used = 11;
+	uint32_t lossy_cmp_par_used = 2;
+	uint32_t original_size = 18;
+	uint32_t spill = MIN_IMA_SPILL;
+	uint32_t golomb_par = MAX_IMA_GOLOMB_PAR;
+	uint32_t ap1_spill = 555;
+	uint32_t ap1_golomb_par = 14;
+	uint32_t ap2_spill = 333;
+	uint32_t ap2_golomb_par = 43;
+	uint32_t cmp_size_byte = 60;
+	uint8_t reserved = 42;
 
-	version_id = 42;
-	start_time = 100;
-	end_time = 200;
-	model_id = 12;
-	model_counter = 23;
-	cfg.data_type = DATA_TYPE_F_CAM_IMAGETTE_ADAPTIVE;
-	cfg.cmp_mode = CMP_MODE_MODEL_MULTI;
-	cfg.model_value = 11;
-	cfg.round = 2;
-	cfg.samples = 9;
-	cfg.spill = MIN_IMA_SPILL;
-	cfg.golomb_par = MAX_IMA_GOLOMB_PAR;
-	cfg.ap1_spill = 555;
-	cfg.ap1_golomb_par = 14;
-	cfg.ap2_spill = 333;
-	cfg.ap2_golomb_par = 43;
-	cmp_size_bits = 60*8;
-
-	size = cmp_ent_build(NULL, version_id, start_time, end_time, model_id,
-			     model_counter, &cfg, cmp_size_bits);
+	size = cmp_ent_create(NULL, data_type, 0, cmp_size_byte);
 	TEST_ASSERT_EQUAL_UINT(IMAGETTE_ADAPTIVE_HEADER_SIZE+60, size);
 	ent = calloc(1, size); TEST_ASSERT_NOT_NULL(ent);
-	size = cmp_ent_build(ent, version_id, start_time, end_time, model_id,
-			     model_counter, &cfg, cmp_size_bits);
+	size = cmp_ent_create(ent, data_type, 0, cmp_size_byte);
 	TEST_ASSERT_EQUAL_UINT(IMAGETTE_ADAPTIVE_HEADER_SIZE+60, size);
+
+	cmp_ent_set_version_id(ent, version_id);
+
+	cmp_ent_set_original_size(ent, original_size);
+
+	cmp_ent_set_start_timestamp(ent, start_timestamp);
+	cmp_ent_set_end_timestamp(ent, end_timestamp);
+
+	cmp_ent_set_cmp_mode(ent, cmp_mode);
+	cmp_ent_set_model_value(ent, model_value_used);
+	cmp_ent_set_model_id(ent, model_id);
+	cmp_ent_set_model_counter(ent, model_counter);
+	cmp_ent_set_reserved(ent, reserved);
+	cmp_ent_set_lossy_cmp_par(ent, lossy_cmp_par_used);
+
+	cmp_ent_set_ima_spill(ent, spill);
+	cmp_ent_set_ima_golomb_par(ent, golomb_par);
+
+	cmp_ent_set_ima_ap1_spill(ent, ap1_spill);
+	cmp_ent_set_ima_ap1_golomb_par(ent, ap1_golomb_par);
+
+	cmp_ent_set_ima_ap2_spill(ent, ap2_spill);
+	cmp_ent_set_ima_ap2_golomb_par(ent, ap2_golomb_par);
+
 
 	cmp_ent_print(ent);
 
@@ -2035,88 +1969,86 @@ void test_cmp_ent_parse(void)
 {
 	size_t size;
 	struct cmp_entity *ent;
-	uint32_t version_id;
-	uint64_t start_time, end_time;
-	uint16_t model_id;
-	uint8_t model_counter;
-	struct cmp_cfg cfg = {0};
-	int cmp_size_bits;
-	struct cmp_max_used_bits max_used_bits = {0};
 
-	/* set up max used bit version */
-	max_used_bits.version = 42;
-	cfg.max_used_bits = &max_used_bits;
+	uint32_t version_id = 42;
+	uint64_t start_timestamp = 100;
+	uint64_t end_timestamp = 200;
+	uint16_t model_id = 12;
+	uint8_t model_counter = 23;
+	uint32_t data_type = DATA_TYPE_F_CAM_IMAGETTE_ADAPTIVE;
+	uint32_t cmp_mode = CMP_MODE_MODEL_MULTI;
+	uint32_t model_value_used = 11;
+	uint32_t lossy_cmp_par_used = 2;
+	uint32_t original_size = 18;
+	uint32_t spill = MIN_IMA_SPILL;
+	uint32_t golomb_par = MAX_IMA_GOLOMB_PAR;
+	uint32_t ap1_spill = 555;
+	uint32_t ap1_golomb_par = 14;
+	uint32_t ap2_spill = 333;
+	uint32_t ap2_golomb_par = 43;
+	uint32_t cmp_size_byte = 60;
+	uint8_t resvered = 42;
 
-	version_id = 42;
-	start_time = 100;
-	end_time = 200;
-	model_id = 12;
-	model_counter = 23;
-	cfg.data_type = DATA_TYPE_F_CAM_IMAGETTE_ADAPTIVE;
-	cfg.cmp_mode = CMP_MODE_MODEL_MULTI;
-	cfg.model_value = 11;
-	cfg.round = 2;
-	cfg.samples = 9;
-	cfg.spill = MIN_IMA_SPILL;
-	cfg.golomb_par = MAX_IMA_GOLOMB_PAR;
-	cfg.ap1_spill = 555;
-	cfg.ap1_golomb_par = 14;
-	cfg.ap2_spill = 333;
-	cfg.ap2_golomb_par = 43;
-	cmp_size_bits = 60*8;
-
-	size = cmp_ent_build(NULL, version_id, start_time, end_time, model_id,
-			     model_counter, &cfg, cmp_size_bits);
+	size = cmp_ent_create(NULL, data_type, 0, cmp_size_byte);
 	TEST_ASSERT_EQUAL_UINT(IMAGETTE_ADAPTIVE_HEADER_SIZE+60, size);
 	ent = calloc(1, size); TEST_ASSERT_NOT_NULL(ent);
-	size = cmp_ent_build(ent, version_id, start_time, end_time, model_id,
-			     model_counter, &cfg, cmp_size_bits);
+	size = cmp_ent_create(ent, data_type, 0, cmp_size_byte);
 	TEST_ASSERT_EQUAL_UINT(IMAGETTE_ADAPTIVE_HEADER_SIZE+60, size);
 
+	cmp_ent_set_version_id(ent, version_id);
+
+	cmp_ent_set_original_size(ent, original_size);
+
+	cmp_ent_set_start_timestamp(ent, start_timestamp);
+	cmp_ent_set_end_timestamp(ent, end_timestamp);
+
+	cmp_ent_set_cmp_mode(ent, cmp_mode);
+	cmp_ent_set_model_value(ent, model_value_used);
+	cmp_ent_set_model_id(ent, model_id);
+	cmp_ent_set_model_counter(ent, model_counter);
+	cmp_ent_set_reserved(ent, resvered);
+	cmp_ent_set_lossy_cmp_par(ent, lossy_cmp_par_used);
+
+	cmp_ent_set_ima_spill(ent, spill);
+	cmp_ent_set_ima_golomb_par(ent, golomb_par);
+
+	cmp_ent_set_ima_ap1_spill(ent, ap1_spill);
+	cmp_ent_set_ima_ap1_golomb_par(ent, ap1_golomb_par);
+
+	cmp_ent_set_ima_ap2_spill(ent, ap2_spill);
+	cmp_ent_set_ima_ap2_golomb_par(ent, ap2_golomb_par);
+
 	cmp_ent_parse(ent);
 
-	free(ent);
 
-
-	cfg.data_type = DATA_TYPE_IMAGETTE;
-	size = cmp_ent_build(NULL, version_id, start_time, end_time, model_id,
-			     model_counter, &cfg, cmp_size_bits);
+	data_type = DATA_TYPE_IMAGETTE;
+	size = cmp_ent_create(ent, data_type, 0, cmp_size_byte);
 	TEST_ASSERT_EQUAL_UINT(IMAGETTE_HEADER_SIZE+60, size);
-	ent = calloc(1, size); TEST_ASSERT_NOT_NULL(ent);
-	size = cmp_ent_build(ent, version_id, start_time, end_time, model_id,
-			     model_counter, &cfg, cmp_size_bits);
-	TEST_ASSERT_EQUAL_UINT(IMAGETTE_HEADER_SIZE+60, size);
 
 	cmp_ent_parse(ent);
 
-	free(ent);
 
-	cfg.data_type = DATA_TYPE_IMAGETTE;
-	cfg.cmp_mode = CMP_MODE_RAW;
+	data_type = DATA_TYPE_IMAGETTE;
+	cmp_mode = CMP_MODE_RAW;
 	version_id = 0x800F0003;
-	size = cmp_ent_build(NULL, version_id, start_time, end_time, model_id,
-			     model_counter, &cfg, cmp_size_bits);
+	size = cmp_ent_create(ent, data_type, cmp_mode == CMP_MODE_RAW, cmp_size_byte);
 	TEST_ASSERT_EQUAL_UINT(GENERIC_HEADER_SIZE+60, size);
-	ent = calloc(1, size); TEST_ASSERT_NOT_NULL(ent);
-	size = cmp_ent_build(ent, version_id, start_time, end_time, model_id,
-			     model_counter, &cfg, cmp_size_bits);
-	TEST_ASSERT_EQUAL_UINT(GENERIC_HEADER_SIZE+60, size);
+	cmp_ent_set_version_id(ent, version_id);
+	cmp_ent_set_cmp_mode(ent, cmp_mode);
 
 	cmp_ent_parse(ent);
 
-	free(ent);
 
-	cfg.data_type = DATA_TYPE_S_FX;
-	cfg.cmp_mode = CMP_MODE_MODEL_ZERO;
-	version_id = 0x800F0003;
-	size = cmp_ent_build(NULL, version_id, start_time, end_time, model_id,
-			     model_counter, &cfg, cmp_size_bits);
-	TEST_ASSERT_EQUAL_UINT(NON_IMAGETTE_HEADER_SIZE+60, size);
-	ent = calloc(1, size); TEST_ASSERT_NOT_NULL(ent);
-	size = cmp_ent_build(ent, version_id, start_time, end_time, model_id,
-			     model_counter, &cfg, cmp_size_bits);
+	data_type = DATA_TYPE_CHUNK;
+	cmp_mode = CMP_MODE_MODEL_ZERO;
+	cmp_ent_set_cmp_mode(ent, cmp_mode);
+	size = cmp_ent_create(ent, data_type, cmp_mode == CMP_MODE_RAW, cmp_size_byte);
 	TEST_ASSERT_EQUAL_UINT(NON_IMAGETTE_HEADER_SIZE+60, size);
 
+	cmp_ent_parse(ent);
+
+	/* unknown data product type */
+	cmp_ent_set_data_type(ent, DATA_TYPE_UNKNOWN, 0);
 	cmp_ent_parse(ent);
 
 	free(ent);

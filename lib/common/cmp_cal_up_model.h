@@ -13,7 +13,7 @@
  * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
  * more details.
  *
- * @brief functions to calculate the update (new) model
+ * @brief functions to calculate the updated (new) model
  */
 
 #ifndef CMP_CAL_UP_MODEL_H
@@ -53,7 +53,7 @@
 
 
 /**
- * @brief implantation of the model update equation
+ * @brief implementation of the model update equation
  * @note check before that model_value is not greater than MAX_MODEL_VALUE
  *
  * @warning: Do not use this macro with types larger than uint32_t
@@ -69,22 +69,22 @@
 #define cmp_up_model(data, model, model_value, round)							\
 	__extension__											\
 	({												\
-		__typeof__(data) __ret;									\
+		uint32_t __ret;										\
 		switch (sizeof(data)) {									\
 		case sizeof(uint8_t):									\
 		case sizeof(uint16_t):									\
-			__ret = (__typeof__(__ret))cmp_up_model16(data, model, model_value, round);	\
+			__ret = cmp_up_model16(data, model, model_value, round);			\
 			break;										\
 		case sizeof(uint32_t):									\
-			__ret = (__typeof__(__ret))cmp_up_model32(data, model, model_value, round);	\
+			__ret = cmp_up_model32(data, model, model_value, round);			\
 			break;										\
 		}											\
-		__ret;											\
+		(__typeof__(data))__ret;								\
 	})
 
 
 /* fast calculation  for data size smaller that uint32_t  */
-static inline uint16_t cmp_up_model16(uint32_t data, uint32_t model,
+static __inline uint16_t cmp_up_model16(uint32_t data, uint32_t model,
 				      unsigned int model_value, unsigned int round)
 {
 	/* round and round back input because for decompression the accurate
@@ -100,7 +100,7 @@ static inline uint16_t cmp_up_model16(uint32_t data, uint32_t model,
 
 
 /* slow calculation for uint32_t data size */
-static inline uint32_t cmp_up_model32(uint32_t data, uint32_t model,
+static __inline uint32_t cmp_up_model32(uint32_t data, uint32_t model,
 				      unsigned int model_value, unsigned int round)
 {
 	/* round and round back input because for decompression the accurate

@@ -2,19 +2,18 @@
 
 /*=======Automagically Detected Files To Include=====*/
 #include "unity.h"
-#include "../test_common/test_common.h"
-#include <string.h>
-#include <stdlib.h>
-#include <cmp_icu.h>
-#include <decmp.h>
-#include <cmp_data_types.h>
-#include <leon_inttypes.h>
 
 /*=======External Functions This Runner Calls=====*/
-extern void setUp(void);
-extern void tearDown(void);
-extern void test_random_compression_decompression(void);
-extern void test_random_compression_decompression2(void);
+extern void test_random_round_trip_like_rdcu_compression(void);
+extern void test_random_compression_decompress_rdcu_data(void);
+extern void test_random_collection_round_trip(void);
+extern void test_cmp_collection_raw(void);
+extern void test_cmp_collection_diff(void);
+extern void test_cmp_collection_worst_case(void);
+extern void test_cmp_collection_imagette_worst_case(void);
+extern void test_cmp_decmp_chunk_raw(void);
+extern void test_cmp_decmp_chunk_worst_case(void);
+extern void test_cmp_decmp_diff(void);
 
 
 /*=======Mock Management=====*/
@@ -32,7 +31,6 @@ static void CMock_Destroy(void)
 void tearDown(void) {}
 
 /*=======Test Reset Options=====*/
-void resetTest(void);
 void resetTest(void)
 {
   tearDown();
@@ -41,7 +39,6 @@ void resetTest(void)
   CMock_Init();
   setUp();
 }
-void verifyTest(void);
 void verifyTest(void)
 {
   CMock_Verify();
@@ -79,8 +76,16 @@ static void run_test(UnityTestFunction func, const char* name, UNITY_LINE_TYPE l
 int main(void)
 {
   UnityBegin("../test/cmp_decmp/test_cmp_decmp.c");
-  run_test(test_random_compression_decompression, "test_random_compression_decompression", 565);
-  run_test(test_random_compression_decompression2, "test_random_compression_decompression2", 609);
+  run_test(test_random_round_trip_like_rdcu_compression, "test_random_round_trip_like_rdcu_compression", 808);
+  run_test(test_random_compression_decompress_rdcu_data, "test_random_compression_decompress_rdcu_data", 893);
+  run_test(test_random_collection_round_trip, "test_random_collection_round_trip", 944);
+  run_test(test_cmp_collection_raw, "test_cmp_collection_raw", 1063);
+  run_test(test_cmp_collection_diff, "test_cmp_collection_diff", 1133);
+  run_test(test_cmp_collection_worst_case, "test_cmp_collection_worst_case", 1217);
+  run_test(test_cmp_collection_imagette_worst_case, "test_cmp_collection_imagette_worst_case", 1304);
+  run_test(test_cmp_decmp_chunk_raw, "test_cmp_decmp_chunk_raw", 1390);
+  run_test(test_cmp_decmp_chunk_worst_case, "test_cmp_decmp_chunk_worst_case", 1491);
+  run_test(test_cmp_decmp_diff, "test_cmp_decmp_diff", 1602);
 
   return UnityEnd();
 }

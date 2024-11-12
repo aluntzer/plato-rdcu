@@ -109,7 +109,7 @@
 #endif /* USE_BUILTIN_BSWAP */
 
 
-static inline __attribute__((const)) uint16_t __fswab16(uint16_t val)
+static __inline __attribute__((const)) uint16_t __fswab16(uint16_t val)
 {
 #ifdef __HAVE_BUILTIN_BSWAP16__
 	return __builtin_bswap16(val);
@@ -119,7 +119,7 @@ static inline __attribute__((const)) uint16_t __fswab16(uint16_t val)
 }
 
 
-static inline __attribute__((const)) uint32_t __fswab32(uint32_t val)
+static __inline __attribute__((const)) uint32_t __fswab32(uint32_t val)
 {
 #ifdef __HAVE_BUILTIN_BSWAP32__
 	return __builtin_bswap32(val);
@@ -129,7 +129,7 @@ static inline __attribute__((const)) uint32_t __fswab32(uint32_t val)
 }
 
 
-static inline __attribute__((const)) uint64_t __fswab64(uint64_t val)
+static __inline __attribute__((const)) uint64_t __fswab64(uint64_t val)
 {
 #ifdef __HAVE_BUILTIN_BSWAP64__
 	return __builtin_bswap64(val);
@@ -174,7 +174,7 @@ static inline __attribute__((const)) uint64_t __fswab64(uint64_t val)
  * @brief return a byteswapped 16-bit value from a pointer
  * @param p a pointer to a naturally-aligned 16-bit value
  */
-static inline uint16_t __swab16p(const uint16_t *p)
+static __inline uint16_t __swab16p(const uint16_t *p)
 {
 	return __swab16(*p);
 }
@@ -184,7 +184,7 @@ static inline uint16_t __swab16p(const uint16_t *p)
  * @brief return a byteswapped 32-bit value from a pointer
  * @param p a pointer to a naturally-aligned 32-bit value
  */
-static inline uint32_t __swab32p(const uint32_t *p)
+static __inline uint32_t __swab32p(const uint32_t *p)
 {
 	return __swab32(*p);
 }
@@ -194,7 +194,7 @@ static inline uint32_t __swab32p(const uint32_t *p)
  * @brief return a byteswapped 64-bit value from a pointer
  * @param p a pointer to a naturally-aligned 64-bit value
  */
-static inline uint64_t __swab64p(const uint64_t *p)
+static __inline uint64_t __swab64p(const uint64_t *p)
 {
 	return __swab64(*p);
 }
@@ -205,7 +205,7 @@ static inline uint64_t __swab64p(const uint64_t *p)
  * @param p a pointer to a naturally-aligned 16-bit value
  */
 
-static inline void __swab16s(uint16_t *p)
+static __inline void __swab16s(uint16_t *p)
 {
 	*p = __swab16p(p);
 }
@@ -216,7 +216,7 @@ static inline void __swab16s(uint16_t *p)
  * @param p a pointer to a naturally-aligned 32-bit value
  */
 
-static inline void __swab32s(uint32_t *p)
+static __inline void __swab32s(uint32_t *p)
 {
 	*p = __swab32p(p);
 }
@@ -227,7 +227,7 @@ static inline void __swab32s(uint32_t *p)
  * @param p a pointer to a naturally-aligned 64-bit value
  */
 
-static inline void __swab64s(uint64_t *p)
+static __inline void __swab64s(uint64_t *p)
 {
 	*p = __swab64p(p);
 }

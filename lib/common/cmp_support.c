@@ -17,11 +17,14 @@
  * @see Data Compression User Manual PLATO-UVIE-PL-UM-0001
  */
 
+#include <stdint.h>
+
 #include "compiler.h"
 
 #include "cmp_support.h"
 #include "cmp_debug.h"
 #include "leon_inttypes.h"
+#include "cmp_cal_up_model.h"
 
 
 /**
@@ -112,30 +115,6 @@ int raw_mode_is_used(enum cmp_mode cmp_mode)
 
 
 /**
- * @brief check if the compression mode is supported by the RDCU compressor
- *
- * @param cmp_mode	compression mode
- *
- * @returns 1 when the compression mode is supported by the RDCU, otherwise 0
- */
-
-int rdcu_supported_cmp_mode_is_used(enum cmp_mode cmp_mode)
-{
-	switch (cmp_mode) {
-	case CMP_MODE_RAW:
-	case CMP_MODE_MODEL_ZERO:
-	case CMP_MODE_DIFF_ZERO:
-	case CMP_MODE_MODEL_MULTI:
-	case CMP_MODE_DIFF_MULTI:
-		return 1;
-	case CMP_MODE_STUFF:
-	default:
-		return 0;
-	}
-}
-
-
-/**
  * @brief check if the data product data type is supported by the RDCU compressor
  *
  * @param data_type	compression data product type
@@ -175,10 +154,10 @@ int cmp_mode_is_supported(enum cmp_mode cmp_mode)
 	case CMP_MODE_DIFF_ZERO:
 	case CMP_MODE_MODEL_MULTI:
 	case CMP_MODE_DIFF_MULTI:
-	case CMP_MODE_STUFF:
 		return 1;
+	default:
+		return 0;
 	}
-	return 0;
 }
 
 
@@ -349,12 +328,12 @@ uint32_t cmp_icu_max_spill(unsigned int cmp_par)
 	/* the ICU compressor can generate code words with a length of maximal 32 bits. */
 	unsigned int const max_cw_bits = 32;
 	unsigned int const cutoff = (0x2U << (ilog_2(cmp_par) & 0x1FU)) - cmp_par;
-	unsigned int const max_n_sym_offset = max_cw_bits/2 - 1;
+	unsigned int const max_n_sym_offset = (max_cw_bits/2) - 1;
 
 	if (!cmp_par || cmp_par > MAX_NON_IMA_GOLOMB_PAR)
 		return 0;
 
-	return (max_cw_bits-1-ilog_2(cmp_par))*cmp_par + cutoff
+	return ((max_cw_bits-1-ilog_2(cmp_par))*cmp_par) + cutoff
 		- max_n_sym_offset - 1;
 }
 
@@ -374,78 +353,35 @@ unsigned int cmp_bit_to_byte(unsigned int cmp_size_bit)
 
 
 /**
- * @brief calculate the need bytes to hold a bitstream
- * @note we round up the result to multiples of 4 bytes
- *
- * @param cmp_size_bit	compressed data size, measured in bits
- *
- * @returns the size in bytes to store the hole bitstream
- */
-
-unsigned int cmp_bit_to_4byte(unsigned int cmp_size_bit)
-{
-	return (cmp_bit_to_byte(cmp_size_bit) + 3) & ~0x3UL;
-}
-
-
-/**
  * @brief check if the compression data type, compression mode, model value and
  *	the lossy rounding parameters are invalid for a RDCU or ICU compression
  *
  * @param cfg	pointer to a compression configuration containing the compression
  *	data product type, compression mode, model value and the rounding parameters
- * @param opt		check options:
- *			RDCU_CHECK for RDCU compression check
- *			ICU_CHECK for ICU compression check
  *
  * @returns 0 if the compression data type, compression mode, model value and
  *	the lossy rounding parameters are valid for an RDCU or ICU compression,
  *	non-zero if parameters are invalid
  */
 
-int cmp_cfg_gen_par_is_invalid(const struct cmp_cfg *cfg, enum check_opt opt)
+int cmp_cfg_gen_par_is_invalid(const struct cmp_cfg *cfg)
 {
 	int cfg_invalid = 0;
-	int invalid_data_type;
-	int unsupported_cmp_mode;
-	int check_model_value;
-	uint32_t max_round_value = 0;
-	MAYBE_UNUSED const char *str = "";
 
 	if (!cfg)
 		return 1;
 
-	switch (opt) {
-	case RDCU_CHECK:
-		/* the RDCU can only compress imagette data */
-		invalid_data_type = !cmp_imagette_data_type_is_used(cfg->data_type);
-		unsupported_cmp_mode = !rdcu_supported_cmp_mode_is_used(cfg->cmp_mode);
-		max_round_value = MAX_RDCU_ROUND;
-		/* for the RDCU the model vale has to be always in the allowed range */
-		check_model_value = 1;
-		str = " for a RDCU compression";
-		break;
-	case ICU_CHECK:
-		invalid_data_type = cmp_data_type_is_invalid(cfg->data_type);
-		unsupported_cmp_mode = !cmp_mode_is_supported(cfg->cmp_mode);
-		max_round_value = MAX_ICU_ROUND;
-		check_model_value = model_mode_is_used(cfg->cmp_mode);
-		break;
-	default:
-		return 1;
-	}
-
-	if (invalid_data_type) {
-		debug_print("Error: selected compression data type is not supported%s.", str);
+	if (cmp_data_type_is_invalid(cfg->data_type)) {
+		debug_print("Error: selected compression data type is not supported.");
 		cfg_invalid++;
 	}
 
-	if (unsupported_cmp_mode) {
-		debug_print("Error: selected cmp_mode: %i is not supported%s.", cfg->cmp_mode, str);
+	if (!cmp_mode_is_supported(cfg->cmp_mode)) {
+		debug_print("Error: selected cmp_mode: %i is not supported.", cfg->cmp_mode);
 		cfg_invalid++;
 	}
 
-	if (check_model_value) {
+	if (model_mode_is_used(cfg->cmp_mode)) {
 		if (cfg->model_value > MAX_MODEL_VALUE) {
 			debug_print("Error: selected model_value: %" PRIu32 " is invalid. The largest supported value is: %u.",
 				    cfg->model_value, MAX_MODEL_VALUE);
@@ -453,9 +389,9 @@ int cmp_cfg_gen_par_is_invalid(const struct cmp_cfg *cfg, enum check_opt opt)
 		}
 	}
 
-	if (cfg->round > max_round_value) {
-		debug_print("Error: selected lossy parameter: %" PRIu32 " is not supported%s. The largest supported value is: %" PRIu32 ".",
-			    cfg->round, str, max_round_value);
+	if (cfg->round > MAX_ICU_ROUND) {
+		debug_print("Error: selected lossy parameter: %" PRIu32 " is not supported. The largest supported value is: %" PRIu32 ".",
+			    cfg->round, MAX_ICU_ROUND);
 		cfg_invalid++;
 	}
 
@@ -467,150 +403,11 @@ int cmp_cfg_gen_par_is_invalid(const struct cmp_cfg *cfg, enum check_opt opt)
 
 
 /**
- * @brief check if the ICU buffer parameters are invalid
- *
- * @param cfg	pointer to the compressor configuration
- *
- * @returns 0 if the buffer parameters are valid, otherwise invalid
- */
-
-int cmp_cfg_icu_buffers_is_invalid(const struct cmp_cfg *cfg)
-{
-	int cfg_invalid = 0;
-
-	if (!cfg)
-		return 1;
-
-	if (cfg->input_buf == NULL) {
-		debug_print("Error: The data_to_compress buffer for the data to be compressed is NULL.");
-		cfg_invalid++;
-	}
-
-	if (cfg->samples == 0)
-		debug_print("Warning: The samples parameter is 0. No data are compressed. This behavior may not be intended.");
-
-	if (cfg->icu_output_buf) {
-		if (cfg->buffer_length == 0 && cfg->samples != 0) {
-			debug_print("Error: The buffer_length is set to 0. There is no space to store the compressed data.");
-			cfg_invalid++;
-		}
-
-		if (raw_mode_is_used(cfg->cmp_mode) && cfg->buffer_length < cfg->samples) {
-			debug_print("Error: The compressed_data_len_samples is to small to hold the data form the data_to_compress.");
-			cfg_invalid++;
-		}
-
-		if (cfg->icu_output_buf == cfg->input_buf) {
-			debug_print("Error: The compressed_data buffer is the same as the data_to_compress buffer.");
-			cfg_invalid++;
-		}
-	}
-
-	if (model_mode_is_used(cfg->cmp_mode)) {
-		if (cfg->model_buf == NULL) {
-			debug_print("Error: The model_of_data buffer for the model data is NULL.");
-			cfg_invalid++;
-		}
-
-		if (cfg->model_buf == cfg->input_buf) {
-			debug_print("Error: The model_of_data buffer is the same as the data_to_compress buffer.");
-			cfg_invalid++;
-		}
-
-		if (cfg->model_buf == cfg->icu_output_buf) {
-			debug_print("Error: The model_of_data buffer is the same as the compressed_data buffer.");
-			cfg_invalid++;
-		}
-
-		if (cfg->icu_new_model_buf) {
-			if (cfg->icu_new_model_buf == cfg->input_buf) {
-				debug_print("Error: The updated_model buffer is the same as the data_to_compress buffer.");
-				cfg_invalid++;
-			}
-
-			if (cfg->icu_new_model_buf == cfg->icu_output_buf) {
-				debug_print("Error: The compressed_data buffer is the same as the compressed_data buffer.");
-				cfg_invalid++;
-			}
-		}
-	}
-
-	return cfg_invalid;
-}
-
-
-/**
- * @brief check if all entries in the max_used_bits structure are in the allowed range
- *
- * @param max_used_bits	pointer to max_used_bits structure to check
- *
- * @returns 0 if all entries are valid, otherwise one or more entries are invalid
- */
-
-
-int cmp_cfg_icu_max_used_bits_out_of_limit(const struct cmp_max_used_bits *max_used_bits)
-{
-#define CHECK_MAX_USED_BITS_LIMIT(entry) \
-	do { \
-		if (max_used_bits->entry > MAX_USED_BITS_SAFE.entry) { \
-			debug_print("Error: The " #entry " entry in the max_used_bits structure is too large (actual: %x, max: %x).",  max_used_bits->entry, MAX_USED_BITS_SAFE.entry); \
-			error++; \
-		} \
-	} while (0)
-
-	int error = 0;
-
-	if (!max_used_bits) {
-		debug_print("Error: The pointer to the max_used_bits structure is NULL.");
-		return 1;
-	}
-
-	CHECK_MAX_USED_BITS_LIMIT(s_exp_flags);
-	CHECK_MAX_USED_BITS_LIMIT(s_fx);
-	CHECK_MAX_USED_BITS_LIMIT(s_efx);
-	CHECK_MAX_USED_BITS_LIMIT(s_ncob);
-	CHECK_MAX_USED_BITS_LIMIT(s_ecob);
-	CHECK_MAX_USED_BITS_LIMIT(f_fx);
-	CHECK_MAX_USED_BITS_LIMIT(f_efx);
-	CHECK_MAX_USED_BITS_LIMIT(f_ncob);
-	CHECK_MAX_USED_BITS_LIMIT(f_ecob);
-	CHECK_MAX_USED_BITS_LIMIT(l_exp_flags);
-	CHECK_MAX_USED_BITS_LIMIT(l_fx);
-	CHECK_MAX_USED_BITS_LIMIT(l_fx_variance);
-	CHECK_MAX_USED_BITS_LIMIT(l_efx);
-	CHECK_MAX_USED_BITS_LIMIT(l_ncob);
-	CHECK_MAX_USED_BITS_LIMIT(l_ecob);
-	CHECK_MAX_USED_BITS_LIMIT(l_cob_variance);
-	CHECK_MAX_USED_BITS_LIMIT(nc_imagette);
-	CHECK_MAX_USED_BITS_LIMIT(saturated_imagette);
-	CHECK_MAX_USED_BITS_LIMIT(nc_offset_mean);
-	CHECK_MAX_USED_BITS_LIMIT(nc_offset_variance);
-	CHECK_MAX_USED_BITS_LIMIT(nc_background_mean);
-	CHECK_MAX_USED_BITS_LIMIT(nc_background_variance);
-	CHECK_MAX_USED_BITS_LIMIT(nc_background_outlier_pixels);
-	CHECK_MAX_USED_BITS_LIMIT(smearing_mean);
-	CHECK_MAX_USED_BITS_LIMIT(smearing_variance_mean);
-	CHECK_MAX_USED_BITS_LIMIT(smearing_outlier_pixels);
-	CHECK_MAX_USED_BITS_LIMIT(fc_imagette);
-	CHECK_MAX_USED_BITS_LIMIT(fc_offset_mean);
-	CHECK_MAX_USED_BITS_LIMIT(fc_offset_variance);
-	CHECK_MAX_USED_BITS_LIMIT(fc_background_mean);
-	CHECK_MAX_USED_BITS_LIMIT(fc_background_variance);
-	CHECK_MAX_USED_BITS_LIMIT(fc_background_outlier_pixels);
-
-	return error;
-
-#undef CHECK_MAX_USED_BITS_LIMIT
-}
-
-
-/**
  * @brief check if the combination of the different compression parameters is invalid
  *
  * @param cmp_par	compression parameter
  * @param spill		spillover threshold parameter
  * @param cmp_mode	compression mode
- * @param data_type	compression data type
  * @param par_name	string describing the use of the compression par. for
  *			debug messages (can be NULL)
  *
@@ -618,28 +415,9 @@ int cmp_cfg_icu_max_used_bits_out_of_limit(const struct cmp_max_used_bits *max_u
  */
 
 static int cmp_pars_are_invalid(uint32_t cmp_par, uint32_t spill, enum cmp_mode cmp_mode,
-				enum cmp_data_type data_type, const char *par_name MAYBE_UNUSED)
+				const char *par_name MAYBE_UNUSED)
 {
 	int cfg_invalid = 0;
-	uint32_t min_golomb_par;
-	uint32_t max_golomb_par;
-	uint32_t min_spill;
-	uint32_t max_spill;
-
-	/* The maximum compression parameter for imagette data are smaller to
-	 * fit into the imagette compression entity header */
-	if (cmp_imagette_data_type_is_used(data_type)) {
-		min_golomb_par = MIN_IMA_GOLOMB_PAR;
-		max_golomb_par = MAX_IMA_GOLOMB_PAR;
-		min_spill = MIN_IMA_SPILL;
-		max_spill = cmp_ima_max_spill(cmp_par);
-	} else {
-		min_golomb_par = MIN_NON_IMA_GOLOMB_PAR;
-		max_golomb_par = MAX_NON_IMA_GOLOMB_PAR;
-		min_spill = MIN_NON_IMA_SPILL;
-		max_spill = cmp_icu_max_spill(cmp_par);
-	}
-
 
 	switch (cmp_mode) {
 	case CMP_MODE_RAW:
@@ -649,32 +427,25 @@ static int cmp_pars_are_invalid(uint32_t cmp_par, uint32_t spill, enum cmp_mode 
 	case CMP_MODE_DIFF_MULTI:
 	case CMP_MODE_MODEL_ZERO:
 	case CMP_MODE_MODEL_MULTI:
-		if (cmp_par < min_golomb_par || cmp_par > max_golomb_par) {
+		if (cmp_par < MIN_NON_IMA_GOLOMB_PAR || cmp_par > MAX_NON_IMA_GOLOMB_PAR) {
 			debug_print("Error: The selected %s compression parameter: %" PRIu32 " is not supported in the selected compression mode. The compression parameter has to be between [%" PRIu32 ", %" PRIu32 "] in this mode.",
-				    par_name, cmp_par, min_golomb_par, max_golomb_par);
+				    par_name, cmp_par, MIN_NON_IMA_GOLOMB_PAR, MAX_NON_IMA_GOLOMB_PAR);
 			cfg_invalid++;
 		}
-		if (spill < min_spill) {
+		if (spill < MIN_NON_IMA_SPILL) {
 			debug_print("Error: The selected %s spillover threshold value: %" PRIu32 " is too small. The smallest possible spillover value is: %" PRIu32 ".",
-				    par_name, spill, min_spill);
+				    par_name, spill, MIN_NON_IMA_SPILL);
 			cfg_invalid++;
 		}
-		if (spill > max_spill) {
+		if (spill > cmp_icu_max_spill(cmp_par)) {
 			debug_print("Error: The selected %s spillover threshold value: %" PRIu32 " is too large for the selected %s compression parameter: %" PRIu32 ". The largest possible spillover value in the selected compression mode is: %" PRIu32 ".",
-				    par_name, spill, par_name, cmp_par, max_spill);
+				    par_name, spill, par_name, cmp_par, cmp_icu_max_spill(cmp_par));
 			cfg_invalid++;
 		}
 
 		break;
-	case CMP_MODE_STUFF:
-		if (cmp_par > MAX_STUFF_CMP_PAR) {
-			debug_print("Error: The selected %s stuff mode compression parameter: %" PRIu32 " is too large. The largest possible value in the selected compression mode is: %u.",
-				    par_name, cmp_par, MAX_STUFF_CMP_PAR);
-			cfg_invalid++;
-		}
-		break;
 	default:
-		debug_print("Error: The compression mode is not supported.");
+		debug_print("Error: selected cmp_mode: %i is not supported.", cmp_mode);
 		cfg_invalid++;
 		break;
 	}
@@ -690,18 +461,13 @@ static int cmp_pars_are_invalid(uint32_t cmp_par, uint32_t spill, enum cmp_mode 
  * @brief check if the imagette specific compression parameters are invalid
  *
  * @param cfg		pointer to a compressor configuration
- * @param opt		check options:
- *			RDCU_CHECK for a imagette RDCU compression check
- *			ICU_CHECK for a imagette ICU compression check
  *
  * @returns 0 if the imagette specific parameters are valid, otherwise invalid
  */
 
-int cmp_cfg_imagette_is_invalid(const struct cmp_cfg *cfg, enum check_opt opt)
+int cmp_cfg_imagette_is_invalid(const struct cmp_cfg *cfg)
 {
 	int cfg_invalid = 0;
-	enum cmp_mode cmp_mode;
-	enum cmp_data_type data_type;
 
 	if (!cfg)
 		return 1;
@@ -711,29 +477,8 @@ int cmp_cfg_imagette_is_invalid(const struct cmp_cfg *cfg, enum check_opt opt)
 		cfg_invalid++;
 	}
 
-	/* The RDCU needs valid compression parameters also in RAW_MODE */
-	if (opt == RDCU_CHECK && cfg->cmp_mode == CMP_MODE_RAW)
-		cmp_mode = CMP_MODE_MODEL_ZERO;
-	else
-		cmp_mode = cfg->cmp_mode;
-
-	if (opt == ICU_CHECK)
-		data_type = DATA_TYPE_CHUNK;
-	else
-		data_type = cfg->data_type;
-
-
-	cfg_invalid += cmp_pars_are_invalid(cfg->golomb_par, cfg->spill, cmp_mode,
-					    data_type, "imagette");
-
-	/* for the RDCU the adaptive parameters have to be always valid */
-	if (opt == RDCU_CHECK || cmp_ap_imagette_data_type_is_used(cfg->data_type)) {
-		cfg_invalid += cmp_pars_are_invalid(cfg->ap1_golomb_par, cfg->ap1_spill,
-				cmp_mode, cfg->data_type, "adaptive 1 imagette");
-		cfg_invalid += cmp_pars_are_invalid(cfg->ap2_golomb_par, cfg->ap2_spill,
-				cmp_mode, cfg->data_type, "adaptive 2 imagette");
-	}
-
+	cfg_invalid += cmp_pars_are_invalid(cfg->cmp_par_imagette, cfg->spill_imagette,
+					    cfg->cmp_mode, "imagette");
 	return cfg_invalid;
 }
 
@@ -850,22 +595,22 @@ int cmp_cfg_fx_cob_is_invalid(const struct cmp_cfg *cfg)
 
 	if (needed_pars.fx) /* this is always true because every flux/center of brightness data type contains a flux parameter */
 		cfg_invalid += cmp_pars_are_invalid(cfg->cmp_par_fx, cfg->spill_fx,
-						    cfg->cmp_mode, cfg->data_type, "flux");
+						    cfg->cmp_mode, "flux");
 	if (needed_pars.exp_flags)
 		cfg_invalid += cmp_pars_are_invalid(cfg->cmp_par_exp_flags, cfg->spill_exp_flags,
-			cfg->cmp_mode, cfg->data_type, "exposure flags");
+			cfg->cmp_mode, "exposure flags");
 	if (needed_pars.ncob)
 		cfg_invalid += cmp_pars_are_invalid(cfg->cmp_par_ncob, cfg->spill_ncob,
-			cfg->cmp_mode, cfg->data_type, "center of brightness");
+			cfg->cmp_mode, "center of brightness");
 	if (needed_pars.efx)
 		cfg_invalid += cmp_pars_are_invalid(cfg->cmp_par_efx, cfg->spill_efx,
-			cfg->cmp_mode, cfg->data_type, "extended flux");
+			cfg->cmp_mode, "extended flux");
 	if (needed_pars.ecob)
 		cfg_invalid += cmp_pars_are_invalid(cfg->cmp_par_ecob, cfg->spill_ecob,
-			cfg->cmp_mode, cfg->data_type, "extended center of brightness");
+			cfg->cmp_mode, "extended center of brightness");
 	if (needed_pars.fx_cob_variance)
 		cfg_invalid += cmp_pars_are_invalid(cfg->cmp_par_fx_cob_variance,
-			cfg->spill_fx_cob_variance, cfg->cmp_mode, cfg->data_type, "flux/COB variance");
+			cfg->spill_fx_cob_variance, cfg->cmp_mode, "flux/COB variance");
 
 	return cfg_invalid;
 }
@@ -891,66 +636,31 @@ int cmp_cfg_aux_is_invalid(const struct cmp_cfg *cfg)
 	case DATA_TYPE_OFFSET:
 	case DATA_TYPE_F_CAM_OFFSET:
 		cfg_invalid += cmp_pars_are_invalid(cfg->cmp_par_offset_mean, cfg->spill_offset_mean,
-				cfg->cmp_mode, cfg->data_type, "offset mean");
+				cfg->cmp_mode, "offset mean");
 		cfg_invalid += cmp_pars_are_invalid(cfg->cmp_par_offset_variance, cfg->spill_offset_variance,
-				cfg->cmp_mode, cfg->data_type, "offset variance");
+				cfg->cmp_mode, "offset variance");
 		break;
 	case DATA_TYPE_BACKGROUND:
 	case DATA_TYPE_F_CAM_BACKGROUND:
 		cfg_invalid += cmp_pars_are_invalid(cfg->cmp_par_background_mean, cfg->spill_background_mean,
-				cfg->cmp_mode, cfg->data_type, "background mean");
+				cfg->cmp_mode, "background mean");
 		cfg_invalid += cmp_pars_are_invalid(cfg->cmp_par_background_variance, cfg->spill_background_variance,
-				cfg->cmp_mode, cfg->data_type, "background variance");
+				cfg->cmp_mode, "background variance");
 		cfg_invalid += cmp_pars_are_invalid(cfg->cmp_par_background_pixels_error, cfg->spill_background_pixels_error,
-				cfg->cmp_mode, cfg->data_type, "background outlier pixls num");
+				cfg->cmp_mode, "background outlier pixls num");
 		break;
 	case DATA_TYPE_SMEARING:
 		cfg_invalid += cmp_pars_are_invalid(cfg->cmp_par_smearing_mean, cfg->spill_smearing_mean,
-				cfg->cmp_mode, cfg->data_type, "smearing mean");
+				cfg->cmp_mode, "smearing mean");
 		cfg_invalid += cmp_pars_are_invalid(cfg->cmp_par_smearing_variance, cfg->spill_smearing_variance,
-				cfg->cmp_mode, cfg->data_type, "smearing variance");
+				cfg->cmp_mode, "smearing variance");
 		cfg_invalid += cmp_pars_are_invalid(cfg->cmp_par_smearing_pixels_error, cfg->spill_smearing_pixels_error,
-				cfg->cmp_mode, cfg->data_type, "smearing outlier pixls num");
+				cfg->cmp_mode, "smearing outlier pixls num");
 		break;
 	default:
 		debug_print("Error: The compression data type is not an auxiliary science compression data type.");
 		cfg_invalid++;
 	}
-	return cfg_invalid;
-}
-
-
-/**
- * @brief check if a compression configuration is invalid for a ICU compression
- *
- * @param cfg	pointer to a compressor configuration
- *
- * @returns 0 if the compression configuration is valid, otherwise invalid
- */
-
-int cmp_cfg_icu_is_invalid(const struct cmp_cfg *cfg)
-{
-	int cfg_invalid = 0;
-
-	if (!cfg)
-		return 1;
-
-	cfg_invalid += cmp_cfg_gen_par_is_invalid(cfg, ICU_CHECK);
-
-	cfg_invalid += cmp_cfg_icu_buffers_is_invalid(cfg);
-
-	if (cfg->cmp_mode != CMP_MODE_RAW)
-		cfg_invalid += cmp_cfg_icu_max_used_bits_out_of_limit(cfg->max_used_bits);
-
-	if (cmp_imagette_data_type_is_used(cfg->data_type))
-		cfg_invalid += cmp_cfg_imagette_is_invalid(cfg, ICU_CHECK);
-	else if (cmp_fx_cob_data_type_is_used(cfg->data_type))
-		cfg_invalid += cmp_cfg_fx_cob_is_invalid(cfg);
-	else if (cmp_aux_data_type_is_used(cfg->data_type))
-		cfg_invalid += cmp_cfg_aux_is_invalid(cfg);
-	else
-		cfg_invalid++;
-
 	return cfg_invalid;
 }
 

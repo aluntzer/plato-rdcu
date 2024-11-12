@@ -10,8 +10,6 @@ uint32_t cmp_rand32(void);
 
 uint32_t cmp_rand_between(uint32_t min, uint32_t max);
 
-uint32_t cmp_rand_nbits(unsigned int nbits);
-
-void* TEST_malloc(size_t size);
+uint32_t cmp_rand_nbits(unsigned int n_bits);
 
 #endif /* TEST_COMMON_H */

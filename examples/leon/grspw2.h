@@ -22,7 +22,7 @@
 
 #include <stdint.h>
 
-#include "../lib/common/list.h"
+#include "list.h"
 #include "../lib/common/compiler.h"
 #include "sysctl.h"
 

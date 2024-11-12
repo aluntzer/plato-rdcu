@@ -27,6 +27,7 @@
  */
 
 
+#include <stddef.h>
 #include <stdint.h>
 
 #include "../common/cmp_debug.h"
@@ -50,7 +51,7 @@ static int interrupt_signal_enabled = RDCU_INTR_SIG_DEFAULT;
 /**
  * @brief save repeating 3 lines of code...
  *
- * @note This function depends on the SpW implantation and must be adjusted to it.
+ * @note This function depends on the SpW implementation and must be adjusted to it.
  *
  * @note prints abort message if pending status is non-zero after 10 retries
  */
@@ -91,7 +92,7 @@ int rdcu_interrupt_compression(void)
 	rdcu_syncing();
 
 	/* clear local bit immediately, this is a write-only register.
-	 * we would not want to restart compression by accidentially calling
+	 * we would not want to restart compression by accidentally calling
 	 * rdcu_sync_compr_ctrl() again
 	 */
 	rdcu_clear_data_compr_interrupt();
@@ -103,15 +104,15 @@ int rdcu_interrupt_compression(void)
 /**
  * @brief set up RDCU compression register
  *
- * @param cfg  pointer to a compression configuration contains all parameters
- *	required for compression
+ * @param rcfg  pointer to a compression configuration contains all parameters
+ *	required for a RDCU compression
  *
  * @returns 0 on success, error otherwise
  */
 
-static int rdcu_set_compression_register(const struct cmp_cfg *cfg)
+static int rdcu_set_compression_register(const struct rdcu_cfg *rcfg)
 {
-	if (rdcu_cmp_cfg_is_invalid(cfg))
+	if (rdcu_cmp_cfg_is_invalid(rcfg))
 		return -1;
 #if 1
 	/*
@@ -129,39 +130,39 @@ static int rdcu_set_compression_register(const struct cmp_cfg *cfg)
 
 
 	/* first, set compression parameters in local mirror registers */
-	if (rdcu_set_compression_mode(cfg->cmp_mode))
+	if (rdcu_set_compression_mode(rcfg->cmp_mode))
 		return -1;
-	if (rdcu_set_golomb_param(cfg->golomb_par))
+	if (rdcu_set_golomb_param(rcfg->golomb_par))
 		return -1;
-	if (rdcu_set_spillover_threshold(cfg->spill))
+	if (rdcu_set_spillover_threshold(rcfg->spill))
 		return -1;
-	if (rdcu_set_weighting_param(cfg->model_value))
+	if (rdcu_set_weighting_param(rcfg->model_value))
 		return -1;
-	if (rdcu_set_noise_bits_rounded(cfg->round))
-		return -1;
-
-	if (rdcu_set_adaptive_1_golomb_param(cfg->ap1_golomb_par))
-		return -1;
-	if (rdcu_set_adaptive_1_spillover_threshold(cfg->ap1_spill))
+	if (rdcu_set_noise_bits_rounded(rcfg->round))
 		return -1;
 
-	if (rdcu_set_adaptive_2_golomb_param(cfg->ap2_golomb_par))
+	if (rdcu_set_adaptive_1_golomb_param(rcfg->ap1_golomb_par))
 		return -1;
-	if (rdcu_set_adaptive_2_spillover_threshold(cfg->ap2_spill))
-		return -1;
-
-	if (rdcu_set_data_start_addr(cfg->rdcu_data_adr))
-		return -1;
-	if (rdcu_set_model_start_addr(cfg->rdcu_model_adr))
-		return -1;
-	if (rdcu_set_num_samples(cfg->samples))
-		return -1;
-	if (rdcu_set_new_model_start_addr(cfg->rdcu_new_model_adr))
+	if (rdcu_set_adaptive_1_spillover_threshold(rcfg->ap1_spill))
 		return -1;
 
-	if (rdcu_set_compr_data_buf_start_addr(cfg->rdcu_buffer_adr))
+	if (rdcu_set_adaptive_2_golomb_param(rcfg->ap2_golomb_par))
 		return -1;
-	if (rdcu_set_compr_data_buf_len(cfg->buffer_length))
+	if (rdcu_set_adaptive_2_spillover_threshold(rcfg->ap2_spill))
+		return -1;
+
+	if (rdcu_set_data_start_addr(rcfg->rdcu_data_adr))
+		return -1;
+	if (rdcu_set_model_start_addr(rcfg->rdcu_model_adr))
+		return -1;
+	if (rdcu_set_num_samples(rcfg->samples))
+		return -1;
+	if (rdcu_set_new_model_start_addr(rcfg->rdcu_new_model_adr))
+		return -1;
+
+	if (rdcu_set_compr_data_buf_start_addr(rcfg->rdcu_buffer_adr))
+		return -1;
+	if (rdcu_set_compr_data_buf_len(rcfg->buffer_length))
 		return -1;
 
 	/* now sync the configuration registers to the RDCU... */
@@ -228,38 +229,38 @@ int rdcu_start_compression(void)
 /**
  * @brief set up RDCU SRAM for compression
  *
- * @param cfg  pointer to a compression configuration
+ * @param rcfg  pointer to a RDCU compression configuration
  *
  * @returns 0 on success, error otherwise
  */
 
-static int rdcu_transfer_sram(const struct cmp_cfg *cfg)
+static int rdcu_transfer_sram(const struct rdcu_cfg *rcfg)
 {
-	if (cfg->input_buf != NULL) {
+	if (rcfg->input_buf != NULL) {
 		/* round up needed size must be a multiple of 4 bytes */
-		uint32_t size = (cfg->samples * 2 + 3) & ~3U;
+		uint32_t size = (rcfg->samples * 2 + 3) & ~3U;
 		/* now set the data in the local mirror... */
-		if (rdcu_write_sram_16(cfg->input_buf, cfg->rdcu_data_adr, cfg->samples * 2) < 0) {
+		if (rdcu_write_sram_16(rcfg->input_buf, rcfg->rdcu_data_adr, rcfg->samples * 2) < 0) {
 			debug_print("Error: The data to be compressed cannot be transferred to the SRAM of the RDCU.");
 			return -1;
 		}
-		if (rdcu_sync_mirror_to_sram(cfg->rdcu_data_adr, size, rdcu_get_data_mtu())) {
+		if (rdcu_sync_mirror_to_sram(rcfg->rdcu_data_adr, size, rdcu_get_data_mtu())) {
 			debug_print("Error: The data to be compressed cannot be transferred to the SRAM of the RDCU.");
 			return -1;
 		}
 	}
 	/*...and the model when needed */
-	if (cfg->model_buf != NULL) {
+	if (rcfg->model_buf != NULL) {
 		/* set model only when model mode is used */
-		if (model_mode_is_used(cfg->cmp_mode)) {
+		if (model_mode_is_used(rcfg->cmp_mode)) {
 			/* round up needed size must be a multiple of 4 bytes */
-			uint32_t size = (cfg->samples * 2 + 3) & ~3U;
+			uint32_t size = (rcfg->samples * 2 + 3) & ~3U;
 			/* set the model in the local mirror... */
-			if (rdcu_write_sram_16(cfg->model_buf, cfg->rdcu_model_adr, cfg->samples * 2) < 0) {
+			if (rdcu_write_sram_16(rcfg->model_buf, rcfg->rdcu_model_adr, rcfg->samples * 2) < 0) {
 				debug_print("Error: The model buffer cannot be transferred to the SRAM of the RDCU.");
 				return -1;
 			}
-			if (rdcu_sync_mirror_to_sram(cfg->rdcu_model_adr, size, rdcu_get_data_mtu())) {
+			if (rdcu_sync_mirror_to_sram(rcfg->rdcu_model_adr, size, rdcu_get_data_mtu())) {
 				debug_print("Error: The model buffer cannot be transferred to the SRAM of the RDCU.");
 				return -1;
 			}
@@ -276,23 +277,23 @@ static int rdcu_transfer_sram(const struct cmp_cfg *cfg)
 /**
  * @brief compressing data with the help of the RDCU hardware compressor
  *
- * @param cfg  configuration contains all parameters required for compression
+ * @param rcfg  RDCU configuration contains all parameters required for compression
  *
  * @note Before the rdcu_compress function can be used, an initialisation of
  *	the RMAP library is required. This is achieved with the functions
  *	rdcu_ctrl_init() and rdcu_rmap_init().
- * @note The validity of the cfg structure is checked before the compression is
+ * @note The validity of the rcfg structure is checked before the compression is
  *	 started.
  *
  * @returns 0 on success, error otherwise
  */
 
-int rdcu_compress_data(const struct cmp_cfg *cfg)
+int rdcu_compress_data(const struct rdcu_cfg *rcfg)
 {
-	if (rdcu_set_compression_register(cfg))
+	if (rdcu_set_compression_register(rcfg))
 		return -1;
 
-	if (rdcu_transfer_sram(cfg))
+	if (rdcu_transfer_sram(rcfg))
 		return -1;
 
 	if (rdcu_start_compression())
@@ -406,6 +407,21 @@ int rdcu_read_cmp_info(struct cmp_info *info)
 
 
 /**
+ * @brief calculate the need bytes to hold a bitstream
+ * @note we round up the result to multiples of 4 bytes
+ *
+ * @param cmp_size_bit	compressed data size, measured in bits
+ *
+ * @returns the size in bytes to store the hole bitstream
+ */
+
+static unsigned int cmp_bit_to_4byte(unsigned int cmp_size_bit)
+{
+	return (cmp_bit_to_byte(cmp_size_bit) + 3) & ~0x3UL;
+}
+
+
+/**
  * @brief read the compressed bitstream from the RDCU SRAM
  *
  * @param info			compression information contains the metadata of a compression
@@ -497,19 +513,19 @@ void rdcu_disable_interrput_signal(void)
 /**
  * @brief inject a SRAM edac multi bit error into the RDCU SRAM
  *
- * @param cfg	configuration to inject error
+ * @param rcfg	configuration to inject error
  * @param addr	SRAM address to inject edac error
  */
 
-int rdcu_inject_edac_error(const struct cmp_cfg *cfg, uint32_t addr)
+int rdcu_inject_edac_error(const struct rdcu_cfg *rcfg, uint32_t addr)
 {
 	uint32_t sub_chip_die_addr;
 	uint8_t buf[4] = {0};
 
-	if (rdcu_set_compression_register(cfg))
+	if (rdcu_set_compression_register(rcfg))
 		return -1;
 
-	if (rdcu_transfer_sram(cfg))
+	if (rdcu_transfer_sram(rcfg))
 		return -1;
 
 	/* disable edac */
@@ -596,7 +612,7 @@ int rdcu_inject_edac_error(const struct cmp_cfg *cfg, uint32_t addr)
 			debug_print("Error: sub_chip_die_addr unexpected!");
 			return -1;
 		}
-		if (1 == rdcu_edac_get_bypass_status()) {
+		if (rdcu_edac_get_bypass_status() == 1) {
 			debug_print("Error: bypass status unexpected!");
 			return -1;
 		}
