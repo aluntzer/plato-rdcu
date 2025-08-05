@@ -646,7 +646,7 @@ static void be_to_cpus_smearing(struct smearing *a, uint32_t samples)
 
 	for (i = 0; i < samples; i++) {
 		a[i].mean = be32_to_cpu(a[i].mean);
-		a[i].variance_mean = be16_to_cpu(a[i].variance_mean);
+		a[i].variance_mean = be32_to_cpu(a[i].variance_mean);
 		a[i].outlier_pixels = be16_to_cpu(a[i].outlier_pixels);
 	}
 }

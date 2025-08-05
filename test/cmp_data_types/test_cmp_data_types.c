@@ -366,11 +366,11 @@ void test_be_to_cpu_chunk(void)
 		data_type = DATA_TYPE_SMEARING;
 
 		data.entry[0].mean           = 0x00010203;
-		data.entry[0].variance_mean  = 0x0405;
-		data.entry[0].outlier_pixels = 0x0607;
-		data.entry[1].mean           = 0x08090A0B;
-		data.entry[1].variance_mean  = 0x0C0D;
-		data.entry[1].outlier_pixels = 0x0E0F;
+		data.entry[0].variance_mean  = 0x04050607;
+		data.entry[0].outlier_pixels = 0x0809;
+		data.entry[1].mean           = 0x0A0B0C0D;
+		data.entry[1].variance_mean  = 0x0E0F1011;
+		data.entry[1].outlier_pixels = 0x1213;
 
 		check_endianness(&data, sizeof(data), data_type);
 	}
