@@ -216,7 +216,7 @@ void test_ent_start_timestamp(void)
 	TEST_ASSERT_FALSE(error);
 
 	start_timestamp_read = cmp_ent_get_start_timestamp(&ent);
-	TEST_ASSERT_EQUAL_UINT64(start_timestamp, start_timestamp_read);
+	TEST_ASSERT_EQUAL(start_timestamp, start_timestamp_read);
 
 	/* check the right position in the header */
 	TEST_ASSERT_EQUAL_HEX(0x12, entity_p[10]);
@@ -227,9 +227,9 @@ void test_ent_start_timestamp(void)
 	TEST_ASSERT_EQUAL_HEX(0xBC, entity_p[15]);
 
 	coarse_start_timestamp_read = cmp_ent_get_coarse_start_time(&ent);
-	TEST_ASSERT_EQUAL_UINT64(0x12345678, coarse_start_timestamp_read);
+	TEST_ASSERT_EQUAL(0x12345678, coarse_start_timestamp_read);
 	fine_start_timestamp_read = cmp_ent_get_fine_start_time(&ent);
-	TEST_ASSERT_EQUAL_UINT64(0x9ABC, fine_start_timestamp_read);
+	TEST_ASSERT_EQUAL(0x9ABC, fine_start_timestamp_read);
 
 	/* error cases */
 	start_timestamp = 0x1000000000000ULL;
@@ -328,7 +328,7 @@ void test_ent_end_timestamp(void)
 	TEST_ASSERT_FALSE(error);
 
 	end_timestamp_read = cmp_ent_get_end_timestamp(&ent);
-	TEST_ASSERT_EQUAL_HEX64(end_timestamp, end_timestamp_read);
+	TEST_ASSERT_EQUAL(end_timestamp, end_timestamp_read);
 
 	/* check the right position in the header */
 	TEST_ASSERT_EQUAL_HEX(0x12, entity_p[16]);
@@ -339,9 +339,9 @@ void test_ent_end_timestamp(void)
 	TEST_ASSERT_EQUAL_HEX(0xBC, entity_p[21]);
 
 	coarse_end_timestamp_read = cmp_ent_get_coarse_end_time(&ent);
-	TEST_ASSERT_EQUAL_UINT64(0x12345678, coarse_end_timestamp_read);
+	TEST_ASSERT_EQUAL(0x12345678, coarse_end_timestamp_read);
 	fine_end_timestamp_read = cmp_ent_get_fine_end_time(&ent);
-	TEST_ASSERT_EQUAL_UINT64(0x9ABC, fine_end_timestamp_read);
+	TEST_ASSERT_EQUAL(0x9ABC, fine_end_timestamp_read);
 
 	/* error cases */
 	end_timestamp = 0x1000000000000ULL;
@@ -1867,7 +1867,7 @@ void test_cmp_ent_create_timestamp(void)
 	ts.tv_nsec = 0;
 	timestamp1 = cmp_ent_create_timestamp(&ts);
 	ts.tv_sec = EPOCH + 1;
-	ts.tv_nsec = 15258;
+	ts.tv_nsec = 15259;
 	timestamp2 = cmp_ent_create_timestamp(&ts);
 	TEST_ASSERT_EQUAL_HEX(0x10001, timestamp2-timestamp1);
 

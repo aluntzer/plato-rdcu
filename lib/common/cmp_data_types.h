@@ -293,7 +293,7 @@ struct background {
 
 struct smearing {
 	uint32_t mean;
-	uint16_t variance_mean;
+	uint32_t variance_mean;
 	uint16_t outlier_pixels;
 } __attribute__((packed));
 
